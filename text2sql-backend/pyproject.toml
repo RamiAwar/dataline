@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "text2sql-backend"
+version = "0.1.0"
+description = ""
+authors = ["Rami <rami.awar.ra@gmail.com>"]
+readme = "README.md"
+packages = [{include = "text2sql_backend"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.95.1"
+uvicorn = {extras = ["standard"], version = "^0.21.1"}
+llama-index = "^0.5.15"
+sqlparse = "^0.4.3"
+psycopg2 = "^2.9.6"
+gpt-index = "^0.5.15"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
