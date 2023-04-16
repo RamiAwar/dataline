@@ -32,7 +32,18 @@ const search = async (
   });
   return response.data;
 };
+
+type SessionResult = { session_id: string; dsn: string };
+type ListSessionsResult =
+  | { status: "ok"; sessions: SessionResult[] }
+  | ApiError;
+const listSessions = async (): Promise<ListSessionsResult> => {
+  const response = await axios.get<ListSessionsResult>(`${baseUrl}/sessions`);
+  return response.data;
+};
+
 export const api = {
   connect,
   search,
+  listSessions,
 };

@@ -32,6 +32,10 @@ def get_session(session_id: str):
     ).fetchone()
 
 
+def get_session_from_dsn(dsn: str):
+    return conn.execute("SELECT * FROM sessions WHERE dsn = ?", (dsn,)).fetchone()
+
+
 def get_sessions():
     return conn.execute("SELECT * FROM sessions").fetchall()
 

@@ -14,10 +14,12 @@ llama-index = "^0.5.15"
 sqlparse = "^0.4.3"
 psycopg2 = "^2.9.6"
 gpt-index = "^0.5.15"
+pygments-pprint-sql = "^0.1.0"
 
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
+jupyterlab = "^3.6.3"
 
 [build-system]
 requires = ["poetry-core"]

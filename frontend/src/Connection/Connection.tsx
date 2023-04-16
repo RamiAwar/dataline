@@ -1,80 +1,144 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { api } from "../api";
 import { isApiError } from "../api";
 import { useNavigate } from "react-router-dom";
 import { Routes } from "../router";
 import { useSession } from "../Providers/SessionProvider";
+import { Combobox, Dialog, Transition } from '@headlessui/react'
+import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
+import { DocumentPlusIcon, FolderPlusIcon, FolderIcon, HashtagIcon, TagIcon } from '@heroicons/react/24/outline'
+
+
+type Session = {session_id: string; dsn: string};
+
+function classNames(...classes: any[]) {
+  return classes.filter(Boolean).join(' ')
+}
 
 export const Connection = () => {
-  const [connectionString, setConnectionString] = useState<string>("");
-
   const navigate = useNavigate();
 
   const [, setSession] = useSession();
 
+  const [query, setQuery] = useState('')
+  const [sessions, setSessions] = useState<Session[]>([]);
+  
+  // Setup session to be null when the component is mounted
   useEffect(() => {
-    setSession(null);
+    // On mount, set the session to null and load all sessions from backend
+    const getSessions = async () => {
+      const result = await api.listSessions();
+     
+      if (isApiError(result)) {
+        alert(result.message);
+        return;
+      }
+      setSessions(result.sessions)
+    }
+    getSessions();
   }, [setSession]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const result = await api.connect(connectionString);
+
+  const connect = async (session: Session) => {
+    // Connect with no session
+    const result = await api.connect(session.dsn);
     if (isApiError(result)) {
       alert(result.message);
       return;
     }
+
+    console.log("Navigating to search with ", result.session_id);
     setSession(result.session_id);
     navigate(Routes.Search);
   };
 
   return (
-    <>
-      <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h1 className="mt-6 text-center text-5xl font-bold tracking-tight text-gray-900">
-            Text2SQL
-          </h1>
-          <h2 className="mt-6 text-center text-2xl font-bold tracking-tight text-gray-900">
-            Connect to your database
-          </h2>
-        </div>
+    <Transition.Root show={true} as={Fragment} afterLeave={() => setQuery('')} appear>
+      <Dialog as="div" className="relative z-10" onClose={() => {}}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-25 transition-opacity" />
+        </Transition.Child>
 
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div>
-                <label
-                  htmlFor="connection-string"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
-                  Connection String
-                </label>
-                <div className="mt-2">
-                  <input
-                    id="connection-string"
-                    name="connection-string"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    value={connectionString}
-                    onChange={(e) => setConnectionString(e.target.value)}
+        <div className="fixed inset-0 z-10 overflow-y-auto p-4 sm:p-6 md:p-20">
+        <h2>Connect</h2>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
+          >
+            <Dialog.Panel className="mx-auto max-w-2xl transform divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all">
+              <Combobox onChange={connect}>
+                <div className="relative">
+                  <MagnifyingGlassIcon
+                    className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400"
+                    aria-hidden="true"
+                  />
+                  <Combobox.Input
+                    className="h-12 w-full border-0 bg-transparent pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
+                    placeholder="Search..."
+                    onChange={(event) => setQuery(event.target.value)}
                   />
                 </div>
-              </div>
 
-              <div>
-                <button
-                  type="submit"
-                  className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                >
-                  Connect
-                </button>
-              </div>
-            </form>
-          </div>
+                {(query === '' || sessions.length > 0) && (
+                  <Combobox.Options static className="max-h-80 scroll-py-2 divide-y divide-gray-100 overflow-y-auto">
+                    <li className="p-2">
+                      {query === '' && (
+                        <h2 className="mb-2 mt-4 px-3 text-xs font-semibold text-gray-500">Recent searches</h2>
+                      )}
+                      <ul className="text-sm text-gray-700">
+                        {(sessions).map((session) => (
+                          <Combobox.Option
+                            key={session.session_id}
+                            value={session}
+                            className={({ active }) =>
+                              classNames(
+                                'flex cursor-default select-none items-center rounded-md px-3 py-2',
+                                active && 'bg-indigo-600 text-white'
+                              )
+                            }
+                          >
+                            {({ active }) => (
+                              <>
+                                <FolderIcon
+                                  className={classNames('h-6 w-6 flex-none', active ? 'text-white' : 'text-gray-400')}
+                                  aria-hidden="true"
+                                />
+                                <span className="ml-3 flex-auto truncate">{session.dsn}</span>
+                                {active && <span className="ml-3 flex-none text-indigo-100">Jump to...</span>}
+                              </>
+                            )}
+                          </Combobox.Option>
+                        ))}
+                      </ul>
+                    </li>
+                  </Combobox.Options>
+                )}
+
+                {query !== '' && sessions.length === 0 && (
+                  <div className="px-6 py-14 text-center sm:px-14">
+                    <FolderIcon className="mx-auto h-6 w-6 text-gray-400" aria-hidden="true" />
+                    <p className="mt-4 text-sm text-gray-900">
+                      We couldn't find any projects with that term. Please try again.
+                    </p>
+                  </div>
+                )}
+              </Combobox>
+            </Dialog.Panel>
+          </Transition.Child>
         </div>
-      </div>
-    </>
-  );
-};
+      </Dialog>
+    </Transition.Root>
+  )};

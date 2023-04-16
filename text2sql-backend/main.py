@@ -2,19 +2,32 @@ import logging
 from uuid import uuid4
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from gpt_index import GPTSimpleVectorIndex, GPTSQLStructStoreIndex, SQLDatabase
 from gpt_index.indices.struct_store import SQLContextContainerBuilder
-from llama_index import SQLDatabase
+from llama_index import GPTSimpleVectorIndex, GPTSQLStructStoreIndex, SQLDatabase
 from pydantic import BaseModel
+from pygments import formatters, highlight, lexers
+from pygments_pprint_sql import SqlFilter
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import OperationalError
 
 import db
 
 app = FastAPI()
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 logger = logging.getLogger(__name__)
+lexer = lexers.MySqlLexer()
+lexer.add_filter(SqlFilter())
 
 
 @app.exception_handler(Exception)
@@ -37,18 +50,26 @@ async def connect_db(dsn: Dsn):
         logger.error(e)
         return {"status": "error", "message": "Failed to connect to database"}
 
-    # If connection is successful, return a session hash
+    # Check if session with DSN already exists, then return session_id
+    res = db.get_session_from_dsn(dsn.dsn)
+    if res:
+        return {"status": "ok", "session_id": res[0]}
+
+    # If new DSN, create new session and schema
     session_id = uuid4().hex
     db.insert_session(session_id, dsn.dsn)
-
-    # DO NOT create index yet, let's wait for first query
-
+    # Create index
+    create_schema_index(session_id)
     return {"status": "ok", "session_id": session_id}
 
 
+# TODO: Add response model
 @app.get("/sessions")
 async def get_sessions():
-    return {"status": "ok", "sessions": db.get_sessions()}
+    return {
+        "status": "ok",
+        "sessions": [{"session_id": x[0], "dsn": x[1]} for x in db.get_sessions()],
+    }
 
 
 @app.get("/query")
@@ -58,10 +79,6 @@ async def query(session_id: str, query: str):
     if not session:
         return {"status": "error", "message": "Invalid session_id"}
 
-    # Check if session_id already has DB schema index
-    if not db.session_is_indexed(session_id):
-        create_schema_index(session_id)
-
     # Perform query using index
     engine = create_engine(session[1])
     insp = inspect(engine)
@@ -70,6 +87,7 @@ async def query(session_id: str, query: str):
     context_builder = SQLContextContainerBuilder(sql_db)
     schema_index_file = db.get_schema_index(session_id)
     table_schema_index = GPTSimpleVectorIndex.load_from_disk(schema_index_file)
+
     context_builder.query_index_for_context(
         table_schema_index, query, store_context_str=True
     )
@@ -116,3 +134,7 @@ def create_schema_index(session_id: str):
     db.insert_schema_index(session_id, schema_index_name)
 
     return {"status": "ok"}
+
+
+def sql2html(sql) -> str:
+    return highlight(sql, lexer, formatters.HtmlFormatter())

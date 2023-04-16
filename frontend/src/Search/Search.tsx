@@ -35,18 +35,17 @@ import { Routes } from "../router";
 
 export default function Search() {
   const [query, setQuery] = useState("");
-
   const [open, setOpen] = useState(true);
-
-  const [session] = useSession();
+  const [session, setSession] = useSession();
 
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log(session);
     if (!session) {
       navigate(Routes.Connection);
     }
-  }, [session, navigate]);
+  }, [session, setSession, navigate]);
 
   if (!session) return null;
 
