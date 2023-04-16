@@ -35,17 +35,17 @@ import { Routes } from "../router";
 
 export default function Search() {
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(true);
-  const [session, setSession] = useSession();
+
+  const [session] = useSession();
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log(session);
+    console.log("in search", session)
     if (!session) {
       navigate(Routes.Connection);
     }
-  }, [session, setSession, navigate]);
+  }, [session, navigate]);
 
   if (!session) return null;
 
@@ -60,12 +60,12 @@ export default function Search() {
 
   return (
     <Transition.Root
-      show={open}
+      show={true}
       as={Fragment}
       afterLeave={() => setQuery("")}
       appear
     >
-      <Dialog as="div" className="relative z-10" onClose={setOpen}>
+      <Dialog as="div" className="relative z-10" onClose={() => {}}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"

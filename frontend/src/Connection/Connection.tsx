@@ -18,7 +18,7 @@ function classNames(...classes: any[]) {
 export const Connection = () => {
   const navigate = useNavigate();
 
-  const [, setSession] = useSession();
+  const [session, setSession] = useSession();
 
   const [query, setQuery] = useState('')
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -38,6 +38,12 @@ export const Connection = () => {
     getSessions();
   }, [setSession]);
 
+  // Navigate to search if session is set
+  useEffect(() => {
+    if (session) {
+      navigate(Routes.Search);
+    }
+  }, [session, navigate]);
 
   const connect = async (session: Session) => {
     // Connect with no session
@@ -49,7 +55,6 @@ export const Connection = () => {
 
     console.log("Navigating to search with ", result.session_id);
     setSession(result.session_id);
-    navigate(Routes.Search);
   };
 
   return (

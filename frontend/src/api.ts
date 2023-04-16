@@ -24,7 +24,7 @@ const search = async (
   sessionId: string,
   query: string
 ): Promise<SearchResult> => {
-  const response = await axios.get<SearchResult>(`${baseUrl}/search`, {
+  const response = await axios.get<SearchResult>(`${baseUrl}/query`, {
     params: {
       session_id: sessionId,
       query,
