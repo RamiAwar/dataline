@@ -14,6 +14,6 @@ export const router = createBrowserRouter([
   },
   {
     path: Routes.Search,
-    element: <Search/>,
+    element: <Search />,
   },
 ]);
