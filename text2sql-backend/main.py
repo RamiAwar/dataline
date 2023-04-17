@@ -1,6 +1,8 @@
+import ast
 import logging
 from uuid import uuid4
 
+import sqlparse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -72,8 +74,15 @@ async def get_sessions():
     }
 
 
+loaded = None
+
+
 @app.get("/query")
 async def query(session_id: str, query: str):
+    global loaded
+    if loaded:
+        return {"status": "ok", "results": loaded}
+
     # Get dsn from session_id
     session = db.get_session(session_id)
     if not session:
@@ -106,8 +115,15 @@ async def query(session_id: str, query: str):
 
     # query the SQL index with the table context
     response = query_index.query(query, sql_context_container=context_container)
+    results = []
 
-    return {"status": "ok", "result": response}
+    sql_query = response.extra_info["sql_query"]
+    results.append(get_selected_columns(sql_query))
+    parsed_results = ast.literal_eval(response.response)
+    results.extend(parsed_results)
+
+    loaded = results
+    return {"status": "ok", "results": results}
 
 
 def create_schema_index(session_id: str):
@@ -138,3 +154,21 @@ def create_schema_index(session_id: str):
 
 def sql2html(sql) -> str:
     return highlight(sql, lexer, formatters.HtmlFormatter())
+
+
+def get_selected_columns(query):
+    tokens = sqlparse.parse(query)[0].tokens
+    found_select = False
+    for token in tokens:
+        if found_select:
+            if isinstance(token, sqlparse.sql.IdentifierList):
+                return [
+                    col.value.split(" ")[-1].strip("`").rpartition(".")[-1]
+                    for col in token.tokens
+                    if isinstance(col, sqlparse.sql.Identifier)
+                ]
+        else:
+            found_select = token.match(
+                sqlparse.tokens.Keyword.DML, ["select", "SELECT"]
+            )
+    return []
