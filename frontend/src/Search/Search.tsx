@@ -28,7 +28,7 @@ import {
   ViewColumnsIcon,
   Bars4Icon,
 } from "@heroicons/react/24/outline";
-import { api, isApiError } from "../api";
+import { api, isApiError, SearchResult } from "../api";
 import { useSession } from "../Providers/SessionProvider";
 import { useNavigate } from "react-router-dom";
 import { Routes } from "../router";
@@ -36,7 +36,7 @@ import { DynamicTable } from "./DynamicTable";
 
 export default function Search() {
   const [query, setQuery] = useState("");
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<SearchResult | null>(null);
   const [inputEnabled, setInputEnabled] = useState(true);
   const [session] = useSession();
 
@@ -56,8 +56,9 @@ export default function Search() {
       alert(result.message);
       return;
     }
-    setData(result.results);
+    setData(result);
     setInputEnabled(true);
+    console.log(result);
   };
 
   const disableInput = () => {
@@ -66,11 +67,11 @@ export default function Search() {
 
   return (
     <div className="min-h-full">
-      <div className="bg-indigo-600 pb-32">
+      <div className="bg-indigo-600 pb-64">
         <header className="py-10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl font-bold tracking-tight text-white text-center">
-              T2SQL
+              Text To SQL
             </h1>
             <div className="justify-center mt-5">
               <Transition.Root
@@ -118,17 +119,31 @@ export default function Search() {
         </header>
       </div>
 
-      <main className="-mt-32">
-        <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-          {
-            <Transition.Root show={data !== null} appear>
-              <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 bg-white rounded-lg shadow">
-                {data !== null && <DynamicTable data={data}></DynamicTable>}
+      <Transition.Root show={data !== null} appear>
+        <main className="-mt-64">
+          <div className="mx-auto max-w-4xl px-4 pb-10 sm:px-6 lg:px-8">
+            <div className="sm:px-6 max-w-4xl lg:px-8 rounded-lg shadow bg-gray-50">
+              <div className="px-4 sm:px-6 lg:px-8">
+                <div className="sm:flex sm:items-center">
+                  <div
+                    className="px-4 py-5 sm:p-6"
+                    dangerouslySetInnerHTML={{ __html: data?.query }}
+                  ></div>
+                </div>
               </div>
-            </Transition.Root>
-          }
-        </div>
-      </main>
+            </div>
+          </div>
+          <div className="mx-auto max-w-6xl pb-12">
+            <div className="mx-auto max-w-7xl  bg-white rounded-lg shadow">
+              <div className="">
+                {data !== null && (
+                  <DynamicTable data={data?.results}></DynamicTable>
+                )}
+              </div>
+            </div>
+          </div>
+        </main>
+      </Transition.Root>
     </div>
   );
 }

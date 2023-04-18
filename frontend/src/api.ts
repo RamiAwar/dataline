@@ -19,7 +19,9 @@ const connect = async (connectionString: string): Promise<ConnectResult> => {
   return response.data;
 };
 
-type SearchResult = { status: "ok"; results: string[] } | ApiError;
+export type SearchResult =
+  | { status: "ok"; results: string[]; query: string; raw_query: string }
+  | ApiError;
 const search = async (
   sessionId: string,
   query: string

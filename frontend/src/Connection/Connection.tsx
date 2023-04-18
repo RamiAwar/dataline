@@ -63,28 +63,25 @@ export const Connection = () => {
   };
 
   return (
-    <div>
+    <div className="min-h-full">
+      <div className="bg-indigo-800 pb-12">
+        <header className="py-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <h1 className="text-3xl font-bold tracking-tight text-white text-center">
+              Text To SQL
+            </h1>
+          </div>
+        </header>
+      </div>
+
       <Transition.Root
         show={true}
         as={Fragment}
         afterLeave={() => setQuery("")}
         appear
       >
-        <Dialog as="div" className="relative z-10" onClose={() => {}}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-25 transition-opacity" />
-          </Transition.Child>
-
-          <div className="fixed inset-0 z-10 overflow-y-auto p-4 sm:p-6 md:p-20">
-            <h2>Connect</h2>
+        <main className="justify-center -mt-10 mb-12">
+          <div className="overflow-y-auto px-4 sm:px-6 md:px-10 pb-24">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -94,7 +91,7 @@ export const Connection = () => {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="mx-auto max-w-2xl transform divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all">
+              <div className="mx-auto max-w-xl transform divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all">
                 <Combobox onChange={connect}>
                   <div className="relative">
                     <MagnifyingGlassIcon
@@ -170,10 +167,10 @@ export const Connection = () => {
                     </div>
                   )}
                 </Combobox>
-              </Dialog.Panel>
+              </div>
             </Transition.Child>
           </div>
-        </Dialog>
+        </main>
       </Transition.Root>
     </div>
   );
