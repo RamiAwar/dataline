@@ -43,7 +43,7 @@ export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
                     <th
                       key={index}
                       scope="col"
-                      className="py-3.5 pl-4 pr-4 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                      className="py-3.5 pl-4 pr-4 text-left text-sm font-semibold text-gray-900"
                     >
                       {item}
                     </th>
@@ -58,7 +58,7 @@ export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
                         {row.map((item: any, rowIndex: number) => (
                           <td
                             key={rowIndex}
-                            className="whitespace-nowrap py-4 pl-8 pr-4 text-sm text-gray-900 sm:pl-0"
+                            className="whitespace-nowrap py-4 pl-4 pr-4 text-sm text-gray-900"
                           >
                             {item}
                           </td>

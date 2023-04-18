@@ -37,6 +37,7 @@ import { DynamicTable } from "./DynamicTable";
 export default function Search() {
   const [query, setQuery] = useState("");
   const [data, setData] = useState<any>(null);
+  const [inputEnabled, setInputEnabled] = useState(true);
   const [session] = useSession();
 
   const navigate = useNavigate();
@@ -56,55 +57,78 @@ export default function Search() {
       return;
     }
     setData(result.results);
+    setInputEnabled(true);
+  };
+
+  const disableInput = () => {
+    setInputEnabled(false);
   };
 
   return (
-    <div>
-      <div className="justify-center">
-        <Transition.Root
-          show={true}
-          as={Fragment}
-          afterLeave={() => setQuery("")}
-          appear
-        >
-          <div className="overflow-y-auto p-4 sm:p-6 md:p-20">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <div className="mx-auto max-w-xl transform divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all">
-                <Combobox>
-                  <div className="relative">
-                    <MagnifyingGlassIcon
-                      className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400"
-                      aria-hidden="true"
-                    />
-                    <Combobox.Input
-                      className="h-12 w-full border-0 bg-transparent pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
-                      placeholder="Search..."
-                      onChange={(event) => setQuery(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          handleQuery();
-                        }
-                      }}
-                    />
-                  </div>
-                </Combobox>
-              </div>
-            </Transition.Child>
+    <div className="min-h-full">
+      <div className="bg-indigo-600 pb-32">
+        <header className="py-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <h1 className="text-3xl font-bold tracking-tight text-white text-center">
+              T2SQL
+            </h1>
+            <div className="justify-center mt-5">
+              <Transition.Root
+                show={true}
+                as={Fragment}
+                afterLeave={() => setQuery("")}
+                appear
+              >
+                <div className="overflow-y-auto px-4 sm:px-6 md:px-10">
+                  <Transition.Child
+                    as={Fragment}
+                    enter="ease-out duration-300"
+                    enterFrom="opacity-0 scale-95"
+                    enterTo="opacity-100 scale-100"
+                    leave="ease-in duration-200"
+                    leaveFrom="opacity-100 scale-100"
+                    leaveTo="opacity-0 scale-95"
+                  >
+                    <div className="mx-auto max-w-xl transform divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all">
+                      <Combobox disabled={!inputEnabled}>
+                        <div className="relative">
+                          <MagnifyingGlassIcon
+                            className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400"
+                            aria-hidden="true"
+                          />
+                          <Combobox.Input
+                            className="h-12 w-full border-0 bg-transparent pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
+                            placeholder="Enter your natural language query here..."
+                            onChange={(event) => setQuery(event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                disableInput();
+                                handleQuery();
+                              }
+                            }}
+                          />
+                        </div>
+                      </Combobox>
+                    </div>
+                  </Transition.Child>
+                </div>
+              </Transition.Root>
+            </div>
           </div>
-        </Transition.Root>
+        </header>
       </div>
 
-      <Transition.Root show={data !== null} appear>
-        {data !== null && <DynamicTable data={data}></DynamicTable>}
-      </Transition.Root>
+      <main className="-mt-32">
+        <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+          {
+            <Transition.Root show={data !== null} appear>
+              <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 bg-white rounded-lg shadow">
+                {data !== null && <DynamicTable data={data}></DynamicTable>}
+              </div>
+            </Transition.Root>
+          }
+        </div>
+      </main>
     </div>
   );
 }
