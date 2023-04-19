@@ -3,6 +3,7 @@ import { api } from "../api";
 import { isApiError } from "../api";
 import { useNavigate } from "react-router-dom";
 import { Routes } from "../router";
+import { Spinner } from "../Spinner/Spinner";
 import { useSession } from "../Providers/SessionProvider";
 import { Combobox, Dialog, Transition } from "@headlessui/react";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
@@ -24,7 +25,7 @@ export const Connection = () => {
   const navigate = useNavigate();
 
   const [session, setSession] = useSession();
-
+  const [inputEnabled, setInputEnabled] = useState(true);
   const [query, setQuery] = useState("");
   const [sessions, setSessions] = useState<Session[]>([]);
 
@@ -50,16 +51,27 @@ export const Connection = () => {
     }
   }, [session, navigate]);
 
-  const connect = async (session: Session) => {
-    // Connect with no session
-    const result = await api.connect(session.dsn);
-    if (isApiError(result)) {
-      alert(result.message);
-      return;
-    }
+  const disableInput = () => {
+    setInputEnabled(false);
+  };
 
-    console.log("Navigating to search with ", result.session_id);
-    setSession(result.session_id);
+  const connect = async (dsn: string) => {
+    try {
+      // Connect with no session
+      const result = await api.connect(dsn);
+
+      if (isApiError(result)) {
+        alert("API Error");
+        console.log(result.message);
+        return;
+      }
+
+      setSession(result.session_id);
+    } catch (e) {
+      console.log(e);
+      alert("API Error");
+      setInputEnabled(true);
+    }
   };
 
   return (
@@ -74,12 +86,7 @@ export const Connection = () => {
         </header>
       </div>
 
-      <Transition.Root
-        show={true}
-        as={Fragment}
-        afterLeave={() => setQuery("")}
-        appear
-      >
+      <Transition.Root show={true} as={Fragment} afterLeave={() => {}} appear>
         <main className="justify-center -mt-10 mb-12">
           <div className="overflow-y-auto px-4 sm:px-6 md:px-10 pb-24">
             <Transition.Child
@@ -92,16 +99,39 @@ export const Connection = () => {
               leaveTo="opacity-0 scale-95"
             >
               <div className="mx-auto max-w-xl transform divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all">
-                <Combobox onChange={connect}>
+                <Combobox
+                  disabled={!inputEnabled}
+                  onChange={(dsn: string) => {
+                    disableInput();
+                    connect(dsn);
+                  }}
+                >
                   <div className="relative">
-                    <MagnifyingGlassIcon
-                      className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400"
-                      aria-hidden="true"
-                    />
+                    {inputEnabled && (
+                      <MagnifyingGlassIcon
+                        className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400"
+                        aria-hidden="true"
+                      />
+                    )}
+                    {!inputEnabled && (
+                      <Spinner className="pointer-events-none absolute left-4 top-3.5 h-5 w-5"></Spinner>
+                    )}
                     <Combobox.Input
-                      className="h-12 w-full border-0 bg-transparent pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
+                      className={`h-12 w-full border-0 bg-transparent pl-11 pr-4 placeholder:text-gray-400 focus:ring-0 sm:text-sm ${
+                        inputEnabled ? "text-gray-900" : "text-gray-400"
+                      }`}
                       placeholder="Search..."
-                      onChange={(event) => setQuery(event.target.value)}
+                      onChange={(event) => {
+                        event.preventDefault();
+                        setQuery(event.target.value);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          disableInput();
+                          connect(query);
+                        }
+                      }}
                     />
                   </div>
 
@@ -120,7 +150,8 @@ export const Connection = () => {
                           {sessions.map((session) => (
                             <Combobox.Option
                               key={session.session_id}
-                              value={session}
+                              value={session.dsn}
+                              disabled={!inputEnabled}
                               className={({ active }) =>
                                 classNames(
                                   "flex cursor-default select-none items-center rounded-md px-3 py-2",

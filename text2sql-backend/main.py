@@ -79,9 +79,9 @@ loaded = None
 
 @app.get("/query")
 async def query(session_id: str, query: str):
-    global loaded
-    if loaded:
-        return {"status": "ok", "results": loaded}
+    # global loaded
+    # if loaded:
+    #     return loaded
 
     # Get dsn from session_id
     session = db.get_session(session_id)
@@ -118,12 +118,20 @@ async def query(session_id: str, query: str):
     results = []
 
     sql_query = response.extra_info["sql_query"]
+    rendered_sql_query = sql2html(sql_query)
+
     results.append(get_selected_columns(sql_query))
     parsed_results = ast.literal_eval(response.response)
     results.extend(parsed_results)
 
-    loaded = results
-    return {"status": "ok", "results": results}
+    res = {
+        "status": "ok",
+        "results": results,
+        "query": rendered_sql_query,
+        "raw_query": sql_query,
+    }
+    # loaded = res
+    return res
 
 
 def create_schema_index(session_id: str):

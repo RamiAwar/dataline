@@ -58,7 +58,6 @@ export default function Search() {
     }
     setData(result);
     setInputEnabled(true);
-    console.log(result);
   };
 
   const disableInput = () => {
@@ -77,7 +76,7 @@ export default function Search() {
               <Transition.Root
                 show={true}
                 as={Fragment}
-                afterLeave={() => setQuery("")}
+                afterLeave={() => {}}
                 appear
               >
                 <div className="overflow-y-auto px-4 sm:px-6 md:px-10">
