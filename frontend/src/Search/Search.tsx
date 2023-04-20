@@ -13,21 +13,10 @@
   ```
 */
 import { Fragment, useEffect, useState } from "react";
-import { Combobox, Dialog, Transition } from "@headlessui/react";
+import { Combobox, Transition } from "@headlessui/react";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import {
-  CalendarIcon,
-  CodeBracketIcon,
-  DocumentIcon,
-  ExclamationCircleIcon,
-  LinkIcon,
-  PencilSquareIcon,
-  PhotoIcon,
-  TableCellsIcon,
-  VideoCameraIcon,
-  ViewColumnsIcon,
-  Bars4Icon,
-} from "@heroicons/react/24/outline";
+import { Spinner } from "../Spinner/Spinner";
+
 import { api, isApiError, SearchResult } from "../api";
 import { useSession } from "../Providers/SessionProvider";
 import { useNavigate } from "react-router-dom";
@@ -51,13 +40,19 @@ export default function Search() {
   if (!session) return null;
 
   const handleQuery = async () => {
-    const result = await api.search(session, query);
-    if (isApiError(result)) {
-      alert(result.message);
-      return;
+    try {
+      const result = await api.search(session, query);
+      if (isApiError(result)) {
+        alert(result.message);
+        return;
+      }
+      setData(result);
+      setInputEnabled(true);
+    } catch (e) {
+      console.log(e);
+      alert("API Error");
+      setInputEnabled(true);
     }
-    setData(result);
-    setInputEnabled(true);
   };
 
   const disableInput = () => {
@@ -66,7 +61,7 @@ export default function Search() {
 
   return (
     <div className="min-h-full">
-      <div className="bg-indigo-600 pb-64">
+      <div className="bg-indigo-600">
         <header className="py-10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl font-bold tracking-tight text-white text-center">
@@ -92,16 +87,27 @@ export default function Search() {
                     <div className="mx-auto max-w-xl transform divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all">
                       <Combobox disabled={!inputEnabled}>
                         <div className="relative">
-                          <MagnifyingGlassIcon
-                            className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400"
-                            aria-hidden="true"
-                          />
+                          {inputEnabled && (
+                            <MagnifyingGlassIcon
+                              className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400"
+                              aria-hidden="true"
+                            />
+                          )}
+                          {!inputEnabled && (
+                            <Spinner className="pointer-events-none absolute left-4 top-3.5 h-5 w-5"></Spinner>
+                          )}
                           <Combobox.Input
-                            className="h-12 w-full border-0 bg-transparent pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
+                            className={`h-12 w-full border-0 bg-transparent pl-11 pr-4 placeholder:text-gray-400 focus:ring-0 sm:text-sm ${
+                              inputEnabled ? "text-gray-900" : "text-gray-400"
+                            }`}
                             placeholder="Enter your natural language query here..."
-                            onChange={(event) => setQuery(event.target.value)}
+                            onChange={(event) => {
+                              event.preventDefault();
+                              setQuery(event.target.value);
+                            }}
                             onKeyDown={(event) => {
                               if (event.key === "Enter") {
+                                event.preventDefault();
                                 disableInput();
                                 handleQuery();
                               }
@@ -119,11 +125,11 @@ export default function Search() {
       </div>
 
       <Transition.Root show={data !== null} appear>
-        <main className="-mt-64">
-          <div className="mx-auto max-w-4xl px-4 pb-10 sm:px-6 lg:px-8">
+        <main className="py-10 flex flex-col">
+          <div className="items-center mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
             <div className="sm:px-6 max-w-4xl lg:px-8 rounded-lg shadow bg-gray-50">
               <div className="px-4 sm:px-6 lg:px-8">
-                <div className="sm:flex sm:items-center">
+                <div className="sm:flex sm:items-center sm:justify-center">
                   <div
                     className="px-4 py-5 sm:p-6"
                     dangerouslySetInnerHTML={{ __html: data?.query }}
@@ -132,7 +138,7 @@ export default function Search() {
               </div>
             </div>
           </div>
-          <div className="mx-auto max-w-6xl pb-12">
+          <div className="mx-auto max-w-7xl pb-12">
             <div className="mx-auto max-w-7xl  bg-white rounded-lg shadow">
               <div className="">
                 {data !== null && (

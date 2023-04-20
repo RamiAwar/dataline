@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+    @apply bg-gray-200;
+}
 
 /* PYGMENTS STYLE FOR SQL RENDERING */
 .highlight .hll { background-color: #ffffcc }

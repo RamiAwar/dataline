@@ -5,15 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { Routes } from "../router";
 import { Spinner } from "../Spinner/Spinner";
 import { useSession } from "../Providers/SessionProvider";
-import { Combobox, Dialog, Transition } from "@headlessui/react";
+import { Combobox, Transition } from "@headlessui/react";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import {
-  DocumentPlusIcon,
-  FolderPlusIcon,
-  FolderIcon,
-  HashtagIcon,
-  TagIcon,
-} from "@heroicons/react/24/outline";
+import { FolderIcon } from "@heroicons/react/24/outline";
 
 type Session = { session_id: string; dsn: string };
 
