@@ -1,9 +1,11 @@
-import ast
+import json
 import logging
+from datetime import date
+from decimal import Decimal
 from uuid import uuid4
 
 import sqlparse
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from gpt_index.indices.struct_store import SQLContextContainerBuilder
@@ -13,6 +15,7 @@ from pygments import formatters, highlight, lexers
 from pygments_pprint_sql import SqlFilter
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.ext.declarative import DeclarativeMeta
 
 import db
 
@@ -121,8 +124,8 @@ async def query(session_id: str, query: str):
     rendered_sql_query = sql2html(sql_query)
 
     results.append(get_selected_columns(sql_query))
-    parsed_results = ast.literal_eval(response.response)
-    results.extend(parsed_results)
+    for r in response.response:
+        results.append(list(r._mapping.values()))
 
     res = {
         "status": "ok",
@@ -130,8 +133,9 @@ async def query(session_id: str, query: str):
         "query": rendered_sql_query,
         "raw_query": sql_query,
     }
-    # loaded = res
-    return res
+    return Response(
+        content=json.dumps(res, cls=AlchemyJSONEncoder), media_type="application/json"
+    )
 
 
 def create_schema_index(session_id: str):
@@ -180,3 +184,33 @@ def get_selected_columns(query):
                 sqlparse.tokens.Keyword.DML, ["select", "SELECT"]
             )
     return []
+
+
+class AlchemyJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        # check if object `o` is of custom declared model instance
+        if isinstance(o.__class__, DeclarativeMeta):
+            data = {}
+            fields = o.__json__() if hasattr(o, "__json__") else dir(o)
+            for field in [
+                f
+                for f in fields
+                if not f.startswith("_")
+                and f not in ["metadata", "query", "query_class"]
+            ]:
+                value = o.__getattribute__(field)
+                try:
+                    if json.dumps(value):
+                        data[field] = value
+                except TypeError:
+                    data[field] = None
+            return data
+        # check if object `o` is of Decimal instance
+        elif isinstance(o, Decimal):
+            return o.to_eng_string()
+        # check if object `o` is of date instance
+        elif isinstance(o, date):
+            return o.isoformat()
+        # rest of objects are handled by default JSONEncoder like 'Datetime',
+        # 'UUID', 'Markdown' and various others
+        return json.JSONEncoder.default(self, o)
