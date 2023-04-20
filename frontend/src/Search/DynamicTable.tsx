@@ -31,7 +31,7 @@ export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {dataSubset.map((row: any, index: number) => {
+              {dataSubset.map((row: Array<any>, index: number) => {
                 if (index > 0)
                   return (
                     <tr key={index} className="divide-x divide-gray-200">

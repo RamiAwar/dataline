@@ -102,8 +102,7 @@ export const Connection = () => {
                 <Combobox
                   disabled={!inputEnabled}
                   onChange={(dsn: string) => {
-                    disableInput();
-                    connect(dsn);
+                    setQuery(dsn);
                   }}
                 >
                   <div className="relative">
