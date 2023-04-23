@@ -5,10 +5,12 @@ export default function NumberField({
   placeholder,
   className = "",
   onChange = () => {},
+  onKeyDown = () => {},
 }: {
   placeholder: number;
   className?: string;
   onChange?: (value: number) => void;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
   return (
     <div className={`flex justify-center items-center ${className}`}>
@@ -26,6 +28,7 @@ export default function NumberField({
             event.preventDefault();
             onChange(parseInt(event.target.value));
           }}
+          onKeyDown={onKeyDown}
         />
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
           <QuestionMarkCircleIcon

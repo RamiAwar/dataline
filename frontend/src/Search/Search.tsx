@@ -128,6 +128,13 @@ export default function Search() {
                       className="w-36"
                       placeholder={limit}
                       onChange={(newVal) => setLimit(newVal)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          disableInput();
+                          handleQuery();
+                        }
+                      }}
                     ></NumberField>
                   </div>
                 </div>
