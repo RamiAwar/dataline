@@ -22,12 +22,14 @@ import { useSession } from "../Providers/SessionProvider";
 import { useNavigate } from "react-router-dom";
 import { Routes } from "../router";
 import { DynamicTable } from "./DynamicTable";
+import NumberField from "../Inputs/NumberField";
 
 export default function Search() {
   const [query, setQuery] = useState("");
   const [data, setData] = useState<SearchResult | null>(null);
   const [inputEnabled, setInputEnabled] = useState(true);
   const [session] = useSession();
+  const [limit, setLimit] = useState(10);
 
   const navigate = useNavigate();
 
@@ -41,9 +43,10 @@ export default function Search() {
 
   const handleQuery = async () => {
     try {
-      const result = await api.search(session, query);
+      const result = await api.search(session, query, limit);
       if (isApiError(result)) {
         alert(result.message);
+        setInputEnabled(true);
         return;
       }
       setData(result);
@@ -85,38 +88,48 @@ export default function Search() {
                     leaveTo="opacity-0 scale-95"
                   >
                     <div className="mx-auto max-w-xl transform divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all">
-                      <Combobox disabled={!inputEnabled}>
-                        <div className="relative">
-                          {inputEnabled && (
-                            <MagnifyingGlassIcon
-                              className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400"
-                              aria-hidden="true"
-                            />
-                          )}
-                          {!inputEnabled && (
-                            <Spinner className="pointer-events-none absolute left-4 top-3.5 h-5 w-5"></Spinner>
-                          )}
-                          <Combobox.Input
-                            className={`h-12 w-full border-0 bg-transparent pl-11 pr-4 placeholder:text-gray-400 focus:ring-0 sm:text-sm ${
-                              inputEnabled ? "text-gray-900" : "text-gray-400"
-                            }`}
-                            placeholder="Enter your natural language query here..."
-                            onChange={(event) => {
-                              event.preventDefault();
-                              setQuery(event.target.value);
-                            }}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter") {
-                                event.preventDefault();
-                                disableInput();
-                                handleQuery();
-                              }
-                            }}
+                      <div className="relative">
+                        {inputEnabled && (
+                          <MagnifyingGlassIcon
+                            className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400"
+                            aria-hidden="true"
                           />
-                        </div>
-                      </Combobox>
+                        )}
+                        {!inputEnabled && (
+                          <Spinner className="pointer-events-none absolute left-4 top-3.5 h-5 w-5"></Spinner>
+                        )}
+                        <input
+                          type="email"
+                          name="email"
+                          id="email"
+                          disabled={!inputEnabled}
+                          className={`h-12 w-full border-0 bg-transparent pl-11 pr-4 placeholder:text-gray-400 focus:ring-0 sm:text-sm ${
+                            inputEnabled ? "text-gray-900" : "text-gray-400"
+                          }`}
+                          placeholder="Enter your natural language query here..."
+                          onChange={(event) => {
+                            event.preventDefault();
+                            setQuery(event.target.value);
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              disableInput();
+                              handleQuery();
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
                   </Transition.Child>
+
+                  <div className="mx-auto px-2 mt-4 max-w-xl ">
+                    <NumberField
+                      className="w-36"
+                      placeholder={limit}
+                      onChange={(newVal) => setLimit(newVal)}
+                    ></NumberField>
+                  </div>
                 </div>
               </Transition.Root>
             </div>

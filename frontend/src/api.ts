@@ -24,12 +24,14 @@ export type SearchResult =
   | ApiError;
 const search = async (
   sessionId: string,
-  query: string
+  query: string,
+  limit: number
 ): Promise<SearchResult> => {
   const response = await axios.get<SearchResult>(`${baseUrl}/query`, {
     params: {
       session_id: sessionId,
       query,
+      limit,
     },
   });
   return response.data;
