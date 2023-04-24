@@ -70,7 +70,7 @@ export const Connection = () => {
 
   return (
     <div className="min-h-full">
-      <div className="bg-indigo-800 pb-12">
+      <div className="bg-indigo-600 pb-12">
         <header className="py-10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl font-bold tracking-tight text-white text-center">
@@ -113,7 +113,7 @@ export const Connection = () => {
                       className={`h-12 w-full border-0 bg-transparent pl-11 pr-4 placeholder:text-gray-400 focus:ring-0 sm:text-sm ${
                         inputEnabled ? "text-gray-900" : "text-gray-400"
                       }`}
-                      placeholder="Search..."
+                      placeholder="Enter your database DSN..."
                       onChange={(event) => {
                         event.preventDefault();
                         setQuery(event.target.value);
@@ -136,7 +136,7 @@ export const Connection = () => {
                       <li className="p-2">
                         {query === "" && (
                           <h2 className="mb-2 mt-4 px-3 text-xs font-semibold text-gray-500">
-                            Recent searches
+                            Recent connections
                           </h2>
                         )}
                         <ul className="text-sm text-gray-700">
