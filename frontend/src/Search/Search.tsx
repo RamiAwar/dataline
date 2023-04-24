@@ -149,7 +149,7 @@ export default function Search() {
           <div className="items-center mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
             <div className="sm:px-6 max-w-4xl lg:px-8 rounded-lg shadow bg-gray-50">
               <div className="px-4 sm:px-6 lg:px-8">
-                <div className="sm:flex sm:items-center sm:justify-center">
+                <div className="sm:flex sm:items-center sm:justify-start overflow-x-auto">
                   <div
                     className="px-4 py-5 sm:p-6"
                     dangerouslySetInnerHTML={{ __html: data?.query }}
