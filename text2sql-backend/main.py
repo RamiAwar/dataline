@@ -5,7 +5,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 import sqlparse
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from gpt_index.indices.struct_store import SQLContextContainerBuilder
@@ -18,9 +18,15 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
 import db
+from sql_wrapper import CustomSQLDatabase, request_execute, request_limit
+
+logger = logging.getLogger(__name__)
+lexer = lexers.MySqlLexer()
+lexer.add_filter(SqlFilter())
 
 app = FastAPI()
 origins = ["*"]
+loaded = None
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,14 +36,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logger = logging.getLogger(__name__)
-lexer = lexers.MySqlLexer()
-lexer.add_filter(SqlFilter())
+
+async def catch_exceptions_middleware(request: Request, call_next):
+    global loaded
+    try:
+        return await call_next(request)
+    except Exception as e:
+        logger.error(e)
+        loaded = JSONResponse({"status": "error", "message": str(e)})
+        return JSONResponse({"status": "error", "message": str(e)})
 
 
-@app.exception_handler(Exception)
-async def http_exception_handler(request, exc):
-    return JSONResponse({"status": "error", "message": str(exc)})
+app.middleware("http")(catch_exceptions_middleware)
 
 
 class Dsn(BaseModel):
@@ -77,12 +87,9 @@ async def get_sessions():
     }
 
 
-loaded = None
-
-
 @app.get("/query")
-async def query(session_id: str, query: str):
-    # global loaded
+async def query(session_id: str, query: str, limit: int = 10, execute: bool = False):
+    global loaded
     # if loaded:
     #     return loaded
 
@@ -91,18 +98,18 @@ async def query(session_id: str, query: str):
     if not session:
         return {"status": "error", "message": "Invalid session_id"}
 
+    request_limit.set(limit)
+    request_execute.set(execute)
+
     # Perform query using index
     engine = create_engine(session[1])
     insp = inspect(engine)
     table_names = insp.get_table_names()
-    sql_db = SQLDatabase(engine, include_tables=table_names)
+    sql_db = CustomSQLDatabase(engine, include_tables=table_names)
     context_builder = SQLContextContainerBuilder(sql_db)
     schema_index_file = db.get_schema_index(session_id)
     table_schema_index = GPTSimpleVectorIndex.load_from_disk(schema_index_file)
 
-    context_builder.query_index_for_context(
-        table_schema_index, query, store_context_str=True
-    )
     query_index = GPTSQLStructStoreIndex(
         [],
         sql_database=sql_db,
@@ -118,11 +125,23 @@ async def query(session_id: str, query: str):
 
     # query the SQL index with the table context
     response = query_index.query(query, sql_context_container=context_container)
-    results = []
+    if not response.response and execute:
+        # TODO: REmove
+        loaded = {"status": "error", "message": "Failed to parse query"}
+        return {"status": "error", "message": "Failed to parse query"}
 
     sql_query = response.extra_info["sql_query"]
     rendered_sql_query = sql2html(sql_query)
 
+    if not execute:
+        return {
+            "status": "ok",
+            "query": rendered_sql_query,
+            "raw_query": sql_query,
+            "results": [],
+        }
+
+    results = []
     results.append(get_selected_columns(sql_query))
     for r in response.response:
         results.append(list(r._mapping.values()))
@@ -133,6 +152,9 @@ async def query(session_id: str, query: str):
         "query": rendered_sql_query,
         "raw_query": sql_query,
     }
+    loaded = Response(
+        content=json.dumps(res, cls=AlchemyJSONEncoder), media_type="application/json"
+    )
     return Response(
         content=json.dumps(res, cls=AlchemyJSONEncoder), media_type="application/json"
     )

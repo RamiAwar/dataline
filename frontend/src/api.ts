@@ -25,13 +25,15 @@ export type SearchResult =
 const search = async (
   sessionId: string,
   query: string,
-  limit: number
+  limit: number,
+  execute: boolean = true
 ): Promise<SearchResult> => {
   const response = await axios.get<SearchResult>(`${baseUrl}/query`, {
     params: {
       session_id: sessionId,
       query,
       limit,
+      execute,
     },
   });
   return response.data;

@@ -22,7 +22,9 @@ import { useSession } from "../Providers/SessionProvider";
 import { useNavigate } from "react-router-dom";
 import { Routes } from "../router";
 import { DynamicTable } from "./DynamicTable";
-import NumberField from "../Inputs/NumberField";
+import LimitNumberField from "../Inputs/LimitNumberField";
+import Toggle from "../Inputs/Toggle";
+import { Tooltip } from "flowbite-react";
 
 export default function Search() {
   const [query, setQuery] = useState("");
@@ -30,6 +32,7 @@ export default function Search() {
   const [inputEnabled, setInputEnabled] = useState(true);
   const [session] = useSession();
   const [limit, setLimit] = useState(10);
+  const [withExecution, setWithExecution] = useState(true);
 
   const navigate = useNavigate();
 
@@ -43,7 +46,7 @@ export default function Search() {
 
   const handleQuery = async () => {
     try {
-      const result = await api.search(session, query, limit);
+      const result = await api.search(session, query, limit, withExecution);
       if (isApiError(result)) {
         alert(result.message);
         setInputEnabled(true);
@@ -123,9 +126,29 @@ export default function Search() {
                     </div>
                   </Transition.Child>
 
-                  <div className="mx-auto px-2 mt-4 max-w-xl ">
-                    <NumberField
-                      className="w-36"
+                  <div className="mx-auto px-2 mt-4 max-w-xl flex items-center">
+                    <div className="flex items-center">
+                      <Tooltip
+                        content="Auto-execute resulting SQL query on your database and fetch the results"
+                        style="light"
+                        placement="bottom"
+                        animation="duration-500"
+                      >
+                        <p className="block text-md font-normal text-gray-200">
+                          Auto-Execute{" "}
+                        </p>
+                      </Tooltip>
+                      <div className="ml-2 flex items-center">
+                        <Toggle
+                          enabled={withExecution}
+                          onChange={() => setWithExecution(!withExecution)}
+                        ></Toggle>
+                      </div>
+                    </div>
+
+                    <LimitNumberField
+                      disabled={!withExecution || !inputEnabled}
+                      className="w-36 ml-6"
                       placeholder={limit}
                       onChange={(newVal) => setLimit(newVal)}
                       onKeyDown={(event) => {
@@ -135,7 +158,7 @@ export default function Search() {
                           handleQuery();
                         }
                       }}
-                    ></NumberField>
+                    ></LimitNumberField>
                   </div>
                 </div>
               </Transition.Root>
@@ -161,7 +184,7 @@ export default function Search() {
           <div className="mx-auto max-w-7xl pb-12">
             <div className="mx-auto max-w-7xl  bg-white rounded-lg shadow">
               <div className="">
-                {data !== null && (
+                {data?.results?.length > 0 && (
                   <DynamicTable data={data?.results}></DynamicTable>
                 )}
               </div>
