@@ -19,7 +19,7 @@ This allows the app to fetch the table schemas from the database, create an inde
 
 ## Why is this useful?
 
-Can't we just send our database schema as context to an LLM? Yes, if it's small enough. But also, sending extra information might hurt the prompt quality.
+Can't we just send our database schema as context to an LLM? Yes, if it's small enough, which is nearly never the case for databases used in the real world. But also, sending extra information might hurt the prompt quality.
 We assume that sending just the right parts of the schema improves the results generally.
 
 <br/>
@@ -30,6 +30,11 @@ We assume that sending just the right parts of the schema improves the results g
 It can auto-execute queries and limit the results, or simply return the generated SQL query for the user to do what they please with.
 
 Confession: I still don't know what's in this DVDRENTAL sample database OR how it's structured, which makes it all the more interesting to get results from natural language queries. Exploring a database with natural language questions is as smooth as it gets!
+
+
+## Why isn't this hosted somewhere?
+
+The whole point of such a tool is plugging into YOUR database to allow for NL queries! If I did host it somewhere, how could I plug it into your databases? Technically it's feasible with tunneling-black-magic, but would you even touch something like that and trust it with your precious data? Didn't think so.
 
 
 ### Here is an example without auto execution:
@@ -49,9 +54,7 @@ This isn't satisfactory enough, so let's ask it to bring in their names as well!
 
 ## Where is this going?
 
-As LLMs become more available, I hope to get help maintaining this to become a local app for exploring DBs with the power of LLMs. To run this as of now, you need an OpenAI API key. I've tried it with all the hosted models, and none other than the most expensive yield satisfactory results. I think this will change very soon however! Just this week StabilityAI released their models to all, and some weeks ago LLama was introduced. Things are moving very fast in this space, and before we know it we'll have very capable LLMs running locally!
-
-This MVP requires some refactoring to be able to plug and play with different LLM configs, so that's the natural next step. Feel free to contribute! We can communicate via issues, and if people are interested I'll add a contribution guide.
+I'm adding upcoming tasks/ideas on this Github project page. Some ideas from the community were: Iterative UI (adjust query through conversation), being able to plug in any LLM (since they're becoming more local), auto-charting query results to generate reports, and more. If you an idea, please create an issue!
 
 
 ## What is this based on?
@@ -76,5 +79,3 @@ For the frontend, React app with npm (started off as Svelte, then moved to React
 npm i
 npm run dev
 ```
-
-Let me know if I missed anything in the installation steps, didn't invest too much time testing this as I have it already running.
