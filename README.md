@@ -54,7 +54,7 @@ This isn't satisfactory enough, so let's ask it to bring in their names as well!
 
 ## Where is this going?
 
-I'm adding upcoming tasks/ideas on this Github project page. Some ideas from the community were: Iterative UI (adjust query through conversation), being able to plug in any LLM (since they're becoming more local), auto-charting query results to generate reports, and more. If you an idea, please create an issue!
+I'm adding upcoming tasks/ideas on this [Github project page](https://github.com/users/RamiAwar/projects/4). Some ideas from the community were: Iterative UI (adjust query through conversation), being able to plug in any LLM (since they're becoming more local), auto-charting query results to generate reports, and more. If you an idea, please create an issue!
 
 
 ## What is this based on?
