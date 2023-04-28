@@ -19,16 +19,20 @@ const connect = async (connectionString: string): Promise<ConnectResult> => {
   return response.data;
 };
 
-export type SearchResult =
-  | { status: "ok"; results: string[]; query: string; raw_query: string }
-  | ApiError;
+export type SearchResult = {
+  status: "ok";
+  results: string[];
+  query: string;
+  raw_query: string;
+};
+export type ApiSearchResult = SearchResult | ApiError;
 const search = async (
   sessionId: string,
   query: string,
   limit: number,
   execute: boolean = true
-): Promise<SearchResult> => {
-  const response = await axios.get<SearchResult>(`${baseUrl}/query`, {
+): Promise<ApiSearchResult> => {
+  const response = await axios.get<ApiSearchResult>(`${baseUrl}/query`, {
     params: {
       session_id: sessionId,
       query,
@@ -39,8 +43,8 @@ const search = async (
   return response.data;
 };
 
-type SessionResult = { session_id: string; dsn: string };
-type ListSessionsResult =
+export type SessionResult = { session_id: string; dsn: string };
+export type ListSessionsResult =
   | { status: "ok"; sessions: SessionResult[] }
   | ApiError;
 const listSessions = async (): Promise<ListSessionsResult> => {

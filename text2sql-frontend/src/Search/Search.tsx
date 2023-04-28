@@ -13,11 +13,11 @@
   ```
 */
 import { Fragment, useEffect, useState } from "react";
-import { Combobox, Transition } from "@headlessui/react";
+import { Transition } from "@headlessui/react";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import { Spinner } from "../Spinner/Spinner";
 
-import { api, isApiError, SearchResult } from "../api";
+import { api, isApiError, SearchResult, ApiSearchResult } from "../api";
 import { useSession } from "../Providers/SessionProvider";
 import { useNavigate } from "react-router-dom";
 import { Routes } from "../router";
@@ -175,7 +175,7 @@ export default function Search() {
                 <div className="sm:flex sm:items-center sm:justify-start overflow-x-auto">
                   <div
                     className="px-4 py-5 sm:p-6"
-                    dangerouslySetInnerHTML={{ __html: data?.query }}
+                    dangerouslySetInnerHTML={{ __html: data?.query as string }}
                   ></div>
                 </div>
               </div>
@@ -184,7 +184,7 @@ export default function Search() {
           <div className="mx-auto max-w-7xl pb-12">
             <div className="mx-auto max-w-7xl  bg-white rounded-lg shadow">
               <div className="">
-                {data?.results?.length > 0 && (
+                {(data as SearchResult).results?.length > 0 && (
                   <DynamicTable data={data?.results}></DynamicTable>
                 )}
               </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState, Fragment } from "react";
-import { api } from "../api";
+import { SessionResult, api } from "../api";
 import { isApiError } from "../api";
 import { useNavigate } from "react-router-dom";
 import { Routes } from "../router";
@@ -8,8 +8,6 @@ import { useSession } from "../Providers/SessionProvider";
 import { Combobox, Transition } from "@headlessui/react";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import { FolderIcon } from "@heroicons/react/24/outline";
-
-type Session = { session_id: string; dsn: string };
 
 function classNames(...classes: any[]) {
   return classes.filter(Boolean).join(" ");
@@ -21,7 +19,7 @@ export const Connection = () => {
   const [session, setSession] = useSession();
   const [inputEnabled, setInputEnabled] = useState(true);
   const [query, setQuery] = useState("");
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<SessionResult[]>([]);
 
   // Setup session to be null when the component is mounted
   useEffect(() => {
