@@ -11,6 +11,12 @@ export const isApiError = <T>(result: T | ApiError): result is ApiError => {
   return (result as ApiError).status === "error";
 };
 
+type HealthcheckResult = { status: "ok" } | ApiError;
+const healthcheck = async (): Promise<HealthcheckResult> => {
+  const response = await axios.get<HealthcheckResult>(`${baseUrl}/healthcheck`);
+  return response.data;
+};
+
 type ConnectResult = { status: "ok"; session_id: string } | ApiError;
 const connect = async (connectionString: string): Promise<ConnectResult> => {
   const response = await axios.post<ConnectResult>(`${baseUrl}/connect`, {
@@ -53,6 +59,7 @@ const listSessions = async (): Promise<ListSessionsResult> => {
 };
 
 export const api = {
+  healthcheck,
   connect,
   search,
   listSessions,
