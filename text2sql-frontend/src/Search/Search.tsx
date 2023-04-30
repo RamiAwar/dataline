@@ -167,31 +167,36 @@ export default function Search() {
         </header>
       </div>
 
-      <Transition.Root show={data !== null} appear>
-        <main className="py-10 flex flex-col">
-          <div className="items-center mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-            <div className="sm:px-6 max-w-4xl lg:px-8 rounded-lg shadow bg-gray-50">
-              <div className="px-4 sm:px-6 lg:px-8">
-                <div className="sm:flex sm:items-center sm:justify-start overflow-x-auto">
-                  <div
-                    className="px-4 py-5 sm:p-6"
-                    dangerouslySetInnerHTML={{ __html: data?.query as string }}
-                  ></div>
+      {data !== null && (
+        <Transition.Root show={true} appear>
+          <main className="py-10 flex flex-col">
+            <div className="items-center mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+              <div className="sm:px-6 max-w-4xl lg:px-8 rounded-lg shadow bg-gray-50">
+                <div className="px-4 sm:px-6 lg:px-8">
+                  <div className="sm:flex sm:items-center sm:justify-start overflow-x-auto">
+                    <div
+                      className="px-4 py-5 sm:p-6"
+                      dangerouslySetInnerHTML={{
+                        __html: data?.query as string,
+                      }}
+                    ></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="mx-auto max-w-7xl pb-12">
-            <div className="mx-auto max-w-7xl  bg-white rounded-lg shadow">
-              <div className="">
-                {(data as SearchResult).results?.length > 0 && (
-                  <DynamicTable data={data?.results}></DynamicTable>
-                )}
+
+            <div className="mx-auto max-w-7xl pb-12">
+              <div className="mx-auto max-w-7xl  bg-white rounded-lg shadow">
+                <div className="">
+                  {(data as SearchResult).results?.length > 0 && (
+                    <DynamicTable data={data?.results}></DynamicTable>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </main>
-      </Transition.Root>
+          </main>
+        </Transition.Root>
+      )}
     </div>
   );
 }
