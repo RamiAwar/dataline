@@ -1,11 +1,14 @@
+import argparse
 import json
 import logging
+import os
 from datetime import date
 from decimal import Decimal
 from uuid import uuid4
 
 import sqlparse
-from fastapi import FastAPI, Request, Response
+import uvicorn
+from fastapi import FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from gpt_index.indices.struct_store import SQLContextContainerBuilder
@@ -28,6 +31,8 @@ app = FastAPI()
 origins = ["*"]
 loaded = None
 
+_environ = os.environ.copy()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -35,6 +40,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+async def check_secret(secret_token: str = Header(None)) -> None:
+    """Dependency to check if a secret token is valid.
+    This ensures only applications with the secret key specified when starting
+    the server or in environment variable is able to post to the server.
+    If no secret token is specified while starting or in environment variables
+    this dependency does nothing.
+
+    Args:
+        secret_token (str, optional): Secret token sent with request.
+            Defaults to None.
+
+    Raises:
+        HTTPException: Secret Token invalid
+    """
+    if _environ.get("SECRET_TOKEN") and secret_token != _environ.get("SECRET_TOKEN"):
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 async def catch_exceptions_middleware(request: Request, call_next):
@@ -52,6 +75,11 @@ app.middleware("http")(catch_exceptions_middleware)
 
 class Dsn(BaseModel):
     dsn: str
+
+
+@app.get("/healthcheck")
+async def healthcheck():
+    return {"status": "ok"}
 
 
 @app.post("/connect")
@@ -236,3 +264,51 @@ class AlchemyJSONEncoder(json.JSONEncoder):
         # rest of objects are handled by default JSONEncoder like 'Datetime',
         # 'UUID', 'Markdown' and various others
         return json.JSONEncoder.default(self, o)
+
+
+def init_argparse() -> argparse.ArgumentParser:
+    """Initialises argparse and returns an argument parser
+
+    Returns:
+        argparse.ArgumentParser: Object for parsing CLI arguments
+    """
+    parser = argparse.ArgumentParser(
+        description="Launches the Python API",
+    )
+    parser.add_argument(
+        "--host",
+        dest="host",
+        default="127.0.0.1",
+        help="Bind socket to host. [default: %(default)s]",
+    )
+    parser.add_argument(
+        "--port",
+        dest="port",
+        default=7377,
+        type=int,
+        help="Bind socket to port. [default: %(default)s]",
+    )
+    parser.add_argument(
+        "--log-level",
+        dest="log_level",
+        default="info",
+        choices=["critical", "error", "warning", "info", "debug", "trace"],
+        help="Log level. [default: %(default)s]",
+    )
+    parser.add_argument(
+        "--secret",
+        dest="secret",
+        default=None,
+        help="Server secret token. [default: %(default)s]",
+    )
+    return parser
+
+
+if __name__ == "__main__":
+    parser = init_argparse()
+    args = parser.parse_args()
+
+    if args.secret:
+        _environ["SECRET_TOKEN"] = args.secret
+
+    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)

@@ -32,6 +32,12 @@ class CustomSQLDatabase(SQLDatabase):
             return {}, {}
 
         with self._engine.connect() as connection:
+            connection = connection.execution_options(
+                isolation_level="SERIALIZABLE",
+                postgresql_readonly=True,
+                postgresql_deferrable=True
+            )
+
             if command.strip().endswith(";"):
                 command = command.strip()[:-1]
 
@@ -41,8 +47,10 @@ class CustomSQLDatabase(SQLDatabase):
                 command = f"{command} LIMIT {limit};"
 
             q = text(command)
-            cursor = connection.execute(q)
-            if cursor.returns_rows:
-                result = cursor.fetchall()
-                return result, {"result": result}
+
+            with connection.begin():
+                cursor = connection.execute(q)
+                if cursor.returns_rows:
+                    result = cursor.fetchall()
+                    return result, {"result": result}
         return {}, {}
