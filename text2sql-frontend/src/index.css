@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-    @apply bg-gray-200;
+    @apply bg-white;
 }
 
 /* PYGMENTS STYLE FOR SQL RENDERING */
