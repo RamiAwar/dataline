@@ -17,6 +17,8 @@ gpt-index = "^0.5.15"
 pygments-pprint-sql = "^0.1.0"
 sql-formatter = "^0.6.2"
 pytest = "^7.3.1"
+pymysql = "^1.0.3"
+cryptography = "^40.0.2"
 
 
 [tool.poetry.group.dev.dependencies]

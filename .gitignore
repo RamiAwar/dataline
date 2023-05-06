@@ -1,0 +1,7 @@
+db.sqlite3
+
+*schema_index.json
+
+.vscode/
+
+src-tauri/

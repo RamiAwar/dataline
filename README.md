@@ -79,3 +79,21 @@ For the frontend, React app with npm (started off as Svelte, then moved to React
 npm i
 npm run dev
 ```
+
+
+### ⚠️ Connecting to the database
+
+Make sure to add the 'connector' to your database connection string. 
+
+If using Postgres, please use psycopg2:
+
+```bash
+postgresql+psycopg2://postgres:secret@localhost:5432/adventureworks
+```
+
+For MySQL, please use pymysql:
+```bash
+mysql+pymysql://root@localhost:3306/mydatabase
+```
+
+I haven't tested connecting with other connectors, so it might cause issues. If you manage to make it work with others, please let me know or contribute to the docs!
