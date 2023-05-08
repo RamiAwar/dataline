@@ -2,7 +2,7 @@
 
 import logging
 from contextvars import ContextVar
-from typing import Dict, Tuple
+from typing import Dict, Iterable, Tuple
 
 from llama_index.langchain_helpers.sql_wrapper import SQLDatabase
 from sqlalchemy import text
@@ -15,6 +15,10 @@ request_execute = ContextVar[bool]("request_execute")
 
 class CustomSQLDatabase(SQLDatabase):
     """Custom SQL Database wrapper"""
+
+    def get_table_names(self) -> Iterable[str]:
+        """Get names of tables available."""
+        return self.get_usable_table_names()
 
     def run_sql(self, command: str) -> Tuple[str, Dict]:
         """Execute a SQL statement and return a string representing the results.

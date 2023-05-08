@@ -1,4 +1,5 @@
 from langchain import OpenAI
+from langchain.chat_models import ChatOpenAI
 from llama_index import GPTSimpleVectorIndex, GPTSQLStructStoreIndex, LLMPredictor
 from llama_index.indices.service_context import ServiceContext
 from sqlalchemy import create_engine, inspect
@@ -19,10 +20,10 @@ class QueryService:
         dsn: str,
         schema_index_file: str,
         model_name: str = "gpt-3.5-turbo",
-        temperature: int = 0,
+        temperature: int = 0.2,
     ):
         self.llm_predictor = LLMPredictor(
-            llm=OpenAI(temperature=temperature, model_name=model_name, max_tokens=1024)
+            llm=OpenAI(temperature=temperature, model_name="text-davinci-003")
         )
         self.service_context = ServiceContext.from_defaults(
             llm_predictor=self.llm_predictor

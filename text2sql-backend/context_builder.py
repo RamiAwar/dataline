@@ -34,6 +34,33 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
 
     """
 
+    def __init__(
+        self,
+        sql_database: SQLDatabase,
+        context_dict: Optional[Dict[str, str]] = None,
+        context_str: Optional[str] = None,
+    ):
+        """Initialize params."""
+        self.sql_database = sql_database
+
+        # if context_dict provided, validate that all keys are valid table names
+        if context_dict is not None:
+            # validate context_dict keys are valid table names
+            context_keys = set(context_dict.keys())
+            if not context_keys.issubset(
+                set(self.sql_database.get_usable_table_names())
+            ):
+                raise ValueError(
+                    "Invalid context table names: "
+                    f"{context_keys - set(self.sql_database.get_usable_table_names())}"
+                )
+        self.context_dict = context_dict or {}
+        # build full context from sql_database
+        self.full_context_dict = self._build_context_from_sql_database(
+            self.sql_database, current_context=self.context_dict
+        )
+        self.context_str = context_str
+
     def query_index_for_context(
         self,
         index: BaseGPTIndex,
