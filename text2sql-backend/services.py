@@ -10,7 +10,6 @@ from sql_wrapper import CustomSQLDatabase
 CONTEXT_QUERY_TEMPLATE = (
     "Please return the relevant table names in a comma separated list like 'table1,table2'"
     "for the following query: '{orig_query_str}' "
-    "If you couldn't find any tables, return the string 'No tables found'"
 )
 
 
@@ -54,7 +53,7 @@ class QueryService:
         )
 
         # If no table schemas found for context, raise error
-        if context_str.strip() == "No tables found":
+        if context_str.strip() == "":
             raise RelatedTablesNotFoundError
 
         # Query with table context
