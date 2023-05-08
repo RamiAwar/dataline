@@ -11,8 +11,7 @@ import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from gpt_index.indices.struct_store import SQLContextContainerBuilder
-from llama_index import GPTSimpleVectorIndex, GPTSQLStructStoreIndex, SQLDatabase
+from llama_index import GPTSimpleVectorIndex, SQLDatabase
 from pydantic import BaseModel
 from pygments import formatters, highlight, lexers
 from pygments_pprint_sql import SqlFilter
@@ -21,7 +20,10 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
 import db
-from sql_wrapper import CustomSQLDatabase, request_execute, request_limit
+from context_builder import CustomSQLContextContainerBuilder
+from errors import RelatedTablesNotFoundError
+from services import QueryService
+from sql_wrapper import request_execute, request_limit
 
 logger = logging.getLogger(__name__)
 lexer = lexers.MySqlLexer()
@@ -40,6 +42,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Query service instances - one per db connection
+query_services = {}
 
 
 async def check_secret(secret_token: str = Header(None)) -> None:
@@ -101,6 +106,7 @@ async def connect_db(dsn: Dsn):
     # If new DSN, create new session and schema
     session_id = uuid4().hex
     db.insert_session(session_id, dsn.dsn)
+
     # Create index
     create_schema_index(session_id)
     return {"status": "ok", "session_id": session_id}
@@ -117,10 +123,6 @@ async def get_sessions():
 
 @app.get("/query")
 async def query(session_id: str, query: str, limit: int = 10, execute: bool = False):
-    global loaded
-    # if loaded:
-    #     return loaded
-
     # Get dsn from session_id
     session = db.get_session(session_id)
     if not session:
@@ -129,33 +131,24 @@ async def query(session_id: str, query: str, limit: int = 10, execute: bool = Fa
     request_limit.set(limit)
     request_execute.set(execute)
 
-    # Perform query using index
-    engine = create_engine(session[1])
-    insp = inspect(engine)
-    table_names = insp.get_table_names()
-    sql_db = CustomSQLDatabase(engine, include_tables=table_names)
-    context_builder = SQLContextContainerBuilder(sql_db)
-    schema_index_file = db.get_schema_index(session_id)
-    table_schema_index = GPTSimpleVectorIndex.load_from_disk(schema_index_file)
+    # Get query service instance
+    if session_id not in query_services:
+        schema = db.get_schema_index(session_id)
+        query_services[session_id] = QueryService(
+            dsn=session[1], schema_index_file=schema
+        )
 
-    query_index = GPTSQLStructStoreIndex(
-        [],
-        sql_database=sql_db,
-        table_name=table_names,
-    )
+    # TODO: Would be nice to have our own internal response type to support other LLMs
+    try:
+        response = query_services[session_id].query(query)
+    except RelatedTablesNotFoundError:
+        return {
+            "status": "error",
+            "message": "Could not find relevant tables in your database from your query",
+        }
 
-    # query the table schema index using the helper method
-    # to retrieve table context
-    context_builder.query_index_for_context(
-        index=table_schema_index, query_str=query, store_context_str=True
-    )
-    context_container = context_builder.build_context_container()
-
-    # query the SQL index with the table context
-    response = query_index.query(query, sql_context_container=context_container)
     if not response.response and execute:
-        # TODO: REmove
-        loaded = {"status": "error", "message": "Failed to parse query"}
+        # TODO: Maybe return query here in addition to error message
         return {"status": "error", "message": "Failed to parse query"}
 
     sql_query = response.extra_info["sql_query"]
@@ -170,7 +163,10 @@ async def query(session_id: str, query: str, limit: int = 10, execute: bool = Fa
         }
 
     results = []
-    results.append(get_selected_columns(sql_query))
+    # Add columns as header row
+    columns = response.extra_info.get("columns", [])
+    results.append(columns)
+    # Fill out results (we can also get those from extra_info if clearer)
     for r in response.response:
         results.append(list(r._mapping.values()))
 
@@ -180,9 +176,6 @@ async def query(session_id: str, query: str, limit: int = 10, execute: bool = Fa
         "query": rendered_sql_query,
         "raw_query": sql_query,
     }
-    loaded = Response(
-        content=json.dumps(res, cls=AlchemyJSONEncoder), media_type="application/json"
-    )
     return Response(
         content=json.dumps(res, cls=AlchemyJSONEncoder), media_type="application/json"
     )
@@ -201,7 +194,7 @@ def create_schema_index(session_id: str):
     sql_db = SQLDatabase(engine, include_tables=table_names)
 
     # build a vector index from the table schema information
-    context_builder = SQLContextContainerBuilder(sql_db)
+    context_builder = CustomSQLContextContainerBuilder(sql_db)
     table_schema_index = context_builder.derive_index_from_context(GPTSimpleVectorIndex)
 
     # save the index to disk
@@ -216,24 +209,6 @@ def create_schema_index(session_id: str):
 
 def sql2html(sql) -> str:
     return highlight(sql, lexer, formatters.HtmlFormatter())
-
-
-def get_selected_columns(query):
-    tokens = sqlparse.parse(query)[0].tokens
-    found_select = False
-    for token in tokens:
-        if found_select:
-            if isinstance(token, sqlparse.sql.IdentifierList):
-                return [
-                    col.value.split(" ")[-1].strip("`").rpartition(".")[-1]
-                    for col in token.tokens
-                    if isinstance(col, sqlparse.sql.Identifier)
-                ]
-        else:
-            found_select = token.match(
-                sqlparse.tokens.Keyword.DML, ["select", "SELECT"]
-            )
-    return []
 
 
 class AlchemyJSONEncoder(json.JSONEncoder):

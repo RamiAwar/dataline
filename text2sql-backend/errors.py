@@ -1,2 +1,6 @@
 class DuplicateError(Exception):
     ...
+
+
+class RelatedTablesNotFoundError(Exception):
+    ...

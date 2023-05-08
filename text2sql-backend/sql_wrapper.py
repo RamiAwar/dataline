@@ -35,7 +35,7 @@ class CustomSQLDatabase(SQLDatabase):
             connection = connection.execution_options(
                 isolation_level="SERIALIZABLE",
                 postgresql_readonly=True,
-                postgresql_deferrable=True
+                postgresql_deferrable=True,
             )
 
             if command.strip().endswith(";"):
@@ -50,7 +50,8 @@ class CustomSQLDatabase(SQLDatabase):
 
             with connection.begin():
                 cursor = connection.execute(q)
+
                 if cursor.returns_rows:
                     result = cursor.fetchall()
-                    return result, {"result": result}
+                    return result, {"result": result, "columns": list(cursor.keys())}
         return {}, {}

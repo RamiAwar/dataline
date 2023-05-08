@@ -1,6 +1,6 @@
 db.sqlite3
 
-*schema_index.json
+*_schema_index.json
 
 .vscode/
 
