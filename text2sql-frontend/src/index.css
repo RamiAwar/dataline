@@ -2,8 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    @apply bg-white;
+:root {
+  --gradient-x: 0;
+  --gradient-y: 0;
+}
+
+.border-gradient {
+  position: relative;
+}
+
+.border-gradient::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  z-index: -1;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+  background-size: 100% 100%;
+  background-position: var(--gradient-x, 50%) var(--gradient-y, 50%);
+  background-repeat: stretch;
 }
 
 /* PYGMENTS STYLE FOR SQL RENDERING */

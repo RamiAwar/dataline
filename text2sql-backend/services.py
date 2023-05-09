@@ -23,7 +23,7 @@ class QueryService:
         temperature: int = 0.2,
     ):
         self.llm_predictor = LLMPredictor(
-            llm=OpenAI(temperature=temperature, model_name="text-davinci-003")
+            llm=OpenAI(temperature=temperature, model_name=model_name)
         )
         self.service_context = ServiceContext.from_defaults(
             llm_predictor=self.llm_predictor

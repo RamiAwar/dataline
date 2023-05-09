@@ -3,6 +3,7 @@ import { api } from "../api";
 
 import { useNavigate } from "react-router-dom";
 import { Routes } from "../router";
+import { CenteredLayout } from "../Layouts/CenteredLayout";
 
 export const Setup = () => {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export const Setup = () => {
         clearInterval(intervalId as NodeJS.Timeout);
         alert("Failed to connect to backend.");
         window.close();
-      }, 15000);
+      }, 20000);
     };
 
     startHealthCheck();
@@ -39,20 +40,19 @@ export const Setup = () => {
   }, [navigate]);
 
   return (
-    <div className="bg-white pt-16">
-      <main>
-        {/* Pricing section */}
-        <div className="mx-auto max-w-7xl px-6 sm:mt-32 lg:px-8">
-          <div className="mx-auto max-w-4xl text-center text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 flex justify-center">
-            <p className="mt-2 ">Setting things up</p>
-            <div className="mt-2 ml-2 flex align-bottom">
-              <div className="mr-1 animate-bounce transition-all">.</div>
-              <div className="mr-1 animate-bounce200 transition-all">.</div>
-              <div className="mr-1 animate-bounce400 transition-all">.</div>
-            </div>
+    <CenteredLayout>
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center flex justify-center items-end dark:text-white text-4xl">
+          <p className="font-semibold tracking-tight text-white sm:text-4xl">
+            Setting things up
+          </p>
+          <div className="ml-2 flex text-3xl">
+            <div className="mr-1 animate-bounce transition-all">.</div>
+            <div className="mr-1 animate-bounce200 transition-all">.</div>
+            <div className="mr-1 animate-bounce400 transition-all">.</div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </CenteredLayout>
   );
 };

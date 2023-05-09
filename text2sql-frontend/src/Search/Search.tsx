@@ -17,7 +17,7 @@ import { Transition } from "@headlessui/react";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import { Spinner } from "../Spinner/Spinner";
 
-import { api, isApiError, SearchResult, ApiSearchResult } from "../api";
+import { api, isApiError, SearchResult } from "../api";
 import { useSession } from "../Providers/SessionProvider";
 import { useNavigate } from "react-router-dom";
 import { Routes } from "../router";
