@@ -7,22 +7,8 @@ export const CenteredLayout = ({ children }: { children: React.ReactNode }) => {
   const targetPosition = useRef({ x: 0, y: 0 });
   const animationFrameId = useRef<number | null>(null);
 
-  const [cursorPositionPercentage, setCursorPositionPercentage] = useState({
-    x: 0,
-    y: 0,
-  });
-
   const handleMouseMove = (event: { clientX: any; clientY: any }) => {
     targetPosition.current = { x: event.clientX, y: event.clientY };
-
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    const cursorPositionXPercentage = (event.clientX / screenWidth) * 100;
-    const cursorPositionYPercentage = (event.clientY / screenHeight) * 100;
-    setCursorPositionPercentage({
-      x: cursorPositionXPercentage,
-      y: cursorPositionYPercentage,
-    });
   };
 
   useEffect(() => {
@@ -117,7 +103,7 @@ export const CenteredLayout = ({ children }: { children: React.ReactNode }) => {
             src={logo}
           ></img>
           <h1 className="my-10 text-3xl font-bold tracking-tight text-center text-white sm:text-6xl">
-            DataBeam
+            DataLine
           </h1>
         </div>
         <div className="">{children}</div>

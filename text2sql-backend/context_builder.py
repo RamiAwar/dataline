@@ -1,21 +1,20 @@
 """SQL Container builder."""
 
 
-from typing import Any, Dict, List, Optional, Type, Union
+import logging
+from typing import Any, Dict, Optional, Union
 
 from llama_index.indices.base import BaseGPTIndex
-from llama_index.indices.common.struct_store.base import SQLDocumentContextBuilder
-from llama_index.indices.common.struct_store.schema import SQLContextContainer
 from llama_index.indices.query.schema import QueryBundle
 from llama_index.indices.struct_store import SQLContextContainerBuilder
 from llama_index.langchain_helpers.sql_wrapper import SQLDatabase
-from llama_index.readers.base import Document
-from llama_index.schema import BaseDocument
 
 DEFAULT_CONTEXT_QUERY_TMPL = (
     "Please return the relevant table names in a comma separated list like 'table1,table2' "
     "for the following query: {orig_query_str}"
 )
+
+logger = logging.getLogger(__name__)
 
 
 class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
@@ -88,6 +87,8 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             context_query_str = query_tmpl.format(orig_query_str=query_str)
         response = index.query(context_query_str, **index_kwargs)
 
+        logger.debug(f"Context query: {context_query_str}")
+        logger.debug(f"Context query response: {response}")
         table_names = str(response).strip().split(",")
         context_str = ""
         for table_name in table_names:

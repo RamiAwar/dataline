@@ -20,7 +20,7 @@ class QueryService:
         dsn: str,
         schema_index_file: str,
         model_name: str = "gpt-3.5-turbo",
-        temperature: int = 0.2,
+        temperature: int = 0.0,
     ):
         self.llm_predictor = LLMPredictor(
             llm=OpenAI(temperature=temperature, model_name=model_name)

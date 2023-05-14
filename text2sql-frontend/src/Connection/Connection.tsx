@@ -37,13 +37,6 @@ export const Connection = () => {
     getSessions();
   }, [setSession]);
 
-  // Navigate to search if session is set
-  useEffect(() => {
-    if (session) {
-      navigate(Routes.Search);
-    }
-  }, [session, navigate]);
-
   const disableInput = () => {
     setInputEnabled(false);
   };
@@ -60,6 +53,7 @@ export const Connection = () => {
       }
 
       setSession(result.session_id);
+      navigate(Routes.Search);
     } catch (e) {
       console.log(e);
       alert("API Error");
