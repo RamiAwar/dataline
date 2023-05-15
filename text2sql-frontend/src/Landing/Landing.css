@@ -1,0 +1,39 @@
+@keyframes smoothAnimation {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  10% {
+    transform: translate3d(100px, -150px, 0) rotate(3deg);
+  }
+  20% {
+    transform: translate3d(60px, 100px, 0) rotate(6deg);
+  }
+  30% {
+    transform: translate3d(100px, 60px, 0) rotate(-3deg);
+  }
+  40% {
+    transform: translate3d(0, 100px, 0) rotate(-6deg);
+  }
+  50% {
+    transform: translate3d(-100px, 150px, 0) rotate(3deg);
+  }
+  60% {
+    transform: translate3d(-60px, -100px, 0) rotate(6deg);
+  }
+  70% {
+    transform: translate3d(-100px, -60px, 0) rotate(-3deg);
+  }
+  80% {
+    transform: translate3d(0, -100px, 0) rotate(-6deg);
+  }
+  90% {
+    transform: translate3d(100px, -150px, 0) rotate(3deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+.complex-animation {
+  animation: smoothAnimation 32s infinite ease-in-out;
+}

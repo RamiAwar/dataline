@@ -10,8 +10,8 @@ export const Setup = () => {
 
   // Navigate to connection if backend is live
   useEffect(() => {
-    let intervalId: NodeJS.Timeout | null = null;
-    let timeoutId: NodeJS.Timeout | null = null;
+    let intervalId: string | number | NodeJS.Timeout | null | undefined = null;
+    let timeoutId: string | number | NodeJS.Timeout | null | undefined = null;
 
     const checkBackendHealth = async () => {
       try {
@@ -25,7 +25,7 @@ export const Setup = () => {
     const startHealthCheck = async () => {
       intervalId = setInterval(checkBackendHealth, 50);
       timeoutId = setTimeout(() => {
-        clearInterval(intervalId as NodeJS.Timeout);
+        clearInterval(intervalId as number);
         alert("Failed to connect to backend.");
         window.close();
       }, 20000);
@@ -34,8 +34,8 @@ export const Setup = () => {
     startHealthCheck();
 
     return () => {
-      clearInterval(intervalId as NodeJS.Timeout);
-      clearTimeout(timeoutId as NodeJS.Timeout);
+      clearInterval(intervalId as number);
+      clearTimeout(timeoutId as number);
     };
   }, [navigate]);
 

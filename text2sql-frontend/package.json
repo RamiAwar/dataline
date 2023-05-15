@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "build:python": "pyinstaller -y ./text2sql-backend/main.spec",
+    "dist:mac": "npm run build:python && tauri build"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.14",
@@ -23,6 +25,7 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.2.3",
+    "@types/node": "^20.1.4",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@vitejs/plugin-react": "^3.1.0",

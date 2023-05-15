@@ -1,25 +1,44 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Connection } from "./Connection/Connection";
-import Search from "./Search/Search";
+import { Search } from "./Search/Search";
 import { Setup } from "./Setup/Setup";
+import { Landing } from "./Landing/Landing";
+import { BetaSignup } from "./BetaSignup/BetaSignup";
 
 export enum Routes {
-  Setup = "/",
+  Landing = "/",
+  BetaSignup = "/beta-signup",
+  Setup = "/setup",
   Connection = "/connect",
   Search = "/search",
 }
 
-export const router = createBrowserRouter([
+let routes = [
   {
-    path: Routes.Setup,
-    element: <Setup />,
+    path: Routes.BetaSignup,
+    element: <BetaSignup />,
   },
   {
-    path: Routes.Connection,
-    element: <Connection />,
+    path: Routes.Landing,
+    element: <Landing />,
   },
-  {
-    path: Routes.Search,
-    element: <Search />,
-  },
-]);
+];
+
+if (process.env.NODE_ENV === "local") {
+  routes.push(
+    {
+      path: Routes.Connection,
+      element: <Connection />,
+    },
+    {
+      path: Routes.Search,
+      element: <Search />,
+    },
+    {
+      path: Routes.Setup,
+      element: <Setup />,
+    }
+  );
+}
+
+export const router = createBrowserRouter([]);

@@ -26,7 +26,7 @@ import LimitNumberField from "../Inputs/LimitNumberField";
 import Toggle from "../Inputs/Toggle";
 import { Tooltip } from "flowbite-react";
 
-export default function Search() {
+export const Search = () => {
   const [query, setQuery] = useState("");
   const [data, setData] = useState<SearchResult | null>(null);
   const [inputEnabled, setInputEnabled] = useState(true);
@@ -199,4 +199,4 @@ export default function Search() {
       )}
     </div>
   );
-}
+};
