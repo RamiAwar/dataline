@@ -41,4 +41,4 @@ if (process.env.NODE_ENV === "local") {
   );
 }
 
-export const router = createBrowserRouter([]);
+export const router = createBrowserRouter(routes);
