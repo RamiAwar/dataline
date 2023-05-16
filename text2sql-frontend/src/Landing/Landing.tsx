@@ -66,12 +66,12 @@ export const Landing = () => {
           </div> */}
 
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-            <a
+            {/* <a
               href="/beta-signup"
               className="text-sm font-semibold leading-6 text-white"
             >
               Sign Up <span aria-hidden="true">&rarr;</span>
-            </a>
+            </a> */}
           </div>
         </nav>
 
@@ -110,14 +110,14 @@ export const Landing = () => {
                     </a>
                   ))}
                 </div>
-                <div className="py-6">
+                {/* <div className="py-6">
                   <a
                     href="#"
                     className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-white hover:bg-gray-800"
                   >
                     Log in
                   </a>
-                </div>
+                </div> */}
               </div>
             </div>
           </Dialog.Panel>
@@ -138,12 +138,12 @@ export const Landing = () => {
                 natural language.
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
-                <a
+                {/* <a
                   href="/beta-signup"
                   className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                 >
                   Join the beta
-                </a>
+                </a> */}
               </div>
             </div>
             <img
