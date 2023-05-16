@@ -39,7 +39,7 @@ export const BackgroundLayout = () => {
 
   return (
     <div className="">
-      <div className="relative">
+      <div className="relative invisible sm:visible">
         <svg
           className="absolute pointer-events-none -z-10 transform-gpu blur-7xl opacity-20"
           style={circleStyle}
