@@ -4,14 +4,14 @@ import logging
 import os
 from datetime import date
 from decimal import Decimal
+from typing import Dict
 from uuid import uuid4
 
-import sqlparse
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from llama_index import GPTSimpleVectorIndex, SQLDatabase
+from llama_index import GPTSimpleVectorIndex
 from pydantic import BaseModel
 from pygments import formatters, highlight, lexers
 from pygments_pprint_sql import SqlFilter
@@ -23,7 +23,7 @@ import db
 from context_builder import CustomSQLContextContainerBuilder
 from errors import RelatedTablesNotFoundError
 from services import QueryService
-from sql_wrapper import request_execute, request_limit
+from sql_wrapper import CustomSQLDatabase, request_execute, request_limit
 
 logger = logging.getLogger(__name__)
 lexer = lexers.MySqlLexer()
@@ -44,7 +44,7 @@ app.add_middleware(
 )
 
 # Query service instances - one per db connection
-query_services = {}
+query_services: Dict[str, QueryService] = {}
 
 
 async def check_secret(secret_token: str = Header(None)) -> None:
@@ -70,7 +70,7 @@ async def catch_exceptions_middleware(request: Request, call_next):
     try:
         return await call_next(request)
     except Exception as e:
-        logger.error(e)
+        logger.exception("internal_server_error")
         loaded = JSONResponse({"status": "error", "message": str(e)})
         return JSONResponse({"status": "error", "message": str(e)})
 
@@ -105,10 +105,13 @@ async def connect_db(dsn: Dsn):
 
     # If new DSN, create new session and schema
     session_id = uuid4().hex
-    db.insert_session(session_id, dsn.dsn)
 
     # Create index
-    create_schema_index(session_id)
+    create_schema_index(session_id=session_id, dsn=dsn.dsn)
+
+    # Insert session only if success
+    db.insert_session(session_id, dsn.dsn)
+
     return {"status": "ok", "session_id": session_id}
 
 
@@ -181,17 +184,12 @@ async def query(session_id: str, query: str, limit: int = 10, execute: bool = Fa
     )
 
 
-def create_schema_index(session_id: str):
-    # Get dsn from session_id
-    session = db.get_session(session_id)
-    if not session:
-        return {"status": "error", "message": "Invalid session_id"}
-
+def create_schema_index(session_id: str, dsn: str):
     # Create index for DB schema
-    engine = create_engine(session[1])
+    engine = create_engine(dsn)
     insp = inspect(engine)
     table_names = insp.get_table_names()
-    sql_db = SQLDatabase(engine, include_tables=table_names)
+    sql_db = CustomSQLDatabase(engine, include_tables=table_names)
 
     # build a vector index from the table schema information
     context_builder = CustomSQLContextContainerBuilder(sql_db)
@@ -204,7 +202,7 @@ def create_schema_index(session_id: str):
     # Mark session_id as indexed
     db.insert_schema_index(session_id, schema_index_name)
 
-    return {"status": "ok"}
+    return True
 
 
 def sql2html(sql) -> str:
