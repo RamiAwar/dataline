@@ -1,4 +1,5 @@
 import argparse
+import itertools
 import json
 import logging
 import os
@@ -18,11 +19,12 @@ from pygments_pprint_sql import SqlFilter
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import DeclarativeMeta
+from sse_starlette.sse import EventSourceResponse
 
 import db
 from context_builder import CustomSQLContextContainerBuilder
 from errors import RelatedTablesNotFoundError
-from services import QueryService
+from services import QueryService, StreamingQueryService
 from sql_wrapper import CustomSQLDatabase, request_execute, request_limit
 
 logger = logging.getLogger(__name__)
@@ -122,6 +124,31 @@ async def get_sessions():
         "status": "ok",
         "sessions": [{"session_id": x[0], "dsn": x[1]} for x in db.get_sessions()],
     }
+
+
+@app.get("/stream/query")
+async def streamed_query(
+    session_id: str, query: str, limit: int = 10, execute: bool = False
+):
+    # Get dsn from session_id
+    session = db.get_session(session_id)
+    if not session:
+        return {"status": "error", "message": "Invalid session_id"}
+
+    request_limit.set(limit)
+    request_execute.set(execute)
+
+    # Get query service instance
+    if session_id not in query_services:
+        schema = db.get_schema_index(session_id)
+        query_services[session_id] = StreamingQueryService(
+            dsn=session[1], schema_index_file=schema
+        )
+
+    # TODO: Would be nice to have our own internal response type to support other LLMs
+    response = query_services[session_id].query(query)
+
+    return EventSourceResponse(response)
 
 
 @app.get("/query")

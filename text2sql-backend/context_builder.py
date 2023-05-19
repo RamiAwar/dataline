@@ -9,6 +9,7 @@ from llama_index.indices.query.schema import QueryBundle
 from llama_index.indices.struct_store import SQLContextContainerBuilder
 from llama_index.langchain_helpers.sql_wrapper import SQLDatabase
 
+from errors import RelatedTablesNotFoundError
 from sql_wrapper import CustomSQLDatabase
 
 DEFAULT_CONTEXT_QUERY_TMPL = (
@@ -130,8 +131,16 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             # If autocorrect not complete, try reasking
             if invalid_table_names:
                 context_query_str = f"""You returned {str(response)} but that contained invalid table names: {invalid_table_names}.\n{query_tmpl.format(orig_query_str=query_str)}"""
-                logger.debug(f"Reasking with query: {context_query_str}")
+                logger.debug(
+                    f"Invalid table names: Reasking with query: {context_query_str}"
+                )
                 response = index.query(context_query_str, **index_kwargs)
+                table_names = str(response).strip().split(",")
+                if any(
+                    table_name not in self.sql_database.get_table_names()
+                    for table_name in table_names
+                ):
+                    raise RelatedTablesNotFoundError()
 
         context_str = ""
         for table_name in table_names:
