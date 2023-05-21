@@ -106,7 +106,7 @@ export const CenteredLayout = ({ children }: { children: React.ReactNode }) => {
             DataLine
           </h1>
         </div>
-        <div className="">{children}</div>
+        <div className="w-full">{children}</div>
       </div>
     </div>
   );

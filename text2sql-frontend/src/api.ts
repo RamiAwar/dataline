@@ -1,4 +1,5 @@
 import axios from "axios";
+import { IConversationResult } from "./Conversation/types";
 
 const baseUrl = "http://localhost:7377";
 
@@ -58,9 +59,31 @@ const listSessions = async (): Promise<ListSessionsResult> => {
   return response.data;
 };
 
+export type Message = {};
+export type MessagesResult = { messages: Message[] };
+const getMessages = async (conversationId: string): Promise<MessagesResult> => {
+  const response = await axios.get<MessagesResult>(`${baseUrl}/messages`, {
+    params: {
+      conversation_id: conversationId,
+    },
+  });
+  return response.data;
+};
+
+export type ListConversations =
+  | { status: "ok"; conversations: IConversationResult[] }
+  | ApiError;
+const getConversations = async (): Promise<ListConversations> => {
+  const response = await axios.get<ListConversations>(
+    `${baseUrl}/conversations`
+  );
+  return response.data;
+};
+
 export const api = {
   healthcheck,
   connect,
   search,
   listSessions,
+  getConversations,
 };

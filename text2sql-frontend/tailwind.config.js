@@ -8,6 +8,11 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
     "./node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}",
   ],
+  variants: {
+    extend: {
+      display: ["group-hover"],
+    },
+  },
   theme: {
     extend: {
       fontFamily: {
@@ -24,6 +29,9 @@ export default {
         "7xl": "160px",
       },
     },
+  },
+  extend: {
+    display: ["group-hover"],
   },
   plugins: [require("@tailwindcss/forms"), require("flowbite/plugin")],
 };

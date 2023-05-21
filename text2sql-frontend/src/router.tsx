@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Connection } from "./Connection/Connection";
-import { Search } from "./Search/Search";
+import { Home } from "./Home/Home";
 import { Setup } from "./Setup/Setup";
 import { Landing } from "./Landing/Landing";
 import { BetaSignup } from "./BetaSignup/BetaSignup";
@@ -10,7 +10,7 @@ export enum Routes {
   BetaSignup = "/beta-signup",
   Setup = "/setup",
   Connection = "/connect",
-  Search = "/search",
+  Home = "/home",
 }
 
 let routes = [
@@ -31,8 +31,8 @@ if (process.env.NODE_ENV === "local") {
       element: <Connection />,
     },
     {
-      path: Routes.Search,
-      element: <Search />,
+      path: Routes.Home,
+      element: <Home />,
     },
     {
       path: Routes.Setup,

@@ -98,7 +98,7 @@ export const Connection = () => {
                           ? "text-gray-900 dark:text-white"
                           : "text-gray-400 dark:text-gray-400"
                       }`}
-                      placeholder="Enter your database DSN..."
+                      placeholder="Enter your database DSN or connection string ..."
                       onChange={(event) => {
                         event.preventDefault();
                         setQuery(event.target.value);
@@ -122,6 +122,7 @@ export const Connection = () => {
                         <h2 className="mb-2 mt-4 px-3 text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-200">
                           Recent connections
                         </h2>
+
                         <ul className="text-sm sm:text-md text-gray-700 dark:text-gray-400">
                           {sessions.map((session) => (
                             <Combobox.Option
@@ -152,7 +153,7 @@ export const Connection = () => {
                                   </span>
                                   {active && (
                                     <span className="ml-3 flex-none text-indigo-100 dark:text-gray-400">
-                                      Fill in...
+                                      Fill in...{" "}
                                     </span>
                                   )}
                                 </>
@@ -171,8 +172,8 @@ export const Connection = () => {
                         aria-hidden="true"
                       />
                       <p className="mt-4 text-sm sm:text-md text-gray-900 dark:text-gray-200">
-                        We couldn't find any projects with that term. Please try
-                        again.
+                        We couldn't find any connections with that name. Please
+                        try again.
                       </p>
                     </div>
                   )}
