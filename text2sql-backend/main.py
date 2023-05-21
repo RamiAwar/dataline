@@ -5,11 +5,11 @@ import logging
 import os
 from datetime import date
 from decimal import Decimal
-from typing import Dict
+from typing import Annotated, Dict, List
 from uuid import uuid4
 
 import uvicorn
-from fastapi import FastAPI, Header, HTTPException, Request, Response
+from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from llama_index import GPTSimpleVectorIndex
@@ -128,9 +128,13 @@ async def get_sessions():
 
 @app.get("/stream/query")
 async def streamed_query(
-    session_id: str, query: str, limit: int = 10, execute: bool = False
+    conversation_id: str, query: str, limit: int = 10, execute: bool = False
 ):
+    # Get conversation
+    conversation = db.get_conversation(conversation_id)
+
     # Get dsn from session_id
+    session_id = conversation.session_id
     session = db.get_session(session_id)
     if not session:
         return {"status": "error", "message": "Invalid session_id"}
@@ -138,17 +142,43 @@ async def streamed_query(
     request_limit.set(limit)
     request_execute.set(execute)
 
-    # Get query service instance
+    # Get streaming query service instance
     if session_id not in query_services:
         schema = db.get_schema_index(session_id)
         query_services[session_id] = StreamingQueryService(
             dsn=session[1], schema_index_file=schema
         )
 
-    # TODO: Would be nice to have our own internal response type to support other LLMs
-    response = query_services[session_id].query(query)
-
+    # Streaming query service handles updating conversation
+    response = query_services[session_id].query(query, conversation_id=conversation_id)
     return EventSourceResponse(response)
+
+
+@app.get("/conversations")
+async def conversations():
+    return {
+        "status": "ok",
+        "conversations": db.get_conversations_with_messages_with_results(),
+    }
+
+
+@app.post("/conversation")
+async def create_conversation(
+    session_id: Annotated[str, Body()], name: Annotated[str, Body()]
+):
+    conversation_id = db.create_conversation(session_id=session_id, name=name)
+    return {"status": "ok", "conversation_id": conversation_id}
+
+
+@app.delete("/conversation")
+async def delete_conversation(conversation_id: Annotated[str, Body()]):
+    db.delete_conversation(conversation_id=conversation_id)
+    return {"status": "ok"}
+
+
+@app.get("/messages")
+async def messages(conversation_id: str):
+    return {"status": "ok", "messages": db.get_messages_with_results(conversation_id)}
 
 
 @app.get("/query")
@@ -168,7 +198,6 @@ async def query(session_id: str, query: str, limit: int = 10, execute: bool = Fa
             dsn=session[1], schema_index_file=schema
         )
 
-    # TODO: Would be nice to have our own internal response type to support other LLMs
     try:
         response = query_services[session_id].query(query)
     except RelatedTablesNotFoundError:

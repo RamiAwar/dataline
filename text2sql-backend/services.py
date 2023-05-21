@@ -10,6 +10,7 @@ from llama_index.indices.service_context import ServiceContext
 from openai import ChatCompletion
 from sqlalchemy import create_engine, inspect
 
+import db
 from context_builder import CustomSQLContextContainerBuilder
 from errors import RelatedTablesNotFoundError
 from sql_wrapper import CustomSQLDatabase
@@ -65,7 +66,6 @@ class StreamingSQLQueryManager:
         model: Optional[str] = "gpt-3.5-turbo",
         embedding_model: Optional[str] = "text-embedding-ada-002",
         temperature: Optional[int] = 0.0,
-        message_history: List[Dict[str, Any]] = [],
     ):
         self.llm_api = functools.partial(
             openai.ChatCompletion.create,
@@ -74,7 +74,6 @@ class StreamingSQLQueryManager:
             stream=True,
         )
         self.embedding_model = OpenAIEmbedding(model=embedding_model)
-        self.message_history = message_history
 
         # TODO: Create conversation in DB if no message history is provided
 
@@ -105,7 +104,6 @@ class StreamingSQLQueryManager:
             response += token
             yield token
 
-        # self.message_history.append({"role": "assistant", "content": response})
         self.latest_response = response
 
     def query(
@@ -114,6 +112,7 @@ class StreamingSQLQueryManager:
         table_context: str,
         reask: bool = False,
         error_context: Optional[str] = None,
+        message_history: Optional[List[Dict]] = [],
     ):
         # Generate prompt
         prompt = self.generate_prompt(
@@ -121,7 +120,7 @@ class StreamingSQLQueryManager:
         )
 
         # Stream base generator until empty
-        messages = self.message_history + [{"role": "user", "content": prompt}]
+        messages = message_history + [{"role": "user", "content": prompt}]
         chunks = self.llm_api(messages=messages)
         yield from self.process_chunks(chunks)
 
@@ -210,6 +209,7 @@ class StreamingQueryService(QueryService):
         # Schema index already built in connect step
         self.table_schema_index = GPTSimpleVectorIndex.load_from_disk(schema_index_file)
         self.sql_index = StreamingSQLQueryManager(dsn=dsn, model=model_name)
+        self.latest_message = None
 
     def get_related_tables(self, query: str):
         # Fetch table context
@@ -233,13 +233,16 @@ class StreamingQueryService(QueryService):
                 "data": chunk,
             }
 
-    def query(self, query: str):
+    def query(self, query: str, conversation_id: str):
         # Fetch table context
         context_str = self.get_related_tables(query)
 
         # Query with table context
+        message_history = db.get_message_history(conversation_id)
         yield from self.encode_events(
-            self.sql_index.query(query, table_context=context_str),
+            self.sql_index.query(
+                query, table_context=context_str, message_history=message_history
+            ),
             event_type=StreamingEventType.APPEND,
         )
         yield {"event": StreamingEventType.COMPLETE.value, "data": None}
@@ -265,6 +268,7 @@ class StreamingQueryService(QueryService):
             )
             try:
                 _, with_columns = self.sql_db.run_sql(command=query_result)
+                error = None
             except Exception:
                 yield {
                     "event": StreamingEventType.ERROR.value,
@@ -275,3 +279,11 @@ class StreamingQueryService(QueryService):
                     self.sql_index.query(query, table_context=context_str),
                     event_type=StreamingEventType.APPEND,
                 )
+
+        # Add assistant message to message history
+        db.add_message_to_conversation(
+            conversation_id,
+            self.sql_index.latest_response,
+            role="assistant",
+            results=[query_result],
+        )
