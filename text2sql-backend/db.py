@@ -208,6 +208,10 @@ def create_conversation(session_id: str, name: str) -> int:
 def add_message_to_conversation(
     conversation_id: str, content: str, role: str, results: List[Result]
 ):
+    # Basic validation
+    if results and role != "assistant":
+        raise ValueError("Only assistant messages can have results")
+
     # Create message object
     message_id = conn.execute(
         "INSERT INTO messages (content, role) VALUES (?, ?)", (content, role)

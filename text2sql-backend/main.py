@@ -133,6 +133,9 @@ async def streamed_query(
     # Get conversation
     conversation = db.get_conversation(conversation_id)
 
+    # Add user message to conversation
+    db.add_message_to_conversation(conversation_id, content=query, role="user")
+
     # Get dsn from session_id
     session_id = conversation.session_id
     session = db.get_session(session_id)

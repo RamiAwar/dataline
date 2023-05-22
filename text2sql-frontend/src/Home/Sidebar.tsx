@@ -171,7 +171,7 @@ export const Sidebar = () => {
           <nav className="flex flex-1 flex-col mt-4">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li
-                className="-mx-2 py-4 px-4 rounded-md flex justify-start items-center border-2 border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
+                className="-mx-4 py-3 px-2 rounded-md flex justify-start items-center border-2 border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
                 onClick={createNewChat}
               >
                 <PlusIcon className="h-5 w-5 shrink-0 mr-2 [&>path]:stroke-[1]"></PlusIcon>
