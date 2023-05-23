@@ -5,6 +5,7 @@ from pydantic.dataclasses import dataclass
 
 @dataclass
 class Result:
+    result_id: int
     type: Union[Literal["sql"], Literal["code"]]
     content: str
 
@@ -14,7 +15,7 @@ class MessageWithResults:
     content: str
     role: str
     results: list[Result]
-    message_id: int = None
+    message_id: int
 
 
 @dataclass

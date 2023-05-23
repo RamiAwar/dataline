@@ -184,6 +184,16 @@ async def messages(conversation_id: str):
     return {"status": "ok", "messages": db.get_messages_with_results(conversation_id)}
 
 
+@app.post("/message")
+async def add_message(
+    conversation_id: Annotated[str, Body()], content: Annotated[str, Body()]
+):
+    db.add_message_to_conversation(
+        conversation_id, content=content, role="user", results=[]
+    )
+    return {"status": "ok"}
+
+
 @app.get("/query")
 async def query(session_id: str, query: str, limit: int = 10, execute: bool = False):
     # Get dsn from session_id

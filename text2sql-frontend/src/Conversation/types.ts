@@ -1,4 +1,10 @@
-export type IResult = { type: "sql" | "code"; content: string };
+export type IResultType = "sql" | "code";
+
+export type IResult = {
+  type: IResultType;
+  content: string;
+  result_id: string;
+};
 
 export type IMessageWithResults = {
   content: string;

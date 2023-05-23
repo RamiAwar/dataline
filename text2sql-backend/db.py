@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from errors import DuplicateError
 from models import (
@@ -9,7 +9,7 @@ from models import (
     Result,
 )
 
-conn = sqlite3.connect("db.sqlite3")
+conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
 
 
 # Create table to store session_id and dsn with unique constraint on session_id and dsn and not null
@@ -147,7 +147,7 @@ def get_conversations_with_messages_with_results() -> (
             content = message[1]
             role = message[2]
             results = conn.execute(
-                "SELECT result_id, content, type FROM results INNER JOIN message_results ON results.result_id = message_results.result_id WHERE message_results.message_id = ?",
+                "SELECT results.result_id, content, type FROM results INNER JOIN message_results ON results.result_id = message_results.result_id WHERE message_results.message_id = ?",
                 (message_id,),
             ).fetchall()
             results = [
@@ -206,7 +206,7 @@ def create_conversation(session_id: str, name: str) -> int:
 
 # Add message with results to conversation
 def add_message_to_conversation(
-    conversation_id: str, content: str, role: str, results: List[Result]
+    conversation_id: str, content: str, role: str, results: Optional[List[Result]] = []
 ):
     # Basic validation
     if results and role != "assistant":
@@ -246,6 +246,7 @@ def add_message_to_conversation(
             last_message_order[0] + 1 if last_message_order else 0,
         ),
     )
+    conn.commit()
 
 
 def get_messages_with_results(conversation_id: str) -> List[MessageWithResults]:
@@ -258,18 +259,22 @@ def get_messages_with_results(conversation_id: str) -> List[MessageWithResults]:
     # Get all results for each message_id
     messages = []
     for message_id in message_ids:
+        message_id = message_id[0]
         message = conn.execute(
             "SELECT content, role FROM messages WHERE message_id = ?",
-            (message_id[0],),
+            (message_id,),
         ).fetchone()
         results = conn.execute(
-            "SELECT * FROM results WHERE result_id IN (SELECT result_id FROM message_results WHERE message_id = ?)",
-            (message_id[0],),
+            "SELECT result_id, content, type FROM results WHERE result_id IN (SELECT result_id FROM message_results WHERE message_id = ?)",
+            (message_id,),
         ).fetchall()
         messages.append(
             MessageWithResults(
                 content=message[0],
-                results=results,
+                results=[
+                    Result(result_id=result[0], content=result[1], type=result[2])
+                    for result in results
+                ],
                 role=message[1],
                 message_id=message_id,
                 conversation_id=conversation_id,

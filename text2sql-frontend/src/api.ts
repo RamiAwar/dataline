@@ -1,5 +1,5 @@
 import axios from "axios";
-import { IConversationResult } from "./Conversation/types";
+import { IConversationResult, IMessageWithResults } from "./Conversation/types";
 
 const baseUrl = "http://localhost:7377";
 
@@ -59,14 +59,14 @@ const listSessions = async (): Promise<ListSessionsResult> => {
   return response.data;
 };
 
-export type Message = {};
-export type MessagesResult = { messages: Message[] };
+export type MessagesResult = { messages: IMessageWithResults[] };
 const getMessages = async (conversationId: string): Promise<MessagesResult> => {
   const response = await axios.get<MessagesResult>(`${baseUrl}/messages`, {
     params: {
       conversation_id: conversationId,
     },
   });
+  console.log(response);
   return response.data;
 };
 
@@ -86,4 +86,5 @@ export const api = {
   search,
   listSessions,
   getConversations,
+  getMessages,
 };
