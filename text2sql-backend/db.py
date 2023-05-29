@@ -7,17 +7,18 @@ from models import (
     ConversationWithMessagesWithResults,
     MessageWithResults,
     Result,
+    Session,
 )
 
 conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
 
 
-# Create table to store session_id and dsn with unique constraint on session_id and dsn and not null
+# SESSIONS: Create table to store session_id and dsn with unique constraint on session_id and dsn and not null
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS sessions (session_id text PRIMARY KEY, dsn text UNIQUE NOT NULL)"""
+    """CREATE TABLE IF NOT EXISTS sessions (session_id text PRIMARY KEY, dsn text UNIQUE NOT NULL, database text NOT NULL, name text, dialect text, UNIQUE (session_id, dsn))"""
 )
 
-# Create table to store session_id and index_file with unique constraint on session_id and index_file and not null
+# SCHEMA FILES: Create table to store session_id and index_file with unique constraint on session_id and index_file and not null
 conn.execute(
     """CREATE TABLE IF NOT EXISTS schema_indexes (session_id text PRIMARY KEY, index_file text UNIQUE NOT NULL)"""
 )
@@ -45,19 +46,24 @@ conn.execute(
 
 # CONVERSATION_MESSAGES: Create many to many table to store conversation with multiple messages with order
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS conversation_messages (y integer NOT NULL, message_id integer NOT NULL, message_order integer NOT NULL, FOREIGN KEY(conversation_id) REFERENCES conversations(conversation_id), FOREIGN KEY(message_id) REFERENCES messages(message_id))"""
+    """CREATE TABLE IF NOT EXISTS conversation_messages (conversation_id integer NOT NULL, message_id integer NOT NULL, message_order integer NOT NULL, FOREIGN KEY(conversation_id) REFERENCES conversations(conversation_id), FOREIGN KEY(message_id) REFERENCES messages(message_id))"""
 )
 
 # TODO: Add source to results (so we can regenerate it) ex. db, file, etc.
 
 
-def insert_session(session_id, dsn):
+def insert_session(
+    session_id: str, dsn: str, database: str, name: str = "", dialect: str = ""
+):
     # Check if session_id or dsn already exist
     if conn.execute(
         "SELECT * FROM sessions WHERE session_id = ? OR dsn = ?", (session_id, dsn)
     ).fetchone():
         raise DuplicateError("session_id or dsn already exists")
-    conn.execute("INSERT INTO sessions VALUES (?, ?)", (session_id, dsn))
+    conn.execute(
+        "INSERT INTO sessions VALUES (?, ?, ?, ?, ?)",
+        (session_id, dsn, database, name, dialect),
+    )
     conn.commit()
 
 
@@ -72,7 +78,12 @@ def get_session_from_dsn(dsn: str):
 
 
 def get_sessions():
-    return conn.execute("SELECT * FROM sessions").fetchall()
+    return [
+        Session(session_id=x[0], name=x[1], dsn=x[2], database=x[3], dialect=x[4])
+        for x in conn.execute(
+            "SELECT session_id, name, dsn, database, dialect FROM sessions"
+        ).fetchall()
+    ]
 
 
 def session_is_indexed(session_id):

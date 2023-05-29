@@ -15,31 +15,11 @@ import { useConversation } from "../Providers/ConversationProvider";
 import { IConversation, IConversationResult } from "../Conversation/types";
 import { api } from "../api";
 
-const navigation = [
-  { name: "DvdRentalDB", icon: CircleStackIcon, current: true },
-];
-const saved = [
-  {
-    id: 1,
-    name: "Queries",
-    icon: BookmarkIcon,
-    href: "/queries",
-    current: false,
-  },
-  {
-    id: 2,
-    name: "Dashboards",
-    icon: ChartBarIcon,
-    href: "/dashboards",
-    current: false,
-  },
-];
-
 function createNewChat() {
   alert("Create new chat");
 }
 
-function classNames(...classes) {
+function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
@@ -271,7 +251,7 @@ export const Sidebar = () => {
         </div>
       </div>
 
-      <div className="sticky top-0 z-40 flex items-center gap-x-6 bg-gray-900 px-4 py-4 shadow-sm sm:px-6 lg:hidden">
+      <div className="sticky top-0 z-40 flex items-center gap-x-6 bg-gray-900 px-4 py-4 shadow-sm sm:px-6 lg:hidden h-16">
         <button
           type="button"
           className="-m-2.5 p-2.5 text-gray-400 lg:hidden"

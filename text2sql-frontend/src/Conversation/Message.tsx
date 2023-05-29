@@ -12,7 +12,7 @@ export const Message = (message: IMessageWithResults) => {
     <div
       className={classNames(
         message.role === "assistant" ? "dark:bg-gray-800" : "dark:bg-gray-900",
-        "w-full text-gray-800 dark:text-gray-100 border-b border-black/10 dark:border-gray-900/50 bg-gray-50"
+        "w-full text-gray-800 dark:text-gray-100 bg-gray-50"
       )}
     >
       <div className="flex p-4 gap-4 text-base md:gap-6 md:max-w-2xl lg:max-w-xl xl:max-w-3xl md:py-6 lg:px-0 m-auto">

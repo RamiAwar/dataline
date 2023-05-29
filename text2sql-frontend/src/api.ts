@@ -50,12 +50,35 @@ const search = async (
   return response.data;
 };
 
-export type SessionResult = { session_id: string; dsn: string };
-export type ListSessionsResult =
-  | { status: "ok"; sessions: SessionResult[] }
+export type ConnectionResult = {
+  session_id: string;
+  dsn: string;
+  database: string;
+  name: string;
+  dialect: string;
+};
+export type ListConnectionsResult =
+  | { status: "ok"; sessions: ConnectionResult[] }
   | ApiError;
-const listSessions = async (): Promise<ListSessionsResult> => {
-  const response = await axios.get<ListSessionsResult>(`${baseUrl}/sessions`);
+const listConnections = async (): Promise<ListConnectionsResult> => {
+  const response = await axios.get<ListConnectionsResult>(
+    `${baseUrl}/sessions`
+  );
+  return response.data;
+};
+
+export type ConversationCreationResult = {
+  status: "ok";
+  conversation_id: string;
+};
+const createConversation = async (sessionId: string, name: string) => {
+  const response = await axios.post<ConversationCreationResult>(
+    `${baseUrl}/conversation`,
+    {
+      session_id: sessionId,
+      name,
+    }
+  );
   return response.data;
 };
 
@@ -66,7 +89,6 @@ const getMessages = async (conversationId: string): Promise<MessagesResult> => {
       conversation_id: conversationId,
     },
   });
-  console.log(response);
   return response.data;
 };
 
@@ -84,7 +106,8 @@ export const api = {
   healthcheck,
   connect,
   search,
-  listSessions,
+  listConnections,
   getConversations,
+  createConversation,
   getMessages,
 };

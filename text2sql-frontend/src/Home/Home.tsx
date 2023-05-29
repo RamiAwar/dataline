@@ -7,10 +7,10 @@ function classNames(...classes) {
 
 export const Home = () => {
   return (
-    <div className="h-screen w-full overflow-hidden">
+    <div className="h-screen w-full">
       <Sidebar></Sidebar>
 
-      <main className="lg:pl-72 h-full w-full">
+      <main className="h-[calc(100%-4rem)] lg:pl-72 lg:h-full w-full">
         <Conversation />
       </main>
     </div>

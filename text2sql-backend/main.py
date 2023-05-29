@@ -1,11 +1,10 @@
 import argparse
-import itertools
 import json
 import logging
 import os
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, Dict, List
+from typing import Annotated, Dict
 from uuid import uuid4
 
 import uvicorn
@@ -80,8 +79,9 @@ async def catch_exceptions_middleware(request: Request, call_next):
 app.middleware("http")(catch_exceptions_middleware)
 
 
-class Dsn(BaseModel):
+class ConnectRequest(BaseModel):
     dsn: str
+    name: str
 
 
 @app.get("/healthcheck")
@@ -90,10 +90,10 @@ async def healthcheck():
 
 
 @app.post("/connect")
-async def connect_db(dsn: Dsn):
+async def connect_db(req: ConnectRequest):
     # Try to connect to provided dsn
     try:
-        engine = create_engine(dsn.dsn)
+        engine = create_engine(req.dsn)
         with engine.connect():
             pass
     except OperationalError as e:
@@ -101,7 +101,7 @@ async def connect_db(dsn: Dsn):
         return {"status": "error", "message": "Failed to connect to database"}
 
     # Check if session with DSN already exists, then return session_id
-    res = db.get_session_from_dsn(dsn.dsn)
+    res = db.get_session_from_dsn(req.dsn)
     if res:
         return {"status": "ok", "session_id": res[0]}
 
@@ -109,12 +109,25 @@ async def connect_db(dsn: Dsn):
     session_id = uuid4().hex
 
     # Create index
-    create_schema_index(session_id=session_id, dsn=dsn.dsn)
+    create_schema_index(session_id=session_id, dsn=req.dsn)
 
     # Insert session only if success
-    db.insert_session(session_id, dsn.dsn)
+    dialect = engine.url.get_dialect().name
+    database = engine.url.database
+    db.insert_session(
+        session_id,
+        req.dsn,
+        database=database,
+        name=req.name,
+        dialect=dialect,
+    )
 
-    return {"status": "ok", "session_id": session_id}
+    return {
+        "status": "ok",
+        "session_id": session_id,
+        "database": database,
+        "dialect": dialect,
+    }
 
 
 # TODO: Add response model
@@ -122,7 +135,7 @@ async def connect_db(dsn: Dsn):
 async def get_sessions():
     return {
         "status": "ok",
-        "sessions": [{"session_id": x[0], "dsn": x[1]} for x in db.get_sessions()],
+        "sessions": db.get_sessions(),
     }
 
 

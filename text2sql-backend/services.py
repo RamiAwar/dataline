@@ -13,11 +13,13 @@ from sqlalchemy import create_engine, inspect
 import db
 from context_builder import CustomSQLContextContainerBuilder
 from errors import RelatedTablesNotFoundError
+from models import UnsavedResult
 from sql_wrapper import CustomSQLDatabase
 
 CONTEXT_QUERY_TEMPLATE = (
-    "Please return the relevant table names in a comma separated list like 'table1,table2'"
-    "for the following query: '{orig_query_str}' "
+    "You are a data scientist whose job is to write SQL queries. You need to select tables for a query."
+    "ONLY return the relevant table names in a comma separated list like 'table1,table2' "
+    "for the following query: '{orig_query_str}'"
 )
 
 
@@ -285,5 +287,5 @@ class StreamingQueryService(QueryService):
             conversation_id,
             self.sql_index.latest_response,
             role="assistant",
-            results=[query_result],
+            results=[UnsavedResult(type="sql", content=query_result)],
         )

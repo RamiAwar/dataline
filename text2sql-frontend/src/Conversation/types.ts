@@ -24,3 +24,11 @@ export type IConversation = {
   id: string;
   name: string;
 };
+
+export type IConnection = {
+  session_id: string;
+  name: string;
+  dsn: string;
+  database: string;
+  dialect: string;
+};
