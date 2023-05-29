@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal, Union
 
 from pydantic.dataclasses import dataclass
@@ -10,6 +11,7 @@ class Result:
     result_id: int
     type: ResultType
     content: str
+    created_at: datetime
 
 
 @dataclass
@@ -24,6 +26,7 @@ class MessageWithResults:
     role: str
     results: list[Result]
     message_id: int
+    created_at: datetime
 
 
 @dataclass
@@ -31,6 +34,7 @@ class Conversation:
     conversation_id: str
     session_id: str
     name: str
+    created_at: datetime
 
 
 @dataclass

@@ -1,23 +1,16 @@
-import { Fragment, useContext, useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
   PlusIcon,
   ChatBubbleOvalLeftIcon,
   XMarkIcon,
-  BookmarkIcon,
-  CircleStackIcon,
-  ChartBarIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import logo from "../assets/images/logo_md.png";
 import { useConversation } from "../Providers/ConversationProvider";
-import { IConversation, IConversationResult } from "../Conversation/types";
-import { api } from "../api";
-
-function createNewChat() {
-  alert("Create new chat");
-}
+import { IConversationResult } from "../Conversation/types";
+import { useConversationList } from "../Providers/ConversationListProvider";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -25,21 +18,12 @@ function classNames(...classes: string[]) {
 
 export const Sidebar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [conversations, setConversations] = useState<IConversationResult[]>([]);
+  const [conversations, s_, f_] = useConversationList();
   const [currentConversation, setCurrentConversation] = useConversation();
 
-  // Load api.getConversations on mount
-  useEffect(() => {
-    api.getConversations().then((conversations) => {
-      // Check if error
-      if (conversations.status === "error") {
-        alert("Error loading conversations");
-        return;
-      }
-
-      setConversations(conversations.conversations);
-    });
-  }, []);
+  function createNewChat() {
+    setCurrentConversation(null);
+  }
 
   function selectConversation(conversation: IConversationResult) {
     setCurrentConversation({
@@ -47,6 +31,11 @@ export const Sidebar = () => {
       name: conversation.name,
     });
   }
+
+  // Update component when conversations change
+  useEffect(() => {
+    console.log(currentConversation);
+  }, [conversations, currentConversation]);
 
   return (
     <div>
@@ -114,8 +103,11 @@ export const Sidebar = () => {
                           {conversations.map((conversation) => (
                             <li key={conversation.conversation_id}>
                               <div
+                                onClick={() => {
+                                  selectConversation(conversation);
+                                }}
                                 className={classNames(
-                                  conversation.conversation_id ===
+                                  conversation.conversation_id ==
                                     currentConversation?.id
                                     ? "bg-gray-800 text-white"
                                     : "text-gray-400 hover:text-white hover:bg-gray-800",
@@ -166,7 +158,7 @@ export const Sidebar = () => {
                           selectConversation(chat);
                         }}
                         className={classNames(
-                          chat.conversation_id === currentConversation?.id
+                          chat.conversation_id == currentConversation?.id
                             ? "bg-gray-800 text-white"
                             : "text-gray-400 hover:text-white hover:bg-gray-800",
                           "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
@@ -179,7 +171,7 @@ export const Sidebar = () => {
                         {chat.name}
                         <div
                           className={classNames(
-                            chat.conversation_id === currentConversation?.id
+                            chat.conversation_id == currentConversation?.id
                               ? "flex"
                               : "hidden group-hover:flex",
                             "justify-end grow"

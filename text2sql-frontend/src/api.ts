@@ -95,7 +95,7 @@ const getMessages = async (conversationId: string): Promise<MessagesResult> => {
 export type ListConversations =
   | { status: "ok"; conversations: IConversationResult[] }
   | ApiError;
-const getConversations = async (): Promise<ListConversations> => {
+const listConversations = async (): Promise<ListConversations> => {
   const response = await axios.get<ListConversations>(
     `${baseUrl}/conversations`
   );
@@ -107,7 +107,7 @@ export const api = {
   connect,
   search,
   listConnections,
-  getConversations,
+  listConversations,
   createConversation,
   getMessages,
 };

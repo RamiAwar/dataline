@@ -6,13 +6,15 @@ import { useConversation } from "../Providers/ConversationProvider";
 import { useConnectionList } from "../Providers/ConnectionListProvider";
 import ExpandingInput from "./ExpandingInput";
 import DatabaseDialectImage from "./DatabaseDialectImage";
-import { PlusIcon } from "@heroicons/react/20/solid";
+import { Transition } from "@headlessui/react";
+import { useConversationList } from "../Providers/ConversationListProvider";
 
 export const Conversation = () => {
   // Load messages from conversation via API on load
   const [messages, setMessages] = useState<IMessageWithResults[]>([]);
   const [connections, setConnections] = useConnectionList();
-
+  const [conversations, setConversations, fetchConversations] =
+    useConversationList();
   const [conversation, setConversation] = useConversation();
 
   function submitQuery(value: string) {
@@ -36,7 +38,13 @@ export const Conversation = () => {
         name: "Untitled chat",
       });
     };
-    createConversation();
+    createConversation().then(() => {
+      fetchConversations();
+    });
+  }
+
+  function createNewConnection() {
+    // pass
   }
 
   useEffect(() => {
@@ -49,8 +57,14 @@ export const Conversation = () => {
   }, [conversation]);
 
   return (
-    <div className="bg-gray-900 w-full flex flex-col h-full relative">
-      {conversation === null && (
+    <div className="bg-gray-900 w-full h-full relative">
+      <Transition
+        className="flex flex-col w-full h-full"
+        show={conversation === null}
+        enter="transition duration-150 ease-in-out transform"
+        enterFrom="opacity-0 scale-75"
+        enterTo="opacity-100 scale-100"
+      >
         <div className="flex flex-col justify-center items-center h-full">
           <div className="bg-gray-700 border-2 border-gray-500 w-3/4 xl:w-1/2 rounded-xl p-6">
             <div className="text-gray-50 text-2xl font-semibold">
@@ -60,7 +74,7 @@ export const Conversation = () => {
               {connections?.map((connection) => (
                 <div
                   key={connection.session_id}
-                  className="hover:cursor-pointer md:hover:ring-4 ring-gray-500 border border-gray-500 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-600 transition-all duration-200"
+                  className="hover:cursor-pointer md:hover:ring-4 ring-gray-500 border border-gray-500 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-600 transition-all duration-75"
                   onClick={() => selectConnection(connection)}
                 >
                   <div className="hidden md:flex overflow-hidden w-full justify-center items-center md:mt-4">
@@ -79,64 +93,58 @@ export const Conversation = () => {
                   </div>
                 </div>
               ))}
-              <div className="hover:cursor-pointer md:hover:ring-4 ring-gray-500 border border-gray-500 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-600 transition-all duration-200">
+              <div
+                className="hover:cursor-pointer md:hover:ring-4 ring-gray-500 border border-gray-500 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-600 transition-all duration-75"
+                onClick={createNewConnection}
+              >
                 {/* Item to add new connection */}
-                <div className="text-gray-50 h-full mx-auto mb-2 lg:mx-6 lg:-mt-2 flex flex-col justify-center md:items-start">
+                <div className="hidden md:flex overflow-hidden w-full justify-center items-center md:mt-4">
+                  <svg
+                    className="h-3/4 lg:h-2/3 my-auto w-full text-gray-200"
+                    stroke="currentColor"
+                    fill="none"
+                    viewBox="0 0 48 48"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 14v20c0 4.418 7.163 8 16 8 1.381 0 2.721-.087 4-.252M8 14c0 4.418 7.163 8 16 8s16-3.582 16-8M8 14c0-4.418 7.163-8 16-8s16 3.582 16 8m0 0v14m0-4c0 4.418-7.163 8-16 8S8 28.418 8 24m32 10v6m0 0v6m0-6h6m-6 0h-6"
+                    />
+                  </svg>
+                </div>
+                <div className="h-full lg:h-fit text-gray-50 mx-auto mb-2 lg:mx-6 lg:-mt-2 flex flex-col justify-center md:items-start">
                   <div className="text-xs md:text-sm lg:text-md font-normal text-gray-400">
-                    Add New Connection
+                    Add
                   </div>
-                  <div className="text-2xl md:text-xl font-normal md:-mt-1">
-                    <PlusIcon className="h-10 w-10 [&>path]:stroke-[20] " />
+                  <div className="text-xs md:text-lg lg:text-lg font-normal md:-mt-1 overflow-ellipsis whitespace-nowrap">
+                    New connection
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      )}
-      {conversation !== null && (
+      </Transition>
+      <Transition
+        show={conversation !== null}
+        enter="transition duration-150 ease-out transform"
+        enterFrom="opacity-0 translate-y-1/2"
+        enterTo="opacity-100 translate-y-0"
+      >
         <div className="overflow-y-scroll pb-36">
           {messages.map((message) => (
-            <div>
-              <Message
-                key={message.message_id}
-                message_id={message.message_id}
-                content={message.content}
-                role={message.role}
-                results={message.results}
-              ></Message>
-              <Message
-                key={message.message_id}
-                message_id={message.message_id}
-                content={message.content}
-                role={message.role}
-                results={message.results}
-              ></Message>
-              <Message
-                key={message.message_id}
-                message_id={message.message_id}
-                content={message.content}
-                role={message.role}
-                results={message.results}
-              ></Message>
-              <Message
-                key={message.message_id}
-                message_id={message.message_id}
-                content={message.content}
-                role={message.role}
-                results={message.results}
-              ></Message>
-              <Message
-                key={message.message_id}
-                message_id={message.message_id}
-                content={message.content}
-                role={message.role}
-                results={message.results}
-              ></Message>
-            </div>
+            <Message
+              key={message.message_id}
+              message_id={message.message_id}
+              content={message.content}
+              role={message.role}
+              results={message.results}
+            ></Message>
           ))}
         </div>
-      )}
+      </Transition>
 
       <div className="absolute w-full bottom-0 left-0 flex justify-center bg-gradient-to-t from-gray-900 from-30% to-transparent pt-2">
         <div className="w-full md:max-w-3xl flex justify-center pt-6 lg:pb-4 m-2">
