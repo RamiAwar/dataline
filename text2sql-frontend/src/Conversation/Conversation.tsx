@@ -32,6 +32,12 @@ export const Conversation = () => {
         connection.session_id,
         "Untitled chat"
       );
+
+      if (createdConversation.status !== "ok") {
+        alert("Error creating conversation");
+        return;
+      }
+
       // and set it as the current conversation
       setConversation({
         id: createdConversation.conversation_id,

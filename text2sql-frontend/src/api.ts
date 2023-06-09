@@ -67,10 +67,12 @@ const listConnections = async (): Promise<ListConnectionsResult> => {
   return response.data;
 };
 
-export type ConversationCreationResult = {
-  status: "ok";
-  conversation_id: string;
-};
+export type ConversationCreationResult =
+  | {
+      status: "ok";
+      conversation_id: string;
+    }
+  | ApiError;
 const createConversation = async (sessionId: string, name: string) => {
   const response = await axios.post<ConversationCreationResult>(
     `${baseUrl}/conversation`,
@@ -78,6 +80,18 @@ const createConversation = async (sessionId: string, name: string) => {
       session_id: sessionId,
       name,
     }
+  );
+  return response.data;
+};
+
+export type ConversationDeletionResult =
+  | {
+      status: "ok";
+    }
+  | ApiError;
+const deleteConversation = async (conversationId: string) => {
+  const response = await axios.delete<ConversationDeletionResult>(
+    `${baseUrl}/conversation/${conversationId}`
   );
   return response.data;
 };
@@ -109,5 +123,6 @@ export const api = {
   listConnections,
   listConversations,
   createConversation,
+  deleteConversation,
   getMessages,
 };

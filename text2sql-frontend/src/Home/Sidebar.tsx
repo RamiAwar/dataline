@@ -11,6 +11,7 @@ import logo from "../assets/images/logo_md.png";
 import { useConversation } from "../Providers/ConversationProvider";
 import { IConversationResult } from "../Conversation/types";
 import { useConversationList } from "../Providers/ConversationListProvider";
+import { api } from "../api";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -18,7 +19,7 @@ function classNames(...classes: string[]) {
 
 export const Sidebar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [conversations, s_, f_] = useConversationList();
+  const [conversations, s_, fetchConversations] = useConversationList();
   const [currentConversation, setCurrentConversation] = useConversation();
 
   function createNewChat() {
@@ -30,6 +31,11 @@ export const Sidebar = () => {
       id: conversation.conversation_id,
       name: conversation.name,
     });
+  }
+
+  async function deleteConversation(conversationId: string) {
+    await api.deleteConversation(conversationId);
+    fetchConversations();
   }
 
   // Update component when conversations change
@@ -177,7 +183,12 @@ export const Sidebar = () => {
                             "justify-end grow"
                           )}
                         >
-                          <TrashIcon className="h-5 w-5 shrink-0 cursor-pointer"></TrashIcon>
+                          <TrashIcon
+                            className="h-5 w-5 shrink-0 cursor-pointer"
+                            onClick={() =>
+                              deleteConversation(chat.conversation_id)
+                            }
+                          ></TrashIcon>
                         </div>
                       </div>
                     </li>
