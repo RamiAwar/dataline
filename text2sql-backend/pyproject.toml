@@ -8,7 +8,7 @@ packages = [{include = "text2sql_backend"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
-fastapi = "^0.95.1"
+fastapi = "0.100.0"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
 llama-index = "^0.5.15"
 sqlparse = "^0.4.3"
@@ -22,6 +22,8 @@ guardrails-ai = {path = "../../guardrails", develop = true}
 sse-starlette = "^1.6.0"
 sqlalchemy = "^2.0.13"
 rapidfuzz = "^3.0.0"
+psycopg = {extras = ["pool"], version = "^3.1.9"}
+sql-metadata = "^2.8.0"
 
 
 [tool.poetry.group.dev.dependencies]

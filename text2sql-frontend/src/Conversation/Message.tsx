@@ -44,7 +44,7 @@ export const Message = (message: IMessageWithResults) => {
           )}
 
           {/** RESULTS: QUERY, DATA, PLOTS */}
-          {message.results.map(
+          {message.results?.map(
             (result, index) =>
               result.type === "sql" && (
                 <CodeBlock key={index} language="sql" code={result.content} />

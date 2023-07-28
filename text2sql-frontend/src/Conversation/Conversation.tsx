@@ -23,6 +23,29 @@ export const Conversation = () => {
       alert("Please select a connection first");
       return;
     }
+
+    // Add message to messages
+    setMessages([
+      ...messages,
+      {
+        content: value,
+        role: "user",
+      },
+    ]);
+
+    // Get API response
+    (async () => {
+      const res = await api.query(conversation.id, value);
+      if (res.status !== "ok") {
+        alert("Error querying database");
+        return;
+      }
+      const message: IMessageWithResults = {
+        content: res.data.text || "",
+        role: "assistant",
+      };
+      setMessages([...messages, message]);
+    })();
   }
 
   function selectConnection(connection: IConnection) {
@@ -63,7 +86,7 @@ export const Conversation = () => {
   }, [conversation]);
 
   return (
-    <div className="bg-gray-900 w-full h-full relative">
+    <div className="bg-gray-900 w-full h-full relative overflow-y-hidden">
       <Transition
         className="flex flex-col w-full h-full"
         show={conversation === null}

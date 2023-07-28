@@ -12,7 +12,7 @@ export const Home = () => {
       <Sidebar></Sidebar>
 
       <main className="h-[calc(100%-4rem)] lg:pl-72 lg:h-full w-full">
-        <ErrorHandler />
+        {/* <ErrorHandler /> */}
         <Conversation />
       </main>
     </div>

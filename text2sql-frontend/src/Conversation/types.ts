@@ -1,4 +1,5 @@
 export type IResultType = "sql" | "code";
+export type Role = "user" | "assistant";
 
 export type IResult = {
   type: IResultType;
@@ -9,8 +10,8 @@ export type IResult = {
 export type IMessageWithResults = {
   content: string;
   role: string;
-  results: IResult[];
-  message_id: string;
+  results?: IResult[];
+  message_id?: string;
 };
 
 export type IConversationResult = {

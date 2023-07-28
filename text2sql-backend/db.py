@@ -9,6 +9,7 @@ from models import (
     MessageWithResults,
     Result,
     Session,
+    UnsavedResult,
 )
 
 conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
@@ -317,3 +318,19 @@ def get_message_history(conversation_id: str) -> List[Dict[str, Any]]:
     )
 
     return [{"role": message[1], "content": message[0]} for message in messages]
+
+
+def create_result(result: UnsavedResult) -> Result:
+    """Create a result and return it"""
+    created_at = datetime.now()
+    result_id = conn.execute(
+        "INSERT INTO results (content, type, created_at) VALUES (?, ?, ?)",
+        (result.content, result.type, created_at),
+    ).lastrowid
+    conn.commit()
+    return Result(
+        result_id=result_id,
+        content=result.content,
+        type=result.type,
+        created_at=created_at,
+    )

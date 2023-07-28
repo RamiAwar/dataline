@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, Dict
+from typing import Annotated, Dict, List, Type, Union
 from uuid import uuid4
 
 import uvicorn
@@ -13,17 +13,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from llama_index import GPTSimpleVectorIndex
 from pydantic import BaseModel
+from pydantic.dataclasses import dataclass
+from pydantic.json import pydantic_encoder
 from pygments import formatters, highlight, lexers
 from pygments_pprint_sql import SqlFilter
+from sql_metadata import Parser
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import DeclarativeMeta
-from sse_starlette.sse import EventSourceResponse
 
 import db
 from context_builder import CustomSQLContextContainerBuilder
-from errors import RelatedTablesNotFoundError
-from services import QueryService, StreamingQueryService
+from models import DataResult, Result, UnsavedResult
+from services import QueryService
 from sql_wrapper import CustomSQLDatabase, request_execute, request_limit
 
 logger = logging.getLogger(__name__)
@@ -139,35 +141,35 @@ async def get_sessions():
     }
 
 
-@app.get("/stream/query")
-async def streamed_query(
-    conversation_id: str, query: str, limit: int = 10, execute: bool = False
-):
-    # Get conversation
-    conversation = db.get_conversation(conversation_id)
+# @app.get("/stream/query")
+# async def streamed_query(
+#     conversation_id: str, query: str, limit: int = 10, execute: bool = False
+# ):
+#     # Get conversation
+#     conversation = db.get_conversation(conversation_id)
 
-    # Add user message to conversation
-    db.add_message_to_conversation(conversation_id, content=query, role="user")
+#     # Add user message to conversation
+#     db.add_message_to_conversation(conversation_id, content=query, role="user")
 
-    # Get dsn from session_id
-    session_id = conversation.session_id
-    session = db.get_session(session_id)
-    if not session:
-        return {"status": "error", "message": "Invalid session_id"}
+#     # Get dsn from session_id
+#     session_id = conversation.session_id
+#     session = db.get_session(session_id)
+#     if not session:
+#         return {"status": "error", "message": "Invalid session_id"}
 
-    request_limit.set(limit)
-    request_execute.set(execute)
+#     request_limit.set(limit)
+#     request_execute.set(execute)
 
-    # Get streaming query service instance
-    if session_id not in query_services:
-        schema = db.get_schema_index(session_id)
-        query_services[session_id] = StreamingQueryService(
-            dsn=session[1], schema_index_file=schema
-        )
+#     # Get streaming query service instance
+#     if session_id not in query_services:
+#         schema = db.get_schema_index(session_id)
+#         query_services[session_id] = StreamingQueryService(
+#             dsn=session[1], schema_index_file=schema
+#         )
 
-    # Streaming query service handles updating conversation
-    response = query_services[session_id].query(query, conversation_id=conversation_id)
-    return EventSourceResponse(response)
+#     # Streaming query service handles updating conversation
+#     response = query_services[session_id].query(query, conversation_id=conversation_id)
+#     return EventSourceResponse(response)
 
 
 @app.get("/conversations")
@@ -186,8 +188,8 @@ async def create_conversation(
     return {"status": "ok", "conversation_id": conversation_id}
 
 
-@app.delete("/conversation")
-async def delete_conversation(conversation_id: Annotated[str, Body()]):
+@app.delete("/conversation/{conversation_id}")
+async def delete_conversation(conversation_id: str):
     db.delete_conversation(conversation_id=conversation_id)
     return {"status": "ok"}
 
@@ -207,62 +209,61 @@ async def add_message(
     return {"status": "ok"}
 
 
-@app.get("/query")
-async def query(session_id: str, query: str, limit: int = 10, execute: bool = False):
-    # Get dsn from session_id
+@app.get("/query", response_model=List[Union[UnsavedResult, DataResult]])
+async def query(
+    conversation_id: str, query: str, limit: int = 10, execute: bool = False
+):
+    request_limit.set(limit)
+    request_execute.set(execute)
+
+    # Get conversation
+    conversation = db.get_conversation(conversation_id)
+
+    # Add user message to message history
+    db.add_message_to_conversation(conversation_id, content=query, role="user")
+
+    # Get query service instance
+    session_id = conversation.session_id
     session = db.get_session(session_id)
     if not session:
         return {"status": "error", "message": "Invalid session_id"}
 
-    request_limit.set(limit)
-    request_execute.set(execute)
-
-    # Get query service instance
     if session_id not in query_services:
         schema = db.get_schema_index(session_id)
         query_services[session_id] = QueryService(
             dsn=session[1], schema_index_file=schema
         )
 
-    try:
-        response = query_services[session_id].query(query)
-    except RelatedTablesNotFoundError:
-        return {
-            "status": "error",
-            "message": "Could not find relevant tables in your database from your query",
-        }
+    response = query_services[session_id].query(query, conversation_id=conversation_id)
+    unsaved_results = query_services[session_id].results_from_query_response(response)
 
-    if not response.response and execute:
-        # TODO: Maybe return query here in addition to error message
-        return {"status": "error", "message": "Failed to parse query"}
+    # Save results
+    saved_results: List[Result] = []
+    for result in unsaved_results:
+        saved_result = db.create_result(result)
+        saved_results.append(saved_result)
 
-    sql_query = response.extra_info["sql_query"]
-    rendered_sql_query = sql2html(sql_query)
+    # Add assistant message to message history
+    db.add_message_to_conversation(
+        conversation_id,
+        response.text,
+        role="assistant",
+        results=saved_results,
+    )
 
-    if not execute:
-        return {
-            "status": "ok",
-            "query": rendered_sql_query,
-            "raw_query": sql_query,
-            "results": [],
-        }
+    # Execute query
+    data = query_services[session_id].sql_db.run_sql(response.sql)[1]
+    unsaved_results.append(
+        DataResult(
+            type="data",
+            content=[[x for x in r] for r in data["result"]],
+            columns=data["columns"],
+        )
+    )
 
-    results = []
-    # Add columns as header row
-    columns = response.extra_info.get("columns", [])
-    results.append(columns)
-    # Fill out results (we can also get those from extra_info if clearer)
-    for r in response.response:
-        results.append(list(r._mapping.values()))
-
-    res = {
-        "status": "ok",
-        "results": results,
-        "query": rendered_sql_query,
-        "raw_query": sql_query,
-    }
     return Response(
-        content=json.dumps(res, cls=AlchemyJSONEncoder), media_type="application/json"
+        content=json.dumps(unsaved_results, indent=4, default=pydantic_encoder),
+        media_type="application/json",
     )
 
 

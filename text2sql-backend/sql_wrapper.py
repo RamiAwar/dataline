@@ -59,7 +59,7 @@ class CustomSQLDatabase(SQLDatabase):
 
         return schema
 
-    def run_sql(self, command: str) -> Tuple[str, Dict]:
+    def run_sql(self, command: str) -> Tuple[Dict, Dict]:
         """Execute a SQL statement and return a string representing the results.
 
         If the statement returns rows, the results are returned.

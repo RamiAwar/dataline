@@ -1,9 +1,10 @@
 from datetime import datetime
-from typing import Literal, Union
+from typing import Any, List, Literal, Tuple, Union
 
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-ResultType = Union[Literal["sql"], Literal["code"]]
+ResultType = Union[Literal["sql"], Literal["code"], Literal["text"], Literal["error"]]
 
 
 @dataclass
@@ -18,6 +19,13 @@ class Result:
 class UnsavedResult:
     type: ResultType
     content: str
+
+
+@dataclass
+class DataResult:
+    type: Literal["data"]
+    content: List[Any]
+    columns: List[str]
 
 
 @dataclass
@@ -48,3 +56,11 @@ class Session:
 
 class ConversationWithMessagesWithResults(Conversation):
     messages: list[MessageWithResults]
+
+
+@dataclass
+class SQLQueryResult:
+    success: bool = Field(default=False)
+    text: str = Field(default="")
+    sql: str = Field(default="")
+    chart_request: bool = Field(default=False)

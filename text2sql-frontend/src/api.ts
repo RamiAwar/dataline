@@ -96,6 +96,16 @@ const deleteConversation = async (conversationId: string) => {
   return response.data;
 };
 
+export type ListConversations =
+  | { status: "ok"; conversations: IConversationResult[] }
+  | ApiError;
+const listConversations = async (): Promise<ListConversations> => {
+  const response = await axios.get<ListConversations>(
+    `${baseUrl}/conversations`
+  );
+  return response.data;
+};
+
 export type MessagesResult = { messages: IMessageWithResults[] };
 const getMessages = async (conversationId: string): Promise<MessagesResult> => {
   const response = await axios.get<MessagesResult>(`${baseUrl}/messages`, {
@@ -106,13 +116,34 @@ const getMessages = async (conversationId: string): Promise<MessagesResult> => {
   return response.data;
 };
 
-export type ListConversations =
-  | { status: "ok"; conversations: IConversationResult[] }
-  | ApiError;
-const listConversations = async (): Promise<ListConversations> => {
-  const response = await axios.get<ListConversations>(
-    `${baseUrl}/conversations`
+export type MessageCreationResult = { status: "ok" } | ApiError;
+const createMessage = async (conversationId: string, content: string) => {
+  const response = await axios.post<MessageCreationResult>(
+    `${baseUrl}/message`,
+    {
+      conversation_id: conversationId,
+      content,
+    }
   );
+  return response.data;
+};
+
+export type QueryResult = {
+  status: "ok";
+  data: {
+    text?: string;
+    sql?: string;
+    results?: any[];
+  };
+};
+const query = async (conversationId: string, query: string) => {
+  const response = await axios.get<QueryResult>(`${baseUrl}/query`, {
+    params: {
+      conversation_id: conversationId,
+      query,
+    },
+  });
+
   return response.data;
 };
 
@@ -125,4 +156,6 @@ export const api = {
   createConversation,
   deleteConversation,
   getMessages,
+  createMessage,
+  query,
 };
