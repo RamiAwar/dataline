@@ -42,9 +42,11 @@ class SQLQueryManager:
             query,
             schema=table_context,
         )
+        print("Prompt:\n", prompt)
 
         # Stream base generator until empty
-        messages = message_history + [{"role": "user", "content": prompt}]
+        # TODO: Add message history
+        messages = [{"role": "user", "content": prompt}]
 
         for i in self.llm_api(messages=messages):
             if i["choices"][0].get("finish_reason") == "stop":

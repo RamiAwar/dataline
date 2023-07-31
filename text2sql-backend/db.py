@@ -267,6 +267,13 @@ def add_message_to_conversation(
         ),
     )
     conn.commit()
+    return MessageWithResults(
+        content=content,
+        role=role,
+        results=results,
+        message_id=message_id,
+        created_at=created_at,
+    )
 
 
 def get_messages_with_results(conversation_id: str) -> List[MessageWithResults]:

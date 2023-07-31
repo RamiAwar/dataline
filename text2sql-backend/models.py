@@ -25,14 +25,13 @@ class UnsavedResult:
 class DataResult:
     type: Literal["data"]
     content: List[Any]
-    columns: List[str]
 
 
 @dataclass
 class MessageWithResults:
     content: str
     role: str
-    results: list[Result]
+    results: list[Union[Result, UnsavedResult]]
     message_id: int
     created_at: datetime
 

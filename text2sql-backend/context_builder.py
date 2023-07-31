@@ -7,15 +7,19 @@ from typing import Any, Dict, Optional, Union
 from llama_index.indices.base import BaseGPTIndex
 from llama_index.indices.query.schema import QueryBundle
 from llama_index.indices.struct_store import SQLContextContainerBuilder
-from llama_index.langchain_helpers.sql_wrapper import SQLDatabase
 
 from errors import RelatedTablesNotFoundError
 from sql_wrapper import CustomSQLDatabase
 
-DEFAULT_CONTEXT_QUERY_TMPL = (
-    "Please return the relevant table names in a comma separated list like 'table1,table2' "
-    "for the following query: {orig_query_str}"
+CONTEXT_QUERY_TEMPLATE = (
+    "You are a data scientist whose job is to write SQL queries. You need to select tables for a query."
+    "ONLY return the relevant table names in a comma separated list like 'table1,table2' "
+    "DO NOT return anything else."
+    "Available Tables: '{table_names}'"
+    "Query: '{orig_query_str}'"
+    "Relevant tables: "
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +78,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         self,
         index: BaseGPTIndex,
         query_str: Union[str, QueryBundle],
-        query_tmpl: Optional[str] = DEFAULT_CONTEXT_QUERY_TMPL,
+        query_tmpl: Optional[str] = CONTEXT_QUERY_TEMPLATE,
         store_context_str: bool = True,
         **index_kwargs: Any,
     ) -> str:
@@ -91,12 +95,10 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             store_context_str (bool): store context_str
 
         """
-
-        # TODO: Use Guardrails here
-        if query_tmpl is None:
-            context_query_str = query_str
-        else:
-            context_query_str = query_tmpl.format(orig_query_str=query_str)
+        context_query_str = query_tmpl.format(
+            orig_query_str=query_str,
+            table_names=",".join(self.sql_database.get_table_names()),
+        )
 
         # Query LLM
         response = index.query(context_query_str, **index_kwargs)
@@ -106,7 +108,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
 
         # Validate table names
         try:
-            table_names = str(response).strip().split(",")
+            table_names = [s.strip() for s in str(response).strip().split(",")]
         except Exception as e:
             context_query_str = f"""You returned {str(response)} but that raised an exception: {str(e)}.\n{query_tmpl.format(orig_query_str=query_str)}"""
             logger.debug(f"Reasking with query: {context_query_str}")
@@ -130,17 +132,19 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
 
             # If autocorrect not complete, try reasking
             if invalid_table_names:
-                context_query_str = f"""You returned {str(response)} but that contained invalid table names: {invalid_table_names}.\n{query_tmpl.format(orig_query_str=query_str)}"""
+                context_query_str = f"""You returned {str(response)} but that contained invalid table names: {invalid_table_names}.\n{query_tmpl.format(orig_query_str=query_str, table_names=",".join(self.sql_database.get_table_names()))}"""
                 logger.debug(
                     f"Invalid table names: Reasking with query: {context_query_str}"
                 )
                 response = index.query(context_query_str, **index_kwargs)
-                table_names = str(response).strip().split(",")
+                table_names = [s.strip() for s in str(response).strip().split(",")]
                 if any(
                     table_name not in self.sql_database.get_table_names()
                     for table_name in table_names
                 ):
-                    raise RelatedTablesNotFoundError()
+                    logger.info(
+                        "Invalid table names: Reasking failed - continuing anyway"
+                    )
 
         context_str = ""
         for table_name in table_names:

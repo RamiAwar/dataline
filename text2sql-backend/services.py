@@ -15,12 +15,6 @@ from models import SQLQueryResult, UnsavedResult
 from query_manager import SQLQueryManager
 from sql_wrapper import CustomSQLDatabase
 
-CONTEXT_QUERY_TEMPLATE = (
-    "You are a data scientist whose job is to write SQL queries. You need to select tables for a query."
-    "ONLY return the relevant table names in a comma separated list like 'table1,table2' "
-    "for the following query: '{orig_query_str}'"
-)
-
 
 class SQLResults(TypedDict):
     result: List[Dict[str, Any]]
@@ -56,7 +50,6 @@ class QueryService:
         context_str = self.context_builder.query_index_for_context(
             index=self.table_schema_index,
             query_str=query,
-            query_tmpl=CONTEXT_QUERY_TEMPLATE,
             store_context_str=True,
         )
 
@@ -78,6 +71,7 @@ class QueryService:
                 query, table_context=context_str, message_history=message_history
             )
         )
+        print("Generated JSON:\n ", generated_json)
 
         data = json.loads(generated_json)
         return SQLQueryResult(**data)

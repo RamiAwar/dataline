@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, Dict, List, Type, Union
+from typing import Annotated, Dict, List, Union
 from uuid import uuid4
 
 import uvicorn
@@ -13,11 +13,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from llama_index import GPTSimpleVectorIndex
 from pydantic import BaseModel
-from pydantic.dataclasses import dataclass
 from pydantic.json import pydantic_encoder
 from pygments import formatters, highlight, lexers
 from pygments_pprint_sql import SqlFilter
-from sql_metadata import Parser
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -27,6 +25,8 @@ from context_builder import CustomSQLContextContainerBuilder
 from models import DataResult, Result, UnsavedResult
 from services import QueryService
 from sql_wrapper import CustomSQLDatabase, request_execute, request_limit
+
+logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 lexer = lexers.MySqlLexer()
@@ -244,7 +244,7 @@ async def query(
         saved_results.append(saved_result)
 
     # Add assistant message to message history
-    db.add_message_to_conversation(
+    saved_message = db.add_message_to_conversation(
         conversation_id,
         response.text,
         role="assistant",
@@ -253,16 +253,27 @@ async def query(
 
     # Execute query
     data = query_services[session_id].sql_db.run_sql(response.sql)[1]
-    unsaved_results.append(
-        DataResult(
-            type="data",
-            content=[[x for x in r] for r in data["result"]],
-            columns=data["columns"],
+    if data.get("result"):
+        # Convert data to list of rows
+        rows = [data["columns"]]
+        rows.extend([x for x in r] for r in data["result"])
+
+        unsaved_results.append(
+            DataResult(
+                type="data",
+                content=rows,
+            )
         )
-    )
+
+    # Replace saved results with unsaved that include data returned
+    saved_message.results = unsaved_results
 
     return Response(
-        content=json.dumps(unsaved_results, indent=4, default=pydantic_encoder),
+        content=json.dumps(
+            {"status": "ok", "message": saved_message},
+            default=pydantic_encoder,
+            indent=4,
+        ),
         media_type="application/json",
     )
 

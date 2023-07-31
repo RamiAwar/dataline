@@ -15,16 +15,17 @@ Given below is XML that describes the response format required of you. You must 
     <bool name="chart_request" description="Returns 'true' if the user requested to plot results"/>
 </output>
 
-Here are some examples of valid input/JSON output combinations:
-    
+DO NOT return anything other than valid JSON.
+Here are some examples of valid input/JSON output combinations you should follow:
+
 Query: Get me all users : schema: users(name, age)
-Output: {{"sql": "SELECT name, age FROM users", "text": "", "success": true, "chart_request": false }}
+Output: {{"sql": "SELECT name, age FROM users", "text": "Here are all the users:", "success": true, "chart_request": false }}
 
 Query: Get me all movies : schema: users(name, age)
 Output: {{"sql": "", "text": "No table info found in provided schema", "success": false, "chart_request": false }}
 
 Query: Get me a plot of all users by age
-Output: {{"sql": "SELECT age, COUNT(*) FROM users GROUP BY age", "text": "Sure, here is the user count grouped by age", "success": true, "chart_request": true }}
+Output: {{"sql": "SELECT age, COUNT(*) FROM users GROUP BY age", "text": "Sure! Here is the user count grouped by age:", "success": true, "chart_request": true }}
 
 Human: {query_string}
 Assistant: """
