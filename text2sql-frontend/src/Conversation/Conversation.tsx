@@ -9,6 +9,29 @@ import DatabaseDialectImage from "./DatabaseDialectImage";
 import { Transition } from "@headlessui/react";
 import { useConversationList } from "../Providers/ConversationListProvider";
 
+function generateUUID() {
+  // Public Domain/MIT
+  var d = new Date().getTime(); //Timestamp
+  var d2 =
+    (typeof performance !== "undefined" &&
+      performance.now &&
+      performance.now() * 1000) ||
+    0; //Time in microseconds since page-load or 0 if unsupported
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16; //random number between 0 and 16
+    if (d > 0) {
+      //Use timestamp until depleted
+      r = (d + r) % 16 | 0;
+      d = Math.floor(d / 16);
+    } else {
+      //Use microseconds since page-load if supported
+      r = (d2 + r) % 16 | 0;
+      d2 = Math.floor(d2 / 16);
+    }
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
 export const Conversation = () => {
   // Load messages from conversation via API on load
   const [messages, setMessages] = useState<IMessageWithResults[]>([]);
@@ -25,26 +48,24 @@ export const Conversation = () => {
     }
 
     // Add message to messages
-    setMessages([
-      ...messages,
+    setMessages((prevMessages) => [
+      ...prevMessages,
       {
         content: value,
         role: "user",
+        message_id: generateUUID(),
       },
     ]);
 
     // Get API response
     (async () => {
-      const res = await api.query(conversation.id, value);
+      const res = await api.query(conversation.id, value, true);
       if (res.status !== "ok") {
         alert("Error querying database");
         return;
       }
-      const message: IMessageWithResults = {
-        content: res.data.text || "",
-        role: "assistant",
-      };
-      setMessages([...messages, message]);
+      const message = res.message;
+      setMessages((prevMessages) => [...prevMessages, message]);
     })();
   }
 
@@ -86,7 +107,7 @@ export const Conversation = () => {
   }, [conversation]);
 
   return (
-    <div className="bg-gray-900 w-full h-full relative overflow-y-hidden">
+    <div className="bg-gray-900 w-full h-full relative flex flex-col">
       <Transition
         className="flex flex-col w-full h-full"
         show={conversation === null}
@@ -162,7 +183,7 @@ export const Conversation = () => {
         enterFrom="opacity-0 translate-y-1/2"
         enterTo="opacity-100 translate-y-0"
       >
-        <div className="overflow-y-scroll pb-36">
+        <div className="overflow-y-auto scroll-m-0 pb-36 bg-gray-900">
           {messages.map((message) => (
             <Message
               key={message.message_id}
@@ -175,8 +196,8 @@ export const Conversation = () => {
         </div>
       </Transition>
 
-      <div className="absolute w-full bottom-0 left-0 flex justify-center bg-gradient-to-t from-gray-900 from-30% to-transparent pt-2">
-        <div className="w-full md:max-w-3xl flex justify-center pt-6 lg:pb-4 m-2">
+      <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex justify-center bg-gradient-to-t from-gray-900 from-30% to-transparent pt-2">
+        <div className="w-full md:max-w-3xl flex justify-center pt-6 pb-4 m-2">
           <ExpandingInput
             onSubmit={submitQuery}
             disabled={conversation === null}

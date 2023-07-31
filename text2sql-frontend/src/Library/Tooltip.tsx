@@ -36,13 +36,13 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
 
   return (
     <div>
-      <button
+      <div
         onClick={handleButtonClick}
         onMouseEnter={handleHover}
         onMouseLeave={handleNoHover}
       >
         {children}
-      </button>
+      </div>
       {showTooltip && (
         <span className="absolute inset-x-0 bottom-full mb-2.5 flex justify-center transition ease-in duration-100 opacity-100">
           <span className="rounded-md bg-gray-600 px-3 py-1 text-[0.625rem] font-semibold uppercase leading-4 tracking-wide text-white drop-shadow-md filter">

@@ -1,4 +1,4 @@
-export type IResultType = "sql" | "code";
+export type IResultType = "sql" | "code" | "data";
 export type Role = "user" | "assistant";
 
 export type IResult = {

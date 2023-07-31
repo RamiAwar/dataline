@@ -1,13 +1,26 @@
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { IResultType } from "./types";
-import monokai from "./CodeStyles/monokai";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
-import Tooltip from "../../src/Library/Tooltip";
-import { FloatingDelayGroup } from "@floating-ui/react";
 import CustomTooltip from "../../src/Library/Tooltip";
+import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import { format } from "prettier-sql";
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
+}
+
+// Enum for sql dialects
+export enum Dialect {
+  Postgres = "postgresql",
+  MySQL = "mysql",
+  SQLite = "sqlite",
+  MariaDB = "mariadb",
+  Spark = "spark",
+  BigQuery = "bigquery",
+  IBMDB2 = "db2",
+  Hive = "hive",
+  Couchbase = "n1ql",
+  TransactSQL = "tsql",
 }
 
 export const CodeBlock = ({
@@ -17,13 +30,16 @@ export const CodeBlock = ({
   code: string;
   language: IResultType;
 }) => {
+  const formatted_code = format(code, { language: Dialect.Postgres });
+
   return (
     <div className="max-w-7xl border-2 border-gray-500 rounded-md bg-gray-900 flex flex-col relative">
-      {/* <span className="w-fit px-2 font-mono italic text-gray-400 font-medium rounded-sm m-1 mb-2">
-        {language}
-      </span> */}
-
-      <SyntaxHighlighter children={code} language={language} style={monokai} />
+      <SyntaxHighlighter
+        children={formatted_code}
+        language={language}
+        style={monokai}
+        wrapLines={true}
+      />
 
       <div
         className="absolute bottom-0 right-0 m-1"

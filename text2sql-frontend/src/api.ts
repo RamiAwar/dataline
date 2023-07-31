@@ -130,17 +130,18 @@ const createMessage = async (conversationId: string, content: string) => {
 
 export type QueryResult = {
   status: "ok";
-  data: {
-    text?: string;
-    sql?: string;
-    results?: any[];
-  };
+  message: IMessageWithResults;
 };
-const query = async (conversationId: string, query: string) => {
+const query = async (
+  conversationId: string,
+  query: string,
+  execute: boolean
+) => {
   const response = await axios.get<QueryResult>(`${baseUrl}/query`, {
     params: {
       conversation_id: conversationId,
       query,
+      execute,
     },
   });
 

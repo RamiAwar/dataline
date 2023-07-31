@@ -1,7 +1,7 @@
-import { ClipboardIcon } from "@heroicons/react/24/outline";
 import logo from "../assets/images/logo_md.png";
 import { CodeBlock } from "./CodeBlock";
 import { IMessageWithResults } from "./types";
+import { DynamicTable } from "../Library/DynamicTable";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -44,12 +44,17 @@ export const Message = (message: IMessageWithResults) => {
           )}
 
           {/** RESULTS: QUERY, DATA, PLOTS */}
-          {message.results?.map(
-            (result, index) =>
-              result.type === "sql" && (
-                <CodeBlock key={index} language="sql" code={result.content} />
-              )
-          )}
+          {message.results
+            ?.sort((a, b) => (a.type === "data" ? -1 : 1))
+            .map(
+              (result, index) =>
+                (result.type === "sql" && (
+                  <CodeBlock key={index} language="sql" code={result.content} />
+                )) ||
+                (result.type === "data" && (
+                  <DynamicTable data={result.content} />
+                ))
+            )}
 
           <div className="flex justify-between lg:block">
             <div className="text-xs flex items-center justify-center gap-1 self-center pt-2 !invisible">
