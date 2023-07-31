@@ -13,7 +13,7 @@ export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
   }, [page, rowsPerPage, data]);
 
   return (
-    <div className="max-w-7xl border-2 border-gray-500 rounded-md bg-gray-900 flex flex-col relative">
+    <div className="max-w-7xl border-2 border-gray-500 rounded-md bg-gray-900 flex flex-col  overflow-x-scroll no-scrollx">
       <div className="flow-root">
         <div className="-mx-4 -my-2 overflow-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">

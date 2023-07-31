@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api } from "../api";
 import { Message } from "./Message";
 import { IConnection, IMessageWithResults } from "./types";
@@ -39,6 +39,7 @@ export const Conversation = () => {
   const [conversations, setConversations, fetchConversations] =
     useConversationList();
   const [conversation, setConversation] = useConversation();
+  const scrollableDiv = useRef<HTMLDivElement | null>(null);
 
   function submitQuery(value: string) {
     // Check if a current conversation is selected
@@ -93,9 +94,7 @@ export const Conversation = () => {
     });
   }
 
-  function createNewConnection() {
-    // pass
-  }
+  function createNewConnection() {}
 
   useEffect(() => {
     const loadMessages = async () => {
@@ -105,6 +104,12 @@ export const Conversation = () => {
     };
     loadMessages();
   }, [conversation]);
+
+  useEffect(() => {
+    if (scrollableDiv.current !== null) {
+      scrollableDiv.current.scrollIntoView({ behavior: "instant" });
+    }
+  }, [messages]);
 
   return (
     <div className="bg-gray-900 w-full h-full relative flex flex-col">
@@ -193,6 +198,7 @@ export const Conversation = () => {
               results={message.results}
             ></Message>
           ))}
+          <div ref={scrollableDiv} />
         </div>
       </Transition>
 

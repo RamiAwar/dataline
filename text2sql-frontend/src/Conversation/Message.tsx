@@ -2,12 +2,71 @@ import logo from "../assets/images/logo_md.png";
 import { CodeBlock } from "./CodeBlock";
 import { IMessageWithResults } from "./types";
 import { DynamicTable } from "../Library/DynamicTable";
+import { useEffect, useState } from "react";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-export const Message = (message: IMessageWithResults) => {
+export const Message = (initialMessage: IMessageWithResults) => {
+  const [loadingQuery, setLoadingQuery] = useState<boolean>(false);
+  const [queryResult, setQueryResult] = useState<any | null>(null);
+  const [message, setMessage] = useState<IMessageWithResults>(initialMessage);
+
+  function runQuery(code: string) {
+    try {
+      console.log("RUNNING QUERY");
+
+      // Display loading result instead of PlayIcon and disable button
+      setLoadingQuery(true);
+      setQueryResult(null);
+
+      setTimeout(() => {
+        setQueryResult([
+          ["id", "name"],
+          ["1", "John"],
+          ["2", "Jane"],
+        ]);
+        setLoadingQuery(false);
+      }, 1000);
+
+      // Replace loading result with actual result
+      // setQueryResult("");
+
+      // Re-enable the button
+      // setLoadingQuery(false);
+    } catch (error) {
+      // Handle any errors that occurred during the backend communication
+      setLoadingQuery(false);
+    }
+  }
+
+  useEffect(() => {
+    // Add query result to results
+    if (message.results !== undefined && queryResult !== null) {
+      // Remove data result from results if any
+      console.log(message.results);
+      let newResults = message.results?.filter(
+        (result) => result.type !== "data"
+      );
+      console.log(newResults);
+
+      const updatedMessage = {
+        ...message,
+        results: [
+          ...newResults,
+          {
+            type: "data",
+            content: queryResult,
+            result_id: "1",
+          },
+        ],
+      } as IMessageWithResults;
+      console.log(updatedMessage);
+      setMessage(updatedMessage);
+    }
+  }, [queryResult]);
+
   return (
     <div
       className={classNames(
@@ -49,7 +108,13 @@ export const Message = (message: IMessageWithResults) => {
             .map(
               (result, index) =>
                 (result.type === "sql" && (
-                  <CodeBlock key={index} language="sql" code={result.content} />
+                  <CodeBlock
+                    key={index}
+                    language="sql"
+                    code={result.content}
+                    runQuery={runQuery}
+                    runnable={!loadingQuery}
+                  />
                 )) ||
                 (result.type === "data" && (
                   <DynamicTable data={result.content} />
