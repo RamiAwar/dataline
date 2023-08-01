@@ -1,5 +1,9 @@
 import axios from "axios";
-import { IConversationResult, IMessageWithResults } from "./Conversation/types";
+import {
+  IConversationResult,
+  IMessageWithResults,
+  IResult,
+} from "./Conversation/types";
 
 const baseUrl = "http://localhost:7377";
 
@@ -148,6 +152,21 @@ const query = async (
   return response.data;
 };
 
+export type RunSQLResult = {
+  status: "ok";
+  data: IResult;
+};
+const runSQL = async (conversationId: string, code: string) => {
+  const response = await axios.get<RunSQLResult>(`${baseUrl}/execute-sql`, {
+    params: {
+      conversation_id: conversationId,
+      sql: code,
+    },
+  });
+
+  return response.data;
+};
+
 export const api = {
   healthcheck,
   connect,
@@ -159,4 +178,5 @@ export const api = {
   getMessages,
   createMessage,
   query,
+  runSQL,
 };

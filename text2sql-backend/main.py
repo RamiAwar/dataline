@@ -22,7 +22,7 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 
 import db
 from context_builder import CustomSQLContextContainerBuilder
-from models import DataResult, Result, UnsavedResult
+from models import Result, UnsavedResult
 from services import QueryService
 from sql_wrapper import CustomSQLDatabase, request_execute, request_limit
 
@@ -209,7 +209,56 @@ async def add_message(
     return {"status": "ok"}
 
 
-@app.get("/query", response_model=List[Union[UnsavedResult, DataResult]])
+@app.get("/execute-sql", response_model=UnsavedResult)
+async def execute_sql(
+    conversation_id: str, sql: str, limit: int = 10, execute: bool = True
+):
+    request_limit.set(limit)
+    request_execute.set(execute)
+
+    # Get conversation
+    conversation = db.get_conversation(conversation_id)
+    session_id = conversation.session_id
+    session = db.get_session(session_id)
+    if not session:
+        return {"status": "error", "message": "Invalid session_id"}
+
+    if session_id not in query_services:
+        schema = db.get_schema_index(session_id)
+        query_services[session_id] = QueryService(
+            dsn=session[1], schema_index_file=schema
+        )
+
+    # Execute query
+    data = query_services[session_id].sql_db.run_sql(sql)[1]
+    print(data)
+    if data.get("result"):
+        # Convert data to list of rows
+        rows = [data["columns"]]
+        rows.extend([x for x in r] for r in data["result"])
+
+        return Response(
+            content=json.dumps(
+                {
+                    "status": "ok",
+                    "data": UnsavedResult(
+                        type="data",
+                        content=rows,
+                    ),
+                },
+                default=pydantic_encoder,
+                indent=4,
+            ),
+            media_type="application/json",
+        )
+    else:
+        return Response(
+            content=json.dumps({"status": "error", "message": "No results found"}),
+            media_type="application/json",
+        )
+
+
+@app.get("/query", response_model=List[UnsavedResult])
 async def query(
     conversation_id: str, query: str, limit: int = 10, execute: bool = False
 ):
@@ -237,7 +286,7 @@ async def query(
     response = query_services[session_id].query(query, conversation_id=conversation_id)
     unsaved_results = query_services[session_id].results_from_query_response(response)
 
-    # Save results
+    # Save results WITHOUT data (sensitive)
     saved_results: List[Result] = []
     for result in unsaved_results:
         saved_result = db.create_result(result)
@@ -251,7 +300,7 @@ async def query(
         results=saved_results,
     )
 
-    # Execute query
+    # Execute query and fetch data result now
     data = query_services[session_id].sql_db.run_sql(response.sql)[1]
     if data.get("result"):
         # Convert data to list of rows
@@ -259,7 +308,7 @@ async def query(
         rows.extend([x for x in r] for r in data["result"])
 
         unsaved_results.append(
-            DataResult(
+            UnsavedResult(
                 type="data",
                 content=rows,
             )

@@ -4,7 +4,9 @@ from typing import Any, List, Literal, Tuple, Union
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-ResultType = Union[Literal["sql"], Literal["code"], Literal["text"], Literal["error"]]
+ResultType = Union[
+    Literal["sql"], Literal["code"], Literal["text"], Literal["error"], Literal["data"]
+]
 
 
 @dataclass
@@ -18,13 +20,7 @@ class Result:
 @dataclass
 class UnsavedResult:
     type: ResultType
-    content: str
-
-
-@dataclass
-class DataResult:
-    type: Literal["data"]
-    content: List[Any]
+    content: Any
 
 
 @dataclass

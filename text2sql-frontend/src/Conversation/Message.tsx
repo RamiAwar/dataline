@@ -3,6 +3,7 @@ import { CodeBlock } from "./CodeBlock";
 import { IMessageWithResults } from "./types";
 import { DynamicTable } from "../Library/DynamicTable";
 import { useEffect, useState } from "react";
+import { api } from "../api";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -21,22 +22,19 @@ export const Message = (initialMessage: IMessageWithResults) => {
       setLoadingQuery(true);
       setQueryResult(null);
 
-      setTimeout(() => {
-        setQueryResult([
-          ["id", "name"],
-          ["1", "John"],
-          ["2", "Jane"],
-        ]);
-        setLoadingQuery(false);
-      }, 1000);
-
-      // Replace loading result with actual result
-      // setQueryResult("");
+      // Fetch result from API
+      const executeSQL = async () => {
+        if (initialMessage.conversation_id === undefined) return;
+        const data = await api.runSQL(initialMessage.conversation_id, code);
+        setQueryResult(data.data.content);
+      };
+      executeSQL();
 
       // Re-enable the button
-      // setLoadingQuery(false);
+      setLoadingQuery(false);
     } catch (error) {
       // Handle any errors that occurred during the backend communication
+      // TODO: Show error
       setLoadingQuery(false);
     }
   }
@@ -91,7 +89,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
             </div>
           </div>
         </div>
-        <div className="flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
+        <div className="flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)] scrollbar-hide">
           {message.content && (
             <div className="flex flex-grow flex-col gap-3">
               <div className="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap break-words">

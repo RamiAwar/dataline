@@ -4,7 +4,7 @@ export type Role = "user" | "assistant";
 export type IResult = {
   type: IResultType;
   content: string;
-  result_id: string;
+  result_id?: string;
 };
 
 export type IMessageWithResults = {
@@ -12,6 +12,7 @@ export type IMessageWithResults = {
   role: string;
   results?: IResult[];
   message_id?: string;
+  conversation_id?: string;
 };
 
 export type IConversationResult = {

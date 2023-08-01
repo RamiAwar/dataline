@@ -13,11 +13,11 @@ export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
   }, [page, rowsPerPage, data]);
 
   return (
-    <div className="max-w-7xl border-2 border-gray-500 rounded-md bg-gray-900 flex flex-col  overflow-x-scroll no-scrollx">
+    <div className="max-w-7xl border-2 border-gray-500 rounded-md bg-gray-900 flex flex-col overflow-auto scrollbar-hide">
       <div className="flow-root">
-        <div className="-mx-4 -my-2 overflow-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <table className="min-w-full divide-y divide-gray-400 overflow-x-scroll">
+        <div className="">
+          <div className="inline-block min-w-full py-2 align-middle">
+            <table className="min-w-full divide-y divide-gray-400 -my-2">
               <thead>
                 <tr className="divide-x divide-gray-400">
                   {dataSubset[0].map((item: any, index: number) => (

@@ -196,6 +196,7 @@ export const Conversation = () => {
               content={message.content}
               role={message.role}
               results={message.results}
+              conversation_id={conversation?.id}
             ></Message>
           ))}
           <div ref={scrollableDiv} />
