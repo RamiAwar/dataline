@@ -58,6 +58,16 @@ export const Conversation = () => {
       },
     ]);
 
+    // Add message to messages
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        content: "Loading...",
+        role: "assistant",
+        message_id: generateUUID(),
+      },
+    ]);
+
     // Get API response
     (async () => {
       const res = await api.query(conversation.id, value, true);
@@ -66,7 +76,7 @@ export const Conversation = () => {
         return;
       }
       const message = res.message;
-      setMessages((prevMessages) => [...prevMessages, message]);
+      setMessages((prevMessages) => [...prevMessages.slice(0, -1), message]);
     })();
   }
 
