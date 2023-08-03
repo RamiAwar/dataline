@@ -1,10 +1,15 @@
 import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { api } from "../api";
+import { Spinner } from "../Spinner/Spinner";
 
 interface NewConnectionModalFormProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+function classNames(...classes: any[]) {
+  return classes.filter(Boolean).join(" ");
 }
 
 function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
@@ -37,11 +42,14 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
     // Enable loading state
     setIsLoading(true);
 
-    const res = await api.createConnection(unmaskedDsn, connectionName);
-    if (res.status !== "ok") {
-      alert("Error creating connection");
-      return;
-    }
+    // const res = await api.createConnection(unmaskedDsn, connectionName);
+    // if (res.status !== "ok") {
+    //   alert("Error creating connection");
+    //   return;
+    // }
+
+    // Fake loading for 2 seconds
+    await new Promise((resolve) => setTimeout(resolve, 4000));
 
     setIsLoading(false);
     onClose();
@@ -96,11 +104,17 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                             type="text"
                             name="name"
                             id="name"
+                            disabled={isLoading}
                             autoComplete="one-time-code"
                             value={connectionName}
                             onChange={handleNameChange}
                             placeholder="Postgres Prod"
-                            className="block w-full rounded-md border-0 bg-white/5 py-1.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                            className={classNames(
+                              isLoading
+                                ? "animate-pulse bg-gray-900 text-gray-400"
+                                : "bg-white/5 text-white",
+                              "block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                            )}
                           />
                         </div>
                       </div>
@@ -132,12 +146,18 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                           id="dsn"
                           name="dsn"
                           type="text"
+                          disabled={isLoading}
                           autoComplete="one-time-code"
                           value={unmaskedDsn}
                           onChange={handleDSNChange}
                           placeholder="postgres://myuser:mypassword@localhost:5432/mydatabase"
                           // readOnly // Make this input read-only to prevent user interaction
-                          className="block w-full rounded-md border-0 bg-white/5 py-1.5 text-white font-mono shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                          className={classNames(
+                            isLoading
+                              ? "animate-pulse bg-gray-900 text-gray-400"
+                              : "bg-white/5 text-white",
+                            "block w-full rounded-md border-0 py-1.5 font-mono shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                          )}
                         />
                       </div>
                     </div>
@@ -153,8 +173,11 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                     </button>
                     <button
                       type="submit"
-                      className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                      className="inline-flex items-center rounded-md bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
                     >
+                      {isLoading && (
+                        <Spinner className="pointer-events-none h-5 w-5"></Spinner>
+                      )}
                       Save
                     </button>
                   </div>

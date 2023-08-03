@@ -89,7 +89,7 @@ class ConnectRequest(BaseModel):
     @validator("dsn")
     def validate_dsn_format(cls, value):
         # Define a regular expression to match the DSN format
-        dsn_regex = r"^\w+:\/\/\w+:\w+@[\w.-]+:\d+\/\w+$"
+        dsn_regex = r"^[\w\+]+:\/\/\w+:\w+@[\w.-]+[:\d]*\/\w+$"
 
         if not re.match(dsn_regex, value):
             raise ValueError(
