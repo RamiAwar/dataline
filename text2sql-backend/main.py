@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import re
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Dict, List, Union
@@ -12,7 +13,7 @@ from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from llama_index import GPTSimpleVectorIndex
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 from pydantic.json import pydantic_encoder
 from pygments import formatters, highlight, lexers
 from pygments_pprint_sql import SqlFilter
@@ -82,8 +83,20 @@ app.middleware("http")(catch_exceptions_middleware)
 
 
 class ConnectRequest(BaseModel):
-    dsn: str
+    dsn: str = Field(min_length=3)
     name: str
+
+    @validator("dsn")
+    def validate_dsn_format(cls, value):
+        # Define a regular expression to match the DSN format
+        dsn_regex = r"^\w+:\/\/\w+:\w+@[\w.-]+:\d+\/\w+$"
+
+        if not re.match(dsn_regex, value):
+            raise ValueError(
+                'Invalid DSN format. The expected format is "driver://username:password@host:port/database".'
+            )
+
+        return value
 
 
 @app.get("/healthcheck")
@@ -139,37 +152,6 @@ async def get_sessions():
         "status": "ok",
         "sessions": db.get_sessions(),
     }
-
-
-# @app.get("/stream/query")
-# async def streamed_query(
-#     conversation_id: str, query: str, limit: int = 10, execute: bool = False
-# ):
-#     # Get conversation
-#     conversation = db.get_conversation(conversation_id)
-
-#     # Add user message to conversation
-#     db.add_message_to_conversation(conversation_id, content=query, role="user")
-
-#     # Get dsn from session_id
-#     session_id = conversation.session_id
-#     session = db.get_session(session_id)
-#     if not session:
-#         return {"status": "error", "message": "Invalid session_id"}
-
-#     request_limit.set(limit)
-#     request_execute.set(execute)
-
-#     # Get streaming query service instance
-#     if session_id not in query_services:
-#         schema = db.get_schema_index(session_id)
-#         query_services[session_id] = StreamingQueryService(
-#             dsn=session[1], schema_index_file=schema
-#         )
-
-#     # Streaming query service handles updating conversation
-#     response = query_services[session_id].query(query, conversation_id=conversation_id)
-#     return EventSourceResponse(response)
 
 
 @app.get("/conversations")
@@ -350,36 +332,6 @@ def create_schema_index(session_id: str, dsn: str):
 
 def sql2html(sql) -> str:
     return highlight(sql, lexer, formatters.HtmlFormatter())
-
-
-class AlchemyJSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        # check if object `o` is of custom declared model instance
-        if isinstance(o.__class__, DeclarativeMeta):
-            data = {}
-            fields = o.__json__() if hasattr(o, "__json__") else dir(o)
-            for field in [
-                f
-                for f in fields
-                if not f.startswith("_")
-                and f not in ["metadata", "query", "query_class"]
-            ]:
-                value = o.__getattribute__(field)
-                try:
-                    if json.dumps(value):
-                        data[field] = value
-                except TypeError:
-                    data[field] = None
-            return data
-        # check if object `o` is of Decimal instance
-        elif isinstance(o, Decimal):
-            return o.to_eng_string()
-        # check if object `o` is of date instance
-        elif isinstance(o, date):
-            return o.isoformat()
-        # rest of objects are handled by default JSONEncoder like 'Datetime',
-        # 'UUID', 'Markdown' and various others
-        return json.JSONEncoder.default(self, o)
 
 
 def init_argparse() -> argparse.ArgumentParser:
