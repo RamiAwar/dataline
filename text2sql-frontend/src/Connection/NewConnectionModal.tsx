@@ -7,43 +7,43 @@ interface NewConnectionModalFormProps {
   onClose: () => void;
 }
 
-interface NewConnectionFormValues {
-  dsn: string;
-  name: string;
-}
-
 function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
-  const [formValues, setFormValues] = useState<NewConnectionFormValues>({
-    dsn: "postgres://myuser:mypassword@localhost:5432/mydatabase",
-    name: "",
-  });
-
-  const maskDSNCredentials = (dsn: string) => {
-    const regex = /^(.*\/\/)(.*?:.*?@)(.*)$/;
-    return dsn.replace(regex, (_, prefix, credentials, rest) => {
-      const maskedCredentials = credentials.replace(/./g, "*");
-      return prefix + maskedCredentials + rest;
-    });
-  };
+  // const maskDSNCredentials = (dsn: string) => {
+  //   const regex = /^(.*\/\/)(.*?:.*?@)(.*)$/;
+  //   return dsn.replace(regex, (_, prefix, credentials, rest) => {
+  //     const maskedCredentials = credentials.replace(/./g, "*");
+  //     return prefix + maskedCredentials + rest;
+  //   });
+  // };
+  // const maskedDsn = maskDSNCredentials(unmaskedDsn);
 
   const [unmaskedDsn, setUnmaskedDsn] = useState("");
-  const maskedDsn = maskDSNCredentials(unmaskedDsn);
+  const [connectionName, setConnectionName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleDSNChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
     setUnmaskedDsn(value);
   };
 
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.target;
+    setConnectionName(value);
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const res = await api.createConnection(formValues.dsn, formValues.name);
+    // Enable loading state
+    setIsLoading(true);
+
+    const res = await api.createConnection(unmaskedDsn, connectionName);
     if (res.status !== "ok") {
       alert("Error creating connection");
       return;
     }
 
-    // TODO: Add success banner
+    setIsLoading(false);
     onClose();
   };
 
@@ -97,8 +97,8 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                             name="name"
                             id="name"
                             autoComplete="one-time-code"
-                            value={maskedDsn}
-                            // onChange={}
+                            value={connectionName}
+                            onChange={handleNameChange}
                             placeholder="Postgres Prod"
                             className="block w-full rounded-md border-0 bg-white/5 py-1.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
                           />
@@ -113,8 +113,10 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                       >
                         Connection string / DSN
                       </label>
+                      {/* Hidden input field overlaying the real one
+                      
                       <div className="relative mt-2">
-                        {/* Hidden input field overlaying the real one */}
+                        
                         <input
                           type="text"
                           autoComplete="off"
@@ -122,16 +124,19 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                           onChange={handleDSNChange}
                           className="absolute w-full h-full bg-transparent border-0 rounded-md text-white font-mono sm:text-sm sm:leading-6 py-1.5"
                           style={{ WebkitTextFillColor: "transparent" }}
-                        />
-                        {/* Display the masked DSN to the user */}
+                        /> */}
+
+                      {/* Display the masked DSN to the user */}
+                      <div className="relative mt-2">
                         <input
                           id="dsn"
                           name="dsn"
                           type="text"
                           autoComplete="one-time-code"
-                          value={maskedDsn}
+                          value={unmaskedDsn}
+                          onChange={handleDSNChange}
                           placeholder="postgres://myuser:mypassword@localhost:5432/mydatabase"
-                          readOnly // Make this input read-only to prevent user interaction
+                          // readOnly // Make this input read-only to prevent user interaction
                           className="block w-full rounded-md border-0 bg-white/5 py-1.5 text-white font-mono shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
                         />
                       </div>

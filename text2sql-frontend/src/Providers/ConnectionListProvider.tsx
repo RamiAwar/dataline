@@ -4,11 +4,13 @@ import { api } from "../api";
 
 type ConnectionListContextType = [
   IConnection[] | null,
-  React.Dispatch<React.SetStateAction<IConnection[]>>
+  React.Dispatch<React.SetStateAction<IConnection[]>>,
+  () => void
 ];
 
 const ConnectionListContext = createContext<ConnectionListContextType>([
   null,
+  () => {},
   () => {},
 ]);
 
@@ -25,19 +27,27 @@ export const ConnectionListProvider = ({
 }: React.PropsWithChildren) => {
   const [connections, setConnections] = useState<IConnection[]>([]);
 
+  function fetchConnections() {
+    api
+      .listConnections()
+      .then((response) => {
+        if (response.status === "ok") {
+          setConnections(response.sessions);
+        } else {
+          alert("Error loading connections");
+        }
+      })
+      .catch((err) => alert("Error loading conversations"));
+  }
+
   useEffect(() => {
-    // replace this with your actual API call
-    api.listConnections().then((response) => {
-      if (response.status === "ok") {
-        setConnections(response.sessions);
-      } else {
-        alert("Error loading connections");
-      }
-    });
+    fetchConnections();
   }, []);
 
   return (
-    <ConnectionListContext.Provider value={[connections, setConnections]}>
+    <ConnectionListContext.Provider
+      value={[connections, setConnections, fetchConnections]}
+    >
       {children}
     </ConnectionListContext.Provider>
   );
