@@ -1,3 +1,17 @@
+// Enum for sql dialects
+export enum Dialect {
+  Postgres = "postgresql",
+  MySQL = "mysql",
+  SQLite = "sqlite",
+  MariaDB = "mariadb",
+  Spark = "spark",
+  BigQuery = "bigquery",
+  IBMDB2 = "db2",
+  Hive = "hive",
+  Couchbase = "n1ql",
+  TransactSQL = "tsql",
+}
+
 export type IResultType = "sql" | "code" | "data";
 export type Role = "user" | "assistant";
 
@@ -31,6 +45,5 @@ export type IConnection = {
   session_id: string;
   name: string;
   dsn: string;
-  database: string;
   dialect: string;
 };

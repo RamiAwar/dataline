@@ -1,10 +1,11 @@
 import SyntaxHighlighter from "react-syntax-highlighter";
-import { IResultType } from "./types";
+import { IResultType } from "../Library/types";
 import { ClipboardIcon, PlayIcon } from "@heroicons/react/24/outline";
 import CustomTooltip from "../../src/Library/Tooltip";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { format } from "prettier-sql";
 import { useRef, useState } from "react";
+import { Dialect } from "../Library/types";
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
@@ -12,20 +13,6 @@ function copyToClipboard(text: string) {
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
-}
-
-// Enum for sql dialects
-export enum Dialect {
-  Postgres = "postgresql",
-  MySQL = "mysql",
-  SQLite = "sqlite",
-  MariaDB = "mariadb",
-  Spark = "spark",
-  BigQuery = "bigquery",
-  IBMDB2 = "db2",
-  Hive = "hive",
-  Couchbase = "n1ql",
-  TransactSQL = "tsql",
 }
 
 export const CodeBlock = ({

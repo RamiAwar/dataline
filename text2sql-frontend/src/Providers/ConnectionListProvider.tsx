@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { IConnection } from "../Conversation/types";
+import { IConnection } from "../Library/types";
 import { api } from "../api";
 
 type ConnectionListContextType = [
   IConnection[] | null,
-  (connections: IConnection[]) => void
+  React.Dispatch<React.SetStateAction<IConnection[]>>
 ];
 
 const ConnectionListContext = createContext<ConnectionListContextType>([

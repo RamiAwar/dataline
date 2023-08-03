@@ -3,7 +3,7 @@ import {
   IConversationResult,
   IMessageWithResults,
   IResult,
-} from "./Conversation/types";
+} from "./Library/types";
 
 const baseUrl = "http://localhost:7377";
 
@@ -23,33 +23,13 @@ const healthcheck = async (): Promise<HealthcheckResult> => {
 };
 
 type ConnectResult = { status: "ok"; session_id: string } | ApiError;
-const connect = async (connectionString: string): Promise<ConnectResult> => {
+const createConnection = async (
+  connectionString: string,
+  name: string
+): Promise<ConnectResult> => {
   const response = await axios.post<ConnectResult>(`${baseUrl}/connect`, {
     dsn: connectionString,
-  });
-  return response.data;
-};
-
-export type SearchResult = {
-  status: "ok";
-  results: string[];
-  query: string;
-  raw_query: string;
-};
-export type ApiSearchResult = SearchResult | ApiError;
-const search = async (
-  sessionId: string,
-  query: string,
-  limit: number,
-  execute: boolean = true
-): Promise<ApiSearchResult> => {
-  const response = await axios.get<ApiSearchResult>(`${baseUrl}/query`, {
-    params: {
-      session_id: sessionId,
-      query,
-      limit,
-      execute,
-    },
+    name: name,
   });
   return response.data;
 };
@@ -169,8 +149,7 @@ const runSQL = async (conversationId: string, code: string) => {
 
 export const api = {
   healthcheck,
-  connect,
-  search,
+  createConnection,
   listConnections,
   listConversations,
   createConversation,
