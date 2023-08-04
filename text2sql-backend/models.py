@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Any, List, Literal, Tuple, Union
+from typing import Any, Literal, Union
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
 
 ResultType = Union[
@@ -59,3 +59,7 @@ class SQLQueryResult:
     text: str = Field(default="")
     sql: str = Field(default="")
     chart_request: bool = Field(default=False)
+
+
+class UpdateConversationRequest(BaseModel):
+    name: str

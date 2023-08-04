@@ -68,6 +68,20 @@ const createConversation = async (sessionId: string, name: string) => {
   return response.data;
 };
 
+export type ConversationUpdateResult = { status: "ok" } | ApiError;
+const updateConversation = async (
+  conversationId: string,
+  name: string
+): Promise<ConversationUpdateResult> => {
+  const response = await axios.patch<ConversationUpdateResult>(
+    `${baseUrl}/conversation/${conversationId}`,
+    {
+      name,
+    }
+  );
+  return response.data;
+};
+
 export type ConversationDeletionResult =
   | {
       status: "ok";
@@ -153,6 +167,7 @@ export const api = {
   listConnections,
   listConversations,
   createConversation,
+  updateConversation,
   deleteConversation,
   getMessages,
   createMessage,

@@ -62,12 +62,23 @@ export const Sidebar = () => {
     // Should never be null, only editable if not null
     if (currentConversation === null) return;
 
-    console.log(editedName);
+    // Update conversation in backend
+    (async () => {
+      const res = await api.updateConversation(
+        currentConversation.id,
+        editedName
+      );
+      if (res.status !== "ok") {
+        alert("Error updating conversation");
+        return;
+      }
+      setCurrentConversation({
+        ...currentConversation,
+        name: editedName,
+      });
 
-    setCurrentConversation({
-      ...currentConversation,
-      name: editedName,
-    });
+      fetchConversations();
+    })();
 
     setIsEditing(false);
   };

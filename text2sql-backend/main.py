@@ -17,11 +17,10 @@ from pygments import formatters, highlight, lexers
 from pygments_pprint_sql import SqlFilter
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.ext.declarative import DeclarativeMeta
 
 import db
 from context_builder import CustomSQLContextContainerBuilder
-from models import Result, UnsavedResult
+from models import Result, UnsavedResult, UpdateConversationRequest
 from services import QueryService
 from sql_wrapper import CustomSQLDatabase, request_execute, request_limit
 
@@ -166,6 +165,12 @@ async def create_conversation(
 ):
     conversation_id = db.create_conversation(session_id=session_id, name=name)
     return {"status": "ok", "conversation_id": conversation_id}
+
+
+@app.patch("/conversation/{conversation_id}")
+async def update_conversation(conversation_id: str, req: UpdateConversationRequest):
+    db.update_conversation(conversation_id=conversation_id, name=req.name)
+    return {"status": "ok"}
 
 
 @app.delete("/conversation/{conversation_id}")

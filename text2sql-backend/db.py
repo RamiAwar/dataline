@@ -229,6 +229,15 @@ def create_conversation(session_id: str, name: str) -> int:
     return conversation_id
 
 
+def update_conversation(conversation_id: str, name: str):
+    conn.execute(
+        "UPDATE conversations SET name = ? WHERE conversation_id = ?",
+        (name, conversation_id),
+    )
+    conn.commit()
+    return True
+
+
 # Add message with results to conversation
 def add_message_to_conversation(
     conversation_id: str, content: str, role: str, results: Optional[List[Result]] = []
