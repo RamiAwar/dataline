@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { IConversation } from "../Conversation/types";
+import { IConversation } from "../Library/types";
 
 type ConversationContextType = [
   IConversation | null,

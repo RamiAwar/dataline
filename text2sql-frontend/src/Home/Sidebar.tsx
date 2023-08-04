@@ -9,9 +9,10 @@ import {
 } from "@heroicons/react/24/outline";
 import logo from "../assets/images/logo_md.png";
 import { useConversation } from "../Providers/ConversationProvider";
-import { IConversationResult } from "../Library/types";
+import { IConversation, IConversationResult } from "../Library/types";
 import { useConversationList } from "../Providers/ConversationListProvider";
 import { api } from "../api";
+import { PencilSquareIcon } from "@heroicons/react/20/solid";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -21,6 +22,8 @@ export const Sidebar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [conversations, s_, fetchConversations] = useConversationList();
   const [currentConversation, setCurrentConversation] = useConversation();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState(currentConversation?.name || "");
 
   function createNewChat() {
     setCurrentConversation(null);
@@ -38,10 +41,45 @@ export const Sidebar = () => {
     fetchConversations();
   }
 
-  // Update component when conversations change
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedName(event.target.value);
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault(); // Prevent form submission on Enter
+      handleSaveClick();
+    } else if (event.key === "Escape") {
+      handleCancelEdit();
+    }
+  };
+
+  const handleSaveClick = () => {
+    // Should never be null, only editable if not null
+    if (currentConversation === null) return;
+
+    console.log(editedName);
+
+    setCurrentConversation({
+      ...currentConversation,
+      name: editedName,
+    });
+
+    setIsEditing(false);
+  };
+
   useEffect(() => {
-    console.log(currentConversation);
+    // Update edited name when conversation changes
+    setEditedName(currentConversation?.name || "");
   }, [conversations, currentConversation]);
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
 
   return (
     <div>
@@ -240,18 +278,45 @@ export const Sidebar = () => {
         </div>
       </div>
 
-      <div className="sticky top-0 z-40 flex items-center gap-x-6 bg-gray-900 px-4 py-4 shadow-sm sm:px-6 lg:hidden h-16">
+      <div className="fixed w-full top-0 z-40 flex items-center gap-x-6 px-4 py-4 shadow-sm sm:px-6 lg:hidden h-16 backdrop-filter backdrop-blur-lg">
         <button
           type="button"
-          className="-m-2.5 p-2.5 text-gray-400 lg:hidden"
+          className="-m-2.5 p-2.5 text-white lg:hidden"
           onClick={() => setSidebarOpen(true)}
         >
           <span className="sr-only">Open sidebar</span>
-          <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+          <Bars3Icon
+            className="h-6 w-6 [&>path]:stroke-[2]"
+            aria-hidden="true"
+          />
         </button>
-        <div className="flex-1 text-sm font-semibold leading-6 text-white">
-          Dashboard
-        </div>
+        {isEditing ? (
+          <div className="flex-1 inline-flex justify-center items-center gap-3 text-center text-md font-medium leading-6 text-white">
+            <input
+              type="text"
+              value={editedName}
+              onChange={handleNameChange}
+              onKeyDown={handleKeyPress}
+              autoFocus
+              onBlur={handleSaveClick}
+              className="text-md font-medium leading-6 text-white bg-transparent border-b-2 border-white"
+            />
+          </div>
+        ) : (
+          <div className="flex-1 inline-flex justify-center items-center gap-3 text-center text-md font-medium leading-6 text-white">
+            {editedName || "New chat"}
+
+            {!isEditing && currentConversation !== null && (
+              <div
+                onClick={handleEditClick}
+                className=" transition-colors duration-150 cursor-pointer p-1 rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
+              >
+                <PencilSquareIcon className="w-5 h-5 " />
+              </div>
+            )}
+          </div>
+        )}
+
         <a href="#">
           <span className="sr-only">Your profile</span>
           <img

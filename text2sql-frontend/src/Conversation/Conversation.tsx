@@ -9,6 +9,7 @@ import ExpandingInput from "./ExpandingInput";
 import { Transition } from "@headlessui/react";
 import { useConversationList } from "../Providers/ConversationListProvider";
 import { ConnectionSelector } from "../Library/ConnectionSelector";
+import { generateUUID } from "../Library/utils";
 
 export const Conversation = () => {
   // Load messages from conversation via API on load

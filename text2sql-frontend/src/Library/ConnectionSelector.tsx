@@ -50,7 +50,7 @@ export const ConnectionSelector = () => {
 
   return (
     <div className="flex flex-col justify-center items-center h-full">
-      <div className="bg-gray-700 border-2 border-gray-500 w-3/4 xl:w-1/2 rounded-xl p-6">
+      <div className="bg-gray-700 border-2 border-gray-500 w-full sm:w-1/2 md:w-3/4 xl:w-1/2 rounded-xl p-6">
         <div className="text-gray-50 text-md md:text-2xl font-semibold">
           Select a connection
         </div>

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { IConversation, IConversationResult } from "../Conversation/types";
+import { IConversationResult } from "../Library/types";
 import { api } from "../api";
 
 type ConversationListContextType = [
