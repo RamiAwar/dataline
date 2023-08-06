@@ -5,7 +5,7 @@ import { DynamicTable } from "../Library/DynamicTable";
 import { useEffect, useState } from "react";
 import { api } from "../api";
 
-function classNames(...classes) {
+function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 

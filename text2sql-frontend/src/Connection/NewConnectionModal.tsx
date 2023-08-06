@@ -8,7 +8,7 @@ interface NewConnectionModalFormProps {
   onClose: () => void;
 }
 
-function classNames(...classes: any[]) {
+function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 

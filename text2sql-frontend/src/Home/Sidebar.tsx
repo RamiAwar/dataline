@@ -6,6 +6,7 @@ import {
   ChatBubbleOvalLeftIcon,
   XMarkIcon,
   TrashIcon,
+  CheckIcon,
 } from "@heroicons/react/24/outline";
 import logo from "../assets/images/logo_md.png";
 import { useConversation } from "../Providers/ConversationProvider";
@@ -30,6 +31,7 @@ export const Sidebar = () => {
   }
 
   function selectConversation(conversation: IConversationResult) {
+    setIsEditing(false);
     setCurrentConversation({
       id: conversation.conversation_id,
       name: conversation.name,
@@ -41,7 +43,8 @@ export const Sidebar = () => {
     fetchConversations();
   }
 
-  const handleEditClick = () => {
+  const handleEditClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
     setIsEditing(true);
   };
 
@@ -59,6 +62,7 @@ export const Sidebar = () => {
   };
 
   const handleSaveClick = () => {
+    console.log("Saving...");
     // Should never be null, only editable if not null
     if (currentConversation === null) return;
 
@@ -214,7 +218,7 @@ export const Sidebar = () => {
                         }}
                         className={classNames(
                           chat.conversation_id == currentConversation?.id
-                            ? "bg-gray-800 text-white"
+                            ? "bg-gray-700 text-white"
                             : "text-gray-400 hover:text-white hover:bg-gray-800",
                           "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
                         )}
@@ -223,15 +227,56 @@ export const Sidebar = () => {
                           className="h-5 w-5 shrink-0"
                           aria-hidden="true"
                         />
-                        {chat.name}
+
+                        {/* Show input field when editing and chat selected */}
+                        {isEditing &&
+                        chat.conversation_id == currentConversation?.id ? (
+                          <div className="flex-1 inline-flex justify-center items-center gap-3 text-center text-md font-medium leading-6 text-white">
+                            <input
+                              type="text"
+                              value={editedName}
+                              onChange={handleNameChange}
+                              onKeyDown={handleKeyPress}
+                              onBlur={handleSaveClick}
+                              autoFocus
+                              className="text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-slate-300"
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-ellipsis overflow-hidden whitespace-nowrap">
+                            {chat.name}
+                          </span>
+                        )}
                         <div
                           className={classNames(
                             chat.conversation_id == currentConversation?.id
                               ? "flex"
                               : "hidden group-hover:flex",
-                            "justify-end grow"
+                            "justify-end items-center grow"
                           )}
                         >
+                          {/* Show edit button when not editing and chat selected */}
+                          {!isEditing &&
+                            currentConversation !== null &&
+                            chat.conversation_id == currentConversation?.id && (
+                              <div
+                                onClick={handleEditClick}
+                                className="transition-colors duration-150 cursor-pointer p-1 rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
+                              >
+                                <PencilSquareIcon className="w-5 h-5 " />
+                              </div>
+                            )}
+
+                          {/* Show check icon when editing to save */}
+                          {isEditing &&
+                            chat.conversation_id == currentConversation?.id && (
+                              <div
+                                onClick={handleSaveClick}
+                                className="transition-colors duration-150 cursor-pointer p-1 rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
+                              >
+                                <CheckIcon className="w-5 h-5 " />
+                              </div>
+                            )}
                           <TrashIcon
                             className="h-5 w-5 shrink-0 cursor-pointer"
                             onClick={() =>
@@ -242,32 +287,6 @@ export const Sidebar = () => {
                       </div>
                     </li>
                   ))}
-                </ul>
-              </li>
-              <li>
-                <div className="text-sm font-semibold leading-6 text-gray-400">
-                  Saved
-                </div>
-                <ul role="list" className="-mx-2 mt-2 space-y-1">
-                  {/* {saved.map((item) => (
-                    <li key={item.name}>
-                      <a
-                        href={item.href}
-                        className={classNames(
-                          item.current
-                            ? "bg-gray-800 text-white"
-                            : "text-gray-400 hover:text-white hover:bg-gray-800",
-                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
-                        )}
-                      >
-                        <item.icon
-                          className="h-6 w-6 shrink-0"
-                          aria-hidden="true"
-                        />
-                        {item.name}
-                      </a>
-                    </li>
-                  ))} */}
                 </ul>
               </li>
               <li className="-mx-6 mt-auto">
