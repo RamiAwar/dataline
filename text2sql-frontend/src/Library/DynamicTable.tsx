@@ -17,7 +17,7 @@ export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
       <div className="flow-root">
         <div className="">
           <div className="inline-block min-w-full py-2 align-middle">
-            <table className="min-w-full divide-y divide-gray-400 -my-2">
+            <table className="min-w-full divide-y divide-gray-400">
               <thead>
                 <tr className="divide-x divide-gray-400">
                   {dataSubset[0].map((item: any, index: number) => (
@@ -36,9 +36,9 @@ export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
                   if (index > 0)
                     return (
                       <tr key={index} className="divide-x divide-gray-400">
-                        {row.map((item: any, rowIndex: number) => (
+                        {row.map((item: any, cellIndex: number) => (
                           <td
-                            key={rowIndex}
+                            key={cellIndex}
                             className="whitespace-nowrap py-4 pl-4 pr-4 text-sm"
                           >
                             {item}

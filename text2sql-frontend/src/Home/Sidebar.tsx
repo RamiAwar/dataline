@@ -62,7 +62,6 @@ export const Sidebar = () => {
   };
 
   const handleSaveClick = () => {
-    console.log("Saving...");
     // Should never be null, only editable if not null
     if (currentConversation === null) return;
 

@@ -48,14 +48,12 @@ export const Connection = () => {
 
       if (isApiError(result)) {
         alert("API Error");
-        console.log(result.message);
         return;
       }
 
       setSession(result.session_id);
       navigate(Routes.Search);
     } catch (e) {
-      console.log(e);
       alert("API Error");
       setInputEnabled(true);
     }

@@ -16,8 +16,6 @@ export const Message = (initialMessage: IMessageWithResults) => {
 
   function runQuery(code: string) {
     try {
-      console.log("RUNNING QUERY");
-
       // Display loading result instead of PlayIcon and disable button
       setLoadingQuery(true);
       setQueryResult(null);
@@ -34,8 +32,8 @@ export const Message = (initialMessage: IMessageWithResults) => {
       setLoadingQuery(false);
     } catch (error) {
       // Handle any errors that occurred during the backend communication
-      // TODO: Show error
       setLoadingQuery(false);
+      alert("Error running query");
     }
   }
 
@@ -43,11 +41,9 @@ export const Message = (initialMessage: IMessageWithResults) => {
     // Add query result to results
     if (message.results !== undefined && queryResult !== null) {
       // Remove data result from results if any
-      console.log(message.results);
       let newResults = message.results?.filter(
         (result) => result.type !== "data"
       );
-      console.log(newResults);
 
       const updatedMessage = {
         ...message,
@@ -60,7 +56,6 @@ export const Message = (initialMessage: IMessageWithResults) => {
           },
         ],
       } as IMessageWithResults;
-      console.log(updatedMessage);
       setMessage(updatedMessage);
     }
   }, [queryResult]);
@@ -107,7 +102,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
               (result, index) =>
                 (result.type === "sql" && (
                   <CodeBlock
-                    key={index}
+                    key={`code-${index}`}
                     language="sql"
                     code={result.content}
                     runQuery={runQuery}
@@ -115,7 +110,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
                   />
                 )) ||
                 (result.type === "data" && (
-                  <DynamicTable data={result.content} />
+                  <DynamicTable key={`table-${index}`} data={result.content} />
                 ))
             )}
 

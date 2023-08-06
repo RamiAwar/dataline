@@ -55,7 +55,6 @@ export const Search = () => {
       setData(result);
       setInputEnabled(true);
     } catch (e) {
-      console.log(e);
       alert("API Error");
       setInputEnabled(true);
     }

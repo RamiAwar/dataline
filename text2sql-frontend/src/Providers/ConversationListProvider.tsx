@@ -35,7 +35,6 @@ export const ConversationListProvider = ({
       .then((response) => {
         if (response.status === "ok") {
           setConversations(response.conversations);
-          console.log(response.conversations);
         } else {
           alert("Error loading Conversations");
         }
