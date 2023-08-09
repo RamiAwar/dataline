@@ -8,14 +8,13 @@ from llama_index.indices.base import BaseGPTIndex
 from llama_index.indices.query.schema import QueryBundle
 from llama_index.indices.struct_store import SQLContextContainerBuilder
 
-from errors import RelatedTablesNotFoundError
 from sql_wrapper import CustomSQLDatabase
 
 CONTEXT_QUERY_TEMPLATE = (
     "You are a data scientist whose job is to write SQL queries. You need to select tables for a query."
     "ONLY return the relevant table names in a comma separated list like 'table1,table2' "
     "DO NOT return anything else."
-    "Available Tables: '{table_names}'"
+    "Available table descriptions (only foreign keys relevant for selection): '{table_names}'"
     "Query: '{orig_query_str}'"
     "Relevant tables: "
 )
@@ -95,9 +94,12 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             store_context_str (bool): store context_str
 
         """
+        table_foreign_key_schemas = "\n".join(
+            self.sql_database.get_schema_foreign_keys().values()
+        )
         context_query_str = query_tmpl.format(
             orig_query_str=query_str,
-            table_names=",".join(self.sql_database.get_table_names()),
+            table_names=table_foreign_key_schemas,
         )
 
         # Query LLM

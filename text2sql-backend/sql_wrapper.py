@@ -1,6 +1,7 @@
 """SQL wrapper around SQLDatabase in langchain."""
 
 import logging
+from collections import defaultdict
 from contextvars import ContextVar
 from typing import Dict, Iterable, Tuple
 
@@ -33,7 +34,7 @@ class CustomSQLDatabase(SQLDatabase):
                 return None
             return closest
 
-    def get_simple_schema(self) -> str:
+    def get_simple_schema(self) -> Dict[str, Dict[str, str]]:
         schema = {}
         for table in self.get_usable_table_names():
             schema[table] = {}
@@ -50,9 +51,35 @@ class CustomSQLDatabase(SQLDatabase):
         # Create a nicely formatted schema for each table
         for table, columns in schema.items():
             formatted_schema = []
-            formatted_schema.append(f"Table: {table}")
+            formatted_schema.append(f"Table: {table}\n")
             for column, column_info in columns.items():
-                formatted_schema.append(f"    Column: {column}")
+                formatted_schema.append(f"Column: {column}")
+                for info, value in column_info.items():
+                    formatted_schema.append(f"        {info}: {value}")
+            schema[table] = "\n".join(formatted_schema)
+
+        return schema
+
+    def get_schema_foreign_keys(self) -> Dict[str, Dict[str, str]]:
+        schema = {}
+
+        # Loop through the tables
+        for table in self.get_usable_table_names():
+            schema[table] = defaultdict(dict)
+
+            # Get foreign keys
+            for fk in self._inspector.get_foreign_keys(table):
+                schema[table][fk["constrained_columns"][0]]["foreign_key"] = {
+                    "table": fk["referred_table"],
+                    "column": fk["referred_columns"][0],
+                }
+
+        # Create a nicely formatted schema for each table
+        for table, columns in schema.items():
+            formatted_schema = []
+            formatted_schema.append(f"Table: {table}\n")
+            for column, column_info in columns.items():
+                formatted_schema.append(f"     Column: {column}")
                 for info, value in column_info.items():
                     formatted_schema.append(f"        {info}: {value}")
             schema[table] = "\n".join(formatted_schema)

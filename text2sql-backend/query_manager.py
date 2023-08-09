@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 import openai
 from guardrails.embedding import OpenAIEmbedding
 
-from prompts import SQL_QUERY_PROMPT
+from prompts import SQL_QUERY_PROMPT, SQL_REASK_QUERY_PROMPT
 
 
 class SQLQueryManager:
@@ -46,8 +46,25 @@ class SQLQueryManager:
 
         # Stream base generator until empty
         # TODO: Add message history
-        messages = [{"role": "user", "content": prompt}]
+        messages = message_history[-2:] + [{"role": "user", "content": prompt}]
 
+        for i in self.llm_api(messages=messages):
+            if i["choices"][0].get("finish_reason") == "stop":
+                break
+            yield i["choices"][0]["delta"]["content"]
+
+    def reask(
+        self, original_query: str, wrong_sql: str, table_context: str, error: str
+    ):
+        query = SQL_REASK_QUERY_PROMPT.format(
+            schema=table_context,
+            query_string=original_query,
+            previous_response=wrong_sql,
+            error_message=error,
+        )
+        print("Reask prompt: ", query)
+
+        messages = [{"role": "user", "content": query}]
         for i in self.llm_api(messages=messages):
             if i["choices"][0].get("finish_reason") == "stop":
                 break

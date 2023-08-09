@@ -1,7 +1,5 @@
-import functools
 import json
-from enum import Enum
-from typing import Any, Dict, Iterable, List, Optional, TypedDict
+from typing import Any, Dict, List, TypedDict
 
 from langchain import OpenAI
 from llama_index import GPTSimpleVectorIndex, LLMPredictor
@@ -71,10 +69,24 @@ class QueryService:
                 query, table_context=context_str, message_history=message_history
             )
         )
-        print("Generated JSON:\n ", generated_json)
-
         data = json.loads(generated_json)
-        return SQLQueryResult(**data)
+        result = SQLQueryResult(**data)
+
+        if result.sql:
+            # Validate SQL
+            valid, error = self.sql_db.validate_sql(result.sql)
+            if not valid:
+                print("Reasking...")
+                # Reask with error
+                generated_json = "".join(
+                    self.sql_index.reask(query, result.sql, context_str, error)
+                )
+                data = json.loads(generated_json)
+
+                # TODO: Add invalid SQL status to result type so it can be communicated to frontend
+                return SQLQueryResult(**data)
+
+        return result
 
     def results_from_query_response(
         self, query_response: SQLQueryResult
