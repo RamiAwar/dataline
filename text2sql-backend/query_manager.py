@@ -5,6 +5,7 @@ import openai
 from guardrails.embedding import OpenAIEmbedding
 
 from prompts import SQL_QUERY_PROMPT, SQL_REASK_QUERY_PROMPT
+from tokenizer import num_tokens_from_string
 
 
 class SQLQueryManager:
@@ -42,7 +43,11 @@ class SQLQueryManager:
             query,
             schema=table_context,
         )
-        print("Prompt:\n", prompt)
+
+        if num_tokens_from_string(prompt) > 8100:
+            raise ValueError(
+                "Prompt is too long. Please reduce the number of tables in your query."
+            )
 
         # Stream base generator until empty
         # TODO: Add message history

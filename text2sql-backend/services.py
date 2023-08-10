@@ -69,6 +69,7 @@ class QueryService:
                 query, table_context=context_str, message_history=message_history
             )
         )
+        print("GENERATED JSON:\n", generated_json)
         data = json.loads(generated_json)
         result = SQLQueryResult(**data)
 

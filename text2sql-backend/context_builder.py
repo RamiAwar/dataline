@@ -9,6 +9,7 @@ from llama_index.indices.query.schema import QueryBundle
 from llama_index.indices.struct_store import SQLContextContainerBuilder
 
 from sql_wrapper import CustomSQLDatabase
+from tokenizer import num_tokens_from_string
 
 CONTEXT_QUERY_TEMPLATE = (
     "You are a data scientist whose job is to write SQL queries. You need to select tables for a query."
@@ -101,6 +102,15 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             orig_query_str=query_str,
             table_names=table_foreign_key_schemas,
         )
+
+        if num_tokens_from_string(context_query_str) > 8100:
+            # Fall back to using simple schema
+            print("Schema too long, falling back to simple schema")
+            table_schema = "\n".join(self.sql_database.get_simple_schema().keys())
+            context_query_str = query_tmpl.format(
+                orig_query_str=query_str,
+                table_names=table_schema,
+            )
 
         # Query LLM
         response = index.query(context_query_str, **index_kwargs)
