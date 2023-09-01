@@ -14,7 +14,7 @@ from tokenizer import num_tokens_from_string
 CONTEXT_QUERY_TEMPLATE = (
     "You are a data scientist whose job is to write SQL queries. You need to select tables for a query."
     "ONLY return the relevant table names in a comma separated list like 'table1,table2' "
-    "DO NOT return anything else."
+    "DO NOT return anything else. The table naming convention follows Django's naming convention."
     "Available table descriptions (only foreign keys relevant for selection): '{table_names}'"
     "Query: '{orig_query_str}'"
     "Relevant tables: "
@@ -121,6 +121,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         # Validate table names
         try:
             table_names = [s.strip() for s in str(response).strip().split(",")]
+            print("Table names chosen: ", table_names)
         except Exception as e:
             context_query_str = f"""You returned {str(response)} but that raised an exception: {str(e)}.\n{query_tmpl.format(orig_query_str=query_str)}"""
             logger.debug(f"Reasking with query: {context_query_str}")

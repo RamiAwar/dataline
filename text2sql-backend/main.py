@@ -211,7 +211,7 @@ async def execute_sql(
     if session_id not in query_services:
         schema = db.get_schema_index(session_id)
         query_services[session_id] = QueryService(
-            dsn=session[1], schema_index_file=schema
+            dsn=session[1], schema_index_file=schema, model_name="gpt-3.5-turbo"
         )
 
     # Execute query
@@ -265,7 +265,7 @@ async def query(
     if session_id not in query_services:
         schema = db.get_schema_index(session_id)
         query_services[session_id] = QueryService(
-            dsn=session[1], schema_index_file=schema
+            dsn=session[1], schema_index_file=schema, model_name="gpt-3.5-turbo"
         )
 
     response = query_services[session_id].query(query, conversation_id=conversation_id)

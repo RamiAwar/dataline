@@ -329,11 +329,37 @@ def get_messages_with_results(conversation_id: str) -> List[MessageWithResults]:
 def get_message_history(conversation_id: str) -> List[Dict[str, Any]]:
     """Returns the message history of a conversation in OpenAI API format"""
     messages = conn.execute(
-        "SELECT content, role, created_at FROM messages INNER JOIN conversation_messages ON messages.message_id = conversation_messages.message_id WHERE conversation_messages.conversation_id = ? ORDER BY messages.created_at ASC",
+        """SELECT content, role, created_at
+        FROM messages
+        INNER JOIN conversation_messages ON messages.message_id = conversation_messages.message_id
+        WHERE conversation_messages.conversation_id = ?
+        ORDER BY messages.created_at ASC
+        """,
         (conversation_id,),
     )
 
     return [{"role": message[1], "content": message[0]} for message in messages]
+
+
+def get_message_history_with_sql(conversation_id: str) -> List[Dict[str, Any]]:
+    """Returns the message history of a conversation with the SQL result encoded inside content in OpenAI API format"""
+    messages_with_sql = conn.execute(
+        """SELECT messages.content, messages.role, messages.created_at, results.content
+    FROM messages
+    INNER JOIN conversation_messages ON messages.message_id = conversation_messages.message_id
+    INNER JOIN message_results ON messages.message_id = message_results.message_id
+    INNER JOIN results ON message_results.result_id = results.result_id
+    WHERE conversation_messages.conversation_id = ?
+    AND results.type = 'sql'
+    ORDER BY messages.created_at ASC
+    """,
+        (conversation_id,),
+    )
+
+    return [
+        {"role": message[1], "content": message[0] + "\nSQL: " + message[3]}
+        for message in messages_with_sql
+    ]
 
 
 def create_result(result: UnsavedResult) -> Result:
