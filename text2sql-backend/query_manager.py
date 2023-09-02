@@ -2,7 +2,7 @@ import functools
 from typing import Dict, List, Optional
 
 import openai
-from guardrails.embedding import OpenAIEmbedding
+from embedding import OpenAIEmbedding
 
 from prompts import SQL_QUERY_PROMPT, SQL_REASK_QUERY_PROMPT
 from tokenizer import num_tokens_from_string

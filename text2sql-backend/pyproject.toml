@@ -10,15 +10,14 @@ packages = [{include = "text2sql_backend"}]
 python = ">=3.10,<3.12"
 fastapi = "0.100.0"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
-llama-index = "^0.5.15"
+llama-index = "^0.8.16"
 sqlparse = "^0.4.3"
 psycopg2 = "^2.9.6"
 pygments-pprint-sql = "^0.1.0"
 sql-formatter = "^0.6.2"
-pytest = "^7.3.1"
+pytest = "^6.2.4"
 pymysql = "^1.0.3"
 cryptography = "^40.0.2"
-guardrails-ai = {path = "../../guardrails", develop = true}
 sse-starlette = "^1.6.0"
 sqlalchemy = "^2.0.13"
 rapidfuzz = "^3.0.0"

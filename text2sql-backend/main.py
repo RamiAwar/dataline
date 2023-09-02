@@ -10,7 +10,7 @@ import uvicorn
 from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from llama_index import GPTSimpleVectorIndex
+from llama_index import GPTVectorStoreIndex
 from pydantic import BaseModel, Field, validator
 from pydantic.json import pydantic_encoder
 from pygments import formatters, highlight, lexers
@@ -321,7 +321,7 @@ def create_schema_index(session_id: str, dsn: str):
 
     # build a vector index from the table schema information
     context_builder = CustomSQLContextContainerBuilder(sql_db)
-    table_schema_index = context_builder.derive_index_from_context(GPTSimpleVectorIndex)
+    table_schema_index = context_builder.derive_index_from_context(GPTVectorStoreIndex)
 
     # save the index to disk
     schema_index_name = f"{session_id}_schema_index.json"

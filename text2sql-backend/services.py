@@ -2,7 +2,7 @@ import json
 from typing import Any, Dict, List, TypedDict
 
 from langchain import OpenAI
-from llama_index import GPTSimpleVectorIndex, LLMPredictor
+from llama_index import GPTVectorStoreIndex, LLMPredictor
 from llama_index.indices.service_context import ServiceContext
 from sqlalchemy import create_engine, inspect
 
@@ -40,7 +40,7 @@ class QueryService:
         self.context_builder = CustomSQLContextContainerBuilder(self.sql_db)
 
         # Fetch schema index from disk
-        self.table_schema_index = GPTSimpleVectorIndex.load_from_disk(schema_index_file)
+        self.table_schema_index = GPTVectorStoreIndex.load_from_disk(schema_index_file)
         self.sql_index = SQLQueryManager(dsn=dsn, model=model_name)
 
     def get_related_tables(self, query: str):
