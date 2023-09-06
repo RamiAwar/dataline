@@ -120,9 +120,6 @@ async def connect_db(req: ConnectRequest):
     # If new DSN, create new session and schema
     session_id = uuid4().hex
 
-    # Create index
-    create_schema_index(session_id=session_id, dsn=req.dsn)
-
     # Insert session only if success
     dialect = engine.url.get_dialect().name
     database = engine.url.database
@@ -209,9 +206,8 @@ async def execute_sql(
         return {"status": "error", "message": "Invalid session_id"}
 
     if session_id not in query_services:
-        schema = db.get_schema_index(session_id)
         query_services[session_id] = QueryService(
-            dsn=session[1], schema_index_file=schema, model_name="gpt-3.5-turbo"
+            dsn=session[1], model_name="gpt-3.5-turbo"
         )
 
     # Execute query
@@ -263,9 +259,8 @@ async def query(
         return {"status": "error", "message": "Invalid session_id"}
 
     if session_id not in query_services:
-        schema = db.get_schema_index(session_id)
         query_services[session_id] = QueryService(
-            dsn=session[1], schema_index_file=schema, model_name="gpt-3.5-turbo"
+            dsn=session[1], model_name="gpt-3.5-turbo"
         )
 
     response = query_services[session_id].query(query, conversation_id=conversation_id)
@@ -310,27 +305,6 @@ async def query(
         ),
         media_type="application/json",
     )
-
-
-def create_schema_index(session_id: str, dsn: str):
-    # Create index for DB schema
-    engine = create_engine(dsn)
-    insp = inspect(engine)
-    table_names = insp.get_table_names()
-    sql_db = CustomSQLDatabase(engine, include_tables=table_names)
-
-    # build a vector index from the table schema information
-    context_builder = CustomSQLContextContainerBuilder(sql_db)
-    table_schema_index = context_builder.derive_index_from_context(GPTVectorStoreIndex)
-
-    # save the index to disk
-    schema_index_name = f"{session_id}_schema_index.json"
-    table_schema_index.save_to_disk(schema_index_name)
-
-    # Mark session_id as indexed
-    db.insert_schema_index(session_id, schema_index_name)
-
-    return True
 
 
 def sql2html(sql) -> str:

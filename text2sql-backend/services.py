@@ -1,9 +1,6 @@
 import json
 from typing import Any, Dict, List, TypedDict
 
-from langchain import OpenAI
-from llama_index import GPTVectorStoreIndex, LLMPredictor
-from llama_index.indices.service_context import ServiceContext
 from sqlalchemy import create_engine, inspect
 
 import db
@@ -23,30 +20,22 @@ class QueryService:
     def __init__(
         self,
         dsn: str,
-        schema_index_file: str,
         model_name: str = "gpt-3.5-turbo",
         temperature: int = 0.0,
     ):
-        self.llm_predictor = LLMPredictor(
-            llm=OpenAI(temperature=temperature, model_name=model_name, streaming=False)
-        )
-        self.service_context = ServiceContext.from_defaults(
-            llm_predictor=self.llm_predictor
-        )
         self.engine = create_engine(dsn)
         self.insp = inspect(self.engine)
         self.table_names = self.insp.get_table_names()
         self.sql_db = CustomSQLDatabase(self.engine, include_tables=self.table_names)
         self.context_builder = CustomSQLContextContainerBuilder(self.sql_db)
 
-        # Fetch schema index from disk
-        self.table_schema_index = GPTVectorStoreIndex.load_from_disk(schema_index_file)
-        self.sql_index = SQLQueryManager(dsn=dsn, model=model_name)
+        self.query_manager = SQLQueryManager(
+            dsn=dsn, model=model_name, temperature=temperature
+        )
 
     def get_related_tables(self, query: str):
         # Fetch table context
         context_str = self.context_builder.query_index_for_context(
-            index=self.table_schema_index,
             query_str=query,
             store_context_str=True,
         )
@@ -65,7 +54,7 @@ class QueryService:
         message_history = db.get_message_history_with_sql(conversation_id)
 
         generated_json = "".join(
-            self.sql_index.query(
+            self.query_manager.query(
                 query, table_context=context_str, message_history=message_history
             )
         )
@@ -80,7 +69,7 @@ class QueryService:
                 print("Reasking...")
                 # Reask with error
                 generated_json = "".join(
-                    self.sql_index.reask(query, result.sql, context_str, error)
+                    self.query_manager.reask(query, result.sql, context_str, error)
                 )
                 data = json.loads(generated_json)
 

@@ -1,10 +1,11 @@
 """SQL Container builder."""
 
 
+import functools
 import logging
 from typing import Any, Dict, Optional, Union
 
-from llama_index.indices.base import BaseGPTIndex
+import openai
 from llama_index.indices.query.schema import QueryBundle
 from llama_index.indices.struct_store import SQLContextContainerBuilder
 
@@ -45,11 +46,24 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         sql_database: CustomSQLDatabase,
         context_dict: Optional[Dict[str, str]] = None,
         context_str: Optional[str] = None,
+        model: Optional[str] = "gpt-3.5-turbo",
+        embedding_model: Optional[str] = "text-embedding-ada-002",
+        temperature: Optional[int] = 0.0,
     ):
         """Initialize params."""
         self.sql_database = sql_database
+        self.model = model
+        self.embedding_model = embedding_model
+        self.temperature = temperature
 
-        # if context_dict provided, validate that all keys are valid table names
+        self.llm_api = functools.partial(
+            openai.ChatCompletion.create,
+            model=self.model,
+            temperature=self.temperature,
+            stream=True,
+        )
+
+        # If context_dict provided, validate that all keys are valid table names
         if context_dict is not None:
             # validate context_dict keys are valid table names
             context_keys = set(context_dict.keys())
@@ -60,7 +74,9 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
                     "Invalid context table names: "
                     f"{context_keys - set(self.sql_database.get_usable_table_names())}"
                 )
+
         self.context_dict = context_dict or {}
+
         # build full context from sql_database
         self.full_context_dict = self._build_context_from_sql_database(
             current_context=self.context_dict
@@ -76,7 +92,6 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
 
     def query_index_for_context(
         self,
-        index: BaseGPTIndex,
         query_str: Union[str, QueryBundle],
         query_tmpl: Optional[str] = CONTEXT_QUERY_TEMPLATE,
         store_context_str: bool = True,
@@ -113,7 +128,14 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             )
 
         # Query LLM
-        response = index.query(context_query_str, **index_kwargs)
+        # TODO: Refactor into function
+        response = ""
+        for i in self.llm_api(
+            messages=[{"role": "user", "content": context_query_str}]
+        ):
+            if i["choices"][0].get("finish_reason") == "stop":
+                break
+            response += i["choices"][0]["delta"]["content"]
 
         logger.debug(f"Context query: {context_query_str}")
         logger.debug(f"Context query response: {response}")
@@ -125,7 +147,13 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         except Exception as e:
             context_query_str = f"""You returned {str(response)} but that raised an exception: {str(e)}.\n{query_tmpl.format(orig_query_str=query_str)}"""
             logger.debug(f"Reasking with query: {context_query_str}")
-            response = index.query(context_query_str, **index_kwargs)
+            response = ""
+            for i in self.llm_api(
+                messages=[{"role": "user", "content": context_query_str}]
+            ):
+                if i["choices"][0].get("finish_reason") == "stop":
+                    break
+                response += i["choices"][0]["delta"]["content"]
 
         invalid_table_names = [
             table_name
@@ -149,7 +177,14 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
                 logger.debug(
                     f"Invalid table names: Reasking with query: {context_query_str}"
                 )
-                response = index.query(context_query_str, **index_kwargs)
+                response = ""
+                for i in self.llm_api(
+                    messages=[{"role": "user", "content": context_query_str}]
+                ):
+                    if i["choices"][0].get("finish_reason") == "stop":
+                        break
+                    response += i["choices"][0]["delta"]["content"]
+
                 table_names = [s.strip() for s in str(response).strip().split(",")]
                 if any(
                     table_name not in self.sql_database.get_table_names()

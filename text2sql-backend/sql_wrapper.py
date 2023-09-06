@@ -8,6 +8,7 @@ from typing import Dict, Iterable, Tuple
 from llama_index.langchain_helpers.sql_wrapper import SQLDatabase
 from rapidfuzz import fuzz
 from sqlalchemy import text
+from sqlalchemy.exc import ProgrammingError
 
 logger = logging.getLogger(__name__)
 
@@ -125,3 +126,29 @@ class CustomSQLDatabase(SQLDatabase):
                     result = cursor.fetchall()
                     return result, {"result": result, "columns": list(cursor.keys())}
         return {}, {}
+
+    def validate_sql(self, sql_query):
+        try:
+            # Execute the EXPLAIN statement (without fetching results)
+            conn = self._engine.raw_connection()
+            cursor = conn.cursor()
+
+            # Prepare an EXPLAIN statement with the SQL query
+            explain_stmt = f"EXPLAIN {sql_query}"
+
+            # Execute the EXPLAIN statement (without fetching results)
+            cursor.execute(explain_stmt)
+            conn.execution_options(autocommit=True)
+            conn.execute(explain_stmt)
+
+            # If no exceptions were raised, the SQL is valid
+            return True, None
+
+        except ProgrammingError as e:
+            # Handle any exceptions raised during validation and return the error message
+            return False, str(e)
+        except Exception as e:
+            return False, str(e)
+        finally:
+            if conn:
+                conn.close()
