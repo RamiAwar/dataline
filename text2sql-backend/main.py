@@ -181,16 +181,6 @@ async def messages(conversation_id: str):
     return {"status": "ok", "messages": db.get_messages_with_results(conversation_id)}
 
 
-@app.post("/message")
-async def add_message(
-    conversation_id: Annotated[str, Body()], content: Annotated[str, Body()]
-):
-    db.add_message_to_conversation(
-        conversation_id, content=content, role="user", results=[]
-    )
-    return {"status": "ok"}
-
-
 @app.get("/execute-sql", response_model=UnsavedResult)
 async def execute_sql(
     conversation_id: str, sql: str, limit: int = 10, execute: bool = True
@@ -248,9 +238,6 @@ async def query(
 
     # Get conversation
     conversation = db.get_conversation(conversation_id)
-
-    # Add user message to message history
-    db.add_message_to_conversation(conversation_id, content=query, role="user")
 
     # Get query service instance
     session_id = conversation.session_id
