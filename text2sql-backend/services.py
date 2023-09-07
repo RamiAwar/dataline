@@ -52,7 +52,6 @@ class QueryService:
 
         # Query with table context
         message_history = db.get_message_history_with_sql(conversation_id)
-
         generated_json = "".join(
             self.query_manager.query(
                 query, table_context=context_str, message_history=message_history
