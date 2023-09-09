@@ -1,22 +1,18 @@
 import { useEffect, useState, useRef } from "react";
-import { api } from "../api";
+import { api } from "../../api";
 import { Message } from "./Message";
-import { IConnection, IMessageWithResults } from "../Library/types";
+import { IMessageWithResults } from "../Library/types";
 import { useConversation } from "../Providers/ConversationProvider";
 
 import ExpandingInput from "./ExpandingInput";
 
 import { Transition } from "@headlessui/react";
-import { useConversationList } from "../Providers/ConversationListProvider";
 import { ConnectionSelector } from "../Library/ConnectionSelector";
 import { generateUUID } from "../Library/utils";
 
 export const Conversation = () => {
   // Load messages from conversation via API on load
   const [messages, setMessages] = useState<IMessageWithResults[]>([]);
-
-  const [conversations, setConversations, fetchConversations] =
-    useConversationList();
   const [conversation, setConversation] = useConversation();
   const scrollableDiv = useRef<HTMLDivElement | null>(null);
 

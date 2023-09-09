@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { IConnection } from "../Library/types";
-import { api } from "../api";
+import { api } from "../../api";
 
 type ConnectionListContextType = [
   IConnection[] | null,

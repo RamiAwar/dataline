@@ -8,11 +8,11 @@ import {
   TrashIcon,
   CheckIcon,
 } from "@heroicons/react/24/outline";
-import logo from "../assets/images/logo_md.png";
+import logo from "../../assets/images/logo_md.png";
 import { useConversation } from "../Providers/ConversationProvider";
-import { IConversation, IConversationResult } from "../Library/types";
+import { IConversationResult } from "../Library/types";
 import { useConversationList } from "../Providers/ConversationListProvider";
-import { api } from "../api";
+import { api } from "../../api";
 import { PencilSquareIcon } from "@heroicons/react/20/solid";
 
 function classNames(...classes: string[]) {

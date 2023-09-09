@@ -1,9 +1,9 @@
-import { SessionProvider } from "./Providers/SessionProvider";
+import { SessionProvider } from "./components/Providers/SessionProvider";
 import { router } from "./router";
 import { RouterProvider } from "react-router";
-import { ConversationProvider } from "./Providers/ConversationProvider";
-import { ConnectionListProvider } from "./Providers/ConnectionListProvider";
-import { ConversationListProvider } from "./Providers/ConversationListProvider";
+import { ConversationProvider } from "./components/Providers/ConversationProvider";
+import { ConnectionListProvider } from "./components/Providers/ConnectionListProvider";
+import { ConversationListProvider } from "./components/Providers/ConversationListProvider";
 
 export const App = () => (
   <ConnectionListProvider>

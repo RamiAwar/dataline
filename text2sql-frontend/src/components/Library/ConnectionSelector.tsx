@@ -1,9 +1,9 @@
 import { useConnectionList } from "../Providers/ConnectionListProvider";
 import NewConnectionModal from "../Connection/NewConnectionModal";
-import { api } from "../api";
+import { api } from "../../api";
 import DatabaseDialectImage from "./DatabaseDialectImage";
-import { useEffect, useState, useRef } from "react";
-import { IConnection, IMessageWithResults } from "./types";
+import { useState } from "react";
+import { IConnection } from "./types";
 import { useConversationList } from "../Providers/ConversationListProvider";
 import { useConversation } from "../Providers/ConversationProvider";
 

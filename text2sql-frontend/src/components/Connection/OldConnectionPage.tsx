@@ -1,8 +1,8 @@
 import { useEffect, useState, Fragment } from "react";
-import { SessionResult, api } from "../api";
-import { isApiError } from "../api";
+import { SessionResult, api } from "../../api";
+import { isApiError } from "../../api";
 import { useNavigate } from "react-router-dom";
-import { Routes } from "../router";
+import { Routes } from "../../router";
 import { Spinner } from "../Spinner/Spinner";
 import { useSession } from "../Providers/SessionProvider";
 import { Combobox, Transition } from "@headlessui/react";

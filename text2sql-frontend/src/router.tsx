@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
-import { Home } from "./Home/Home";
-import { Landing } from "./Landing/Landing";
-import { BetaSignup } from "./BetaSignup/BetaSignup";
+import { Home } from "./components/Home/Home";
+import { Landing } from "./components/Landing/Landing";
+import { BetaSignup } from "./components/BetaSignup/BetaSignup";
 
 export enum Routes {
   Landing = "/",

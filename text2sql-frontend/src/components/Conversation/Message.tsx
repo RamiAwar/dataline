@@ -1,9 +1,9 @@
-import logo from "../assets/images/logo_md.png";
+import logo from "../../assets/images/logo_md.png";
 import { CodeBlock } from "./CodeBlock";
 import { IMessageWithResults } from "../Library/types";
 import { DynamicTable } from "../Library/DynamicTable";
 import { useEffect, useState } from "react";
-import { api } from "../api";
+import { api } from "../../api";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
