@@ -1,11 +1,16 @@
 from datetime import datetime
-from typing import Any, Literal, Union
+from typing import Any, List, Literal, Union
 
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
 
 ResultType = Union[
-    Literal["sql"], Literal["code"], Literal["text"], Literal["error"], Literal["data"]
+    Literal["sql"],
+    Literal["code"],
+    Literal["text"],
+    Literal["error"],
+    Literal["data"],
+    Literal["selected_tables"],
 ]
 
 
@@ -19,6 +24,12 @@ class Result:
 
 @dataclass
 class UnsavedResult:
+    type: ResultType
+    content: str | List[str]  # To allow for selected tables list
+
+
+@dataclass
+class DataResult:
     type: ResultType
     content: Any
 
@@ -59,6 +70,7 @@ class SQLQueryResult:
     text: str = Field(default="")
     sql: str = Field(default="")
     chart_request: bool = Field(default=False)
+    selected_tables: list[str] = Field(default_factory=list)
 
 
 class UpdateConversationRequest(BaseModel):

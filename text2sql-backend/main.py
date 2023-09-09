@@ -10,19 +10,17 @@ import uvicorn
 from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from llama_index import GPTVectorStoreIndex
 from pydantic import BaseModel, Field, validator
 from pydantic.json import pydantic_encoder
 from pygments import formatters, highlight, lexers
 from pygments_pprint_sql import SqlFilter
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
 import db
-from context_builder import CustomSQLContextContainerBuilder
-from models import Result, UnsavedResult, UpdateConversationRequest
+from models import DataResult, Result, UnsavedResult, UpdateConversationRequest
 from services import QueryService
-from sql_wrapper import CustomSQLDatabase, request_execute, request_limit
+from sql_wrapper import request_execute, request_limit
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -212,7 +210,7 @@ async def execute_sql(
             content=json.dumps(
                 {
                     "status": "ok",
-                    "data": UnsavedResult(
+                    "data": DataResult(
                         type="data",
                         content=rows,
                     ),
@@ -275,7 +273,7 @@ async def query(
         rows.extend([x for x in r] for r in data["result"])
 
         unsaved_results.append(
-            UnsavedResult(
+            DataResult(
                 type="data",
                 content=rows,
             )

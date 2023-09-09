@@ -50,7 +50,7 @@ class QueryService:
 
         return context_str, table_names
 
-    def query(self, query: str, conversation_id: str) -> List[UnsavedResult]:
+    def query(self, query: str, conversation_id: str) -> SQLQueryResult:
         # Query with table context
         message_history = db.get_message_history_with_selected_tables_with_sql(
             conversation_id
@@ -71,7 +71,7 @@ class QueryService:
         )
         print("GENERATED JSON:\n", generated_json)
         data = json.loads(generated_json)
-        result = SQLQueryResult(**data)
+        result = SQLQueryResult(**data, selected_tables=table_names)
 
         if result.sql:
             # Validate SQL
@@ -86,8 +86,9 @@ class QueryService:
                 )
                 data = json.loads(generated_json)
 
-                # TODO: Add invalid SQL status to result type so it can be communicated to frontend
-                return SQLQueryResult(**data)
+                # TODO: Add invalid SQL status to result type so it can be communicated to frontend\
+                # Return all generated data + selected tables
+                return SQLQueryResult(**data, selected_tables=table_names)
 
         return result
 
@@ -101,6 +102,15 @@ class QueryService:
 
             if query_response.sql:
                 results.append(UnsavedResult(type="sql", content=query_response.sql))
+
+            if query_response.selected_tables:
+                results.append(
+                    # Serialize selected_tables into string to save in db
+                    UnsavedResult(
+                        type="selected_tables",
+                        content=",".join(query_response.selected_tables),
+                    )
+                )
 
             if query_response.chart_request:
                 # TODO: DO STUFF

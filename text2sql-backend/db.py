@@ -402,6 +402,7 @@ def create_result(result: UnsavedResult) -> Result:
         (result.content, result.type, created_at),
     ).lastrowid
     conn.commit()
+
     return Result(
         result_id=result_id,
         content=result.content,
