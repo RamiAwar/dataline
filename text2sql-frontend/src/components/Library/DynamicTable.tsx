@@ -11,7 +11,6 @@ export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
       data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
     );
   }, [page, rowsPerPage, data]);
-
   return (
     <div className="max-w-7xl border-2 border-gray-500 rounded-md bg-gray-900 flex flex-col overflow-auto scrollbar-hide">
       <div className="flow-root">

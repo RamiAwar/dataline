@@ -4,6 +4,7 @@ import { IMessageWithResults } from "../Library/types";
 import { DynamicTable } from "../Library/DynamicTable";
 import { useEffect, useState } from "react";
 import { api } from "../../api";
+import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -96,10 +97,25 @@ export const Message = (initialMessage: IMessageWithResults) => {
           )}
 
           {/** RESULTS: QUERY, DATA, PLOTS */}
+          {/** Sort results as selected_tables first, data second, code third using tertiary if **/}
           {message.results
-            ?.sort((a, b) => (a.type === "data" ? -1 : 1))
+            ?.sort((a, b) => {
+              if (a.type === "selected_tables") return -1;
+              if (b.type === "selected_tables") return 1;
+              if (a.type === "data") return -1;
+              if (b.type === "data") return 1;
+              if (a.type === "sql") return -1;
+              if (b.type === "sql") return 1;
+              return 0;
+            })
             .map(
               (result, index) =>
+                (result.type === "selected_tables" && (
+                  <SelectedTablesDisplay tables={result.content} />
+                )) ||
+                (result.type === "data" && (
+                  <DynamicTable key={`table-${index}`} data={result.content} />
+                )) ||
                 (result.type === "sql" && (
                   <CodeBlock
                     key={`code-${index}`}
@@ -108,9 +124,6 @@ export const Message = (initialMessage: IMessageWithResults) => {
                     runQuery={runQuery}
                     runnable={!loadingQuery}
                   />
-                )) ||
-                (result.type === "data" && (
-                  <DynamicTable key={`table-${index}`} data={result.content} />
                 ))
             )}
 
