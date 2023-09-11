@@ -111,7 +111,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
             .map(
               (result, index) =>
                 (result.type === "selected_tables" && (
-                  <SelectedTablesDisplay tables={result.content} />
+                  <SelectedTablesDisplay tables={result.content as string} />
                 )) ||
                 (result.type === "data" && (
                   <DynamicTable key={`table-${index}`} data={result.content} />
@@ -120,7 +120,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
                   <CodeBlock
                     key={`code-${index}`}
                     language="sql"
-                    code={result.content}
+                    code={result.content as string}
                     runQuery={runQuery}
                     runnable={!loadingQuery}
                   />

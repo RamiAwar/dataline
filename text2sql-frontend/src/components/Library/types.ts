@@ -17,7 +17,7 @@ export type Role = "user" | "assistant";
 
 export type IResult = {
   type: IResultType;
-  content: string;
+  content: string | any[][];
   result_id?: string;
 };
 
