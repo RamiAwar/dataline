@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "build:python": "pyinstaller -y ./text2sql-backend/main.spec",
-    "dist:mac": "npm run build:python && tauri build"
+    "dist:mac": "npm run build:python && tauri build",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.14",
@@ -27,6 +29,14 @@
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
+    "@storybook/addon-essentials": "^7.4.0",
+    "@storybook/addon-interactions": "^7.4.0",
+    "@storybook/addon-links": "^7.4.0",
+    "@storybook/addon-onboarding": "^1.0.8",
+    "@storybook/blocks": "^7.4.0",
+    "@storybook/react": "^7.4.0",
+    "@storybook/react-vite": "^7.4.0",
+    "@storybook/testing-library": "^0.2.0",
     "@tauri-apps/cli": "^1.2.3",
     "@types/node": "^20.1.4",
     "@types/react": "^18.0.28",
@@ -35,6 +45,7 @@
     "@vitejs/plugin-react": "^3.1.0",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.21",
+    "storybook": "^7.4.0",
     "tailwindcss": "^3.3.1",
     "typescript": "^5.0.4",
     "vite": "^4.2.0",

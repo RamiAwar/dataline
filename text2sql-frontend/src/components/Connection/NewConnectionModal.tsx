@@ -1,6 +1,5 @@
 import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { api } from "../api";
 import { Spinner } from "../Spinner/Spinner";
 
 interface NewConnectionModalFormProps {

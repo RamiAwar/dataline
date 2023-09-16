@@ -7,10 +7,10 @@ readme = "README.md"
 packages = [{include = "text2sql_backend"}]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
+python = ">=3.11,<3.12"
 fastapi = "0.100.0"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
-llama-index = "^0.8.16"
+llama-index = "^0.8.26.post1"
 sqlparse = "^0.4.3"
 psycopg2 = "^2.9.6"
 pygments-pprint-sql = "^0.1.0"
@@ -25,12 +25,13 @@ psycopg = {extras = ["pool"], version = "^3.1.9"}
 sql-metadata = "^2.8.0"
 tiktoken = "^0.4.0"
 nltk = "^3.8.1"
+pyvis = "^0.3.2"
 
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
-jupyterlab = "^3.6.3"
 pyinstaller = "^5.10.1"
+jupyterlab = "^4.0.5"
 
 [build-system]
 requires = ["poetry-core"]

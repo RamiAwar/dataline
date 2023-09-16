@@ -12,18 +12,18 @@ export enum Dialect {
   TransactSQL = "tsql",
 }
 
-export type IResultType = "sql" | "code" | "data";
+export type IResultType = "sql" | "code" | "data" | "text" | "selected_tables";
 export type Role = "user" | "assistant";
 
 export type IResult = {
   type: IResultType;
-  content: string;
+  content: string | any[][];
   result_id?: string;
 };
 
 export type IMessageWithResults = {
   content: string;
-  role: string;
+  role: "assistant" | "user";
   results?: IResult[];
   message_id?: string;
   conversation_id?: string;

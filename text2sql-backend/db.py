@@ -25,10 +25,9 @@ conn.execute(
     """CREATE TABLE IF NOT EXISTS schema_indexes (session_id text PRIMARY KEY, index_file text UNIQUE NOT NULL)"""
 )
 
-
 # MESSAGES: Create table to store messages with text, role, and session_id
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS messages (message_id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, role text NOT NULL, created_at text)"""
+    """CREATE TABLE IF NOT EXISTS messages (message_id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, role text NOT NULL, created_at text, selected_tables text NOT NULL DEFAULT '')"""
 )
 
 # RESULTS: Create table to store results with a result text field with a reference to a session
@@ -240,7 +239,11 @@ def update_conversation(conversation_id: str, name: str):
 
 # Add message with results to conversation
 def add_message_to_conversation(
-    conversation_id: str, content: str, role: str, results: Optional[List[Result]] = []
+    conversation_id: str,
+    content: str,
+    role: str,
+    results: Optional[List[Result]] = [],
+    selected_tables: Optional[List[str]] = [],
 ):
     # Basic validation
     if results and role != "assistant":
@@ -249,8 +252,8 @@ def add_message_to_conversation(
     # Create message object
     created_at = datetime.now()
     message_id = conn.execute(
-        "INSERT INTO messages (content, role, created_at) VALUES (?, ?, ?)",
-        (content, role, created_at),
+        "INSERT INTO messages (content, role, created_at, selected_tables) VALUES (?, ?, ?, ?)",
+        (content, role, created_at, ",".join(selected_tables)),
     ).lastrowid
 
     # Create result objects and update message_results many2many
@@ -341,6 +344,35 @@ def get_message_history(conversation_id: str) -> List[Dict[str, Any]]:
     return [{"role": message[1], "content": message[0]} for message in messages]
 
 
+def get_message_history_with_selected_tables_with_sql(conversation_id: str):
+    """Returns the message history of a conversation with selected tables as a list"""
+    messages = conn.execute(
+        """SELECT messages.content, messages.role, messages.created_at, results.content, messages.selected_tables
+    FROM messages
+    INNER JOIN conversation_messages ON messages.message_id = conversation_messages.message_id
+    INNER JOIN message_results ON messages.message_id = message_results.message_id
+    INNER JOIN results ON message_results.result_id = results.result_id
+    WHERE conversation_messages.conversation_id = ?
+    AND results.type = 'sql'
+    ORDER BY messages.created_at ASC
+    """,
+        (conversation_id,),
+    )
+
+    return [
+        {
+            "role": message[1],
+            "content": "Selected tables: "
+            + message[4]
+            + "\n"
+            + message[0]
+            + "\nSQL: "
+            + message[3],
+        }
+        for message in messages
+    ]
+
+
 def get_message_history_with_sql(conversation_id: str) -> List[Dict[str, Any]]:
     """Returns the message history of a conversation with the SQL result encoded inside content in OpenAI API format"""
     messages_with_sql = conn.execute(
@@ -370,6 +402,7 @@ def create_result(result: UnsavedResult) -> Result:
         (result.content, result.type, created_at),
     ).lastrowid
     conn.commit()
+
     return Result(
         result_id=result_id,
         content=result.content,

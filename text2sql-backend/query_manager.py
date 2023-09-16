@@ -1,4 +1,5 @@
 import functools
+import logging
 from typing import Dict, List, Optional
 
 import openai
@@ -6,6 +7,8 @@ import openai
 from embedding import OpenAIEmbedding
 from prompts import SQL_QUERY_PROMPT, SQL_REASK_QUERY_PROMPT
 from tokenizer import num_tokens_from_string
+
+logger = logging.getLogger(__name__)
 
 
 class SQLQueryManager:
@@ -67,7 +70,9 @@ class SQLQueryManager:
             previous_response=wrong_sql,
             error_message=error,
         )
-        print("Reask prompt: ", query)
+        logger.debug("\n\n------------------\n\n")
+        logger.debug("Reask prompt: ", query)
+        logger.debug("\n\n------------------\n\n")
 
         messages = [{"role": "user", "content": query}]
         for i in self.llm_api(messages=messages):

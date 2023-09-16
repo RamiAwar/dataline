@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Dialog } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { BackgroundLayout } from "../Layouts/BackgroundLayout";
-import logo from "../assets/images/logo_xl.png";
-import logomd from "../assets/images/logo_md.png";
-import demo from "../assets/images/demo.png";
+import logo from "../../assets/images/logo_xl.png";
+import logomd from "../../assets/images/logo_md.png";
+import demo from "../../assets/images/demo.png";
 
 import "./Landing.css";
 import { Footer } from "../Layouts/Footer";

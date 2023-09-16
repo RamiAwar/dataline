@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { IConversationResult } from "../Library/types";
-import { api } from "../api";
+import { api } from "../../api";
 
 type ConversationListContextType = [
   IConversationResult[],

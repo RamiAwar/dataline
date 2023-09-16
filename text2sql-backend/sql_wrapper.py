@@ -138,7 +138,6 @@ class CustomSQLDatabase(SQLDatabase):
 
             # Execute the EXPLAIN statement (without fetching results)
             cursor.execute(explain_stmt)
-            conn.execute(explain_stmt)
 
             # If no exceptions were raised, the SQL is valid
             return True, None

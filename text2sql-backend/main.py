@@ -10,19 +10,17 @@ import uvicorn
 from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from llama_index import GPTVectorStoreIndex
 from pydantic import BaseModel, Field, validator
 from pydantic.json import pydantic_encoder
 from pygments import formatters, highlight, lexers
 from pygments_pprint_sql import SqlFilter
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
 import db
-from context_builder import CustomSQLContextContainerBuilder
-from models import Result, UnsavedResult, UpdateConversationRequest
+from models import DataResult, Result, UnsavedResult, UpdateConversationRequest
 from services import QueryService
-from sql_wrapper import CustomSQLDatabase, request_execute, request_limit
+from sql_wrapper import request_execute, request_limit
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -181,16 +179,6 @@ async def messages(conversation_id: str):
     return {"status": "ok", "messages": db.get_messages_with_results(conversation_id)}
 
 
-@app.post("/message")
-async def add_message(
-    conversation_id: Annotated[str, Body()], content: Annotated[str, Body()]
-):
-    db.add_message_to_conversation(
-        conversation_id, content=content, role="user", results=[]
-    )
-    return {"status": "ok"}
-
-
 @app.get("/execute-sql", response_model=UnsavedResult)
 async def execute_sql(
     conversation_id: str, sql: str, limit: int = 10, execute: bool = True
@@ -222,7 +210,7 @@ async def execute_sql(
             content=json.dumps(
                 {
                     "status": "ok",
-                    "data": UnsavedResult(
+                    "data": DataResult(
                         type="data",
                         content=rows,
                     ),
@@ -248,9 +236,6 @@ async def query(
 
     # Get conversation
     conversation = db.get_conversation(conversation_id)
-
-    # Add user message to message history
-    db.add_message_to_conversation(conversation_id, content=query, role="user")
 
     # Get query service instance
     session_id = conversation.session_id
@@ -288,7 +273,7 @@ async def query(
         rows.extend([x for x in r] for r in data["result"])
 
         unsaved_results.append(
-            UnsavedResult(
+            DataResult(
                 type="data",
                 content=rows,
             )

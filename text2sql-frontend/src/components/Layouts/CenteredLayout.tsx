@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import logo from "../assets/images/logo_md.png";
+import logo from "../../assets/images/logo_md.png";
 
 export const CenteredLayout = ({ children }: { children: React.ReactNode }) => {
   const circleSize = 300;

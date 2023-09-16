@@ -1,5 +1,5 @@
 import React from "react";
-import postgresImage from "../assets/images/postgres.png";
+import postgresImage from "../../assets/images/postgres.png";
 import { CircleStackIcon } from "@heroicons/react/24/outline";
 
 interface DatabaseDialectImageProps {

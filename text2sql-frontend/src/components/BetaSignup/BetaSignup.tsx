@@ -1,6 +1,6 @@
 import { BackgroundLayout } from "../Layouts/BackgroundLayout";
 import { Footer } from "../Layouts/Footer";
-import logo from "../assets/images/logo_xl.png";
+import logo from "../../assets/images/logo_xl.png";
 import { BetaSignupForm } from "./BetaSignupForm";
 
 export const BetaSignup = () => {

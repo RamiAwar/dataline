@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { api } from "../api";
+import { api } from "../../api";
 
 import { useNavigate } from "react-router-dom";
-import { Routes } from "../router";
+import { Routes } from "../../router";
 import { CenteredLayout } from "../Layouts/CenteredLayout";
 
 export const Setup = () => {
