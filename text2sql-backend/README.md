@@ -11,9 +11,19 @@ poetry config virtualenvs.in-project true
 poetry install
 ```
 
+### With pyenv
+If you're using pyenv-virtualenvs, you can do:
+```
+pyenv install 3.11 --skip-existing
+pyenv virtualenv 3.11 dataline
+pyenv local dataline
+poetry install
+```
 
 ## Running the backend
 Make sure you have an OpenAI key in your environment variables.
 You can then run this to start the backend:
-```uvicorn main:app --reload --port=7377```
+```
+uvicorn main:app --reload --port=7377
+```
 
