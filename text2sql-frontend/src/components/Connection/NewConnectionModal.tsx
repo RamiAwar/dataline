@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
+import { api } from "../../api";
 import { Spinner } from "../Spinner/Spinner";
 
 interface NewConnectionModalFormProps {
@@ -41,11 +42,11 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
     // Enable loading state
     setIsLoading(true);
 
-    // const res = await api.createConnection(unmaskedDsn, connectionName);
-    // if (res.status !== "ok") {
-    //   alert("Error creating connection");
-    //   return;
-    // }
+    const res = await api.createConnection(unmaskedDsn, connectionName);
+    if (res.status !== "ok") {
+      alert("Error creating connection");
+      return;
+    }
 
     // Fake loading for 2 seconds
     await new Promise((resolve) => setTimeout(resolve, 4000));
