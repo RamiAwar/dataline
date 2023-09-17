@@ -199,16 +199,17 @@ export const Sidebar = () => {
             <img className="h-8 w-auto" src={logo} alt="DataLine" />
           </div>
           <nav className="flex flex-1 flex-col mt-4">
-            <ul role="list" className="flex flex-1 flex-col gap-y-7">
+            <ul role="list" className="flex flex-1 flex-col gap-y-4">
               <li
                 className="-mx-4 py-3 px-2 rounded-md flex justify-start items-center border-2 border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
                 onClick={createNewChat}
               >
                 <PlusIcon className="h-5 w-5 shrink-0 mr-2 [&>path]:stroke-[1]"></PlusIcon>
-                <div> New chat</div>
+                <div>New chat</div>
               </li>
+              <hr className="border-gray-600 my-2" />
               <li>
-                <ul role="list" className="-mx-4 mt-2 space-y-1">
+                <ul role="list" className="-mx-4 space-y-1">
                   {conversations.map((chat) => (
                     <li key={chat.conversation_id}>
                       <div
