@@ -1,0 +1,9 @@
+#!/bin/bash
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$branch" = "main" ]; then
+    echo "\nERROR: Direct pushes to the 'main' branch are not allowed. Please create a PR for your changes."
+    exit 1
+fi
+
