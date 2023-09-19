@@ -1,0 +1,34 @@
+exclude: 'docs|scripts|node_modules|\.git|\.tox|\.idea|min\.css|.*\.js|.*\.csv|.*\.svg|^frontend/packages/old|pnpm-lock\.yaml'
+default_stages: [commit]
+fail_fast: false
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0
+    hooks:
+      # Basic checks and fixes
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: check-added-large-files # To force people to use git-lfs
+        args: ["--maxkb=6000", "--enforce-all"]
+        name: "added file is too large, use git-lfs for large files"
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+        description: Forces to replace line ending by the UNIX 'lf' character.
+
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        args: [--config=./pyproject.toml, --target-version=py311]
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    # Ruff version.
+    rev: "v0.0.267"
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+        exclude: ".*pb2(_grpc)?.py(i)?$"

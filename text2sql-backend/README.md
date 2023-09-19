@@ -22,6 +22,12 @@ pyenv local dataline
 poetry install
 ```
 
+### pre-commit
+
+```
+pre-commit install
+```
+
 ## Running the backend
 
 Make sure you have an OpenAI key in your environment variables.
