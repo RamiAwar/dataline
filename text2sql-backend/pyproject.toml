@@ -26,6 +26,7 @@ sql-metadata = "^2.8.0"
 tiktoken = "^0.4.0"
 nltk = "^3.8.1"
 pyvis = "^0.3.2"
+pre-commit = "^3.4.0"
 
 
 [tool.poetry.group.dev.dependencies]
