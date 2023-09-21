@@ -9,34 +9,25 @@ import {
   CheckIcon,
 } from "@heroicons/react/24/outline";
 import logo from "../../assets/images/logo_md.png";
-import { useConversation } from "../Providers/ConversationProvider";
-import { IConversationResult } from "../Library/types";
+import { IConversation } from "../Library/types";
 import { useConversationList } from "../Providers/ConversationListProvider";
 import { api } from "../../api";
 import { PencilSquareIcon } from "@heroicons/react/20/solid";
+import { Link, useParams } from "react-router-dom";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
 export const Sidebar = () => {
+  const params = useParams<{ conversationId: string }>();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [conversations, s_, fetchConversations] = useConversationList();
-  const [currentConversation, setCurrentConversation] = useConversation();
+  const [conversations, _, fetchConversations] = useConversationList();
+  const [currentConversation, setCurrentConversation] =
+    useState<IConversation | null>();
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(currentConversation?.name || "");
-
-  function createNewChat() {
-    setCurrentConversation(null);
-  }
-
-  function selectConversation(conversation: IConversationResult) {
-    setIsEditing(false);
-    setCurrentConversation({
-      id: conversation.conversation_id,
-      name: conversation.name,
-    });
-  }
 
   async function deleteConversation(conversationId: string) {
     await api.deleteConversation(conversationId);
@@ -44,6 +35,7 @@ export const Sidebar = () => {
   }
 
   const handleEditClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
     e.stopPropagation();
     setIsEditing(true);
   };
@@ -63,7 +55,8 @@ export const Sidebar = () => {
 
   const handleSaveClick = () => {
     // Should never be null, only editable if not null
-    if (currentConversation === null) return;
+    if (currentConversation === null || currentConversation === undefined)
+      return;
 
     // Update conversation in backend
     (async () => {
@@ -87,9 +80,26 @@ export const Sidebar = () => {
   };
 
   useEffect(() => {
-    // Update edited name when conversation changes
-    setEditedName(currentConversation?.name || "");
-  }, [conversations, currentConversation]);
+    // Update current conversation when we get the list of conversations
+    if (conversations.length > 0) {
+      if (params.conversationId) {
+        const conversation = conversations.find(
+          (c) => c.conversation_id === params.conversationId
+        );
+        if (conversation) {
+          setCurrentConversation({
+            id: conversation.conversation_id,
+            name: conversation.name,
+          });
+
+          // Update edited name when conversation changes
+          setEditedName(conversation.name || "");
+        }
+      } else {
+        setCurrentConversation(null);
+      }
+    }
+  }, [conversations, params]);
 
   const handleCancelEdit = () => {
     setIsEditing(false);
@@ -149,6 +159,7 @@ export const Sidebar = () => {
                     </button>
                   </div>
                 </Transition.Child>
+
                 {/* Sidebar component, swap this element with another sidebar if you like */}
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-2 ring-1 ring-white/10">
                   <div className="flex h-16 shrink-0 items-center">
@@ -158,26 +169,42 @@ export const Sidebar = () => {
                     <ul role="list" className="flex flex-1 flex-col gap-y-7">
                       <li>
                         <ul role="list" className="-mx-2 space-y-1">
+                          <Link
+                            to="/chat/new"
+                            className="py-3 px-2 rounded-md flex justify-start items-center border-2 border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
+                          >
+                            <PlusIcon className="h-5 w-5 shrink-0 mr-2 [&>path]:stroke-[1]"></PlusIcon>
+                            <div>New chat</div>
+                          </Link>
                           {conversations.map((conversation) => (
                             <li key={conversation.conversation_id}>
-                              <div
-                                onClick={() => {
-                                  selectConversation(conversation);
-                                }}
+                              <Link
+                                to={`/chat/${conversation.conversation_id}`}
+                                onClick={() => setIsEditing(false)}
                                 className={classNames(
                                   conversation.conversation_id ==
                                     currentConversation?.id
-                                    ? "bg-gray-800 text-white"
+                                    ? "bg-gray-700 text-white"
                                     : "text-gray-400 hover:text-white hover:bg-gray-800",
-                                  "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
+                                  "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
                                 )}
                               >
                                 <ChatBubbleOvalLeftIcon
                                   className="h-5 w-5 shrink-0"
                                   aria-hidden="true"
                                 />
-                                {conversation.name}
-                              </div>
+                                <span className="flex-1">
+                                  {conversation.name}
+                                </span>
+                                <TrashIcon
+                                  className="h-5 w-5 shrink-0 cursor-pointer"
+                                  onClick={() =>
+                                    deleteConversation(
+                                      conversation.conversation_id
+                                    )
+                                  }
+                                ></TrashIcon>
+                              </Link>
                             </li>
                           ))}
                         </ul>
@@ -200,23 +227,23 @@ export const Sidebar = () => {
           </div>
           <nav className="flex flex-1 flex-col mt-4">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
-              <li
+              <Link
+                to="/chat/new"
                 className="-mx-4 py-3 px-2 rounded-md flex justify-start items-center border-2 border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
-                onClick={createNewChat}
+                // onClick={createNewChat}
               >
                 <PlusIcon className="h-5 w-5 shrink-0 mr-2 [&>path]:stroke-[1]"></PlusIcon>
-                <div> New chat</div>
-              </li>
+                <div>New chat</div>
+              </Link>
               <li>
                 <ul role="list" className="-mx-4 mt-2 space-y-1">
                   {conversations.map((chat) => (
                     <li key={chat.conversation_id}>
-                      <div
-                        onClick={() => {
-                          selectConversation(chat);
-                        }}
+                      <Link
+                        to={`/chat/${chat.conversation_id}`}
+                        onClick={() => setIsEditing(false)}
                         className={classNames(
-                          chat.conversation_id == currentConversation?.id
+                          chat.conversation_id == params.conversationId
                             ? "bg-gray-700 text-white"
                             : "text-gray-400 hover:text-white hover:bg-gray-800",
                           "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
@@ -229,70 +256,64 @@ export const Sidebar = () => {
 
                         {/* Show input field when editing and chat selected */}
                         {isEditing &&
-                        chat.conversation_id == currentConversation?.id ? (
-                          <div className="flex-1 inline-flex justify-center items-center gap-3 text-center text-md font-medium leading-6 text-white">
-                            <input
-                              type="text"
-                              value={editedName}
-                              onChange={handleNameChange}
-                              onKeyDown={handleKeyPress}
-                              onBlur={handleSaveClick}
-                              autoFocus
-                              className="text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-slate-300"
-                            />
-                          </div>
+                        chat.conversation_id == params.conversationId ? (
+                          <input
+                            type="text"
+                            value={editedName}
+                            onChange={handleNameChange}
+                            onKeyDown={handleKeyPress}
+                            onBlur={handleSaveClick}
+                            autoFocus
+                            className="flex-none max-w-[70%] text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-slate-300"
+                          />
                         ) : (
                           <span className="text-ellipsis overflow-hidden whitespace-nowrap">
                             {chat.name}
                           </span>
                         )}
-                        <div
-                          className={classNames(
-                            chat.conversation_id == currentConversation?.id
-                              ? "flex"
-                              : "hidden group-hover:flex",
-                            "justify-end items-center grow"
-                          )}
-                        >
-                          {/* Show edit button when not editing and chat selected */}
-                          {!isEditing &&
-                            currentConversation !== null &&
-                            chat.conversation_id == currentConversation?.id && (
+                        {/* Show edit button when not editing and chat selected */}
+                        {!isEditing &&
+                          chat.conversation_id == params.conversationId && (
+                            <div
+                              className={classNames(
+                                chat.conversation_id == params.conversationId
+                                  ? "flex"
+                                  : "hidden group-hover:flex",
+                                "justify-end items-center grow"
+                              )}
+                            >
                               <div
                                 onClick={handleEditClick}
                                 className="transition-colors duration-150 cursor-pointer p-1 rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
                               >
-                                <PencilSquareIcon className="w-5 h-5 " />
+                                <PencilSquareIcon className="w-5 h-5" />
                               </div>
-                            )}
+                              <TrashIcon
+                                className="h-5 w-5 shrink-0 cursor-pointer"
+                                onClick={() =>
+                                  deleteConversation(chat.conversation_id)
+                                }
+                              ></TrashIcon>
+                            </div>
+                          )}
 
-                          {/* Show check icon when editing to save */}
-                          {isEditing &&
-                            chat.conversation_id == currentConversation?.id && (
-                              <div
-                                onClick={handleSaveClick}
-                                className="transition-colors duration-150 cursor-pointer p-1 rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
-                              >
-                                <CheckIcon className="w-5 h-5 " />
-                              </div>
-                            )}
-                          <TrashIcon
-                            className="h-5 w-5 shrink-0 cursor-pointer"
-                            onClick={() =>
-                              deleteConversation(chat.conversation_id)
-                            }
-                          ></TrashIcon>
-                        </div>
-                      </div>
+                        {/* Show check icon when editing to save */}
+                        {isEditing &&
+                          chat.conversation_id == params.conversationId && (
+                            <div
+                              onClick={handleSaveClick}
+                              className="transition-colors duration-150 cursor-pointer p-1 rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
+                            >
+                              <CheckIcon className="w-5 h-5 [&>path]:stroke-[2]" />
+                            </div>
+                          )}
+                      </Link>
                     </li>
                   ))}
                 </ul>
               </li>
               <li className="-mx-6 mt-auto">
-                <a
-                  href="#"
-                  className="flex items-center gap-x-4 px-6 py-6 text-md font-medium leading-6 text-white hover:bg-gray-800"
-                >
+                <div className="flex items-center gap-x-4 px-6 py-6 text-md font-medium leading-6 text-white hover:bg-gray-800">
                   <img
                     className="h-10 w-10 rounded-full bg-gray-800"
                     src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
@@ -300,14 +321,15 @@ export const Sidebar = () => {
                   />
                   <span className="sr-only">Your profile</span>
                   <span aria-hidden="true">Tom Cook</span>
-                </a>
+                </div>
               </li>
             </ul>
           </nav>
         </div>
       </div>
 
-      <div className="fixed w-full top-0 z-40 flex items-center gap-x-6 px-4 py-4 shadow-sm sm:px-6 lg:hidden h-16 backdrop-filter backdrop-blur-lg">
+      {/* Top navbar */}
+      <div className="fixed w-full h-16 top-0 z-40 flex items-center justify-between gap-x-6 px-4 py-4 shadow-sm sm:px-6 lg:hidden backdrop-filter backdrop-blur-lg">
         <button
           type="button"
           className="-m-2.5 p-2.5 text-white lg:hidden"
@@ -319,7 +341,7 @@ export const Sidebar = () => {
             aria-hidden="true"
           />
         </button>
-        {isEditing ? (
+        {isEditing && params.conversationId !== undefined ? (
           <div className="flex-1 inline-flex justify-center items-center gap-3 text-center text-md font-medium leading-6 text-white">
             <input
               type="text"
@@ -332,28 +354,30 @@ export const Sidebar = () => {
             />
           </div>
         ) : (
-          <div className="flex-1 inline-flex justify-center items-center gap-3 text-center text-md font-medium leading-6 text-white">
-            {editedName || "New chat"}
+          params.conversationId !== undefined && (
+            <div className="flex-1 inline-flex justify-center items-center gap-3 text-center text-md font-medium leading-6 text-white">
+              {editedName || "New chat"}
 
-            {!isEditing && currentConversation !== null && (
-              <div
-                onClick={handleEditClick}
-                className=" transition-colors duration-150 cursor-pointer p-1 rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
-              >
-                <PencilSquareIcon className="w-5 h-5 " />
-              </div>
-            )}
-          </div>
+              {!isEditing && (
+                <div
+                  onClick={handleEditClick}
+                  className=" transition-colors duration-150 cursor-pointer p-1 rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
+                >
+                  <PencilSquareIcon className="w-5 h-5 " />
+                </div>
+              )}
+            </div>
+          )
         )}
 
-        <a href="#">
+        <div>
           <span className="sr-only">Your profile</span>
           <img
             className="h-8 w-8 rounded-full bg-gray-800"
             src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
             alt=""
           />
-        </a>
+        </div>
       </div>
     </div>
   );

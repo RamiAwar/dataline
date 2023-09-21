@@ -2,11 +2,15 @@ import { createBrowserRouter } from "react-router-dom";
 import { Home } from "./components/Home/Home";
 import { Landing } from "./components/Landing/Landing";
 import { BetaSignup } from "./components/BetaSignup/BetaSignup";
+import { Conversation } from "./components/Conversation/Conversation";
+import { ConnectionSelector } from "./components/Library/ConnectionSelector";
 
 export enum Routes {
-  Landing = "/",
+  Root = "/",
   BetaSignup = "/beta-signup",
-  Home = "/home",
+  Connection = "/connection/:connectionId",
+  Chat = "/chat/:conversationId",
+  NewChat = "/chat/new",
 }
 
 let routes = [
@@ -15,16 +19,31 @@ let routes = [
     element: <BetaSignup />,
   },
   {
-    path: Routes.Landing,
+    path: Routes.Root,
     element: <Landing />,
   },
 ];
 
-if (process.env.NODE_ENV === "local") {
-  routes.push({
-    path: Routes.Home,
+let private_routes = [
+  {
+    path: Routes.Root,
     element: <Home />,
-  });
+    children: [
+      {
+        path: Routes.NewChat,
+        element: <ConnectionSelector />,
+      },
+      {
+        path: Routes.Chat,
+        element: <Conversation />,
+      },
+    ],
+  },
+];
+
+if (process.env.NODE_ENV === "local") {
+  // Replace public with private
+  routes = private_routes;
 }
 
 export const router = createBrowserRouter(routes);
