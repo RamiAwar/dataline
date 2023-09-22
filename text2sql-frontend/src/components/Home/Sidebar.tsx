@@ -75,7 +75,8 @@ export const Sidebar = () => {
 
       fetchConversations();
     })();
-
+    // message: saving editedName
+    console.log("saving", editedName);
     setIsEditing(false);
   };
 
@@ -240,47 +241,32 @@ export const Sidebar = () => {
                 <ul role="list" className="-mx-4 space-y-1">
                   {conversations.map((chat) => (
                     <li key={chat.conversation_id}>
-                      <Link
-                        to={`/chat/${chat.conversation_id}`}
-                        onClick={() => setIsEditing(false)}
-                        className={classNames(
-                          chat.conversation_id == params.conversationId
-                            ? "bg-gray-700 text-white"
-                            : "text-gray-400 hover:text-white hover:bg-gray-800",
-                          "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
-                        )}
-                      >
-                        <ChatBubbleOvalLeftIcon
-                          className="h-5 w-5 shrink-0"
-                          aria-hidden="true"
-                        />
-
-                        {/* Show input field when editing and chat selected */}
-                        {isEditing &&
-                        chat.conversation_id == params.conversationId ? (
-                          <input
-                            type="text"
-                            value={editedName}
-                            onChange={handleNameChange}
-                            onKeyDown={handleKeyPress}
-                            onBlur={handleSaveClick}
-                            autoFocus
-                            className="flex-none max-w-[70%] text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-slate-300"
+                      {!isEditing ? (
+                        <Link
+                          to={`/chat/${chat.conversation_id}`}
+                          onClick={(e) =>
+                            chat.conversation_id === params.conversationId &&
+                            e.preventDefault()
+                          }
+                          className={classNames(
+                            chat.conversation_id == params.conversationId
+                              ? "bg-gray-700 text-white"
+                              : "text-gray-400 hover:text-white hover:bg-gray-800",
+                            "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
+                          )}
+                        >
+                          <ChatBubbleOvalLeftIcon
+                            className="h-5 w-5 shrink-0"
+                            aria-hidden="true"
                           />
-                        ) : (
                           <span className="text-ellipsis overflow-hidden whitespace-nowrap">
                             {chat.name}
                           </span>
-                        )}
-                        {/* Show edit button when not editing and chat selected */}
-                        {!isEditing &&
-                          chat.conversation_id == params.conversationId && (
+                          {/* Show edit button when not editing and chat selected */}
+                          {chat.conversation_id == params.conversationId && (
                             <div
                               className={classNames(
-                                chat.conversation_id == params.conversationId
-                                  ? "flex"
-                                  : "hidden group-hover:flex",
-                                "justify-end items-center grow"
+                                "flex justify-end items-center grow"
                               )}
                             >
                               <div
@@ -297,10 +283,40 @@ export const Sidebar = () => {
                               ></TrashIcon>
                             </div>
                           )}
+                        </Link>
+                      ) : (
+                        <div
+                          className={classNames(
+                            chat.conversation_id == params.conversationId
+                              ? "bg-gray-700 text-white"
+                              : "text-gray-400 hover:text-white hover:bg-gray-800",
+                            "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
+                          )}
+                        >
+                          <ChatBubbleOvalLeftIcon
+                            className="h-5 w-5 shrink-0"
+                            aria-hidden="true"
+                          />
 
-                        {/* Show check icon when editing to save */}
-                        {isEditing &&
-                          chat.conversation_id == params.conversationId && (
+                          {/* Show input field when editing and chat selected */}
+                          {chat.conversation_id == params.conversationId ? (
+                            <input
+                              type="text"
+                              value={editedName}
+                              onChange={handleNameChange}
+                              onKeyDown={handleKeyPress}
+                              onBlur={handleSaveClick}
+                              autoFocus
+                              className="flex-none max-w-[70%] text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-slate-300"
+                            />
+                          ) : (
+                            <span className="text-ellipsis overflow-hidden whitespace-nowrap">
+                              {chat.name}
+                            </span>
+                          )}
+
+                          {/* Show check icon when editing to save */}
+                          {chat.conversation_id == params.conversationId && (
                             <div
                               onClick={handleSaveClick}
                               className="transition-colors duration-150 cursor-pointer p-1 rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
@@ -308,7 +324,8 @@ export const Sidebar = () => {
                               <CheckIcon className="w-5 h-5 [&>path]:stroke-[2]" />
                             </div>
                           )}
-                      </Link>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
