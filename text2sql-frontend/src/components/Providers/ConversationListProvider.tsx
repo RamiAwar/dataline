@@ -30,16 +30,19 @@ export const ConversationListProvider = ({
   const [conversations, setConversations] = useState<IConversationResult[]>([]);
 
   function fetchConversations() {
-    api
-      .listConversations()
-      .then((response) => {
-        if (response.status === "ok") {
-          setConversations(response.conversations);
-        } else {
-          alert("Error loading Conversations");
-        }
-      })
-      .catch((err) => alert("Error loading conversations"));
+    async function f() {
+      await api
+        .listConversations()
+        .then((response) => {
+          if (response.status === "ok") {
+            setConversations(response.conversations);
+          } else {
+            alert("Error loading Conversations");
+          }
+        })
+        .catch((err) => alert("Error loading conversations"));
+    }
+    f();
   }
 
   useEffect(() => {

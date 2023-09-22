@@ -1,28 +1,21 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { api } from "../../api";
 import { Message } from "./Message";
 import { IMessageWithResults } from "../Library/types";
-import { useConversation } from "../Providers/ConversationProvider";
-
+import { useParams } from "react-router-dom";
 import ExpandingInput from "./ExpandingInput";
 
 import { Transition } from "@headlessui/react";
-import { ConnectionSelector } from "../Library/ConnectionSelector";
 import { generateUUID } from "../Library/utils";
 
 export const Conversation = () => {
+  const params = useParams<{ conversationId: string }>();
+
   // Load messages from conversation via API on load
   const [messages, setMessages] = useState<IMessageWithResults[]>([]);
-  const [conversation, setConversation] = useConversation();
   const scrollableDiv = useRef<HTMLDivElement | null>(null);
 
   function submitQuery(value: string) {
-    // Check if a current conversation is selected
-    if (conversation === null) {
-      alert("Please select a connection first");
-      return;
-    }
-
     // Add message to messages
     setMessages((prevMessages) => [
       ...prevMessages,
@@ -45,7 +38,7 @@ export const Conversation = () => {
 
     // Get API response
     (async () => {
-      const res = await api.query(conversation.id, value, true);
+      const res = await api.query(params.conversationId as string, value, true);
       if (res.status !== "ok") {
         alert("Error querying database");
         return;
@@ -57,45 +50,37 @@ export const Conversation = () => {
 
   useEffect(() => {
     const loadMessages = async () => {
-      if (!conversation) return;
-      const messages = await api.getMessages(conversation.id);
+      const messages = await api.getMessages(params.conversationId as string);
       setMessages(messages.messages);
     };
     loadMessages();
-  }, [conversation]);
+  }, [params]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (scrollableDiv.current !== null) {
       scrollableDiv.current.scrollIntoView({ behavior: "instant" });
     }
   }, [messages]);
 
   return (
-    <div className="bg-gray-900 w-full h-full relative flex flex-col">
+    <div className="bg-gray-900 w-full h-[calc(100%-4rem)] relative flex flex-col">
       <Transition
-        className="flex flex-col w-full h-full"
-        show={conversation === null}
-        enter="transition duration-150 ease-in-out transform"
-        enterFrom="opacity-0 scale-75"
-        enterTo="opacity-100 scale-100"
-      >
-        <ConnectionSelector />
-      </Transition>
-      <Transition
-        show={conversation !== null}
+        key={params.conversationId}
         enter="transition duration-150 ease-out transform"
         enterFrom="opacity-0 translate-y-1/2"
         enterTo="opacity-100 translate-y-0"
+        show={true}
+        appear={true}
       >
         <div className="overflow-y-auto scroll-m-0 pb-36 bg-gray-900">
           {messages.map((message) => (
             <Message
-              key={message.message_id}
+              key={(params.conversationId as string) + message.message_id}
               message_id={message.message_id}
               content={message.content}
               role={message.role}
               results={message.results}
-              conversation_id={conversation?.id}
+              conversation_id={params.conversationId}
             ></Message>
           ))}
           <div ref={scrollableDiv} />
@@ -106,7 +91,7 @@ export const Conversation = () => {
         <div className="w-full md:max-w-3xl flex justify-center pt-6 pb-4 m-2">
           <ExpandingInput
             onSubmit={submitQuery}
-            disabled={conversation === null}
+            disabled={false}
           ></ExpandingInput>
         </div>
       </div>
