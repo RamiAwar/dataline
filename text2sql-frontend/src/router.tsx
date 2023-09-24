@@ -4,6 +4,7 @@ import { Landing } from "./components/Landing/Landing";
 import { BetaSignup } from "./components/BetaSignup/BetaSignup";
 import { Conversation } from "./components/Conversation/Conversation";
 import { ConnectionSelector } from "./components/Library/ConnectionSelector";
+import { ConnectionEditor } from "./components/Library/ConnectionEditor";
 
 export enum Routes {
   Root = "/",
@@ -32,6 +33,10 @@ let private_routes = [
       {
         path: Routes.NewChat,
         element: <ConnectionSelector />,
+      },
+      {
+        path: Routes.Connection,
+        element: <ConnectionEditor />,
       },
       {
         path: Routes.Chat,

@@ -3,7 +3,8 @@ import {
   IConversationResult,
   IMessageWithResults,
   IResult,
-} from "./Library/types";
+} from "./components/Library/types";
+import { IEditConnection } from "./components/Library/types";
 
 const baseUrl = "http://localhost:7377";
 
@@ -47,6 +48,32 @@ export type ListConnectionsResult =
 const listConnections = async (): Promise<ListConnectionsResult> => {
   const response = await axios.get<ListConnectionsResult>(
     `${baseUrl}/sessions`
+  );
+  return response.data;
+};
+
+export type GetConnectionResult =
+  | { status: "ok"; session: ConnectionResult }
+  | ApiError;
+const getConnection = async (
+  connectionId: string
+): Promise<GetConnectionResult> => {
+  const response = await axios.get<GetConnectionResult>(
+    `${baseUrl}/session/${connectionId}`
+  );
+  return response.data;
+};
+
+export type UpdateConnectionResult =
+  | { status: "ok"; session: ConnectionResult }
+  | ApiError;
+const updateConnection = async (
+  connectionId: string,
+  edits: IEditConnection
+): Promise<UpdateConnectionResult> => {
+  const response = await axios.patch<UpdateConnectionResult>(
+    `${baseUrl}/session/${connectionId}`,
+    edits
   );
   return response.data;
 };
@@ -163,7 +190,9 @@ const runSQL = async (conversationId: string, code: string) => {
 
 export const api = {
   healthcheck,
+  getConnection,
   createConnection,
+  updateConnection,
   listConnections,
   listConversations,
   createConversation,
