@@ -38,6 +38,24 @@ export const Message = (initialMessage: IMessageWithResults) => {
     }
   }
 
+  // TODO: Currently unused by child components, will be used when api functionality is added
+  function toggleSaveQuery(result_id: string | undefined) {
+    if (result_id === undefined) return;
+    // Find result in message
+    const result = message.results?.find(
+      (result) => result.result_id === result_id
+    );
+    if (result === undefined) return;
+
+    // Toggle saved
+    result.saved = !result.saved;
+    alert(result.saved ? "Saved query" : "Unsaved query");
+
+    // Update message
+    setMessage(message);
+  }
+
+
   useEffect(() => {
     // Add query result to results
     if (message.results !== undefined && queryResult !== null) {
@@ -128,7 +146,9 @@ export const Message = (initialMessage: IMessageWithResults) => {
                     language="sql"
                     code={result.content as string}
                     runQuery={runQuery}
+                    toggleSaveQuery={() => toggleSaveQuery(result.result_id)}
                     runnable={!loadingQuery}
+                    saved={result.saved}
                   />
                 ))
             )}
