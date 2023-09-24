@@ -69,9 +69,26 @@ def insert_session(
 
 
 def get_session(session_id: str):
-    return conn.execute(
-        "SELECT * FROM sessions WHERE session_id = ?", (session_id,)
+    session = conn.execute(
+        "SELECT session_id, name, dsn, database, dialect FROM sessions WHERE session_id = ?",
+        (session_id,),
     ).fetchone()
+    return Session(
+        session_id=session[0],
+        name=session[1],
+        dsn=session[2],
+        database=session[3],
+        dialect=session[4],
+    )
+
+
+def update_session(session_id: str, name: str, dsn: str, database: str, dialect: str):
+    conn.execute(
+        "UPDATE sessions SET name = ?, dsn = ?, database = ?, dialect = ? WHERE session_id = ?",
+        (name, dsn, database, dialect, session_id),
+    )
+    conn.commit()
+    return True
 
 
 def get_session_from_dsn(dsn: str):

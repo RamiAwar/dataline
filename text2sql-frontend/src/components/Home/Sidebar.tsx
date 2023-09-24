@@ -236,7 +236,6 @@ export const Sidebar = () => {
                 <PlusIcon className="h-5 w-5 shrink-0 mr-2 [&>path]:stroke-[1]"></PlusIcon>
                 <div>New chat</div>
               </Link>
-              <hr className="border-gray-600 my-2" />
               <li>
                 <ul role="list" className="-mx-4 space-y-1">
                   {conversations.map((chat) => (

@@ -75,3 +75,8 @@ class SQLQueryResult:
 
 class UpdateConversationRequest(BaseModel):
     name: str
+
+
+class UpdateSessionRequest(BaseModel):
+    name: str
+    dsn: str
