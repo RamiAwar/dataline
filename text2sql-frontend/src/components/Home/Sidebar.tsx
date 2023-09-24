@@ -309,7 +309,7 @@ export const Sidebar = () => {
                               onKeyDown={handleKeyPress}
                               onBlur={handleSaveClick}
                               autoFocus
-                              className="flex-none max-w-[70%] text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-slate-300"
+                              className="flex-none max-w-[70%] h-7 text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-slate-300 pl-1"
                             />
                           ) : (
                             <span className="text-ellipsis overflow-hidden whitespace-nowrap">
