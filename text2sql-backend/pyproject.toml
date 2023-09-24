@@ -27,12 +27,16 @@ tiktoken = "^0.4.0"
 nltk = "^3.8.1"
 pyvis = "^0.3.2"
 pre-commit = "^3.4.0"
+pylint-pydantic = "^0.2.4"
 
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
 pyinstaller = "^5.10.1"
 jupyterlab = "^4.0.5"
+
+[tool.pylint.MASTER]
+load-plugins = "pylint_pydantic"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,0 +1,8 @@
+{
+    "python.languageServer": "Pylance",
+    "pylint.args": [
+        "--extension-pkg-whitelist=pydantic",
+        "--load-plugins",
+        "pylint_pydantic"
+    ]
+}

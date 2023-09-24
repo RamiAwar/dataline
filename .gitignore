@@ -2,6 +2,9 @@ db.sqlite3
 
 *_schema_index.json
 
-.vscode/
+.vscode/*
+!.vscode/settings_template.json
+!.vscode/tasks.json
+!.vscode/launch.json
 
 src-tauri/
