@@ -15,35 +15,40 @@ export enum Dialect {
 export type IResultType = "sql" | "code" | "data" | "text" | "selected_tables";
 export type Role = "user" | "assistant";
 
-export type IResult = {
+export interface IResult {
   type: IResultType;
   content: string | any[][];
   result_id?: string;
-};
+}
 
-export type IMessageWithResults = {
+export interface IMessageWithResults {
   content: string;
   role: "assistant" | "user";
   results?: IResult[];
   message_id?: string;
   conversation_id?: string;
-};
+}
 
-export type IConversationResult = {
+export interface IConversationResult {
   conversation_id: string;
   session_id: string;
   name: string;
   messages: IMessageWithResults[];
-};
+}
 
-export type IConversation = {
+export interface IConversation {
   id: string;
   name: string;
-};
+}
 
-export type IConnection = {
+export interface IConnection {
   session_id: string;
   name: string;
   dsn: string;
   dialect: string;
-};
+}
+
+export interface IEditConnection {
+  name: string;
+  dsn: string;
+}
