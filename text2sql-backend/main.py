@@ -18,7 +18,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
 import db
-from models import DataResult, Result, UnsavedResult, UpdateConversationRequest
+from models import (
+    DataResult,
+    Result,
+    Session,
+    UnsavedResult,
+    UpdateConversationRequest,
+    UpdateSessionRequest,
+)
 from services import QueryService
 from sql_wrapper import request_execute, request_limit
 
@@ -146,6 +153,48 @@ async def get_sessions():
     }
 
 
+@app.get("/session/{session_id}")
+async def get_session(session_id: str):
+    return {
+        "status": "ok",
+        "session": db.get_session(session_id),
+    }
+
+
+@app.patch("/session/{session_id}")
+async def update_session(session_id: str, req: UpdateSessionRequest):
+    # Try to connect to provided dsn
+    try:
+        engine = create_engine(req.dsn)
+        with engine.connect():
+            pass
+    except OperationalError as e:
+        logger.error(e)
+        return {"status": "error", "message": "Failed to connect to database"}
+
+    # Update session only if success
+    dialect = engine.url.get_dialect().name
+    database = engine.url.database
+
+    db.update_session(
+        session_id=session_id,
+        dsn=req.dsn,
+        database=database,
+        name=req.name,
+        dialect=dialect,
+    )
+    return {
+        "status": "ok",
+        "connection": Session(
+            session_id=session_id,
+            dsn=req.dsn,
+            database=database,
+            name=req.name,
+            dialect=dialect,
+        ),
+    }
+
+
 @app.get("/conversations")
 async def conversations():
     return {
@@ -195,7 +244,7 @@ async def execute_sql(
 
     if session_id not in query_services:
         query_services[session_id] = QueryService(
-            dsn=session[1], model_name="gpt-3.5-turbo"
+            dsn=session.dsn, model_name="gpt-3.5-turbo"
         )
 
     # Execute query
@@ -245,7 +294,7 @@ async def query(
 
     if session_id not in query_services:
         query_services[session_id] = QueryService(
-            dsn=session[1], model_name="gpt-3.5-turbo"
+            dsn=session.dsn, model_name="gpt-3.5-turbo"
         )
 
     response = query_services[session_id].query(query, conversation_id=conversation_id)
