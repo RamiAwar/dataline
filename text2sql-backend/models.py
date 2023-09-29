@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, List, Literal, Union
+from typing import Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
@@ -58,6 +58,31 @@ class Session:
     session_id: str
     dsn: str
     dialect: str
+
+
+class TableSchemaDescription(BaseModel):
+    id: str
+    schema_id: str
+    name: str
+    type: str
+    description: str
+    is_primary_key: Optional[bool]
+    is_foreign_key: Optional[bool]
+    linked_table: Optional[str]
+
+
+class TableField(BaseModel):
+    name: str
+    type: str
+    is_primary_key: bool = False
+    is_foreign_key: bool = False
+    linked_table: str = ""
+
+
+class TableSchema(BaseModel):
+    session_id: str
+    description: str
+    field_descriptions: List[TableSchemaDescription]
 
 
 class ConversationWithMessagesWithResults(Conversation):

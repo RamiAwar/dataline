@@ -26,7 +26,7 @@ from models import (
     UpdateConversationRequest,
     UpdateSessionRequest,
 )
-from services import QueryService
+from services import QueryService, SchemaService
 from sql_wrapper import request_execute, request_limit
 
 logging.basicConfig(level=logging.DEBUG)
@@ -128,13 +128,19 @@ async def connect_db(req: ConnectRequest):
     # Insert session only if success
     dialect = engine.url.get_dialect().name
     database = engine.url.database
-    db.insert_session(
-        session_id,
-        req.dsn,
-        database=database,
-        name=req.name,
-        dialect=dialect,
-    )
+
+    with db.DatabaseManager() as conn:
+        db.insert_session(
+            conn,
+            session_id,
+            req.dsn,
+            database=database,
+            name=req.name,
+            dialect=dialect,
+        )
+
+        SchemaService.create_or_update_tables(conn, session_id)
+        conn.commit()  # only commit if all step were successful
 
     return {
         "status": "ok",
@@ -153,12 +159,27 @@ async def get_sessions():
     }
 
 
+@app.get("/session/{session_id}/schemas")
+async def get_tables_schemas(session_id: str):
+    # Check for session existence
+    with db.DatabaseManager() as conn:
+        session = db.get_session(conn, session_id)
+        if not session:
+            return {"status": "error", "message": "Invalid session_id"}
+
+        return {
+            "status": "ok",
+            "tables": db.get_table_schemas_with_descriptions(session_id),
+        }
+
+
 @app.get("/session/{session_id}")
 async def get_session(session_id: str):
-    return {
-        "status": "ok",
-        "session": db.get_session(session_id),
-    }
+    with db.DatabaseManager() as conn:
+        return {
+            "status": "ok",
+            "session": db.get_session(conn, session_id),
+        }
 
 
 @app.patch("/session/{session_id}")
@@ -236,44 +257,44 @@ async def execute_sql(
     request_execute.set(execute)
 
     # Get conversation
-    conversation = db.get_conversation(conversation_id)
-    session_id = conversation.session_id
-    session = db.get_session(session_id)
-    if not session:
-        return {"status": "error", "message": "Invalid session_id"}
+    with db.DatabaseManager() as conn:
+        conversation = db.get_conversation(conversation_id)
+        session_id = conversation.session_id
+        session = db.get_session(conn, session_id)
+        if not session:
+            return {"status": "error", "message": "Invalid session_id"}
 
-    if session_id not in query_services:
-        query_services[session_id] = QueryService(
-            dsn=session.dsn, model_name="gpt-3.5-turbo"
-        )
+        if session_id not in query_services:
+            query_services[session_id] = QueryService(
+                dsn=session.dsn, model_name="gpt-3.5-turbo"
+            )
 
-    # Execute query
-    data = query_services[session_id].sql_db.run_sql(sql)[1]
-    print(data)
-    if data.get("result"):
-        # Convert data to list of rows
-        rows = [data["columns"]]
-        rows.extend([x for x in r] for r in data["result"])
+        # Execute query
+        data = query_services[session_id].sql_db.run_sql(sql)[1]
+        if data.get("result"):
+            # Convert data to list of rows
+            rows = [data["columns"]]
+            rows.extend([x for x in r] for r in data["result"])
 
-        return Response(
-            content=json.dumps(
-                {
-                    "status": "ok",
-                    "data": DataResult(
-                        type="data",
-                        content=rows,
-                    ),
-                },
-                default=pydantic_encoder,
-                indent=4,
-            ),
-            media_type="application/json",
-        )
-    else:
-        return Response(
-            content=json.dumps({"status": "error", "message": "No results found"}),
-            media_type="application/json",
-        )
+            return Response(
+                content=json.dumps(
+                    {
+                        "status": "ok",
+                        "data": DataResult(
+                            type="data",
+                            content=rows,
+                        ),
+                    },
+                    default=pydantic_encoder,
+                    indent=4,
+                ),
+                media_type="application/json",
+            )
+        else:
+            return Response(
+                content=json.dumps({"status": "error", "message": "No results found"}),
+                media_type="application/json",
+            )
 
 
 @app.get("/query", response_model=List[UnsavedResult])
@@ -283,62 +304,67 @@ async def query(
     request_limit.set(limit)
     request_execute.set(execute)
 
-    # Get conversation
-    conversation = db.get_conversation(conversation_id)
+    with db.DatabaseManager() as conn:
+        # Get conversation
+        conversation = db.get_conversation(conversation_id)
 
-    # Get query service instance
-    session_id = conversation.session_id
-    session = db.get_session(session_id)
-    if not session:
-        return {"status": "error", "message": "Invalid session_id"}
+        # Get query service instance
+        session_id = conversation.session_id
+        session = db.get_session(conn, session_id)
+        if not session:
+            return {"status": "error", "message": "Invalid session_id"}
 
-    if session_id not in query_services:
-        query_services[session_id] = QueryService(
-            dsn=session.dsn, model_name="gpt-3.5-turbo"
-        )
-
-    response = query_services[session_id].query(query, conversation_id=conversation_id)
-    unsaved_results = query_services[session_id].results_from_query_response(response)
-
-    # Save results WITHOUT data (sensitive)
-    saved_results: List[Result] = []
-    for result in unsaved_results:
-        saved_result = db.create_result(result)
-        saved_results.append(saved_result)
-
-    # Add assistant message to message history
-    saved_message = db.add_message_to_conversation(
-        conversation_id,
-        response.text,
-        role="assistant",
-        results=saved_results,
-    )
-
-    # Execute query and fetch data result now
-    data = query_services[session_id].sql_db.run_sql(response.sql)[1]
-    if data.get("result"):
-        # Convert data to list of rows
-        rows = [data["columns"]]
-        rows.extend([x for x in r] for r in data["result"])
-
-        unsaved_results.append(
-            DataResult(
-                type="data",
-                content=rows,
+        if session_id not in query_services:
+            query_services[session_id] = QueryService(
+                dsn=session.dsn, model_name="gpt-3.5-turbo"
             )
+
+        response = query_services[session_id].query(
+            query, conversation_id=conversation_id
+        )
+        unsaved_results = query_services[session_id].results_from_query_response(
+            response
         )
 
-    # Replace saved results with unsaved that include data returned
-    saved_message.results = unsaved_results
+        # Save results WITHOUT data (sensitive)
+        saved_results: List[Result] = []
+        for result in unsaved_results:
+            saved_result = db.create_result(result)
+            saved_results.append(saved_result)
 
-    return Response(
-        content=json.dumps(
-            {"status": "ok", "message": saved_message},
-            default=pydantic_encoder,
-            indent=4,
-        ),
-        media_type="application/json",
-    )
+        # Add assistant message to message history
+        saved_message = db.add_message_to_conversation(
+            conversation_id,
+            response.text,
+            role="assistant",
+            results=saved_results,
+        )
+
+        # Execute query and fetch data result now
+        data = query_services[session_id].sql_db.run_sql(response.sql)[1]
+        if data.get("result"):
+            # Convert data to list of rows
+            rows = [data["columns"]]
+            rows.extend([x for x in r] for r in data["result"])
+
+            unsaved_results.append(
+                DataResult(
+                    type="data",
+                    content=rows,
+                )
+            )
+
+        # Replace saved results with unsaved that include data returned
+        saved_message.results = unsaved_results
+
+        return Response(
+            content=json.dumps(
+                {"status": "ok", "message": saved_message},
+                default=pydantic_encoder,
+                indent=4,
+            ),
+            media_type="application/json",
+        )
 
 
 def sql2html(sql) -> str:
