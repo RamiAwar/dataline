@@ -1,13 +1,14 @@
 import json
 import logging
+from sqlite3 import Connection
 from typing import Any, Dict, List, TypedDict
 
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import MetaData, create_engine, inspect
 
 import db
 from context_builder import CustomSQLContextContainerBuilder
 from errors import GenerationError, RelatedTablesNotFoundError
-from models import SQLQueryResult, UnsavedResult
+from models import SQLQueryResult, TableField, UnsavedResult
 from query_manager import SQLQueryManager
 from sql_wrapper import CustomSQLDatabase
 
@@ -17,6 +18,89 @@ logger = logging.getLogger(__name__)
 class SQLResults(TypedDict):
     result: List[Dict[str, Any]]
     columns: List[str]
+
+
+class SchemaService:
+    @classmethod
+    def extract_tables(
+        cls, conn: Connection, session_id: str
+    ) -> Dict[str, Dict[str, TableField]]:
+        # Get DSN from session
+        session = db.get_session(conn, session_id)
+        engine = create_engine(session.dsn)
+        metadata = MetaData()
+        metadata.reflect(bind=engine)
+
+        tables = {}
+
+        for table_name, table in metadata.tables.items():
+            fields = {}
+            pk_field_name = table.primary_key.name
+            foreign_keys = {fk.name: fk for fk in table.foreign_keys}
+
+            for column in table.c:
+                field_name, field_type = column.name, type(column.type).__name__
+                if field_name == pk_field_name:
+                    fields[field_name] = TableField(
+                        name=field_name, type=field_type, is_primary_key=True
+                    )
+                else:
+                    if field_name in foreign_keys:
+                        fk = foreign_keys[field_name].column
+                        fields[field_name] = TableField(
+                            name=field_name,
+                            type=field_type,
+                            is_foreign_key=True,
+                            linked_table=f"{fk.table.name}.{fk.name}",
+                        )
+                    else:
+                        fields[field_name] = TableField(
+                            name=field_name, type=field_type
+                        )
+
+            tables[table_name] = list(fields.values())
+
+        return tables
+
+    @classmethod
+    def create_or_update_tables(cls, conn: Connection, session_id: str):
+        exists = db.exists_schema_table(session_id)
+        if exists:
+            raise Exception("Update not implemented yet")
+
+        tables = cls.extract_tables(conn, session_id)
+        for table_name, fields in tables.items():
+            cls._create_or_update_table_schema(conn, session_id, table_name, fields)
+
+    @classmethod
+    def _create_or_update_table_schema(
+        cls,
+        conn: Connection,
+        session_id: str,
+        table_name: str,
+        fields: List[TableField],
+    ):
+        """Creates a schema from scratch with empty descriptions or adds missing fields to one
+        that already exists."""
+        # TODO: Delete removed fields as well
+        # Check if schema exists for this session
+        exists = db.exists_schema_table(session_id)
+        if not exists:
+            # Create new schema table
+            table_id = db.create_schema_table(conn, session_id, table_name)
+
+            # Create schema fields
+            for field in fields:
+                db.create_schema_field(
+                    conn=conn,
+                    table_id=table_id,
+                    field_name=field.name,
+                    field_type=field.type,
+                    field_description="",
+                    is_primary_key=field.is_primary_key,
+                    is_foreign_key=field.is_foreign_key,
+                    foreign_table=field.linked_table,
+                )
 
 
 class QueryService:

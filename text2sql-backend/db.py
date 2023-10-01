@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from uuid import uuid4
 
 from errors import DuplicateError
 from models import (
@@ -9,20 +10,62 @@ from models import (
     MessageWithResults,
     Result,
     Session,
+    TableFieldCreate,
+    TableSchema,
+    TableSchemaDescription,
     UnsavedResult,
 )
 
+# Old way of using database - this is a single connection, hard to manage transactions
 conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
+
+
+class DatabaseManager:
+    def __init__(self, db_file="db.sqlite3"):
+        self.db_file = db_file
+        self.connection = None
+
+    def __enter__(self):
+        self.connection = sqlite3.connect(self.db_file)
+        return self.connection
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.connection:
+            self.connection.close()
 
 
 # SESSIONS: Create table to store session_id and dsn with unique constraint on session_id and dsn and not null
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS sessions (session_id text PRIMARY KEY, dsn text UNIQUE NOT NULL, database text NOT NULL, name text, dialect text, UNIQUE (session_id, dsn))"""
+    """CREATE TABLE IF NOT EXISTS sessions (
+        session_id text PRIMARY KEY,
+        dsn text UNIQUE NOT NULL,
+        database text NOT NULL,
+        name text,
+        dialect text,
+        UNIQUE (session_id, dsn))"""
 )
 
-# SCHEMA FILES: Create table to store session_id and index_file with unique constraint on session_id and index_file and not null
+# SCHEMA TABLE: Create table to store table names in the schema with a reference to a session
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS schema_indexes (session_id text PRIMARY KEY, index_file text UNIQUE NOT NULL)"""
+    """CREATE TABLE IF NOT EXISTS schema_tables (
+    session_id text NOT NULL,
+    id text PRIMARY KEY,
+    name text NOT NULL,
+    description text NOT NULL,
+    FOREIGN KEY(session_id) REFERENCES sessions(session_id))"""
+)
+
+# SCHEMA FIELDS: Create table to store a reference to a table schema, table reference, field name, field type ('table' or 'field'), and a field description (text) with a reference to a session
+conn.execute(
+    """CREATE TABLE IF NOT EXISTS schema_fields (id text PRIMARY KEY,
+    table_id text NOT NULL,
+    name text NOT NULL,
+    type text NOT NULL,
+    description text NOT NULL,
+    is_primary_key boolean NOT NULL DEFAULT 0,
+    is_foreign_key boolean NOT NULL DEFAULT 0,
+    foreign_table text NOT NULL DEFAULT '',
+    FOREIGN KEY(table_id) REFERENCES schema_tables(table_id))"""
 )
 
 # MESSAGES: Create table to store messages with text, role, and session_id
@@ -54,25 +97,30 @@ conn.execute(
 
 
 def insert_session(
-    session_id: str, dsn: str, database: str, name: str = "", dialect: str = ""
-):
+    conn: sqlite3.Connection,
+    dsn: str,
+    database: str,
+    name: str = "",
+    dialect: str = "",
+) -> str:
     # Check if session_id or dsn already exist
-    if conn.execute(
-        "SELECT * FROM sessions WHERE session_id = ? OR dsn = ?", (session_id, dsn)
-    ).fetchone():
-        raise DuplicateError("session_id or dsn already exists")
+    session_id = uuid4().hex
+
     conn.execute(
         "INSERT INTO sessions VALUES (?, ?, ?, ?, ?)",
         (session_id, dsn, database, name, dialect),
     )
-    conn.commit()
+    return session_id
 
 
-def get_session(session_id: str):
+def get_session(conn: sqlite3.Connection, session_id: str):
     session = conn.execute(
         "SELECT session_id, name, dsn, database, dialect FROM sessions WHERE session_id = ?",
         (session_id,),
     ).fetchone()
+    if not session:
+        raise Exception("Session not found")
+
     return Session(
         session_id=session[0],
         name=session[1],
@@ -102,6 +150,151 @@ def get_sessions():
             "SELECT session_id, name, dsn, database, dialect FROM sessions"
         ).fetchall()
     ]
+
+
+def exists_schema_table(session_id: str):
+    result = conn.execute(
+        "SELECT * FROM schema_tables WHERE session_id = ?", (session_id,)
+    ).fetchone()
+    if result:
+        return True
+    return False
+
+
+def create_schema_table(conn: sqlite3.Connection, session_id: str, table_name: str):
+    """Creates a table schema for a session"""
+    # Check if table already exists
+    if conn.execute(
+        "SELECT * FROM schema_tables WHERE session_id = ? AND name = ?",
+        (session_id, table_name),
+    ).fetchone():
+        raise DuplicateError("Table already exists")
+
+    # Insert table with UUID for ID
+    table_id = uuid4().hex
+    conn.execute(
+        "INSERT INTO schema_tables (id, session_id, name, description) VALUES (?, ?, ?, ?)",
+        (table_id, session_id, table_name, ""),
+    )
+    return table_id
+
+
+def create_schema_field(
+    conn: sqlite3.Connection,
+    table_id: str,
+    field_name: str,
+    field_type: str,
+    field_description: str = "",
+    is_primary_key: bool = False,
+    is_foreign_key: bool = False,
+    foreign_table: str = "",
+):
+    """Creates a field schema for a table"""
+    # Check if field already exists
+    if conn.execute(
+        "SELECT * FROM schema_fields WHERE table_id = ? AND name = ?",
+        (table_id, field_name),
+    ).fetchone():
+        raise DuplicateError("Field already exists")
+
+    # Insert field and return ID of row
+    field_id = uuid4().hex
+    conn.execute(
+        "INSERT INTO schema_fields (id, table_id, name, type, description, is_primary_key, is_foreign_key, foreign_table) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            field_id,
+            table_id,
+            field_name,
+            field_type,
+            field_description,
+            is_primary_key,
+            is_foreign_key,
+            foreign_table,
+        ),
+    )
+
+    return field_id
+
+
+def get_table_schemas_with_descriptions(session_id: str):
+    # Select all table schemas for a session and then join with schema_descriptions to get the field descriptions
+    descriptions = conn.execute(
+        """
+    SELECT
+        schema_tables.id,
+        schema_tables.session_id,
+        schema_tables.name,
+        schema_tables.description,
+        schema_fields.id,
+        schema_fields.name,
+        schema_fields.type,
+        schema_fields.description,
+        schema_fields.is_primary_key,
+        schema_fields.is_foreign_key,
+        schema_fields.foreign_table
+    FROM schema_tables
+    INNER JOIN schema_fields ON schema_tables.id = schema_fields.table_id
+    WHERE schema_tables.session_id = ?""",
+        (session_id,),
+    ).fetchall()
+
+    # Join all the field descriptions for each table into a list of table schemas
+    schemas = {}
+    for description in descriptions:
+        if description[0] not in schemas:
+            schemas[description[0]] = []
+        schemas[description[0]].append(description)
+
+    # Return a list of TableSchema objects
+    return [
+        TableSchema(
+            session_id=session_id,
+            id=table[0][0],
+            name=table[0][2],
+            description=table[0][3],
+            field_descriptions=[
+                TableSchemaDescription(
+                    id=field[4],
+                    schema_id=field[0],
+                    name=field[5],
+                    type=field[6],
+                    description=field[7],
+                    is_primary_key=field[8],
+                    is_foreign_key=field[9],
+                    linked_table=field[10],
+                )
+                for field in table
+            ],
+        )
+        for table in schemas.values()
+    ]
+
+
+# def get_schema_table(table_id: str):
+#     schema_table = conn.execute(
+#         """SELECT id, name, description FROM schema_tables WHERE id = ?""", (table_id,)
+#     ).fetchone()
+
+#     return TableSchema(id=schema_table[0])
+
+
+def update_schema_table_description(
+    conn: sqlite3.Connection, table_id: str, description: str
+):
+    return conn.execute(
+        """UPDATE schema_tables SET description = ? WHERE id = ?""",
+        (description, table_id),
+    )
+
+
+def update_schema_table_field_description(
+    conn: sqlite3.Connection, field_id: str, description: str
+):
+    # Check
+    return conn.execute(
+        """UPDATE schema_fields SET description = ? WHERE id = ?""",
+        (description, field_id),
+    )
 
 
 def session_is_indexed(session_id):

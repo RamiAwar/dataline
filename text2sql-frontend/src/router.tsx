@@ -3,8 +3,8 @@ import { Home } from "./components/Home/Home";
 import { Landing } from "./components/Landing/Landing";
 import { BetaSignup } from "./components/BetaSignup/BetaSignup";
 import { Conversation } from "./components/Conversation/Conversation";
-import { ConnectionSelector } from "./components/Library/ConnectionSelector";
-import { ConnectionEditor } from "./components/Library/ConnectionEditor";
+import { ConnectionSelector } from "./components/Connection/ConnectionSelector";
+import { ConnectionEditor } from "./components/Connection/ConnectionEditor";
 
 export enum Routes {
   Root = "/",
