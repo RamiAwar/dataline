@@ -122,17 +122,13 @@ async def connect_db(req: ConnectRequest):
     if res:
         return {"status": "ok", "session_id": res[0]}
 
-    # If new DSN, create new session and schema
-    session_id = uuid4().hex
-
     # Insert session only if success
     dialect = engine.url.get_dialect().name
     database = engine.url.database
 
     with db.DatabaseManager() as conn:
-        db.insert_session(
+        session_id = db.insert_session(
             conn,
-            session_id,
             req.dsn,
             database=database,
             name=req.name,

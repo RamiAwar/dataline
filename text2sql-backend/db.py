@@ -98,21 +98,19 @@ conn.execute(
 
 def insert_session(
     conn: sqlite3.Connection,
-    session_id: str,
     dsn: str,
     database: str,
     name: str = "",
     dialect: str = "",
-):
+) -> str:
     # Check if session_id or dsn already exist
-    if conn.execute(
-        "SELECT * FROM sessions WHERE session_id = ? OR dsn = ?", (session_id, dsn)
-    ).fetchone():
-        raise DuplicateError("session_id or dsn already exists")
+    session_id = uuid4().hex
+
     conn.execute(
         "INSERT INTO sessions VALUES (?, ?, ?, ?, ?)",
         (session_id, dsn, database, name, dialect),
     )
+    return session_id
 
 
 def get_session(conn: sqlite3.Connection, session_id: str):
