@@ -3,10 +3,9 @@ import NewConnectionModal from "../Connection/NewConnectionModal";
 import { api } from "../../api";
 import DatabaseDialectImage from "./DatabaseDialectImage";
 import { useState } from "react";
-import { IConnection, IConversation } from "./types";
+import { IConnection, IConversation } from "../Library/types";
 import { useConversationList } from "../Providers/ConversationListProvider";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { Transition } from "@headlessui/react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 export const ConnectionSelector = () => {

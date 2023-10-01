@@ -3,6 +3,7 @@ import {
   IConversationResult,
   IMessageWithResults,
   IResult,
+  ITableSchemaResult,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
 
@@ -74,6 +75,51 @@ const updateConnection = async (
   const response = await axios.patch<UpdateConnectionResult>(
     `${baseUrl}/session/${connectionId}`,
     edits
+  );
+  return response.data;
+};
+
+export type GetTableSchemasResult =
+  | {
+      status: "ok";
+      tables: ITableSchemaResult[];
+    }
+  | ApiError;
+const getTableSchemas = async (
+  connectionId: string
+): Promise<GetTableSchemasResult> => {
+  const response = await axios.get<GetTableSchemasResult>(
+    `${baseUrl}/session/${connectionId}/schemas`
+  );
+  return response.data;
+};
+
+export type UpdateTableSchemaDescriptionResult = { status: "ok" } | ApiError;
+const updateTableSchemaDescription = async (
+  tableId: string,
+  description: string
+): Promise<UpdateTableSchemaDescriptionResult> => {
+  const response = await axios.patch<UpdateTableSchemaDescriptionResult>(
+    `${baseUrl}/schemas/table/${tableId}`,
+    {
+      description,
+    }
+  );
+  return response.data;
+};
+
+export type UpdateTableSchemaFieldDescriptionResult =
+  | { status: "ok" }
+  | ApiError;
+const updateTableSchemaFieldDescription = async (
+  fieldId: string,
+  description: string
+): Promise<UpdateTableSchemaFieldDescriptionResult> => {
+  const response = await axios.patch<UpdateTableSchemaFieldDescriptionResult>(
+    `${baseUrl}/schemas/field/${fieldId}`,
+    {
+      description,
+    }
   );
   return response.data;
 };
@@ -191,6 +237,9 @@ const runSQL = async (conversationId: string, code: string) => {
 export const api = {
   healthcheck,
   getConnection,
+  getTableSchemas,
+  updateTableSchemaDescription,
+  updateTableSchemaFieldDescription,
   createConnection,
   updateConnection,
   listConnections,

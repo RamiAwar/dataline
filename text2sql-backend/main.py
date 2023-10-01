@@ -160,7 +160,7 @@ async def get_sessions():
 
 
 @app.get("/session/{session_id}/schemas")
-async def get_tables_schemas(session_id: str):
+async def get_table_schemas(session_id: str):
     # Check for session existence
     with db.DatabaseManager() as conn:
         session = db.get_session(conn, session_id)
@@ -171,6 +171,32 @@ async def get_tables_schemas(session_id: str):
             "status": "ok",
             "tables": db.get_table_schemas_with_descriptions(session_id),
         }
+
+
+@app.patch("/schemas/table/{table_id}")
+async def update_table_schema_description(
+    table_id: str, description: Annotated[str, Body(embed=True)]
+):
+    with db.DatabaseManager() as conn:
+        db.update_schema_table_description(
+            conn, table_id=table_id, description=description
+        )
+        conn.commit()
+
+    return {"status": "ok"}
+
+
+@app.patch("/schemas/field/{field_id}")
+async def update_table_schema_field_description(
+    field_id: str, description: Annotated[str, Body(embed=True)]
+):
+    with db.DatabaseManager() as conn:
+        db.update_schema_table_field_description(
+            conn, field_id=field_id, description=description
+        )
+        conn.commit()
+
+    return {"status": "ok"}
 
 
 @app.get("/session/{session_id}")

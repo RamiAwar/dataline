@@ -10,6 +10,7 @@ from models import (
     MessageWithResults,
     Result,
     Session,
+    TableFieldCreate,
     TableSchema,
     TableSchemaDescription,
     UnsavedResult,
@@ -250,7 +251,7 @@ def get_table_schemas_with_descriptions(session_id: str):
     return [
         TableSchema(
             session_id=session_id,
-            table_id=table[0][0],
+            id=table[0][0],
             name=table[0][2],
             description=table[0][3],
             field_descriptions=[
@@ -269,6 +270,33 @@ def get_table_schemas_with_descriptions(session_id: str):
         )
         for table in schemas.values()
     ]
+
+
+# def get_schema_table(table_id: str):
+#     schema_table = conn.execute(
+#         """SELECT id, name, description FROM schema_tables WHERE id = ?""", (table_id,)
+#     ).fetchone()
+
+#     return TableSchema(id=schema_table[0])
+
+
+def update_schema_table_description(
+    conn: sqlite3.Connection, table_id: str, description: str
+):
+    return conn.execute(
+        """UPDATE schema_tables SET description = ? WHERE id = ?""",
+        (description, table_id),
+    )
+
+
+def update_schema_table_field_description(
+    conn: sqlite3.Connection, field_id: str, description: str
+):
+    # Check
+    return conn.execute(
+        """UPDATE schema_fields SET description = ? WHERE id = ?""",
+        (description, field_id),
+    )
 
 
 def session_is_indexed(session_id):

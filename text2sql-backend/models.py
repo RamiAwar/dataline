@@ -79,8 +79,20 @@ class TableField(BaseModel):
     linked_table: str = ""
 
 
+class TableFieldCreate(BaseModel):
+    table_id: str
+    field_name: str
+    field_type: str
+    field_description: str = ""
+    is_primary_key: bool = False
+    is_foreign_key: bool = False
+    foreign_table: str = ""
+
+
 class TableSchema(BaseModel):
+    id: str
     session_id: str
+    name: str
     description: str
     field_descriptions: List[TableSchemaDescription]
 

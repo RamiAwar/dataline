@@ -1,12 +1,12 @@
 import { api } from "../../api";
 import { useEffect, useState } from "react";
-import { IConnection, IEditConnection } from "./types";
+import { IConnection, IEditConnection } from "../Library/types";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useNavigate, useParams } from "react-router-dom";
-import { AlertIcon, AlertModal } from "./AlertModal";
+import { AlertIcon, AlertModal } from "../Library/AlertModal";
 import { useConnectionList } from "../Providers/ConnectionListProvider";
 import { Routes } from "../../router";
-import { Transition } from "@headlessui/react";
+import SchemaEditorGrid from "./SchemaEditorGrid";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -106,7 +106,7 @@ export const ConnectionEditor = () => {
   }
 
   return (
-    <div className="bg-gray-800 w-full h-screen relative flex flex-col -mt-16 lg:mt-0">
+    <div className="bg-gray-800 w-full h-full relative flex flex-col -mt-16 lg:mt-0">
       <AlertModal
         isOpen={showAlert}
         title="Discard Unsaved Changes?"
@@ -205,14 +205,17 @@ export const ConnectionEditor = () => {
             </button>
           </form>
 
-          {/* <div className="sm:col-span-6">
+          <div className="sm:col-span-6">
             <label
               htmlFor="name"
               className="block text-sm font-medium leading-6 text-white"
             >
               Schema Descriptions
             </label>
-          </div> */}
+            <div className="mt-2">
+              {connection && <SchemaEditorGrid connection={connection} />}
+            </div>
+          </div>
         </div>
       </div>
     </div>

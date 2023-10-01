@@ -22,6 +22,9 @@ export default {
         bounce200: "bounce 1s infinite 100ms",
         bounce400: "bounce 1s infinite 200ms",
       },
+      transitionDuration: {
+        2000: "2000ms", // 2000ms is equivalent to 2 seconds
+      },
       blur: {
         "4xl": "72px",
         "5xl": "96px",
