@@ -7,7 +7,7 @@ Never query for all the columns from a specific table, only ask for a few releva
 
 Prefer using joins to subqueries where possible since that's more efficient.
 
-Here's the database schema that you should use to generate the SQL query. DO NOT use any tables that are not listed here: {schema}
+Here's the database schema that you should use to generate the SQL query. Read any provided descriptions carefully! DO NOT use any tables that are not listed here: {schema}
 
 ONLY return a valid JSON object (no other text is necessary), where the key of the field in JSON is the `name` attribute of the corresponding XML, and the value is of the type specified by the corresponding XML's tag. The JSON MUST conform to the XML format, including any types and format requests e.g. requests for lists, objects and specific types. Be correct and concise.
 <output>
@@ -43,7 +43,7 @@ Never query for all the columns from a specific table, only ask for a few releva
 
 Prefer using joins to subqueries where possible since that's more efficient.
 
-Here's the database schema that you should use to generate the SQL query. DO NOT use any tables that are not listed here: {schema}
+Here's the database schema that you should use to generate the SQL query. Read any provided descriptions carefully! DO NOT use any tables that are not listed here: {schema}
 
 ONLY return a valid JSON object (no other text is necessary), where the key of the field in JSON is the `name` attribute of the corresponding XML, and the value is of the type specified by the corresponding XML's tag. The JSON MUST conform to the XML format, including any types and format requests e.g. requests for lists, objects and specific types. Be correct and concise.
 <output>

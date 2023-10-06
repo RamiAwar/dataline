@@ -286,13 +286,10 @@ async def execute_sql(
         if not session:
             return {"status": "error", "message": "Invalid session_id"}
 
-        if session_id not in query_services:
-            query_services[session_id] = QueryService(
-                session_id=session_id, dsn=session.dsn, model_name="gpt-3.5-turbo"
-            )
+        query_service = QueryService(session)
 
         # Execute query
-        data = query_services[session_id].sql_db.run_sql(sql)[1]
+        data = query_service.run_sql(sql)
         if data.get("result"):
             # Convert data to list of rows
             rows = [data["columns"]]
@@ -336,7 +333,7 @@ async def query(
         if not session:
             return {"status": "error", "message": "Invalid session_id"}
 
-        query_service = QueryService(session=session)
+        query_service = QueryService(session=session, model_name="gpt-3.5-turbo")
         response = query_service.query(query, conversation_id=conversation_id)
         unsaved_results = results_from_query_response(response)
 

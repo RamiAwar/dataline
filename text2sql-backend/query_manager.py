@@ -11,6 +11,7 @@ from tokenizer import num_tokens_from_string
 logger = logging.getLogger(__name__)
 
 
+# TODO: Refactor to use ChatLLM
 class SQLQueryManager:
     def __init__(
         self,
