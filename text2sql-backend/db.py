@@ -10,9 +10,8 @@ from models import (
     MessageWithResults,
     Result,
     Session,
-    TableFieldCreate,
     TableSchema,
-    TableSchemaDescription,
+    TableSchemaField,
     UnsavedResult,
 )
 
@@ -93,10 +92,8 @@ conn.execute(
     """CREATE TABLE IF NOT EXISTS conversation_messages (conversation_id integer NOT NULL, message_id integer NOT NULL, FOREIGN KEY(conversation_id) REFERENCES conversations(conversation_id), FOREIGN KEY(message_id) REFERENCES messages(message_id))"""
 )
 
-# TODO: Add source to results (so we can regenerate it) ex. db, file, etc.
 
-
-def insert_session(
+def create_session(
     conn: sqlite3.Connection,
     dsn: str,
     database: str,
@@ -253,7 +250,7 @@ def get_table_schemas_with_descriptions(session_id: str):
             name=table[0][2],
             description=table[0][3],
             field_descriptions=[
-                TableSchemaDescription(
+                TableSchemaField(
                     id=field[4],
                     schema_id=field[0],
                     name=field[5],

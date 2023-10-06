@@ -1,21 +1,21 @@
 """SQL Container builder."""
 
-
-import functools
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import openai
 from llama_index.indices.query.schema import QueryBundle
 from llama_index.indices.struct_store import SQLContextContainerBuilder
 
+import db
+from llm import ChatLLM
+from models import Session
 from sql_wrapper import CustomSQLDatabase
 from tokenizer import num_tokens_from_string
 
 CONTEXT_QUERY_TEMPLATE = (
     "You are a data scientist whose job is to write SQL queries. You need to select tables for a query."
     "ONLY return the relevant table names in a comma separated list like 'table1,table2' "
-    "DO NOT return anything else. The table naming convention follows Django's naming convention."
+    "DO NOT return anything else."
     "Available table descriptions (only foreign keys relevant for selection): '{table_names}'"
     "Query: '{orig_query_str}'"
     "Relevant tables: "
@@ -43,25 +43,18 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
 
     def __init__(
         self,
+        session: Session,
         sql_database: CustomSQLDatabase,
         context_dict: Optional[Dict[str, str]] = None,
         context_str: Optional[str] = None,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[str] = "gpt-4",
         embedding_model: Optional[str] = "text-embedding-ada-002",
         temperature: Optional[int] = 0.0,
     ):
         """Initialize params."""
+        self.session = session
         self.sql_database = sql_database
-        self.model = model
-        self.embedding_model = embedding_model
-        self.temperature = temperature
-
-        self.llm_api = functools.partial(
-            openai.ChatCompletion.create,
-            model=self.model,
-            temperature=self.temperature,
-            stream=True,
-        )
+        self.llm = ChatLLM(model=model, temperature=temperature)
 
         # If context_dict provided, validate that all keys are valid table names
         if context_dict is not None:
@@ -88,9 +81,10 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         current_context: Optional[Dict[str, str]] = None,
     ) -> Dict[str, str]:
         """Get tables schema + optional context as a single string."""
-        return self.sql_database.get_simple_schema()
+        descriptions = db.get_table_schemas_with_descriptions(self.session.session_id)
+        return self.sql_database.get_schema_with_user_descriptions(descriptions)
 
-    def query_index_for_context(
+    def get_relevant_table_context(
         self,
         query_str: Union[str, QueryBundle],
         message_history: Optional[List[Dict]] = [],
@@ -98,17 +92,14 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         store_context_str: bool = True,
         **index_kwargs: Any,
     ) -> Tuple[str, List[str]]:
-        """Query index for context.
-
-        A simple wrapper around the index.query call which
-        injects a query template to specifically fetch table information,
-        and can store a context_str.
+        """Query LLM for table context.
 
         Args:
-            index (BaseGPTIndex): index data structure
-            query_str (Union[str, QueryBundle]): query string
+            query_str (Union[str, QueryBundle]): query string or QueryBundle
+            message_history (Optional[List[Dict]]): message history
             query_tmpl (Optional[str]): query template
-            store_context_str (bool): store context_str
+            store_context_str (bool): store context string
+            **index_kwargs (Any): index kwargs
 
         """
         table_foreign_key_schemas = "\n".join(
@@ -129,34 +120,24 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             )
 
         # Query LLM
-        # TODO: Refactor into function
-        response = ""
-        messages = message_history + [{"role": "user", "content": context_query_str}]
-        for i in self.llm_api(messages=messages):
-            if i["choices"][0].get("finish_reason") == "stop":
-                break
-            response += i["choices"][0]["delta"]["content"]
-
-        logger.debug(f"Context query: {context_query_str}")
-        logger.debug(f"Context query response: {response}")
+        response = self.llm.query(
+            query=context_query_str, message_history=message_history
+        )
 
         # Validate table names
         try:
             table_names = [s.strip() for s in str(response).strip().split(",")]
-            print("Table names chosen: ", table_names)
+            # print("Table names chosen: ", table_names) # TODO: Turn into event
         except Exception as e:
             context_query_str = f"""You returned {str(response)} but that raised an exception: {str(e)}.\n{query_tmpl.format(orig_query_str=query_str)}"""
             logger.debug("\n\n------------------\n\n")
             logger.debug(f"Reasking with query: {context_query_str}")
             logger.debug("\n\n------------------\n\n")
-            response = ""
-            for i in self.llm_api(
-                messages=[{"role": "user", "content": context_query_str}]
-            ):
-                if i["choices"][0].get("finish_reason") == "stop":
-                    break
-                response += i["choices"][0]["delta"]["content"]
+            response = self.llm.query(
+                query=context_query_str, message_history=message_history
+            )
 
+        # Check if any table names are invalid
         invalid_table_names = [
             table_name
             for table_name in table_names
@@ -175,19 +156,19 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
 
             # If autocorrect not complete, try reasking
             if invalid_table_names:
-                context_query_str = f"""You returned {str(response)} but that contained invalid table names: {invalid_table_names}.\n{query_tmpl.format(orig_query_str=query_str, table_names=",".join(self.sql_database.get_table_names()))}"""
+                table_names = query_tmpl.format(
+                    orig_query_str=query_str,
+                    table_names=",".join(self.sql_database.get_table_names()),
+                )
+                context_query_str = f"""You returned {str(response)} but that contained invalid table names: {invalid_table_names}.\n{table_names}"""
                 logger.debug("\n\n------------------\n\n")
                 logger.debug(
                     f"Invalid table names: Reasking with query: {context_query_str}"
                 )
                 logger.debug("\n\n------------------\n\n")
-                response = ""
-                for i in self.llm_api(
-                    messages=[{"role": "user", "content": context_query_str}]
-                ):
-                    if i["choices"][0].get("finish_reason") == "stop":
-                        break
-                    response += i["choices"][0]["delta"]["content"]
+                response = self.llm.query(
+                    query=context_query_str, message_history=message_history
+                )
 
                 table_names = [s.strip() for s in str(response).strip().split(",")]
                 if any(

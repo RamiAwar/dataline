@@ -60,7 +60,7 @@ class Session:
     dialect: str
 
 
-class TableSchemaDescription(BaseModel):
+class TableSchemaField(BaseModel):
     id: str
     schema_id: str
     name: str
@@ -94,7 +94,7 @@ class TableSchema(BaseModel):
     session_id: str
     name: str
     description: str
-    field_descriptions: List[TableSchemaDescription]
+    field_descriptions: List[TableSchemaField]
 
 
 class ConversationWithMessagesWithResults(Conversation):

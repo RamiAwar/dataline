@@ -16,7 +16,7 @@ class SQLQueryManager:
         self,
         dsn: str,
         examples: Optional[Dict] = None,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[str] = "gpt-4",
         embedding_model: Optional[str] = "text-embedding-ada-002",
         temperature: Optional[int] = 0.0,
     ):
@@ -47,7 +47,7 @@ class SQLQueryManager:
             schema=table_context,
         )
 
-        if num_tokens_from_string(prompt) > 8100:
+        if num_tokens_from_string(prompt) > 8192:
             raise ValueError(
                 "Prompt is too long. Please reduce the number of tables in your query."
             )
