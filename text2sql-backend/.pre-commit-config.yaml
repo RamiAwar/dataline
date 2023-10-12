@@ -23,7 +23,7 @@ repos:
     rev: 23.3.0
     hooks:
       - id: black
-        args: [--config=./pyproject.toml, --target-version=py311]
+        args: [--config=./text2sql-backend/pyproject.toml, --target-version=py311]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     # Ruff version.

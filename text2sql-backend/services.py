@@ -80,8 +80,8 @@ class SchemaService:
         table_name: str,
         fields: List[TableField],
     ):
-        """Creates a schema from scratch with empty descriptions or adds missing fields to one
-        that already exists."""
+        """Creates a schema from scratch with empty descriptions or adds missing
+        fields to one that already exists."""
         # TODO: Delete removed fields as well
         # Check if schema exists for this session
         exists = db.exists_schema_table(session_id)
@@ -170,7 +170,7 @@ class QueryService:
                 )
                 data = json.loads(generated_json)
 
-                # TODO: Add invalid SQL status to result type so it can be communicated to frontend\
+                # TODO: Add invalid SQL status to result type so it can be communicated to frontend  # noqa
                 # Return all generated data + selected tables
                 return SQLQueryResult(**data, selected_tables=table_names)
 
@@ -184,9 +184,7 @@ class QueryService:
         raise Exception("Uknown error running sql, got no results: ", results)
 
 
-def results_from_query_response(
-    query_response: SQLQueryResult,
-) -> List[UnsavedResult]:
+def results_from_query_response(query_response: SQLQueryResult) -> List[UnsavedResult]:
     results = []
     if query_response.success:
         if query_response.text:

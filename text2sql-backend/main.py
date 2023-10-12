@@ -3,8 +3,7 @@ import json
 import logging
 import os
 import re
-from typing import Annotated, Dict, List
-from uuid import uuid4
+from typing import Annotated, List
 
 import uvicorn
 from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
@@ -48,9 +47,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Query service instances - one per db connection
-query_services: Dict[str, QueryService] = {}
 
 
 async def check_secret(secret_token: str = Header(None)) -> None:
