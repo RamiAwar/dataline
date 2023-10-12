@@ -43,5 +43,6 @@ uvicorn main:app --reload --port=7377
 cd scripts/
 bash ./postgres_img_with_sample_data.sh
 ```
+In the app: `postgresql://postgres:dvdrental@localhost:5433/dvdrental`
 
 🧑‍🍳🧑‍🍳🧑‍🍳
