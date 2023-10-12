@@ -1,5 +1,5 @@
 import functools
-from typing import Dict, Iterator, List, Optional
+from typing import Iterator, Optional
 
 import openai
 
@@ -17,12 +17,12 @@ class ChatLLM:
             stream=True,
         )
 
-    def query(self, query: str, message_history: List[Dict]) -> str:
+    def query(self, query: str, message_history: list[dict]) -> str:
         """Query LLM for table context, returns generated string.
 
         Args:
             query (str): query string
-            message_history (List[Dict]): message history in openai format
+            message_history (list[dict]): message history in openai format
         """
         response = ""
         messages = message_history + [{"role": "user", "content": query}]
@@ -33,12 +33,12 @@ class ChatLLM:
 
         return response
 
-    def query_streaming(self, query: str, message_history: List[Dict]) -> Iterator[str]:
+    def query_streaming(self, query: str, message_history: list[dict]) -> Iterator[str]:
         """Query LLM for table context, returns generator.
 
         Args:
             query (str): query string
-            message_history (List[Dict]): message history in openai format
+            message_history (list[dict]): message history in openai format
         """
         messages = message_history + [{"role": "user", "content": query}]
         for i in self.llm_api(messages=messages):

@@ -1,7 +1,7 @@
 import json
 import logging
 from sqlite3 import Connection
-from typing import Any, Dict, List, TypedDict
+from typing import Any, TypedDict
 
 from sqlalchemy import MetaData, create_engine, inspect
 
@@ -16,15 +16,15 @@ logger = logging.getLogger(__name__)
 
 
 class SQLResults(TypedDict):
-    result: List[Dict[str, Any]]
-    columns: List[str]
+    result: list[dict[str, Any]]
+    columns: list[str]
 
 
 class SchemaService:
     @classmethod
     def extract_tables(
         cls, conn: Connection, session_id: str
-    ) -> Dict[str, Dict[str, TableField]]:
+    ) -> dict[str, dict[str, TableField]]:
         # Get DSN from session
         session = db.get_session(conn, session_id)
         engine = create_engine(session.dsn)
@@ -78,7 +78,7 @@ class SchemaService:
         conn: Connection,
         session_id: str,
         table_name: str,
-        fields: List[TableField],
+        fields: list[TableField],
     ):
         """Creates a schema from scratch with empty descriptions or adds missing
         fields to one that already exists."""
@@ -120,7 +120,7 @@ class QueryService:
             dsn=session.dsn, model=model_name, temperature=temperature
         )
 
-    def get_related_tables(self, query: str, message_history: List[Dict] = []):
+    def get_related_tables(self, query: str, message_history: list[dict] = []):
         # Fetch table context
         context_str, table_names = self.context_builder.get_relevant_table_context(
             query_str=query,
@@ -184,7 +184,7 @@ class QueryService:
         raise Exception("Uknown error running sql, got no results: ", results)
 
 
-def results_from_query_response(query_response: SQLQueryResult) -> List[UnsavedResult]:
+def results_from_query_response(query_response: SQLQueryResult) -> list[UnsavedResult]:
     results = []
     if query_response.success:
         if query_response.text:

@@ -34,6 +34,10 @@ black = "^23.3.0"
 pyinstaller = "^5.10.1"
 jupyterlab = "^4.0.5"
 
+[tool.ruff]
+ignore = ["E501"]
+
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

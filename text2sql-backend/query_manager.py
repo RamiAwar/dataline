@@ -1,6 +1,6 @@
 import functools
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
 import openai
 
@@ -16,7 +16,7 @@ class SQLQueryManager:
     def __init__(
         self,
         dsn: str,
-        examples: Optional[Dict] = None,
+        examples: Optional[dict] = None,
         model: Optional[str] = "gpt-4",
         embedding_model: Optional[str] = "text-embedding-ada-002",
         temperature: Optional[int] = 0.0,
@@ -40,7 +40,7 @@ class SQLQueryManager:
         self,
         query: str,
         table_context: str,
-        message_history: Optional[List[Dict]] = [],
+        message_history: Optional[list[dict]] = [],
     ):
         # Generate prompt
         prompt = self.generate_prompt(

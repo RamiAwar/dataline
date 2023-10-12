@@ -1,7 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 from itertools import islice
-from typing import Callable, List, Optional
+from typing import Callable, Optional
 
 import openai
 
@@ -31,18 +31,18 @@ class EmbeddingBase(ABC):
         self._max_tokens = max_tokens
 
     @abstractmethod
-    def embed(self, texts: List[str]) -> List[List[float]]:
+    def embed(self, texts: list[str]) -> list[list[float]]:
         """Embeds a list of texts and returns a list of vectors of floats."""
         ...
 
     @abstractmethod
-    def embed_query(self, query: str) -> List[float]:
+    def embed_query(self, query: str) -> list[float]:
         """Embeds a single query and returns a vector of floats."""
         ...
 
     def _len_safe_get_embedding(
-        self, text, embedder: Callable[[str], List[float]], average=True
-    ) -> List[float]:
+        self, text, embedder: Callable[[str], list[float]], average=True
+    ) -> list[float]:
         """Gets the embedding for a text, but splits it into chunks if it is
         too long.
 
@@ -51,7 +51,7 @@ class EmbeddingBase(ABC):
             embedder: Embedding function to use.
             average: Whether to average the embeddings of the chunks.
         Returns:
-            List[float] Embedding of the text.
+            list[float] Embedding of the text.
         """
         chunk_embeddings = []
         chunk_lens = []
@@ -110,7 +110,7 @@ class OpenAIEmbedding(EmbeddingBase):
         self.api_key = api_key
         self.api_base = api_base
 
-    def embed(self, texts: List[str]) -> List[List[float]]:
+    def embed(self, texts: list[str]) -> list[list[float]]:
         embeddings = []
         for text in texts:
             embeddings.append(
@@ -119,11 +119,11 @@ class OpenAIEmbedding(EmbeddingBase):
 
         return embeddings
 
-    def embed_query(self, query: str) -> List[float]:
+    def embed_query(self, query: str) -> list[float]:
         resp = self._get_embedding([query])
         return resp[0]
 
-    def _get_embedding(self, texts: List[str]) -> List[float]:
+    def _get_embedding(self, texts: list[str]) -> list[float]:
         api_key = (
             self.api_key
             if self.api_key is not None

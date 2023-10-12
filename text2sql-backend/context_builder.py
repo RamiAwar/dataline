@@ -1,7 +1,7 @@
 """SQL Container builder."""
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 from llama_index.indices.query.schema import QueryBundle
 from llama_index.indices.struct_store import SQLContextContainerBuilder
@@ -37,7 +37,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
 
     Args:
         sql_database (SQLDatabase): SQL database
-        context_dict (Optional[Dict[str, str]]): context dict
+        context_dict (Optional[dict[str, str]]): context dict
 
     """
 
@@ -45,7 +45,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         self,
         session: Session,
         sql_database: CustomSQLDatabase,
-        context_dict: Optional[Dict[str, str]] = None,
+        context_dict: Optional[dict[str, str]] = None,
         context_str: Optional[str] = None,
         model: Optional[str] = "gpt-4",
         embedding_model: Optional[str] = "text-embedding-ada-002",
@@ -78,8 +78,8 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
 
     def _build_context_from_sql_database(
         self,
-        current_context: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, str]:
+        current_context: Optional[dict[str, str]] = None,
+    ) -> dict[str, str]:
         """Get tables schema + optional context as a single string."""
         descriptions = db.get_table_schemas_with_descriptions(self.session.session_id)
         return self.sql_database.get_schema_with_user_descriptions(descriptions)
@@ -87,16 +87,16 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
     def get_relevant_table_context(
         self,
         query_str: Union[str, QueryBundle],
-        message_history: Optional[List[Dict]] = [],
+        message_history: Optional[list[dict]] = [],
         query_tmpl: Optional[str] = CONTEXT_QUERY_TEMPLATE,
         store_context_str: bool = True,
         **index_kwargs: Any,
-    ) -> Tuple[str, List[str]]:
+    ) -> tuple[str, list[str]]:
         """Query LLM for table context.
 
         Args:
             query_str (Union[str, QueryBundle]): query string or QueryBundle
-            message_history (Optional[List[Dict]]): message history
+            message_history (Optional[list[dict]]): message history
             query_tmpl (Optional[str]): query template
             store_context_str (bool): store context string
             **index_kwargs (Any): index kwargs
