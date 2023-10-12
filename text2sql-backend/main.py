@@ -312,6 +312,12 @@ async def execute_sql(
             )
 
 
+@app.get("/toggle-save-query/{result_id}")
+async def toggle_save_query(result_id: str):
+    db.toggle_save_query(result_id=result_id)
+    return {"status": "ok"}
+
+
 @app.get("/query", response_model=list[UnsavedResult])
 async def query(
     conversation_id: str, query: str, limit: int = 10, execute: bool = False

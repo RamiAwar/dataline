@@ -19,7 +19,7 @@ export interface IResult {
   type: IResultType;
   content: string | any[][];
   result_id?: string;
-  saved?: boolean;
+  is_saved?: boolean;
 };
 
 export interface IMessageWithResults {

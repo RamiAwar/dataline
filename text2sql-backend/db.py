@@ -77,6 +77,13 @@ conn.execute(
     """CREATE TABLE IF NOT EXISTS results (result_id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, type text NOT NULL, created_at text)"""
 )
 
+columns = [col[1] for col in conn.execute("PRAGMA table_info(results)").fetchall()]
+if "is_saved" not in columns:
+    conn.execute(
+        """ALTER TABLE results ADD COLUMN is_saved BOOLEAN DEFAULT FALSE"""
+    )
+
+
 # MESSAGE_RESULTS: Create many to many table to store message with multiple results
 conn.execute(
     """CREATE TABLE IF NOT EXISTS message_results (message_id integer NOT NULL, result_id integer NOT NULL, FOREIGN KEY(message_id) REFERENCES messages(message_id), FOREIGN KEY(result_id) REFERENCES results(result_id))"""
@@ -318,7 +325,7 @@ def get_conversation(conversation_id: str) -> Conversation:
         (conversation_id,),
     ).fetchone()
     return Conversation(
-        conversation_id=conversation[0],
+        conversation_id=str(conversation[0]),
         session_id=conversation[1],
         name=conversation[2],
         created_at=conversation[3],
@@ -370,7 +377,7 @@ def get_conversations_with_messages_with_results() -> (
             role = message[2]
             created_at = message[3]
             results = conn.execute(
-                "SELECT results.result_id, content, type, created_at FROM results INNER JOIN message_results ON results.result_id = message_results.result_id WHERE message_results.message_id = ?",
+                "SELECT results.result_id, content, type, created_at, is_saved FROM results INNER JOIN message_results ON results.result_id = message_results.result_id WHERE message_results.message_id = ?",
                 (message_id,),
             ).fetchall()
             results = [
@@ -379,6 +386,7 @@ def get_conversations_with_messages_with_results() -> (
                     content=result[1],
                     type=result[2],
                     created_at=result[3],
+                    is_saved=result[4],
                 )
                 for result in results
             ]
@@ -393,7 +401,7 @@ def get_conversations_with_messages_with_results() -> (
             )
         conversations_with_messages_with_results.append(
             ConversationWithMessagesWithResults(
-                conversation_id=conversation_id,
+                conversation_id=str(conversation_id),
                 created_at=conversation[3],
                 session_id=session_id,
                 name=name,
@@ -442,6 +450,19 @@ def update_conversation(conversation_id: str, name: str):
     )
     conn.commit()
     return True
+
+def toggle_save_query(result_id: str):
+    # Get is_saved
+    is_saved = conn.execute(
+        "SELECT is_saved FROM results WHERE result_id = ?", (result_id,)
+    ).fetchone()[0]
+    # Toggle is_saved
+    conn.execute(
+        "UPDATE results SET is_saved = ? WHERE result_id = ?",
+        (not is_saved, result_id),
+    )
+    conn.commit()
+    return not is_saved
 
 
 # Add message with results to conversation
@@ -511,7 +532,7 @@ def get_messages_with_results(conversation_id: str) -> list[MessageWithResults]:
             (message_id,),
         ).fetchone()
         results = conn.execute(
-            "SELECT result_id, content, type, created_at FROM results WHERE result_id IN (SELECT result_id FROM message_results WHERE message_id = ?)",
+            "SELECT result_id, content, type, created_at, is_saved FROM results WHERE result_id IN (SELECT result_id FROM message_results WHERE message_id = ?)",
             (message_id,),
         ).fetchall()
         messages.append(
@@ -523,6 +544,7 @@ def get_messages_with_results(conversation_id: str) -> list[MessageWithResults]:
                         content=result[1],
                         type=result[2],
                         created_at=result[3],
+                        is_saved=result[4],
                     )
                     for result in results
                 ],

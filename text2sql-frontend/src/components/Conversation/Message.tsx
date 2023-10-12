@@ -39,7 +39,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
   }
 
   // TODO: Currently unused by child components, will be used when api functionality is added
-  function toggleSaveQuery(result_id: string | undefined) {
+  async function toggleSaveQuery(result_id: string | undefined) {
     if (result_id === undefined) return;
     // Find result in message
     const result = message.results?.find(
@@ -47,14 +47,26 @@ export const Message = (initialMessage: IMessageWithResults) => {
     );
     if (result === undefined) return;
 
-    // Toggle saved
-    result.saved = !result.saved;
-    alert(result.saved ? "Saved query" : "Unsaved query");
-
-    // Update message
-    setMessage(message);
+    const data = await api.toggleSaveQuery(result_id);
+    if (data.status !== "ok") {
+      alert("Error saving query");
+      return;
+    }
+    // Update is_saved in message
+    const updatedMessage = {
+      ...message,
+      results: message.results?.map((result) => {
+        if (result.result_id === result_id) {
+          return {
+            ...result,
+            is_saved: !result.is_saved,
+          };
+        }
+        return result;
+      }),
+    } as IMessageWithResults;
+    setMessage(updatedMessage);
   }
-
 
   useEffect(() => {
     // Add query result to results
@@ -148,7 +160,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
                     runQuery={runQuery}
                     toggleSaveQuery={() => toggleSaveQuery(result.result_id)}
                     runnable={!loadingQuery}
-                    saved={result.saved}
+                    isSaved={result.is_saved}
                   />
                 ))
             )}

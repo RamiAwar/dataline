@@ -20,6 +20,7 @@ class Result:
     type: ResultType
     content: str
     created_at: datetime
+    is_saved: bool
 
 
 @dataclass

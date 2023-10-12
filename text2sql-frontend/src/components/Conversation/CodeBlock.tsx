@@ -9,7 +9,6 @@ import { BookmarkIcon as BookmarkIconSolid } from "@heroicons/react/24/solid";
 import CustomTooltip from "../Library/Tooltip";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { format } from "prettier-sql";
-import { useEffect, useRef, useState } from "react";
 import { Dialect } from "../Library/types";
 
 function copyToClipboard(text: string) {
@@ -26,24 +25,18 @@ export const CodeBlock = ({
   runQuery,
   toggleSaveQuery,
   runnable,
-  saved,
+  isSaved,
 }: {
   code: string;
   language: IResultType;
   runQuery: (code: string) => void;
   toggleSaveQuery: () => void;
   runnable: boolean;
-  saved?: boolean;
+  isSaved?: boolean;
 }) => {
   const formatted_code = format(code, { language: Dialect.Postgres });
 
-  const [savedState, setSavedState] = useState<boolean | undefined>(saved);
-
-  // Replace with ToggleSaveQuery in parent once api is linked
-  function localToggleSaveQuery() {
-    setSavedState(!savedState);
-  }
-  let BookmarkIcon = savedState ? BookmarkIconSolid : BookmarkIconOutline;
+  let BookmarkIcon = isSaved ? BookmarkIconSolid : BookmarkIconOutline;
   return (
     <div className="max-w-7xl border-2 border-gray-500 rounded-md bg-gray-900 flex flex-col relative">
       <SyntaxHighlighter
@@ -66,7 +59,7 @@ export const CodeBlock = ({
         {/* Save Icon */}
         <button className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out">
           <BookmarkIcon
-            onClick={() => localToggleSaveQuery()}
+            onClick={() => toggleSaveQuery()}
             className="w-5 h-5 [&>path]:stroke-[2] group-hover:-rotate-6"
           />
         </button>
