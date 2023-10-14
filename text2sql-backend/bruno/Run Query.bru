@@ -1,0 +1,17 @@
+meta {
+  name: Run Query
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/query?session_id=0b9e2f8a735741418def80389f2f07f3&query=Get me all regions with an associated water risk&limit=10
+  body: json
+  auth: none
+}
+
+query {
+  session_id: 0b9e2f8a735741418def80389f2f07f3
+  query: Get me all regions with an associated water risk
+  limit: 10
+}

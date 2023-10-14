@@ -1,0 +1,18 @@
+meta {
+  name: Connect
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/connect
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "dsn": "postgresql+psycopg2://postgres:secret@localhost:5432/agriplace_trade_backend",
+      "name": "schematest2"
+  }
+}

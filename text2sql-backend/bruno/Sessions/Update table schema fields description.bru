@@ -1,0 +1,17 @@
+meta {
+  name: Update table schema fields description
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/schemas/field/:field_id
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "description": "Customer ID"
+  }
+}

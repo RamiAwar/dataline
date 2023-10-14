@@ -1,0 +1,17 @@
+meta {
+  name: Delete Conversation
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/conversation
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "dsn": "postgresql+psycopg2://postgres:secret@localhost:5432/agriplace_trade_backend"
+  }
+}
