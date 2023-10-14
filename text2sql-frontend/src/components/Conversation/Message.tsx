@@ -38,7 +38,6 @@ export const Message = (initialMessage: IMessageWithResults) => {
     }
   }
 
-  // TODO: Currently unused by child components, will be used when api functionality is added
   async function toggleSaveQuery(result_id: string | undefined) {
     if (result_id === undefined) return;
     // Find result in message
