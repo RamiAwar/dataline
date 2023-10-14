@@ -74,14 +74,8 @@ conn.execute(
 
 # RESULTS: Create table to store results with a result text field with a reference to a session
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS results (result_id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, type text NOT NULL, created_at text)"""
+    """CREATE TABLE IF NOT EXISTS results (result_id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, type text NOT NULL, created_at text, is_saved BOOLEAN DEFAULT FALSE)"""
 )
-
-columns = [col[1] for col in conn.execute("PRAGMA table_info(results)").fetchall()]
-if "is_saved" not in columns:
-    conn.execute(
-        """ALTER TABLE results ADD COLUMN is_saved BOOLEAN DEFAULT FALSE"""
-    )
 
 
 # MESSAGE_RESULTS: Create many to many table to store message with multiple results
@@ -450,6 +444,7 @@ def update_conversation(conversation_id: str, name: str):
     )
     conn.commit()
     return True
+
 
 def toggle_save_query(result_id: str):
     # Get is_saved
