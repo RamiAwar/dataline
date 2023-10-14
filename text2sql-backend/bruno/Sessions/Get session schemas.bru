@@ -1,0 +1,11 @@
+meta {
+  name: Get session schemas
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/sessions
+  body: json
+  auth: none
+}

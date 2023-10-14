@@ -1,0 +1,18 @@
+meta {
+  name: Create message
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/message
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "conversation_id": "",
+      "content": "How many movies are there?"
+  }
+}

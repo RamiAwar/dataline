@@ -5,10 +5,14 @@ import { BetaSignup } from "./components/BetaSignup/BetaSignup";
 import { Conversation } from "./components/Conversation/Conversation";
 import { ConnectionSelector } from "./components/Connection/ConnectionSelector";
 import { ConnectionEditor } from "./components/Connection/ConnectionEditor";
+import { SignIn } from "./components/Authentication/SignIn";
+import Account from "./components/Home/Profile";
 
 export enum Routes {
   Root = "/",
   BetaSignup = "/beta-signup",
+  SignIn = "/login",
+  UserProfile = "/user",
   Connection = "/connection/:connectionId",
   Chat = "/chat/:conversationId",
   NewChat = "/chat/new",
@@ -42,7 +46,15 @@ let private_routes = [
         path: Routes.Chat,
         element: <Conversation />,
       },
+      {
+        path: Routes.UserProfile,
+        element: <Account />,
+      },
     ],
+  },
+  {
+    path: Routes.SignIn,
+    element: <SignIn />,
   },
 ];
 

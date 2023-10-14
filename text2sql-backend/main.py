@@ -3,8 +3,7 @@ import json
 import logging
 import os
 import re
-from typing import Annotated, Dict, List
-from uuid import uuid4
+from typing import Annotated
 
 import uvicorn
 from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
@@ -26,7 +25,7 @@ from models import (
     UpdateConversationRequest,
     UpdateSessionRequest,
 )
-from services import QueryService, SchemaService
+from services import QueryService, SchemaService, results_from_query_response
 from sql_wrapper import request_execute, request_limit
 
 logging.basicConfig(level=logging.DEBUG)
@@ -48,9 +47,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Query service instances - one per db connection
-query_services: Dict[str, QueryService] = {}
 
 
 async def check_secret(secret_token: str = Header(None)) -> None:
@@ -127,7 +123,7 @@ async def connect_db(req: ConnectRequest):
     database = engine.url.database
 
     with db.DatabaseManager() as conn:
-        session_id = db.insert_session(
+        session_id = db.create_session(
             conn,
             req.dsn,
             database=database,
@@ -286,13 +282,10 @@ async def execute_sql(
         if not session:
             return {"status": "error", "message": "Invalid session_id"}
 
-        if session_id not in query_services:
-            query_services[session_id] = QueryService(
-                dsn=session.dsn, model_name="gpt-3.5-turbo"
-            )
+        query_service = QueryService(session)
 
         # Execute query
-        data = query_services[session_id].sql_db.run_sql(sql)[1]
+        data = query_service.run_sql(sql)
         if data.get("result"):
             # Convert data to list of rows
             rows = [data["columns"]]
@@ -319,7 +312,7 @@ async def execute_sql(
             )
 
 
-@app.get("/query", response_model=List[UnsavedResult])
+@app.get("/query", response_model=list[UnsavedResult])
 async def query(
     conversation_id: str, query: str, limit: int = 10, execute: bool = False
 ):
@@ -330,26 +323,18 @@ async def query(
         # Get conversation
         conversation = db.get_conversation(conversation_id)
 
-        # Get query service instance
+        # Create query service and generate response
         session_id = conversation.session_id
         session = db.get_session(conn, session_id)
         if not session:
             return {"status": "error", "message": "Invalid session_id"}
 
-        if session_id not in query_services:
-            query_services[session_id] = QueryService(
-                dsn=session.dsn, model_name="gpt-3.5-turbo"
-            )
+        query_service = QueryService(session=session, model_name="gpt-3.5-turbo")
+        response = query_service.query(query, conversation_id=conversation_id)
+        unsaved_results = results_from_query_response(response)
 
-        response = query_services[session_id].query(
-            query, conversation_id=conversation_id
-        )
-        unsaved_results = query_services[session_id].results_from_query_response(
-            response
-        )
-
-        # Save results WITHOUT data (sensitive)
-        saved_results: List[Result] = []
+        # Save results before executing query if any (without data)
+        saved_results: list[Result] = []
         for result in unsaved_results:
             saved_result = db.create_result(result)
             saved_results.append(saved_result)
@@ -362,21 +347,22 @@ async def query(
             results=saved_results,
         )
 
-        # Execute query and fetch data result now
-        data = query_services[session_id].sql_db.run_sql(response.sql)[1]
-        if data.get("result"):
-            # Convert data to list of rows
-            rows = [data["columns"]]
-            rows.extend([x for x in r] for r in data["result"])
+        # Execute query if any and fetch data result now
+        if response.sql:
+            data = query_service.run_sql(response.sql)
+            if data.get("result"):
+                # Convert data to list of rows
+                rows = [data["columns"]]
+                rows.extend([x for x in r] for r in data["result"])
 
-            unsaved_results.append(
-                DataResult(
-                    type="data",
-                    content=rows,
+                unsaved_results.append(
+                    DataResult(
+                        type="data",
+                        content=rows,
+                    )
                 )
-            )
 
-        # Replace saved results with unsaved that include data returned
+        # Replace saved results with unsaved that include data returned if any
         saved_message.results = unsaved_results
 
         return Response(

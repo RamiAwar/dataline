@@ -1,0 +1,11 @@
+meta {
+  name: Get sessions
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/sessions
+  body: json
+  auth: none
+}

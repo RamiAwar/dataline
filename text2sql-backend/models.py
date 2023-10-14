@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, List, Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
@@ -25,7 +25,7 @@ class Result:
 @dataclass
 class UnsavedResult:
     type: ResultType
-    content: str | List[str]  # To allow for selected tables list
+    content: str | list[str]  # To allow for selected tables list
 
 
 @dataclass
@@ -60,7 +60,7 @@ class Session:
     dialect: str
 
 
-class TableSchemaDescription(BaseModel):
+class TableSchemaField(BaseModel):
     id: str
     schema_id: str
     name: str
@@ -94,7 +94,7 @@ class TableSchema(BaseModel):
     session_id: str
     name: str
     description: str
-    field_descriptions: List[TableSchemaDescription]
+    field_descriptions: list[TableSchemaField]
 
 
 class ConversationWithMessagesWithResults(Conversation):

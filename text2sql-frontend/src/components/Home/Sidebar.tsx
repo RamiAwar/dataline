@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, Menu, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
   PlusIcon,
@@ -7,6 +7,7 @@ import {
   XMarkIcon,
   TrashIcon,
   CheckIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import logo from "../../assets/images/logo_md.png";
 import { IConversation } from "../Library/types";
@@ -14,6 +15,7 @@ import { useConversationList } from "../Providers/ConversationListProvider";
 import { api } from "../../api";
 import { PencilSquareIcon } from "@heroicons/react/20/solid";
 import { Link, useParams } from "react-router-dom";
+import { ProfileDropdown } from "./ProfileDropdown";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -231,7 +233,6 @@ export const Sidebar = () => {
               <Link
                 to="/chat/new"
                 className="-mx-4 py-3 px-2 rounded-md flex justify-start items-center border-2 border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
-                // onClick={createNewChat}
               >
                 <PlusIcon className="h-5 w-5 shrink-0 mr-2 [&>path]:stroke-[1]"></PlusIcon>
                 <div>New chat</div>
@@ -330,14 +331,8 @@ export const Sidebar = () => {
                 </ul>
               </li>
               <li className="-mx-6 mt-auto">
-                <div className="flex items-center gap-x-4 px-6 py-6 text-md font-medium leading-6 text-white hover:bg-gray-800">
-                  <img
-                    className="h-10 w-10 rounded-full bg-gray-800"
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    alt=""
-                  />
-                  <span className="sr-only">Your profile</span>
-                  <span aria-hidden="true">Tom Cook</span>
+                <div className="flex items-center gap-x-4 px-4 py-4 text-md font-medium leading-6 text-white cursor-pointer">
+                  <ProfileDropdown topRight={true}></ProfileDropdown>
                 </div>
               </li>
             </ul>
@@ -387,14 +382,7 @@ export const Sidebar = () => {
           )
         )}
 
-        <div>
-          <span className="sr-only">Your profile</span>
-          <img
-            className="h-8 w-8 rounded-full bg-gray-800"
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            alt=""
-          />
-        </div>
+        <ProfileDropdown topRight={false}></ProfileDropdown>
       </div>
     </div>
   );

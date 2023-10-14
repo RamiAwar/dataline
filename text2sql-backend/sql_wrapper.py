@@ -3,12 +3,14 @@
 import logging
 from collections import defaultdict
 from contextvars import ContextVar
-from typing import Dict, Iterable, Tuple
+from typing import Iterable
 
 from llama_index.langchain_helpers.sql_wrapper import SQLDatabase
 from rapidfuzz import fuzz
 from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
+
+from models import TableSchema
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ class CustomSQLDatabase(SQLDatabase):
                 return None
             return closest
 
-    def get_simple_schema(self) -> Dict[str, Dict[str, str]]:
+    def get_simple_schema(self) -> dict[str, dict[str, str]]:
         schema = {}
         for table in self.get_usable_table_names():
             schema[table] = {}
@@ -61,7 +63,7 @@ class CustomSQLDatabase(SQLDatabase):
 
         return schema
 
-    def get_schema_foreign_keys(self) -> Dict[str, Dict[str, str]]:
+    def get_schema_foreign_keys(self) -> dict[str, dict[str, str]]:
         schema = {}
 
         # Loop through the tables
@@ -87,7 +89,52 @@ class CustomSQLDatabase(SQLDatabase):
 
         return schema
 
-    def run_sql(self, command: str) -> Tuple[Dict, Dict]:
+    def get_schema_with_user_descriptions(
+        self, descriptions: list[TableSchema]
+    ) -> dict[str, dict[str, str]]:
+        # Create dict of descriptions
+        descriptions_dict: dict[str, TableSchema] = {}
+        for description in descriptions:
+            descriptions_dict[description.name] = description
+
+        schema = {}
+        for table in self.get_usable_table_names():
+            schema[table] = {}
+            for column in self.get_table_columns(table):
+                schema[table][column["name"]] = {"type": column["type"]}
+
+            # Get foreign keys
+            for fk in self._inspector.get_foreign_keys(table):
+                schema[table][fk["constrained_columns"][0]]["foreign_key"] = {
+                    "table": fk["referred_table"],
+                    "column": fk["referred_columns"][0],
+                }
+
+            # Add descriptions
+            if table in descriptions_dict:
+                for field in descriptions_dict[table].field_descriptions:
+                    if field.description:
+                        schema[table][field.name]["description"] = field.description
+
+        # Create a nicely formatted schema for each table
+        for table, columns in schema.items():
+            formatted_schema = []
+            table_description = (
+                descriptions_dict[table].description
+                if table in descriptions_dict
+                else ""
+            )
+            formatted_schema.append(f"Table: {table} : {table_description}\n")
+            for column, column_info in columns.items():
+                formatted_schema.append(f"Column: {column}")
+                for info, value in column_info.items():
+                    formatted_schema.append(f"        {info}: {value}")
+
+            schema[table] = "\n".join(formatted_schema)
+
+        return schema
+
+    def run_sql(self, command: str) -> tuple[dict, dict]:
         """Execute a SQL statement and return a string representing the results.
 
         If the statement returns rows, the results are returned.
