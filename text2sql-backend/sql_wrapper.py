@@ -3,7 +3,7 @@
 import logging
 from collections import defaultdict
 from contextvars import ContextVar
-from typing import Dict, Iterable, List, Tuple
+from typing import Iterable
 
 from llama_index.langchain_helpers.sql_wrapper import SQLDatabase
 from rapidfuzz import fuzz
@@ -37,7 +37,7 @@ class CustomSQLDatabase(SQLDatabase):
                 return None
             return closest
 
-    def get_simple_schema(self) -> Dict[str, Dict[str, str]]:
+    def get_simple_schema(self) -> dict[str, dict[str, str]]:
         schema = {}
         for table in self.get_usable_table_names():
             schema[table] = {}
@@ -63,7 +63,7 @@ class CustomSQLDatabase(SQLDatabase):
 
         return schema
 
-    def get_schema_foreign_keys(self) -> Dict[str, Dict[str, str]]:
+    def get_schema_foreign_keys(self) -> dict[str, dict[str, str]]:
         schema = {}
 
         # Loop through the tables
@@ -90,10 +90,10 @@ class CustomSQLDatabase(SQLDatabase):
         return schema
 
     def get_schema_with_user_descriptions(
-        self, descriptions: List[TableSchema]
-    ) -> Dict[str, Dict[str, str]]:
+        self, descriptions: list[TableSchema]
+    ) -> dict[str, dict[str, str]]:
         # Create dict of descriptions
-        descriptions_dict: Dict[str, TableSchema] = {}
+        descriptions_dict: dict[str, TableSchema] = {}
         for description in descriptions:
             descriptions_dict[description.name] = description
 
@@ -134,7 +134,7 @@ class CustomSQLDatabase(SQLDatabase):
 
         return schema
 
-    def run_sql(self, command: str) -> Tuple[Dict, Dict]:
+    def run_sql(self, command: str) -> tuple[dict, dict]:
         """Execute a SQL statement and return a string representing the results.
 
         If the statement returns rows, the results are returned.

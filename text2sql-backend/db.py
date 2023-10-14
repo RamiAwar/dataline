@@ -1,6 +1,6 @@
 import sqlite3
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 from errors import DuplicateError
@@ -341,7 +341,7 @@ def get_conversations():
 
 
 def get_conversations_with_messages_with_results() -> (
-    List[ConversationWithMessagesWithResults]
+    list[ConversationWithMessagesWithResults]
 ):
     conversations = conn.execute(
         "SELECT conversation_id, session_id, name, created_at FROM conversations ORDER BY created_at DESC"
@@ -449,8 +449,8 @@ def add_message_to_conversation(
     conversation_id: str,
     content: str,
     role: str,
-    results: Optional[List[Result]] = [],
-    selected_tables: Optional[List[str]] = [],
+    results: Optional[list[Result]] = [],
+    selected_tables: Optional[list[str]] = [],
 ):
     # Basic validation
     if results and role != "assistant":
@@ -495,7 +495,7 @@ def add_message_to_conversation(
     )
 
 
-def get_messages_with_results(conversation_id: str) -> List[MessageWithResults]:
+def get_messages_with_results(conversation_id: str) -> list[MessageWithResults]:
     # Get all message_ids for conversation
     message_ids = conn.execute(
         "SELECT cm.message_id FROM conversation_messages cm JOIN messages m ON m.message_id=cm.message_id WHERE conversation_id = ? ORDER BY m.created_at ASC",
@@ -536,7 +536,7 @@ def get_messages_with_results(conversation_id: str) -> List[MessageWithResults]:
     return messages
 
 
-def get_message_history(conversation_id: str) -> List[Dict[str, Any]]:
+def get_message_history(conversation_id: str) -> list[dict[str, Any]]:
     """Returns the message history of a conversation in OpenAI API format"""
     messages = conn.execute(
         """SELECT content, role, created_at
@@ -580,7 +580,7 @@ def get_message_history_with_selected_tables_with_sql(conversation_id: str):
     ]
 
 
-def get_message_history_with_sql(conversation_id: str) -> List[Dict[str, Any]]:
+def get_message_history_with_sql(conversation_id: str) -> list[dict[str, Any]]:
     """Returns the message history of a conversation with the SQL result encoded inside content in OpenAI API format"""
     messages_with_sql = conn.execute(
         """SELECT messages.content, messages.role, messages.created_at, results.content

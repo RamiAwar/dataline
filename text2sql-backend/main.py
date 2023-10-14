@@ -3,8 +3,7 @@ import json
 import logging
 import os
 import re
-from typing import Annotated, Dict, List
-from uuid import uuid4
+from typing import Annotated
 
 import uvicorn
 from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
@@ -48,9 +47,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Query service instances - one per db connection
-query_services: Dict[str, QueryService] = {}
 
 
 async def check_secret(secret_token: str = Header(None)) -> None:
@@ -316,7 +312,7 @@ async def execute_sql(
             )
 
 
-@app.get("/query", response_model=List[UnsavedResult])
+@app.get("/query", response_model=list[UnsavedResult])
 async def query(
     conversation_id: str, query: str, limit: int = 10, execute: bool = False
 ):
@@ -338,7 +334,7 @@ async def query(
         unsaved_results = results_from_query_response(response)
 
         # Save results before executing query if any (without data)
-        saved_results: List[Result] = []
+        saved_results: list[Result] = []
         for result in unsaved_results:
             saved_result = db.create_result(result)
             saved_results.append(saved_result)
