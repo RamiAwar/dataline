@@ -369,6 +369,8 @@ async def query(
                 )
 
         # Replace saved results with unsaved that include data returned if any
+        # TODO @Rami this is causing the bookmark button in the frontend to fail when the message is first created because result_id is null.
+        # TODO maybe append DataResult to saved_message.results instead of replacing it?
         saved_message.results = unsaved_results
 
         return Response(

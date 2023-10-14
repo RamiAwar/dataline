@@ -74,9 +74,12 @@ conn.execute(
 
 # RESULTS: Create table to store results with a result text field with a reference to a session
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS results (result_id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, type text NOT NULL, created_at text, is_saved BOOLEAN DEFAULT FALSE)"""
+    """CREATE TABLE IF NOT EXISTS results (result_id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, type text NOT NULL, created_at text)"""
 )
 
+conn.execute(
+    """CREATE TABLE IF NOT EXISTS saved_queries (result_id integer NOT NULL, name text, description text, FOREIGN KEY(result_id) REFERENCES results(result_id))"""
+)
 
 # MESSAGE_RESULTS: Create many to many table to store message with multiple results
 conn.execute(
@@ -371,7 +374,7 @@ def get_conversations_with_messages_with_results() -> (
             role = message[2]
             created_at = message[3]
             results = conn.execute(
-                "SELECT results.result_id, content, type, created_at, is_saved FROM results INNER JOIN message_results ON results.result_id = message_results.result_id WHERE message_results.message_id = ?",
+                "SELECT results.result_id, content, type, created_at, CASE WHEN saved_queries.result_id IS NULL THEN 0 ELSE 1 END AS is_saved FROM results INNER JOIN message_results ON results.result_id = message_results.result_id LEFT JOIN saved_queries ON results.result_id = saved_queries.result_id WHERE message_results.message_id = ?",
                 (message_id,),
             ).fetchall()
             results = [
@@ -447,17 +450,18 @@ def update_conversation(conversation_id: str, name: str):
 
 
 def toggle_save_query(result_id: str):
-    # Get is_saved
-    is_saved = conn.execute(
-        "SELECT is_saved FROM results WHERE result_id = ?", (result_id,)
-    ).fetchone()[0]
-    # Toggle is_saved
-    conn.execute(
-        "UPDATE results SET is_saved = ? WHERE result_id = ?",
-        (not is_saved, result_id),
-    )
-    conn.commit()
-    return not is_saved
+    # check if result_id exists in saved_queries
+    exists = conn.execute(
+        "SELECT * FROM saved_queries WHERE result_id = ?", (result_id,)
+    ).fetchone()
+    if exists:
+        conn.execute("DELETE FROM saved_queries WHERE result_id = ?", (result_id,))
+        conn.commit()
+        return False
+    else:
+        conn.execute("INSERT INTO saved_queries (result_id) VALUES (?)", (result_id,))
+        conn.commit()
+        return True
 
 
 # Add message with results to conversation
@@ -527,7 +531,7 @@ def get_messages_with_results(conversation_id: str) -> list[MessageWithResults]:
             (message_id,),
         ).fetchone()
         results = conn.execute(
-            "SELECT result_id, content, type, created_at, is_saved FROM results WHERE result_id IN (SELECT result_id FROM message_results WHERE message_id = ?)",
+            "SELECT results.result_id, content, type, created_at, CASE WHEN saved_queries.result_id IS NULL THEN 0 ELSE 1 END AS is_saved FROM results LEFT JOIN saved_queries ON results.result_id = saved_queries.result_id WHERE results.result_id IN (SELECT result_id FROM message_results WHERE message_id = ?)",
             (message_id,),
         ).fetchall()
         messages.append(
