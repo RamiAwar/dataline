@@ -4,16 +4,9 @@ from typing import Any, Optional
 from uuid import uuid4
 
 from errors import DuplicateError
-from models import (
-    Conversation,
-    ConversationWithMessagesWithResults,
-    MessageWithResults,
-    Result,
-    Session,
-    TableSchema,
-    TableSchemaField,
-    UnsavedResult,
-)
+from models import (Conversation, ConversationWithMessagesWithResults,
+                    MessageWithResults, Result, Session, TableSchema,
+                    TableSchemaField, UnsavedResult)
 
 # Old way of using database - this is a single connection, hard to manage transactions
 conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
@@ -77,6 +70,7 @@ conn.execute(
     """CREATE TABLE IF NOT EXISTS results (result_id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, type text NOT NULL, created_at text)"""
 )
 
+# SAVED_QUERIES: Create many to many table to store saved queries with a reference to a result
 conn.execute(
     """CREATE TABLE IF NOT EXISTS saved_queries (result_id integer NOT NULL, name text, description text, FOREIGN KEY(result_id) REFERENCES results(result_id))"""
 )
@@ -454,6 +448,7 @@ def toggle_save_query(result_id: str):
     exists = conn.execute(
         "SELECT * FROM saved_queries WHERE result_id = ?", (result_id,)
     ).fetchone()
+
     if exists:
         conn.execute("DELETE FROM saved_queries WHERE result_id = ?", (result_id,))
         conn.commit()
