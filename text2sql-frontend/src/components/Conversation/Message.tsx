@@ -38,6 +38,35 @@ export const Message = (initialMessage: IMessageWithResults) => {
     }
   }
 
+  async function toggleSaveQuery(result_id: string | undefined) {
+    if (result_id === undefined) return;
+    // Find result in message
+    const result = message.results?.find(
+      (result) => result.result_id === result_id
+    );
+    if (result === undefined) return;
+
+    const data = await api.toggleSaveQuery(result_id);
+    if (data.status !== "ok") {
+      alert("Error saving query");
+      return;
+    }
+    // Update is_saved in message
+    const updatedMessage = {
+      ...message,
+      results: message.results?.map((result) => {
+        if (result.result_id === result_id) {
+          return {
+            ...result,
+            is_saved: !result.is_saved,
+          };
+        }
+        return result;
+      }),
+    } as IMessageWithResults;
+    setMessage(updatedMessage);
+  }
+
   useEffect(() => {
     // Add query result to results
     if (message.results !== undefined && queryResult !== null) {
@@ -128,7 +157,9 @@ export const Message = (initialMessage: IMessageWithResults) => {
                     language="sql"
                     code={result.content as string}
                     runQuery={runQuery}
+                    toggleSaveQuery={() => toggleSaveQuery(result.result_id)}
                     runnable={!loadingQuery}
+                    isSaved={result.is_saved}
                   />
                 ))
             )}

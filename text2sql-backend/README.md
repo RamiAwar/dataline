@@ -43,5 +43,14 @@ uvicorn main:app --reload --port=7377
 cd scripts/
 bash ./postgres_img_with_sample_data.sh
 ```
+In the app: `postgresql://postgres:dvdrental@localhost:5433/dvdrental`
+
+### Inspecting sqlite
+```
+sudo add-apt-repository -y ppa:linuxgndu/sqlitebrowser
+sudo apt-get update
+sudo apt-get install sqlitebrowser
+```
+And then run `sqlitebrowser` and open the database file.
 
 🧑‍🍳🧑‍🍳🧑‍🍳

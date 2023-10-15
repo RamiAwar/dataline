@@ -234,6 +234,14 @@ const runSQL = async (conversationId: string, code: string) => {
   return response.data;
 };
 
+
+export type SaveQueryResult = {status: "ok"} | ApiError;
+const toggleSaveQuery = async (resultId: string) => {
+  const response = await axios.get<SaveQueryResult>(`${baseUrl}/toggle-save-query/${resultId}`);
+  return response.data;
+};
+
+
 export const api = {
   healthcheck,
   getConnection,
@@ -251,4 +259,5 @@ export const api = {
   createMessage,
   query,
   runSQL,
+  toggleSaveQuery,
 };

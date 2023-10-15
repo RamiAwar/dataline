@@ -312,6 +312,12 @@ async def execute_sql(
             )
 
 
+@app.get("/toggle-save-query/{result_id}")
+async def toggle_save_query(result_id: str):
+    db.toggle_save_query(result_id=result_id)
+    return {"status": "ok"}
+
+
 @app.get("/query", response_model=list[UnsavedResult])
 async def query(
     conversation_id: str, query: str, limit: int = 10, execute: bool = False
@@ -363,6 +369,8 @@ async def query(
                 )
 
         # Replace saved results with unsaved that include data returned if any
+        # TODO @Rami this is causing the bookmark button in the frontend to fail when the message is first created because result_id is null.
+        # TODO maybe append DataResult to saved_message.results instead of replacing it?
         saved_message.results = unsaved_results
 
         return Response(
