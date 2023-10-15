@@ -268,12 +268,12 @@ export const Sidebar = () => {
                           {chat.conversation_id == params.conversationId && (
                             <div
                               className={classNames(
-                                "flex justify-end items-center grow"
+                                "flex justify-end items-center grow gap-1"
                               )}
                             >
                               <div
                                 onClick={handleEditClick}
-                                className="transition-colors duration-150 cursor-pointer p-1 rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
+                                className="transition-colors duration-150 cursor-pointer rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
                               >
                                 <PencilSquareIcon className="w-5 h-5" />
                               </div>
@@ -309,7 +309,7 @@ export const Sidebar = () => {
                               onKeyDown={handleKeyPress}
                               onBlur={handleSaveClick}
                               autoFocus
-                              className="flex-none max-w-[70%] h-7 text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-slate-300 pl-1"
+                              className="flex-none max-w-[70%] h-6 text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-slate-300 pl-1"
                             />
                           ) : (
                             <span className="text-ellipsis overflow-hidden whitespace-nowrap">
@@ -321,7 +321,7 @@ export const Sidebar = () => {
                           {chat.conversation_id == params.conversationId && (
                             <div
                               onClick={handleSaveClick}
-                              className="transition-colors duration-150 cursor-pointer p-1 rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
+                              className="transition-colors duration-150 cursor-pointer rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
                             >
                               <CheckIcon className="w-5 h-5 [&>path]:stroke-[2]" />
                             </div>
@@ -349,7 +349,7 @@ export const Sidebar = () => {
                     </span>
                   </div>
                 </li>
-                <li key="dashboards" className="-mx-4 space-y-1">
+                {/* <li key="dashboards" className="-mx-4 space-y-1">
                   <div className="text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer">
                     <ChartBarSquareIcon
                       className="h-5 w-5 shrink-0"
@@ -359,7 +359,7 @@ export const Sidebar = () => {
                       Dashboards
                     </span>
                   </div>
-                </li>
+                </li> */}
               </ul>
               <li className="-mx-6 mt-auto">
                 <div className="flex items-center gap-x-4 px-4 py-4 text-md font-medium leading-6 text-white cursor-pointer">

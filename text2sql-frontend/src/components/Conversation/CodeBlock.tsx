@@ -47,6 +47,14 @@ export const CodeBlock = ({
       />
 
       <div className="absolute bottom-0 right-0 m-1 flex gap-1">
+        {/* Save Icon */}
+        <button className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out">
+          <BookmarkIcon
+            onClick={() => toggleSaveQuery()}
+            className="w-5 h-5 [&>path]:stroke-[2] group-hover:-rotate-6"
+          />
+        </button>
+
         <CustomTooltip content="COPIED!" trigger="click">
           <button
             onClick={() => copyToClipboard(code)}
@@ -55,14 +63,6 @@ export const CodeBlock = ({
             <ClipboardIcon className="w-5 h-5 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
-
-        {/* Save Icon */}
-        <button className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out">
-          <BookmarkIcon
-            onClick={() => toggleSaveQuery()}
-            className="w-5 h-5 [&>path]:stroke-[2] group-hover:-rotate-6"
-          />
-        </button>
 
         <button
           className={classNames(
