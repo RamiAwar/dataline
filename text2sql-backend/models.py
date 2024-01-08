@@ -1,7 +1,9 @@
+import re
 from datetime import datetime
-from typing import Any, Literal, Optional, Union
+from enum import Enum
+from typing import Any, Generic, Literal, Optional, TypeVar, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from pydantic.dataclasses import dataclass
 
 ResultType = Union[
@@ -12,6 +14,19 @@ ResultType = Union[
     Literal["data"],
     Literal["selected_tables"],
 ]
+
+
+class StatusType(Enum):
+    ok = "ok"
+    error = "error"
+
+
+T = TypeVar("T")
+
+
+class APIResponse(BaseModel, Generic[T]):
+    status: StatusType
+    data: Optional[T] = None
 
 
 @dataclass
@@ -47,18 +62,20 @@ class MessageWithResults:
 @dataclass
 class Conversation:
     conversation_id: str
-    session_id: str
+    connection_id: str
     name: str
     created_at: datetime
 
 
-@dataclass
-class Session:
+class Connection(BaseModel):
+    id: str
     name: str
     database: str
-    session_id: str
     dsn: str
     dialect: str
+
+    class Config:
+        table_name = "connections"
 
 
 class TableSchemaField(BaseModel):
@@ -92,7 +109,7 @@ class TableFieldCreate(BaseModel):
 
 class TableSchema(BaseModel):
     id: str
-    session_id: str
+    connection_id: str
     name: str
     description: str
     field_descriptions: list[TableSchemaField]
@@ -115,6 +132,23 @@ class UpdateConversationRequest(BaseModel):
     name: str
 
 
-class UpdateSessionRequest(BaseModel):
+class UpdateConnectionRequest(BaseModel):
     name: str
     dsn: str
+
+
+class ConnectRequest(BaseModel):
+    dsn: str = Field(min_length=3)
+    name: str
+
+    @validator("dsn")
+    def validate_dsn_format(cls, value: str) -> str:
+        # Define a regular expression to match the DSN format
+        dsn_regex = r"^[\w\+]+:\/\/\w+:\w+@[\w.-]+[:\d]*\/\w+$"
+
+        if not re.match(dsn_regex, value):
+            raise ValueError(
+                'Invalid DSN format. The expected format is "driver://username:password@host:port/database".'
+            )
+
+        return value

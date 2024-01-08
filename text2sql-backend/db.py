@@ -1,53 +1,54 @@
 import sqlite3
 from datetime import datetime
-from typing import Any, Optional
+from sqlite3.dbapi2 import Connection as SQLiteConnection
+from typing import Any, List, Optional
 from uuid import uuid4
 
-from errors import DuplicateError
-from models import (Conversation, ConversationWithMessagesWithResults,
-                    MessageWithResults, Result, Session, TableSchema,
-                    TableSchemaField, UnsavedResult)
+from errors import DuplicateError, NotFoundError
+from models import (Connection, Conversation,
+                    ConversationWithMessagesWithResults, MessageWithResults,
+                    Result, TableSchema, TableSchemaField, UnsavedResult)
 
 # Old way of using database - this is a single connection, hard to manage transactions
 conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
 
 
 class DatabaseManager:
-    def __init__(self, db_file="db.sqlite3"):
+    def __init__(self, db_file: str = "db.sqlite3") -> None:
         self.db_file = db_file
-        self.connection = None
+        self.connection: Optional[SQLiteConnection] = None
 
-    def __enter__(self):
+    def __enter__(self) -> SQLiteConnection:
         self.connection = sqlite3.connect(self.db_file)
         return self.connection
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         if self.connection:
             self.connection.close()
 
 
-# SESSIONS: Create table to store session_id and dsn with unique constraint on session_id and dsn and not null
+# CONNECTIONS: Create table to connections
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS sessions (
-        session_id text PRIMARY KEY,
+    """CREATE TABLE IF NOT EXISTS connections (
+        id text PRIMARY KEY,
         dsn text UNIQUE NOT NULL,
         database text NOT NULL,
         name text,
-        dialect text,
-        UNIQUE (session_id, dsn))"""
+        dialect text
+    )"""
 )
 
-# SCHEMA TABLE: Create table to store table names in the schema with a reference to a session
+# SCHEMA TABLE: Create table to store table names in the schema with a reference to a connection
 conn.execute(
     """CREATE TABLE IF NOT EXISTS schema_tables (
-    session_id text NOT NULL,
+    connection_id text NOT NULL,
     id text PRIMARY KEY,
     name text NOT NULL,
     description text NOT NULL,
-    FOREIGN KEY(session_id) REFERENCES sessions(session_id))"""
+    FOREIGN KEY(connection_id) REFERENCES connections(id))"""
 )
 
-# SCHEMA FIELDS: Create table to store a reference to a table schema, table reference, field name, field type ('table' or 'field'), and a field description (text) with a reference to a session
+# SCHEMA FIELDS: Create table to store a reference to a table schema, table reference, field name, field type ('table' or 'field'), and a field description (text) with a reference to a connection
 conn.execute(
     """CREATE TABLE IF NOT EXISTS schema_fields (id text PRIMARY KEY,
     table_id text NOT NULL,
@@ -57,119 +58,130 @@ conn.execute(
     is_primary_key boolean NOT NULL DEFAULT 0,
     is_foreign_key boolean NOT NULL DEFAULT 0,
     foreign_table text NOT NULL DEFAULT '',
-    FOREIGN KEY(table_id) REFERENCES schema_tables(table_id))"""
+    FOREIGN KEY(table_id) REFERENCES schema_tables(id))"""
 )
 
-# MESSAGES: Create table to store messages with text, role, and session_id
+# MESSAGES: Create table to store messages with text, role, and connection_id
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS messages (message_id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, role text NOT NULL, created_at text, selected_tables text NOT NULL DEFAULT '')"""
+    """CREATE TABLE IF NOT EXISTS messages (id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, role text NOT NULL, created_at text, selected_tables text NOT NULL DEFAULT '')"""
 )
 
-# RESULTS: Create table to store results with a result text field with a reference to a session
+# RESULTS: Create table to store results
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS results (result_id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, type text NOT NULL, created_at text)"""
+    """CREATE TABLE IF NOT EXISTS results (id integer PRIMARY KEY AUTOINCREMENT, content text NOT NULL, type text NOT NULL, created_at text)"""
 )
 
 # SAVED_QUERIES: Create many to many table to store saved queries with a reference to a result
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS saved_queries (result_id integer NOT NULL, name text, description text, FOREIGN KEY(result_id) REFERENCES results(result_id))"""
+    """CREATE TABLE IF NOT EXISTS saved_queries (result_id integer NOT NULL, name text, description text, FOREIGN KEY(result_id) REFERENCES results(id))"""
 )
 
 # MESSAGE_RESULTS: Create many to many table to store message with multiple results
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS message_results (message_id integer NOT NULL, result_id integer NOT NULL, FOREIGN KEY(message_id) REFERENCES messages(message_id), FOREIGN KEY(result_id) REFERENCES results(result_id))"""
+    """CREATE TABLE IF NOT EXISTS message_results (message_id integer NOT NULL, result_id integer NOT NULL, FOREIGN KEY(message_id) REFERENCES messages(id), FOREIGN KEY(result_id) REFERENCES results(id))"""
 )
 
-# CONVERSATIONS: Create table to store conversations with a reference to a session, and many results, and a datetime field
+# CONVERSATIONS: Create table to store conversations with a reference to a connection, and many results, and a datetime field
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS conversations (conversation_id integer PRIMARY KEY AUTOINCREMENT, session_id text NOT NULL, name text NOT NULL, created_at text, FOREIGN KEY(session_id) REFERENCES sessions(session_id))"""
+    """CREATE TABLE IF NOT EXISTS conversations (conversation_id integer PRIMARY KEY AUTOINCREMENT, connection_id text NOT NULL, name text NOT NULL, created_at text, FOREIGN KEY(connection_id) REFERENCES connections(id))"""
 )
 
 # CONVERSATION_MESSAGES: Create many to many table to store conversation with multiple messages with order
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS conversation_messages (conversation_id integer NOT NULL, message_id integer NOT NULL, FOREIGN KEY(conversation_id) REFERENCES conversations(conversation_id), FOREIGN KEY(message_id) REFERENCES messages(message_id))"""
+    """CREATE TABLE IF NOT EXISTS conversation_messages (conversation_id integer NOT NULL, message_id integer NOT NULL, FOREIGN KEY(conversation_id) REFERENCES conversations(id), FOREIGN KEY(message_id) REFERENCES messages(id))"""
 )
 
 
-def create_session(
+def create_connection(
     conn: sqlite3.Connection,
     dsn: str,
     database: str,
     name: str = "",
     dialect: str = "",
 ) -> str:
-    # Check if session_id or dsn already exist
-    session_id = uuid4().hex
+    # Check if connection_id or dsn already exist
+    connection_id = str(uuid4())
 
     conn.execute(
-        "INSERT INTO sessions VALUES (?, ?, ?, ?, ?)",
-        (session_id, dsn, database, name, dialect),
+        "INSERT INTO connections VALUES (?, ?, ?, ?, ?)",
+        (connection_id, dsn, database, name, dialect),
     )
-    return session_id
+    return connection_id
 
 
-def get_session(conn: sqlite3.Connection, session_id: str):
-    session = conn.execute(
-        "SELECT session_id, name, dsn, database, dialect FROM sessions WHERE session_id = ?",
-        (session_id,),
+def get_connection(conn: sqlite3.Connection, connection_id: str) -> Connection:
+    connection = conn.execute(
+        "SELECT id, name, dsn, database, dialect FROM connections WHERE id = ?",
+        (connection_id,),
     ).fetchone()
-    if not session:
-        raise Exception("Session not found")
+    if not connection:
+        raise NotFoundError("Connection not found")
 
-    return Session(
-        session_id=session[0],
-        name=session[1],
-        dsn=session[2],
-        database=session[3],
-        dialect=session[4],
+    return Connection(
+        id=connection[0],
+        name=connection[1],
+        dsn=connection[2],
+        database=connection[3],
+        dialect=connection[4],
     )
 
 
-def update_session(session_id: str, name: str, dsn: str, database: str, dialect: str):
+def update_connection(connection_id: str, name: str, dsn: str, database: str, dialect: str) -> bool:
     conn.execute(
-        "UPDATE sessions SET name = ?, dsn = ?, database = ?, dialect = ? WHERE session_id = ?",
-        (name, dsn, database, dialect, session_id),
+        "UPDATE connections SET name = ?, dsn = ?, database = ?, dialect = ? WHERE id = ?",
+        (name, dsn, database, dialect, connection_id),
     )
     conn.commit()
     return True
 
 
-def get_session_from_dsn(dsn: str):
-    return conn.execute("SELECT * FROM sessions WHERE dsn = ?", (dsn,)).fetchone()
+def get_connection_from_dsn(dsn: str) -> Connection:
+    data = conn.execute("SELECT id, name, dsn, database, dialect FROM connections WHERE dsn = ?", (dsn,)).fetchone()
+    if not data:
+        raise NotFoundError("Connection not found")
+
+    return Connection(
+        id=data[0],
+        name=data[1],
+        dsn=data[2],
+        database=data[3],
+        dialect=data[4],
+    )
 
 
-def get_sessions():
+def get_connections() -> List[Connection]:
     return [
-        Session(session_id=x[0], name=x[1], dsn=x[2], database=x[3], dialect=x[4])
+        Connection(id=x[0], name=x[1], dsn=x[2], database=x[3], dialect=x[4])
         for x in conn.execute(
-            "SELECT session_id, name, dsn, database, dialect FROM sessions"
+            "SELECT id, name, dsn, database, dialect FROM connections"
         ).fetchall()
     ]
 
 
-def exists_schema_table(session_id: str):
+def exists_schema_table(connection_id: str) -> bool:
     result = conn.execute(
-        "SELECT * FROM schema_tables WHERE session_id = ?", (session_id,)
+        "SELECT * FROM schema_tables WHERE connection_id = ?", (connection_id,)
     ).fetchone()
+
     if result:
         return True
     return False
 
 
-def create_schema_table(conn: sqlite3.Connection, session_id: str, table_name: str):
-    """Creates a table schema for a session"""
+def create_schema_table(conn: sqlite3.Connection, connection_id: str, table_name: str) -> str:
+    """Creates a table schema for a connection"""
     # Check if table already exists
     if conn.execute(
-        "SELECT * FROM schema_tables WHERE session_id = ? AND name = ?",
-        (session_id, table_name),
+        "SELECT * FROM schema_tables WHERE connection_id = ? AND name = ?",
+        (connection_id, table_name),
     ).fetchone():
         raise DuplicateError("Table already exists")
 
     # Insert table with UUID for ID
     table_id = uuid4().hex
     conn.execute(
-        "INSERT INTO schema_tables (id, session_id, name, description) VALUES (?, ?, ?, ?)",
-        (table_id, session_id, table_name, ""),
+        "INSERT INTO schema_tables (id, connection_id, name, description) VALUES (?, ?, ?, ?)",
+        (table_id, connection_id, table_name, ""),
     )
     return table_id
 
@@ -183,7 +195,7 @@ def create_schema_field(
     is_primary_key: bool = False,
     is_foreign_key: bool = False,
     foreign_table: str = "",
-):
+) -> str:
     """Creates a field schema for a table"""
     # Check if field already exists
     if conn.execute(
@@ -211,13 +223,13 @@ def create_schema_field(
     return field_id
 
 
-def get_table_schemas_with_descriptions(session_id: str):
-    # Select all table schemas for a session and then join with schema_descriptions to get the field descriptions
+def get_table_schemas_with_descriptions(connection_id: str) -> List[TableSchema]:
+    # Select all table schemas for a connection and then join with schema_descriptions to get the field descriptions
     descriptions = conn.execute(
         """
     SELECT
         schema_tables.id,
-        schema_tables.session_id,
+        schema_tables.connection_id,
         schema_tables.name,
         schema_tables.description,
         schema_fields.id,
@@ -229,8 +241,8 @@ def get_table_schemas_with_descriptions(session_id: str):
         schema_fields.foreign_table
     FROM schema_tables
     INNER JOIN schema_fields ON schema_tables.id = schema_fields.table_id
-    WHERE schema_tables.session_id = ?""",
-        (session_id,),
+    WHERE schema_tables.connection_id = ?""",
+        (connection_id,),
     ).fetchall()
 
     # Join all the field descriptions for each table into a list of table schemas
@@ -243,7 +255,7 @@ def get_table_schemas_with_descriptions(session_id: str):
     # Return a list of TableSchema objects
     return [
         TableSchema(
-            session_id=session_id,
+            connection_id=connection_id,
             id=table[0][0],
             name=table[0][2],
             description=table[0][3],
@@ -292,32 +304,32 @@ def update_schema_table_field_description(
     )
 
 
-def session_is_indexed(session_id):
+def connection_is_indexed(connection_id):
     return conn.execute(
-        "SELECT * FROM schema_indexes WHERE session_id = ?", (session_id,)
+        "SELECT * FROM schema_indexes WHERE connection_id = ?", (connection_id,)
     ).fetchone()
 
 
-def insert_schema_index(session_id, index_file):
-    conn.execute("INSERT INTO schema_indexes VALUES (?, ?)", (session_id, index_file))
+def insert_schema_index(connection_id, index_file):
+    conn.execute("INSERT INTO schema_indexes VALUES (?, ?)", (connection_id, index_file))
     conn.commit()
 
 
-def get_schema_index(session_id):
+def get_schema_index(connection_id):
     return conn.execute(
-        "SELECT index_file FROM schema_indexes WHERE session_id = ?", (session_id,)
+        "SELECT index_file FROM schema_indexes WHERE connection_id = ?", (connection_id,)
     ).fetchone()[0]
 
 
 # Conversation logic
 def get_conversation(conversation_id: str) -> Conversation:
     conversation = conn.execute(
-        "SELECT conversation_id, session_id, name, created_at FROM conversations WHERE conversation_id = ?",
+        "SELECT conversation_id, connection_id, name, created_at FROM conversations WHERE conversation_id = ?",
         (conversation_id,),
     ).fetchone()
     return Conversation(
         conversation_id=str(conversation[0]),
-        session_id=conversation[1],
+        connection_id=conversation[1],
         name=conversation[2],
         created_at=conversation[3],
     )
@@ -325,12 +337,12 @@ def get_conversation(conversation_id: str) -> Conversation:
 
 def get_conversations():
     conversations = conn.execute(
-        "SELECT conversation_id, session_id, name, created_at FROM conversations"
+        "SELECT conversation_id, connection_id, name, created_at FROM conversations"
     ).fetchall()
     return [
         Conversation(
             conversation_id=conversation[0],
-            session_id=conversation[1],
+            connection_id=conversation[1],
             name=conversation[2],
             created_at=conversation[3],
         )
@@ -342,13 +354,13 @@ def get_conversations_with_messages_with_results() -> (
     list[ConversationWithMessagesWithResults]
 ):
     conversations = conn.execute(
-        "SELECT conversation_id, session_id, name, created_at FROM conversations ORDER BY created_at DESC"
+        "SELECT conversation_id, connection_id, name, created_at FROM conversations ORDER BY created_at DESC"
     ).fetchall()
 
     conversations_with_messages_with_results = []
     for conversation in conversations:
         conversation_id = conversation[0]
-        session_id = conversation[1]
+        connection_id = conversation[1]
         name = conversation[2]
 
         messages = conn.execute(
@@ -394,7 +406,7 @@ def get_conversations_with_messages_with_results() -> (
             ConversationWithMessagesWithResults(
                 conversation_id=str(conversation_id),
                 created_at=conversation[3],
-                session_id=session_id,
+                connection_id=connection_id,
                 name=name,
                 messages=messages_with_results,
             )
@@ -423,12 +435,12 @@ def delete_conversation(conversation_id: str):
 
 
 # Create empty converstaion
-def create_conversation(session_id: str, name: str) -> int:
+def create_conversation(connection_id: str, name: str) -> int:
     """Creates an empty conversation and returns its id"""
     created_at = datetime.now()
     conversation_id = conn.execute(
-        "INSERT INTO conversations (session_id, name, created_at) VALUES (?, ?, ?)",
-        (session_id, name, created_at),
+        "INSERT INTO conversations (connection_id, name, created_at) VALUES (?, ?, ?)",
+        (connection_id, name, created_at),
     ).lastrowid
     conn.commit()
     return conversation_id

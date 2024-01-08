@@ -8,7 +8,7 @@ from llama_index.indices.struct_store import SQLContextContainerBuilder
 
 import db
 from llm import ChatLLM
-from models import Session
+from models import Connection
 from sql_wrapper import CustomSQLDatabase
 from tokenizer import num_tokens_from_string
 
@@ -43,7 +43,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
 
     def __init__(
         self,
-        session: Session,
+        connection: Connection,
         sql_database: CustomSQLDatabase,
         context_dict: Optional[dict[str, str]] = None,
         context_str: Optional[str] = None,
@@ -52,7 +52,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         temperature: Optional[int] = 0.0,
     ):
         """Initialize params."""
-        self.session = session
+        self.connection: Connection = connection
         self.sql_database = sql_database
         self.llm = ChatLLM(model=model, temperature=temperature)
 
@@ -81,7 +81,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         current_context: Optional[dict[str, str]] = None,
     ) -> dict[str, str]:
         """Get tables schema + optional context as a single string."""
-        descriptions = db.get_table_schemas_with_descriptions(self.session.session_id)
+        descriptions = db.get_table_schemas_with_descriptions(self.connection.id)
         return self.sql_database.get_schema_with_user_descriptions(descriptions)
 
     def get_relevant_table_context(

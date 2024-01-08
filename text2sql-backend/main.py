@@ -3,28 +3,23 @@ import json
 import logging
 import os
 import re
-from typing import Annotated
+from typing import Annotated, Any
 
 import uvicorn
-from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
+from fastapi import (Body, Depends, FastAPI, Header, HTTPException, Request,
+                     Response)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
-from pydantic.json import pydantic_encoder
 from pygments import formatters, highlight, lexers
 from pygments_pprint_sql import SqlFilter
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
 import db
-from models import (
-    DataResult,
-    Result,
-    Session,
-    UnsavedResult,
-    UpdateConversationRequest,
-    UpdateSessionRequest,
-)
+from auth import Auth, token_auth
+from models import (Connection, DataResult, Result, UnsavedResult,
+                    UpdateConnectionRequest, UpdateConversationRequest)
 from services import QueryService, SchemaService, results_from_query_response
 from sql_wrapper import request_execute, request_limit
 
@@ -103,7 +98,7 @@ async def healthcheck():
 
 
 @app.post("/connect")
-async def connect_db(req: ConnectRequest):
+async def connect_db(req: ConnectRequest, supabase: Auth = Depends(token_auth)) -> dict:
     # Try to connect to provided dsn
     try:
         engine = create_engine(req.dsn)
@@ -113,17 +108,20 @@ async def connect_db(req: ConnectRequest):
         logger.error(e)
         return {"status": "error", "message": "Failed to connect to database"}
 
-    # Check if session with DSN already exists, then return session_id
-    res = db.get_session_from_dsn(req.dsn)
-    if res:
-        return {"status": "ok", "session_id": res[0]}
+    # Check if connection with DSN already exists, then return connection_id
+    existing_connection = db.get_connection_from_dsn(req.dsn)
+    if existing_connection:
+        return {"status": "ok", "connection_id": existing_connection.id}
 
-    # Insert session only if success
+    # Insert connection only if success
     dialect = engine.url.get_dialect().name
     database = engine.url.database
 
+    if not database:
+        raise Exception("Invalid DSN. Database name is required.")
+
     with db.DatabaseManager() as conn:
-        session_id = db.create_session(
+        connection_id = db.create_connection(
             conn,
             req.dsn,
             database=database,
@@ -131,37 +129,37 @@ async def connect_db(req: ConnectRequest):
             dialect=dialect,
         )
 
-        SchemaService.create_or_update_tables(conn, session_id)
+        SchemaService.create_or_update_tables(conn, connection_id)
         conn.commit()  # only commit if all step were successful
 
     return {
         "status": "ok",
-        "session_id": session_id,
+        "connection_id": connection_id,
         "database": database,
         "dialect": dialect,
     }
 
 
 # TODO: Add response model
-@app.get("/sessions")
-async def get_sessions():
+@app.get("/connections")
+async def get_connections() -> dict[str, Any]:
     return {
         "status": "ok",
-        "sessions": db.get_sessions(),
+        "connections": db.get_connections(),
     }
 
 
-@app.get("/session/{session_id}/schemas")
-async def get_table_schemas(session_id: str):
-    # Check for session existence
+@app.get("/connection/{connection_id}/schemas")
+async def get_table_schemas(connection_id: str):
+    # Check for connection existence
     with db.DatabaseManager() as conn:
-        session = db.get_session(conn, session_id)
-        if not session:
-            return {"status": "error", "message": "Invalid session_id"}
+        connection = db.get_connection(conn, connection_id)
+        if not connection:
+            return {"status": "error", "message": "Invalid connection_id"}
 
         return {
             "status": "ok",
-            "tables": db.get_table_schemas_with_descriptions(session_id),
+            "tables": db.get_table_schemas_with_descriptions(connection_id),
         }
 
 
@@ -191,17 +189,17 @@ async def update_table_schema_field_description(
     return {"status": "ok"}
 
 
-@app.get("/session/{session_id}")
-async def get_session(session_id: str):
+@app.get("/connection/{connection_id}")
+async def get_connection(connection_id: str):
     with db.DatabaseManager() as conn:
         return {
             "status": "ok",
-            "session": db.get_session(conn, session_id),
+            "connection": db.get_connection(conn, connection_id),
         }
 
 
-@app.patch("/session/{session_id}")
-async def update_session(session_id: str, req: UpdateSessionRequest):
+@app.patch("/connection/{connection_id}")
+async def update_connection(connection_id: str, req: UpdateConnectionRequest):
     # Try to connect to provided dsn
     try:
         engine = create_engine(req.dsn)
@@ -211,12 +209,12 @@ async def update_session(session_id: str, req: UpdateSessionRequest):
         logger.error(e)
         return {"status": "error", "message": "Failed to connect to database"}
 
-    # Update session only if success
+    # Update connection only if success
     dialect = engine.url.get_dialect().name
     database = engine.url.database
 
-    db.update_session(
-        session_id=session_id,
+    db.update_connection(
+        connection_id=connection_id,
         dsn=req.dsn,
         database=database,
         name=req.name,
@@ -224,8 +222,8 @@ async def update_session(session_id: str, req: UpdateSessionRequest):
     )
     return {
         "status": "ok",
-        "connection": Session(
-            session_id=session_id,
+        "connection": Connection(
+            connection_id=connection_id,
             dsn=req.dsn,
             database=database,
             name=req.name,
@@ -244,9 +242,9 @@ async def conversations():
 
 @app.post("/conversation")
 async def create_conversation(
-    session_id: Annotated[str, Body()], name: Annotated[str, Body()]
+    connection_id: Annotated[str, Body()], name: Annotated[str, Body()]
 ):
-    conversation_id = db.create_conversation(session_id=session_id, name=name)
+    conversation_id = db.create_conversation(connection_id=connection_id, name=name)
     return {"status": "ok", "conversation_id": conversation_id}
 
 
@@ -277,12 +275,12 @@ async def execute_sql(
     # Get conversation
     with db.DatabaseManager() as conn:
         conversation = db.get_conversation(conversation_id)
-        session_id = conversation.session_id
-        session = db.get_session(conn, session_id)
-        if not session:
-            return {"status": "error", "message": "Invalid session_id"}
+        connection_id = conversation.connection_id
+        connection = db.get_connection(conn, connection_id)
+        if not connection:
+            return {"status": "error", "message": "Invalid connection_id"}
 
-        query_service = QueryService(session)
+        query_service = QueryService(connection)
 
         # Execute query
         data = query_service.run_sql(sql)
@@ -330,12 +328,12 @@ async def query(
         conversation = db.get_conversation(conversation_id)
 
         # Create query service and generate response
-        session_id = conversation.session_id
-        session = db.get_session(conn, session_id)
-        if not session:
-            return {"status": "error", "message": "Invalid session_id"}
+        connection_id = conversation.connection_id
+        connection = db.get_connection(conn, connection_id)
+        if not connection:
+            return {"status": "error", "message": "Invalid connection_id"}
 
-        query_service = QueryService(session=session, model_name="gpt-3.5-turbo")
+        query_service = QueryService(connection=connection, model_name="gpt-3.5-turbo")
         response = query_service.query(query, conversation_id=conversation_id)
         unsaved_results = results_from_query_response(response)
 

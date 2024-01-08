@@ -27,12 +27,14 @@ tiktoken = "^0.4.0"
 nltk = "^3.8.1"
 pyvis = "^0.3.2"
 pre-commit = "^3.4.0"
+pydantic = "2.4.2"
 
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
 pyinstaller = "^5.10.1"
 jupyterlab = "^4.0.5"
+mypy = "^1.6.1"
 
 [tool.ruff]
 ignore = ["E501"]
@@ -41,3 +43,13 @@ ignore = ["E501"]
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.mypy]
+exclude = [
+    '^bruno/*$',  # TOML literal string (single-quotes, no escaping necessary)
+    "^notebooks/*$",  # TOML basic string (double-quotes, backslash and other characters need escaping)
+    "^scripts/*$",
+    "^hooks/*$",
+    "^notebooks/*$",
+]

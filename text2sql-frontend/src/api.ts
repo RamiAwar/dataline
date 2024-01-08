@@ -14,8 +14,24 @@ type ApiError = {
   message: string;
 };
 
+interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
 export const isApiError = <T>(result: T | ApiError): result is ApiError => {
   return (result as ApiError).status === "error";
+};
+
+// Create wrapper around axios get/post/patch/delete to add auth tokens as headers and forward types
+const get = async <T>(url: string, tokens: AuthTokens): Promise<T> => {
+  const response = await axios.get<T>(url, {
+    headers: {
+      "X-Access-Token": tokens.accessToken,
+      "X-Refresh-Token": tokens.refreshToken,
+    },
+  });
+  return response.data;
 };
 
 type HealthcheckResult = { status: "ok" } | ApiError;
@@ -46,11 +62,15 @@ export type ConnectionResult = {
 export type ListConnectionsResult =
   | { status: "ok"; sessions: ConnectionResult[] }
   | ApiError;
-const listConnections = async (): Promise<ListConnectionsResult> => {
-  const response = await axios.get<ListConnectionsResult>(
-    `${baseUrl}/sessions`
+const listConnections = async (
+  tokens: AuthTokens
+): Promise<ListConnectionsResult> => {
+  console.log(tokens);
+  const response = await get<ListConnectionsResult>(
+    `${baseUrl}/sessions`,
+    tokens
   );
-  return response.data;
+  return response;
 };
 
 export type GetConnectionResult =

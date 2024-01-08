@@ -40,7 +40,10 @@ export const ConversationListProvider = ({
             alert("Error loading Conversations");
           }
         })
-        .catch((err) => alert("Error loading conversations"));
+        .catch((err) => {
+          alert("Error loading conversations");
+          console.log(err);
+        });
     }
     f();
   }
