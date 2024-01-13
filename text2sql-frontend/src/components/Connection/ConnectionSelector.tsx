@@ -29,9 +29,10 @@ export const ConnectionSelector = () => {
 
   function selectConnection(connection: IConnection) {
     // Create a new conversation with the selected connection
+    console.log("Selected: ", connection);
     const createConversation = async () => {
       let createdConversation = await api.createConversation(
-        connection.session_id,
+        connection.id,
         "Untitled chat"
       );
 
@@ -64,7 +65,7 @@ export const ConnectionSelector = () => {
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 mt-4">
             {connections?.map((connection) => (
               <div
-                key={connection.session_id}
+                key={connection.id}
                 className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75"
                 onClick={() => selectConnection(connection)}
               >
@@ -84,7 +85,7 @@ export const ConnectionSelector = () => {
 
                   {/** ------ Connection Settings ------ */}
                   <Link
-                    to={`/connection/${connection.session_id}`}
+                    to={`/connection/${connection.id}`}
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent the click event from propagating to the parent container
                     }}

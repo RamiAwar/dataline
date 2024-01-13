@@ -1,13 +1,21 @@
 import sqlite3
+import string
 from datetime import datetime
 from sqlite3.dbapi2 import Connection as SQLiteConnection
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional
 from uuid import uuid4
 
 from errors import DuplicateError, NotFoundError
-from models import (Connection, Conversation,
-                    ConversationWithMessagesWithResults, MessageWithResults,
-                    Result, TableSchema, TableSchemaField, UnsavedResult)
+from models import (
+    Connection,
+    Conversation,
+    ConversationWithMessagesWithResults,
+    MessageWithResults,
+    Result,
+    TableSchema,
+    TableSchemaField,
+    UnsavedResult,
+)
 
 # Old way of using database - this is a single connection, hard to manage transactions
 conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
@@ -126,7 +134,9 @@ def get_connection(conn: sqlite3.Connection, connection_id: str) -> Connection:
     )
 
 
-def update_connection(connection_id: str, name: str, dsn: str, database: str, dialect: str) -> bool:
+def update_connection(
+    connection_id: str, name: str, dsn: str, database: str, dialect: str
+) -> bool:
     conn.execute(
         "UPDATE connections SET name = ?, dsn = ?, database = ?, dialect = ? WHERE id = ?",
         (name, dsn, database, dialect, connection_id),
@@ -136,7 +146,9 @@ def update_connection(connection_id: str, name: str, dsn: str, database: str, di
 
 
 def get_connection_from_dsn(dsn: str) -> Connection:
-    data = conn.execute("SELECT id, name, dsn, database, dialect FROM connections WHERE dsn = ?", (dsn,)).fetchone()
+    data = conn.execute(
+        "SELECT id, name, dsn, database, dialect FROM connections WHERE dsn = ?", (dsn,)
+    ).fetchone()
     if not data:
         raise NotFoundError("Connection not found")
 
@@ -168,7 +180,9 @@ def exists_schema_table(connection_id: str) -> bool:
     return False
 
 
-def create_schema_table(conn: sqlite3.Connection, connection_id: str, table_name: str) -> str:
+def create_schema_table(
+    conn: sqlite3.Connection, connection_id: str, table_name: str
+) -> str:
     """Creates a table schema for a connection"""
     # Check if table already exists
     if conn.execute(
@@ -311,13 +325,16 @@ def connection_is_indexed(connection_id):
 
 
 def insert_schema_index(connection_id, index_file):
-    conn.execute("INSERT INTO schema_indexes VALUES (?, ?)", (connection_id, index_file))
+    conn.execute(
+        "INSERT INTO schema_indexes VALUES (?, ?)", (connection_id, index_file)
+    )
     conn.commit()
 
 
 def get_schema_index(connection_id):
     return conn.execute(
-        "SELECT index_file FROM schema_indexes WHERE connection_id = ?", (connection_id,)
+        "SELECT index_file FROM schema_indexes WHERE connection_id = ?",
+        (connection_id,),
     ).fetchone()[0]
 
 
@@ -365,9 +382,9 @@ def get_conversations_with_messages_with_results() -> (
 
         messages = conn.execute(
             """
-        SELECT messages.message_id, content, role, created_at
+        SELECT messages.id, content, role, created_at
         FROM messages
-        INNER JOIN conversation_messages ON messages.message_id = conversation_messages.message_id
+        INNER JOIN conversation_messages ON messages.id = conversation_messages.message_id
         WHERE conversation_messages.conversation_id = ?
         ORDER BY messages.created_at ASC""",
             (conversation_id,),
@@ -421,7 +438,7 @@ def delete_conversation(conversation_id: str):
         (conversation_id,),
     )
     conn.execute(
-        "DELETE FROM messages WHERE message_id IN (SELECT message_id FROM conversation_messages WHERE conversation_id = ?)",
+        "DELETE FROM messages WHERE id IN (SELECT message_id FROM conversation_messages WHERE conversation_id = ?)",
         (conversation_id,),
     )
     conn.execute(
@@ -446,7 +463,7 @@ def create_conversation(connection_id: str, name: str) -> int:
     return conversation_id
 
 
-def update_conversation(conversation_id: str, name: str):
+def update_conversation(conversation_id: str, name: str) -> Literal[True]:
     conn.execute(
         "UPDATE conversations SET name = ? WHERE conversation_id = ?",
         (name, conversation_id),
@@ -455,7 +472,7 @@ def update_conversation(conversation_id: str, name: str):
     return True
 
 
-def toggle_save_query(result_id: str):
+def toggle_save_query(result_id: str) -> bool:
     # check if result_id exists in saved_queries
     exists = conn.execute(
         "SELECT * FROM saved_queries WHERE result_id = ?", (result_id,)
@@ -476,9 +493,9 @@ def add_message_to_conversation(
     conversation_id: str,
     content: str,
     role: str,
-    results: Optional[list[Result]] = [],
-    selected_tables: Optional[list[str]] = [],
-):
+    results: list[Result | UnsavedResult] = [],
+    selected_tables: list[str] = [],
+) -> MessageWithResults:
     # Basic validation
     if results and role != "assistant":
         raise ValueError("Only assistant messages can have results")
@@ -489,6 +506,9 @@ def add_message_to_conversation(
         "INSERT INTO messages (content, role, created_at, selected_tables) VALUES (?, ?, ?, ?)",
         (content, role, created_at, ",".join(selected_tables)),
     ).lastrowid
+
+    if message_id is None:
+        raise ValueError("Message could not be created")
 
     # Create result objects and update message_results many2many
     for result in results:
@@ -525,7 +545,7 @@ def add_message_to_conversation(
 def get_messages_with_results(conversation_id: str) -> list[MessageWithResults]:
     # Get all message_ids for conversation
     message_ids = conn.execute(
-        "SELECT cm.message_id FROM conversation_messages cm JOIN messages m ON m.message_id=cm.message_id WHERE conversation_id = ? ORDER BY m.created_at ASC",
+        "SELECT cm.message_id FROM conversation_messages cm JOIN messages m ON m.id=cm.message_id WHERE conversation_id = ? ORDER BY m.created_at ASC",
         (conversation_id,),
     ).fetchall()
 
@@ -538,7 +558,7 @@ def get_messages_with_results(conversation_id: str) -> list[MessageWithResults]:
             (message_id,),
         ).fetchone()
         results = conn.execute(
-            "SELECT results.result_id, content, type, created_at, CASE WHEN saved_queries.result_id IS NULL THEN 0 ELSE 1 END AS is_saved FROM results LEFT JOIN saved_queries ON results.result_id = saved_queries.result_id WHERE results.result_id IN (SELECT result_id FROM message_results WHERE message_id = ?)",
+            "SELECT results.id, content, type, created_at, CASE WHEN saved_queries.result_id IS NULL THEN 0 ELSE 1 END AS is_saved FROM results LEFT JOIN saved_queries ON results.id = saved_queries.result_id WHERE results.id IN (SELECT result_id FROM message_results WHERE message_id = ?)",
             (message_id,),
         ).fetchall()
         messages.append(
@@ -569,7 +589,7 @@ def get_message_history(conversation_id: str) -> list[dict[str, Any]]:
     messages = conn.execute(
         """SELECT content, role, created_at
         FROM messages
-        INNER JOIN conversation_messages ON messages.message_id = conversation_messages.message_id
+        INNER JOIN conversation_messages ON messages.id = conversation_messages.message_id
         WHERE conversation_messages.conversation_id = ?
         ORDER BY messages.created_at ASC
         """,
@@ -579,14 +599,16 @@ def get_message_history(conversation_id: str) -> list[dict[str, Any]]:
     return [{"role": message[1], "content": message[0]} for message in messages]
 
 
-def get_message_history_with_selected_tables_with_sql(conversation_id: str):
+def get_message_history_with_selected_tables_with_sql(
+    conversation_id: str,
+) -> list[dict[str, Any]]:
     """Returns the message history of a conversation with selected tables as a list"""
     messages = conn.execute(
         """SELECT messages.content, messages.role, messages.created_at, results.content, messages.selected_tables
     FROM messages
-    INNER JOIN conversation_messages ON messages.message_id = conversation_messages.message_id
-    INNER JOIN message_results ON messages.message_id = message_results.message_id
-    INNER JOIN results ON message_results.result_id = results.result_id
+    INNER JOIN conversation_messages ON messages.id = conversation_messages.message_id
+    INNER JOIN message_results ON messages.id = message_results.message_id
+    INNER JOIN results ON message_results.result_id = results.id
     WHERE conversation_messages.conversation_id = ?
     AND results.type = 'sql'
     ORDER BY messages.created_at ASC
@@ -613,9 +635,9 @@ def get_message_history_with_sql(conversation_id: str) -> list[dict[str, Any]]:
     messages_with_sql = conn.execute(
         """SELECT messages.content, messages.role, messages.created_at, results.content
     FROM messages
-    INNER JOIN conversation_messages ON messages.message_id = conversation_messages.message_id
-    INNER JOIN message_results ON messages.message_id = message_results.message_id
-    INNER JOIN results ON message_results.result_id = results.result_id
+    INNER JOIN conversation_messages ON messages.id = conversation_messages.message_id
+    INNER JOIN message_results ON messages.id = message_results.message_id
+    INNER JOIN results ON message_results.result_id = results.id
     WHERE conversation_messages.conversation_id = ?
     AND results.type = 'sql'
     ORDER BY messages.created_at ASC

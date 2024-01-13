@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { IConnection } from "../Library/types";
 import { api } from "../../api";
-import { useAuth } from "./AuthProvider";
 
 type ConnectionListContextType = [
   IConnection[] | null,
@@ -27,19 +26,14 @@ export const ConnectionListProvider = ({
   children,
 }: React.PropsWithChildren) => {
   const [connections, setConnections] = useState<IConnection[]>([]);
-  const { session } = useAuth();
-  const tokens = {
-    accessToken: session?.access_token ?? "",
-    refreshToken: session?.refresh_token ?? "",
-  };
 
   function fetchConnections() {
     api
-      .listConnections(tokens)
+      .listConnections()
       .then((response) => {
-        console.log(response);
+        console.log("HERE", response);
         if (response.status === "ok") {
-          setConnections(response.sessions);
+          setConnections(response.connections);
         } else {
           alert("Error loading connections");
         }
@@ -51,9 +45,8 @@ export const ConnectionListProvider = ({
   }
 
   useEffect(() => {
-    if (!session) return;
     fetchConnections();
-  }, [session]);
+  }, []);
 
   return (
     <ConnectionListContext.Provider

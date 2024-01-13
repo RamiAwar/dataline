@@ -3,23 +3,29 @@ import json
 import logging
 import os
 import re
-from typing import Annotated, Any
+from typing import Annotated, Any, Awaitable, Callable
 
 import uvicorn
-from fastapi import (Body, Depends, FastAPI, Header, HTTPException, Request,
-                     Response)
+from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
+from pydantic.json import pydantic_encoder
 from pygments import formatters, highlight, lexers
 from pygments_pprint_sql import SqlFilter
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
 import db
-from auth import Auth, token_auth
-from models import (Connection, DataResult, Result, UnsavedResult,
-                    UpdateConnectionRequest, UpdateConversationRequest)
+from errors import NotFoundError
+from models import (
+    Connection,
+    DataResult,
+    Result,
+    UnsavedResult,
+    UpdateConnectionRequest,
+    UpdateConversationRequest,
+)
 from services import QueryService, SchemaService, results_from_query_response
 from sql_wrapper import request_execute, request_limit
 
@@ -62,7 +68,9 @@ async def check_secret(secret_token: str = Header(None)) -> None:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-async def catch_exceptions_middleware(request: Request, call_next):
+async def catch_exceptions_middleware(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response | JSONResponse:
     global loaded
     try:
         return await call_next(request)
@@ -80,7 +88,7 @@ class ConnectRequest(BaseModel):
     name: str
 
     @validator("dsn")
-    def validate_dsn_format(cls, value):
+    def validate_dsn_format(cls, value: str) -> str:
         # Define a regular expression to match the DSN format
         dsn_regex = r"^[\w\+]+:\/\/\w+:\w+@[\w.-]+[:\d]*\/\w+$"
 
@@ -92,13 +100,15 @@ class ConnectRequest(BaseModel):
         return value
 
 
+# TODO: Response model
 @app.get("/healthcheck")
-async def healthcheck():
+async def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
 
 
+# TODO: Add response models
 @app.post("/connect")
-async def connect_db(req: ConnectRequest, supabase: Auth = Depends(token_auth)) -> dict:
+async def connect_db(req: ConnectRequest) -> dict[str, str]:
     # Try to connect to provided dsn
     try:
         engine = create_engine(req.dsn)
@@ -109,9 +119,12 @@ async def connect_db(req: ConnectRequest, supabase: Auth = Depends(token_auth)) 
         return {"status": "error", "message": "Failed to connect to database"}
 
     # Check if connection with DSN already exists, then return connection_id
-    existing_connection = db.get_connection_from_dsn(req.dsn)
-    if existing_connection:
-        return {"status": "ok", "connection_id": existing_connection.id}
+    try:
+        existing_connection = db.get_connection_from_dsn(req.dsn)
+        if existing_connection:
+            return {"status": "ok", "connection_id": existing_connection.id}
+    except NotFoundError:
+        pass
 
     # Insert connection only if success
     dialect = engine.url.get_dialect().name
@@ -120,6 +133,7 @@ async def connect_db(req: ConnectRequest, supabase: Auth = Depends(token_auth)) 
     if not database:
         raise Exception("Invalid DSN. Database name is required.")
 
+    # TODO: Refactor to session dependency
     with db.DatabaseManager() as conn:
         connection_id = db.create_connection(
             conn,
@@ -150,7 +164,7 @@ async def get_connections() -> dict[str, Any]:
 
 
 @app.get("/connection/{connection_id}/schemas")
-async def get_table_schemas(connection_id: str):
+async def get_table_schemas(connection_id: str) -> dict[str, Any]:
     # Check for connection existence
     with db.DatabaseManager() as conn:
         connection = db.get_connection(conn, connection_id)
@@ -166,7 +180,7 @@ async def get_table_schemas(connection_id: str):
 @app.patch("/schemas/table/{table_id}")
 async def update_table_schema_description(
     table_id: str, description: Annotated[str, Body(embed=True)]
-):
+) -> dict[str, str]:
     with db.DatabaseManager() as conn:
         db.update_schema_table_description(
             conn, table_id=table_id, description=description
@@ -179,7 +193,7 @@ async def update_table_schema_description(
 @app.patch("/schemas/field/{field_id}")
 async def update_table_schema_field_description(
     field_id: str, description: Annotated[str, Body(embed=True)]
-):
+) -> dict[str, str]:
     with db.DatabaseManager() as conn:
         db.update_schema_table_field_description(
             conn, field_id=field_id, description=description
@@ -190,7 +204,7 @@ async def update_table_schema_field_description(
 
 
 @app.get("/connection/{connection_id}")
-async def get_connection(connection_id: str):
+async def get_connection(connection_id: str) -> dict[str, Any]:
     with db.DatabaseManager() as conn:
         return {
             "status": "ok",
@@ -199,7 +213,9 @@ async def get_connection(connection_id: str):
 
 
 @app.patch("/connection/{connection_id}")
-async def update_connection(connection_id: str, req: UpdateConnectionRequest):
+async def update_connection(
+    connection_id: str, req: UpdateConnectionRequest
+) -> dict[str, Any]:
     # Try to connect to provided dsn
     try:
         engine = create_engine(req.dsn)
@@ -211,7 +227,7 @@ async def update_connection(connection_id: str, req: UpdateConnectionRequest):
 
     # Update connection only if success
     dialect = engine.url.get_dialect().name
-    database = engine.url.database
+    database = str(engine.url.database)
 
     db.update_connection(
         connection_id=connection_id,
@@ -223,7 +239,7 @@ async def update_connection(connection_id: str, req: UpdateConnectionRequest):
     return {
         "status": "ok",
         "connection": Connection(
-            connection_id=connection_id,
+            id=connection_id,
             dsn=req.dsn,
             database=database,
             name=req.name,
@@ -233,7 +249,7 @@ async def update_connection(connection_id: str, req: UpdateConnectionRequest):
 
 
 @app.get("/conversations")
-async def conversations():
+async def conversations() -> dict[str, Any]:
     return {
         "status": "ok",
         "conversations": db.get_conversations_with_messages_with_results(),
@@ -243,32 +259,34 @@ async def conversations():
 @app.post("/conversation")
 async def create_conversation(
     connection_id: Annotated[str, Body()], name: Annotated[str, Body()]
-):
+) -> dict[str, Any]:
     conversation_id = db.create_conversation(connection_id=connection_id, name=name)
     return {"status": "ok", "conversation_id": conversation_id}
 
 
 @app.patch("/conversation/{conversation_id}")
-async def update_conversation(conversation_id: str, req: UpdateConversationRequest):
+async def update_conversation(
+    conversation_id: str, req: UpdateConversationRequest
+) -> dict[str, str]:
     db.update_conversation(conversation_id=conversation_id, name=req.name)
     return {"status": "ok"}
 
 
 @app.delete("/conversation/{conversation_id}")
-async def delete_conversation(conversation_id: str):
+async def delete_conversation(conversation_id: str) -> dict[str, str]:
     db.delete_conversation(conversation_id=conversation_id)
     return {"status": "ok"}
 
 
 @app.get("/messages")
-async def messages(conversation_id: str):
+async def messages(conversation_id: str):  # -> dict[str, Any]:
     return {"status": "ok", "messages": db.get_messages_with_results(conversation_id)}
 
 
 @app.get("/execute-sql", response_model=UnsavedResult)
 async def execute_sql(
     conversation_id: str, sql: str, limit: int = 10, execute: bool = True
-):
+) -> dict[str, str] | Response:
     request_limit.set(limit)
     request_execute.set(execute)
 
@@ -311,7 +329,7 @@ async def execute_sql(
 
 
 @app.get("/toggle-save-query/{result_id}")
-async def toggle_save_query(result_id: str):
+async def toggle_save_query(result_id: str) -> dict[str, str]:
     db.toggle_save_query(result_id=result_id)
     return {"status": "ok"}
 
@@ -319,7 +337,7 @@ async def toggle_save_query(result_id: str):
 @app.get("/query", response_model=list[UnsavedResult])
 async def query(
     conversation_id: str, query: str, limit: int = 10, execute: bool = False
-):
+) -> dict[str, str] | Response:
     request_limit.set(limit)
     request_execute.set(execute)
 
