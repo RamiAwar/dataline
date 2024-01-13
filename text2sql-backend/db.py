@@ -397,7 +397,7 @@ def get_conversations_with_messages_with_results() -> (
             role = message[2]
             created_at = message[3]
             results = conn.execute(
-                "SELECT results.result_id, content, type, created_at, CASE WHEN saved_queries.result_id IS NULL THEN 0 ELSE 1 END AS is_saved FROM results INNER JOIN message_results ON results.result_id = message_results.result_id LEFT JOIN saved_queries ON results.result_id = saved_queries.result_id WHERE message_results.message_id = ?",
+                "SELECT results.id, content, type, created_at, CASE WHEN saved_queries.result_id IS NULL THEN 0 ELSE 1 END AS is_saved FROM results INNER JOIN message_results ON results.id = message_results.result_id LEFT JOIN saved_queries ON results.id = saved_queries.result_id WHERE message_results.message_id = ?",
                 (message_id,),
             ).fetchall()
             results = [
@@ -554,7 +554,7 @@ def get_messages_with_results(conversation_id: str) -> list[MessageWithResults]:
     for message_id in message_ids:
         message_id = message_id[0]
         message = conn.execute(
-            "SELECT content, role, created_at FROM messages WHERE message_id = ?",
+            "SELECT content, role, created_at FROM messages WHERE id = ?",
             (message_id,),
         ).fetchone()
         results = conn.execute(
