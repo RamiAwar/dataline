@@ -2,6 +2,7 @@ import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { api } from "../../api";
 import { Spinner } from "../Spinner/Spinner";
+import { useAuth } from "../Providers/AuthProvider";
 
 interface NewConnectionModalFormProps {
   isOpen: boolean;

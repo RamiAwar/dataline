@@ -20,7 +20,7 @@ export interface IResult {
   content: string | any[][];
   result_id?: string;
   is_saved?: boolean;
-};
+}
 
 export interface IMessageWithResults {
   content: string;
@@ -32,7 +32,7 @@ export interface IMessageWithResults {
 
 export interface IConversationResult {
   conversation_id: string;
-  session_id: string;
+  connection_id: string;
   name: string;
   messages: IMessageWithResults[];
 }
@@ -43,7 +43,7 @@ export interface IConversation {
 }
 
 export interface IConnection {
-  session_id: string;
+  id: string;
   name: string;
   dsn: string;
   dialect: string;
@@ -57,7 +57,7 @@ export interface IEditConnection {
 export interface ITableSchemaResult {
   id: string;
   name: string;
-  session_id: string;
+  connection_id: string;
   description: string;
   field_descriptions: Array<{
     id: string;

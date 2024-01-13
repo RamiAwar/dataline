@@ -31,13 +31,17 @@ export const ConnectionListProvider = ({
     api
       .listConnections()
       .then((response) => {
+        console.log("HERE", response);
         if (response.status === "ok") {
-          setConnections(response.sessions);
+          setConnections(response.connections);
         } else {
           alert("Error loading connections");
         }
       })
-      .catch((err) => alert("Error loading conversations"));
+      .catch((err) => {
+        alert("Error loading conversations");
+        console.log(err);
+      });
   }
 
   useEffect(() => {

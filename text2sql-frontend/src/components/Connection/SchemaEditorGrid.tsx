@@ -27,7 +27,7 @@ export default function SchemaEditorGrid({
     // Load the initial table schemas from API
 
     const fetchTableSchemas = async () => {
-      let fetchedSchemas = await api.getTableSchemas(connection.session_id);
+      let fetchedSchemas = await api.getTableSchemas(connection.connection_id);
       if (fetchedSchemas.status !== "ok") {
         alert("Error fetching connection");
         return;
@@ -35,7 +35,7 @@ export default function SchemaEditorGrid({
       setTableSchemas(fetchedSchemas.tables);
     };
     fetchTableSchemas();
-  }, [connection.session_id]);
+  }, [connection.connection_id]);
 
   const updateTableSchema = (updatedSchema: ITableSchema) => {
     // Find the index of the schema with the matching table name

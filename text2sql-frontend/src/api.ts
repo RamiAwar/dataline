@@ -14,9 +14,39 @@ type ApiError = {
   message: string;
 };
 
+interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
 export const isApiError = <T>(result: T | ApiError): result is ApiError => {
   return (result as ApiError).status === "error";
 };
+
+// Create wrapper around axios get/post/patch/delete to add auth tokens as headers and forward types
+// const get = async <T>(url: string, tokens: AuthTokens): Promise<T> => {
+//   const response = await axios.get<T>(url, {
+//     headers: {
+//       "X-Access-Token": tokens.accessToken,
+//       "X-Refresh-Token": tokens.refreshToken,
+//     },
+//   });
+//   return response.data;
+// };
+
+// const post = async <T>(
+//   url: string,
+//   tokens: AuthTokens,
+//   data: any
+// ): Promise<T> => {
+//   const response = await axios.post<T>(url, data, {
+//     headers: {
+//       "X-Access-Token": tokens.accessToken,
+//       "X-Refresh-Token": tokens.refreshToken,
+//     },
+//   });
+//   return response.data;
+// };
 
 type HealthcheckResult = { status: "ok" } | ApiError;
 const healthcheck = async (): Promise<HealthcheckResult> => {
@@ -24,7 +54,7 @@ const healthcheck = async (): Promise<HealthcheckResult> => {
   return response.data;
 };
 
-type ConnectResult = { status: "ok"; session_id: string } | ApiError;
+type ConnectResult = { status: "ok"; connection_id: string } | ApiError;
 const createConnection = async (
   connectionString: string,
   name: string
@@ -37,43 +67,43 @@ const createConnection = async (
 };
 
 export type ConnectionResult = {
-  session_id: string;
+  id: string;
   dsn: string;
   database: string;
   name: string;
   dialect: string;
 };
 export type ListConnectionsResult =
-  | { status: "ok"; sessions: ConnectionResult[] }
+  | { status: "ok"; connections: ConnectionResult[] }
   | ApiError;
 const listConnections = async (): Promise<ListConnectionsResult> => {
   const response = await axios.get<ListConnectionsResult>(
-    `${baseUrl}/sessions`
+    `${baseUrl}/connections`
   );
   return response.data;
 };
 
 export type GetConnectionResult =
-  | { status: "ok"; session: ConnectionResult }
+  | { status: "ok"; connection: ConnectionResult }
   | ApiError;
 const getConnection = async (
   connectionId: string
 ): Promise<GetConnectionResult> => {
   const response = await axios.get<GetConnectionResult>(
-    `${baseUrl}/session/${connectionId}`
+    `${baseUrl}/connection/${connectionId}`
   );
   return response.data;
 };
 
 export type UpdateConnectionResult =
-  | { status: "ok"; session: ConnectionResult }
+  | { status: "ok"; connection: ConnectionResult }
   | ApiError;
 const updateConnection = async (
   connectionId: string,
   edits: IEditConnection
 ): Promise<UpdateConnectionResult> => {
   const response = await axios.patch<UpdateConnectionResult>(
-    `${baseUrl}/session/${connectionId}`,
+    `${baseUrl}/connection/${connectionId}`,
     edits
   );
   return response.data;
@@ -89,7 +119,7 @@ const getTableSchemas = async (
   connectionId: string
 ): Promise<GetTableSchemasResult> => {
   const response = await axios.get<GetTableSchemasResult>(
-    `${baseUrl}/session/${connectionId}/schemas`
+    `${baseUrl}/connection/${connectionId}/schemas`
   );
   return response.data;
 };
@@ -130,11 +160,11 @@ export type ConversationCreationResult =
       conversation_id: string;
     }
   | ApiError;
-const createConversation = async (sessionId: string, name: string) => {
+const createConversation = async (connectionId: string, name: string) => {
   const response = await axios.post<ConversationCreationResult>(
     `${baseUrl}/conversation`,
     {
-      session_id: sessionId,
+      connection_id: connectionId,
       name,
     }
   );
@@ -234,13 +264,13 @@ const runSQL = async (conversationId: string, code: string) => {
   return response.data;
 };
 
-
-export type SaveQueryResult = {status: "ok"} | ApiError;
+export type SaveQueryResult = { status: "ok" } | ApiError;
 const toggleSaveQuery = async (resultId: string) => {
-  const response = await axios.get<SaveQueryResult>(`${baseUrl}/toggle-save-query/${resultId}`);
+  const response = await axios.get<SaveQueryResult>(
+    `${baseUrl}/toggle-save-query/${resultId}`
+  );
   return response.data;
 };
-
 
 export const api = {
   healthcheck,

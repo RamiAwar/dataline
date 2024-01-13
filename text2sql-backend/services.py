@@ -8,7 +8,7 @@ from sqlalchemy import MetaData, create_engine, inspect
 import db
 from context_builder import CustomSQLContextContainerBuilder
 from errors import GenerationError, RelatedTablesNotFoundError
-from models import Session, SQLQueryResult, TableField, UnsavedResult
+from models import Connection, SQLQueryResult, TableField, UnsavedResult
 from query_manager import SQLQueryManager
 from sql_wrapper import CustomSQLDatabase
 
@@ -23,11 +23,11 @@ class SQLResults(TypedDict):
 class SchemaService:
     @classmethod
     def extract_tables(
-        cls, conn: Connection, session_id: str
+        cls, conn: Connection, connection_id: str
     ) -> dict[str, dict[str, TableField]]:
-        # Get DSN from session
-        session = db.get_session(conn, session_id)
-        engine = create_engine(session.dsn)
+        # Get DSN from connection
+        connection = db.get_connection(conn, connection_id)
+        engine = create_engine(connection.dsn)
         metadata = MetaData()
         metadata.reflect(bind=engine)
 
@@ -63,31 +63,31 @@ class SchemaService:
         return tables
 
     @classmethod
-    def create_or_update_tables(cls, conn: Connection, session_id: str):
-        exists = db.exists_schema_table(session_id)
+    def create_or_update_tables(cls, conn: Connection, connection_id: str):
+        exists = db.exists_schema_table(connection_id)
         if exists:
             raise Exception("Update not implemented yet")
 
-        tables = cls.extract_tables(conn, session_id)
+        tables = cls.extract_tables(conn, connection_id)
         for table_name, fields in tables.items():
-            cls._create_or_update_table_schema(conn, session_id, table_name, fields)
+            cls._create_or_update_table_schema(conn, connection_id, table_name, fields)
 
     @classmethod
     def _create_or_update_table_schema(
         cls,
         conn: Connection,
-        session_id: str,
+        connection_id: str,
         table_name: str,
         fields: list[TableField],
     ):
         """Creates a schema from scratch with empty descriptions or adds missing
         fields to one that already exists."""
         # TODO: Delete removed fields as well
-        # Check if schema exists for this session
-        exists = db.exists_schema_table(session_id)
+        # Check if schema exists for this connection
+        exists = db.exists_schema_table(connection_id)
         if not exists:
             # Create new schema table
-            table_id = db.create_schema_table(conn, session_id, table_name)
+            table_id = db.create_schema_table(conn, connection_id, table_name)
 
             # Create schema fields
             for field in fields:
@@ -106,18 +106,18 @@ class SchemaService:
 class QueryService:
     def __init__(
         self,
-        session: Session,
+        connection: Connection,
         model_name: str = "gpt-4",
         temperature: int = 0.0,
     ):
-        self.sesion = session
-        self.engine = create_engine(session.dsn)
+        self.sesion = connection
+        self.engine = create_engine(connection.dsn)
         self.insp = inspect(self.engine)
         self.table_names = self.insp.get_table_names()
         self.sql_db = CustomSQLDatabase(self.engine, include_tables=self.table_names)
-        self.context_builder = CustomSQLContextContainerBuilder(session, self.sql_db)
+        self.context_builder = CustomSQLContextContainerBuilder(connection, self.sql_db)
         self.query_manager = SQLQueryManager(
-            dsn=session.dsn, model=model_name, temperature=temperature
+            dsn=connection.dsn, model=model_name, temperature=temperature
         )
 
     def get_related_tables(self, query: str, message_history: list[dict] = []):
