@@ -1,6 +1,6 @@
 import json
 import logging
-from sqlite3 import Connection
+from sqlite3 import Connection as SQLiteConnection
 from typing import Any, TypedDict
 
 from sqlalchemy import MetaData, create_engine, inspect
@@ -63,7 +63,7 @@ class SchemaService:
         return tables
 
     @classmethod
-    def create_or_update_tables(cls, conn: Connection, connection_id: str):
+    def create_or_update_tables(cls, conn: Connection, connection_id: str) -> None:
         exists = db.exists_schema_table(connection_id)
         if exists:
             raise Exception("Update not implemented yet")
@@ -75,7 +75,7 @@ class SchemaService:
     @classmethod
     def _create_or_update_table_schema(
         cls,
-        conn: Connection,
+        conn: SQLiteConnection,
         connection_id: str,
         table_name: str,
         fields: list[TableField],
@@ -109,8 +109,8 @@ class QueryService:
         connection: Connection,
         model_name: str = "gpt-4",
         temperature: int = 0.0,
-    ):
-        self.sesion = connection
+    ) -> None:
+        self.session = connection
         self.engine = create_engine(connection.dsn)
         self.insp = inspect(self.engine)
         self.table_names = self.insp.get_table_names()
@@ -120,7 +120,9 @@ class QueryService:
             dsn=connection.dsn, model=model_name, temperature=temperature
         )
 
-    def get_related_tables(self, query: str, message_history: list[dict] = []):
+    def get_related_tables(
+        self, query: str, message_history: list[dict] = []
+    ) -> tuple[str, list[str]]:
         # Fetch table context
         context_str, table_names = self.context_builder.get_relevant_table_context(
             query_str=query,

@@ -60,20 +60,15 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         if context_dict is not None:
             # validate context_dict keys are valid table names
             context_keys = set(context_dict.keys())
-            if not context_keys.issubset(
-                set(self.sql_database.get_usable_table_names())
-            ):
+            if not context_keys.issubset(set(self.sql_database.get_usable_table_names())):
                 raise ValueError(
-                    "Invalid context table names: "
-                    f"{context_keys - set(self.sql_database.get_usable_table_names())}"
+                    "Invalid context table names: " f"{context_keys - set(self.sql_database.get_usable_table_names())}"
                 )
 
         self.context_dict = context_dict or {}
 
         # build full context from sql_database
-        self.full_context_dict = self._build_context_from_sql_database(
-            current_context=self.context_dict
-        )
+        self.full_context_dict = self._build_context_from_sql_database(current_context=self.context_dict)
         self.context_str = context_str
 
     def _build_context_from_sql_database(
@@ -102,9 +97,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             **index_kwargs (Any): index kwargs
 
         """
-        table_foreign_key_schemas = "\n".join(
-            self.sql_database.get_schema_foreign_keys().values()
-        )
+        table_foreign_key_schemas = "\n".join(self.sql_database.get_schema_foreign_keys().values())
         context_query_str = query_tmpl.format(
             orig_query_str=query_str,
             table_names=table_foreign_key_schemas,
@@ -120,9 +113,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             )
 
         # Query LLM
-        response = self.llm.query(
-            query=context_query_str, message_history=message_history
-        )
+        response = self.llm.query(query=context_query_str, message_history=message_history)
 
         # Validate table names
         try:
@@ -133,15 +124,11 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             logger.debug("\n\n------------------\n\n")
             logger.debug(f"Reasking with query: {context_query_str}")
             logger.debug("\n\n------------------\n\n")
-            response = self.llm.query(
-                query=context_query_str, message_history=message_history
-            )
+            response = self.llm.query(query=context_query_str, message_history=message_history)
 
         # Check if any table names are invalid
         invalid_table_names = [
-            table_name
-            for table_name in table_names
-            if table_name not in self.sql_database.get_table_names()
+            table_name for table_name in table_names if table_name not in self.sql_database.get_table_names()
         ]
 
         # Try to correct or reask once
@@ -162,22 +149,13 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
                 )
                 context_query_str = f"""You returned {str(response)} but that contained invalid table names: {invalid_table_names}.\n{table_names}"""
                 logger.debug("\n\n------------------\n\n")
-                logger.debug(
-                    f"Invalid table names: Reasking with query: {context_query_str}"
-                )
+                logger.debug(f"Invalid table names: Reasking with query: {context_query_str}")
                 logger.debug("\n\n------------------\n\n")
-                response = self.llm.query(
-                    query=context_query_str, message_history=message_history
-                )
+                response = self.llm.query(query=context_query_str, message_history=message_history)
 
                 table_names = [s.strip() for s in str(response).strip().split(",")]
-                if any(
-                    table_name not in self.sql_database.get_table_names()
-                    for table_name in table_names
-                ):
-                    logger.info(
-                        "Invalid table names: Reasking failed - continuing anyway"
-                    )
+                if any(table_name not in self.sql_database.get_table_names() for table_name in table_names):
+                    logger.info("Invalid table names: Reasking failed - continuing anyway")
 
         context_str = ""
         for table_name in table_names:

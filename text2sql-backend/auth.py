@@ -25,9 +25,7 @@ class AuthTokens(BaseModel):
 
 
 class CustomAuth(HTTPBasic):
-    async def __call__(  # type: ignore
-        self, request: Request
-    ) -> Optional[AuthTokens]:
+    async def __call__(self, request: Request) -> Optional[AuthTokens]:  # type: ignore
         authorization = request.headers.get("Authorization")
         scheme, param = get_authorization_scheme_param(authorization)
         if self.realm:
@@ -61,7 +59,9 @@ class CustomAuth(HTTPBasic):
 security = CustomAuth()
 
 
-async def token_auth(credentials: Annotated[AuthTokens, Depends(security)],) -> Client:
+async def token_auth(
+    credentials: Annotated[AuthTokens, Depends(security)],
+) -> Client:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_PUBLIC_KEY)
     supabase.auth.set_session(
         access_token=credentials.x_access_token,

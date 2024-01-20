@@ -3,7 +3,7 @@
 import logging
 from collections import defaultdict
 from contextvars import ContextVar
-from typing import Iterable
+from typing import Any, Iterable, Literal
 
 from llama_index.langchain_helpers.sql_wrapper import SQLDatabase
 from rapidfuzz import fuzz
@@ -25,7 +25,7 @@ class CustomSQLDatabase(SQLDatabase):
         """Get names of tables available."""
         return self.get_usable_table_names()
 
-    def get_closest_table_name(self, table_name):
+    def get_closest_table_name(self, table_name) -> Any | str | None:
         """Get the closest table name to the given table name."""
         table_names = self.get_usable_table_names()
         if table_name in table_names:
@@ -174,7 +174,9 @@ class CustomSQLDatabase(SQLDatabase):
                     return result, {"result": result, "columns": list(cursor.keys())}
         return {}, {}
 
-    def validate_sql(self, sql_query):
+    def validate_sql(
+        self, sql_query
+    ) -> tuple[Literal[True], None] | tuple[Literal[False], str]:
         try:
             # Execute the EXPLAIN statement (without fetching results)
             conn = self._engine.raw_connection()
