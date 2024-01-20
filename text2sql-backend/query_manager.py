@@ -49,9 +49,7 @@ class SQLQueryManager:
         )
 
         if num_tokens_from_string(prompt) > 8192:
-            raise ValueError(
-                "Prompt is too long. Please reduce the number of tables in your query."
-            )
+            raise ValueError("Prompt is too long. Please reduce the number of tables in your query.")
 
         # Stream base generator until empty
         # TODO: Add message history
@@ -62,9 +60,7 @@ class SQLQueryManager:
                 break
             yield i["choices"][0]["delta"]["content"]
 
-    def reask(
-        self, original_query: str, wrong_sql: str, table_context: str, error: str
-    ):
+    def reask(self, original_query: str, wrong_sql: str, table_context: str, error: str):
         query = SQL_REASK_QUERY_PROMPT.format(
             schema=table_context,
             query_string=original_query,

@@ -41,7 +41,7 @@ class Result:
 @dataclass
 class UnsavedResult:
     type: ResultType
-    content: str | list[str]  # To allow for selected tables list
+    content: str
 
 
 @dataclass
@@ -115,6 +115,7 @@ class TableSchema(BaseModel):
     field_descriptions: list[TableSchemaField]
 
 
+@dataclass
 class ConversationWithMessagesWithResults(Conversation):
     messages: list[MessageWithResults]
 

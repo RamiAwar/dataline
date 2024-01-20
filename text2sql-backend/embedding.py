@@ -40,9 +40,7 @@ class EmbeddingBase(ABC):
         """Embeds a single query and returns a vector of floats."""
         ...
 
-    def _len_safe_get_embedding(
-        self, text, embedder: Callable[[str], list[float]], average=True
-    ) -> list[float]:
+    def _len_safe_get_embedding(self, text, embedder: Callable[[str], list[float]], average=True) -> list[float]:
         """Gets the embedding for a text, but splits it into chunks if it is
         too long.
 
@@ -64,9 +62,7 @@ class EmbeddingBase(ABC):
 
         if average:
             chunk_embeddings = np.average(chunk_embeddings, axis=0, weights=chunk_lens)
-            chunk_embeddings = chunk_embeddings / np.linalg.norm(
-                chunk_embeddings
-            )  # normalizes length to 1
+            chunk_embeddings = chunk_embeddings / np.linalg.norm(chunk_embeddings)  # normalizes length to 1
         return chunk_embeddings.flatten().tolist()
 
     @staticmethod
@@ -113,9 +109,7 @@ class OpenAIEmbedding(EmbeddingBase):
     def embed(self, texts: list[str]) -> list[list[float]]:
         embeddings = []
         for text in texts:
-            embeddings.append(
-                super()._len_safe_get_embedding(text, self._get_embedding)
-            )
+            embeddings.append(super()._len_safe_get_embedding(text, self._get_embedding))
 
         return embeddings
 
@@ -124,14 +118,8 @@ class OpenAIEmbedding(EmbeddingBase):
         return resp[0]
 
     def _get_embedding(self, texts: list[str]) -> list[float]:
-        api_key = (
-            self.api_key
-            if self.api_key is not None
-            else os.environ.get("OPENAI_API_KEY")
-        )
-        resp = openai.Embedding.create(
-            api_key=api_key, model=self._model, input=texts, api_base=self.api_base
-        )
+        api_key = self.api_key if self.api_key is not None else os.environ.get("OPENAI_API_KEY")
+        resp = openai.Embedding.create(api_key=api_key, model=self._model, input=texts, api_base=self.api_base)
         return [r["embedding"] for r in resp["data"]]
 
     @property

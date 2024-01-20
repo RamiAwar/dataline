@@ -279,7 +279,7 @@ async def delete_conversation(conversation_id: str) -> dict[str, str]:
 
 
 @app.get("/messages")
-async def messages(conversation_id: str):  # -> dict[str, Any]:
+async def messages(conversation_id: str) -> dict[str, Any]:
     return {"status": "ok", "messages": db.get_messages_with_results(conversation_id)}
 
 
