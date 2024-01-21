@@ -191,7 +191,7 @@ export const Sidebar = () => {
                                     currentConversation?.id
                                     ? "bg-gray-700 text-white"
                                     : "text-gray-400 hover:text-white hover:bg-gray-800",
-                                  "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
+                                  "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer mt-2"
                                 )}
                               >
                                 <ChatBubbleOvalLeftIcon
@@ -212,6 +212,27 @@ export const Sidebar = () => {
                               </Link>
                             </li>
                           ))}
+                        </ul>
+                      </li>
+
+                      <li>
+                        <hr className="border-gray-800 -mt-2 mb-4" />
+                        {/* Section for saved queries and dashboards */}
+                        <ul role="list" className="-mx-2 space-y-1">
+                          <li key="saved-queries">
+                            <Link
+                              to="/queries"
+                              className="group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer text-gray-400 hover:text-white hover:bg-gray-800"
+                            >
+                              <BookmarkIcon
+                                className="h-5 w-5 shrink-0"
+                                aria-hidden="true"
+                              />
+                              <span className="text-ellipsis overflow-hidden whitespace-nowrap">
+                                Saved queries
+                              </span>
+                            </Link>
+                          </li>
                         </ul>
                       </li>
                     </ul>
@@ -332,14 +353,14 @@ export const Sidebar = () => {
                   ))}
                 </ul>
               </li>
-              <hr className="border-gray-600 my-2" />
+              <hr className="border-gray-800 mt-1" />
               {/* Section for saved queries and dashboards */}
-              <ul>
-                <div className="h-6 text-gray-500 text-sm font-medium font-['Inter'] tracking-tight mb-2">
-                  Saved
-                </div>
-                <li key="saved-queries" className="-mx-4 space-y-1">
-                  <div className="text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer">
+              <ul role="list" className="-mx-4 space-y-1">
+                <li key="saved-queries">
+                  <Link
+                    to="/queries"
+                    className="group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer text-gray-400 hover:text-white hover:bg-gray-800"
+                  >
                     <BookmarkIcon
                       className="h-5 w-5 shrink-0"
                       aria-hidden="true"
@@ -347,7 +368,7 @@ export const Sidebar = () => {
                     <span className="text-ellipsis overflow-hidden whitespace-nowrap">
                       Saved queries
                     </span>
-                  </div>
+                  </Link>
                 </li>
                 {/* <li key="dashboards" className="-mx-4 space-y-1">
                   <div className="text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer">

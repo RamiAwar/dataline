@@ -5,6 +5,8 @@ import { DynamicTable } from "../Library/DynamicTable";
 import { useEffect, useState } from "react";
 import { api } from "../../api";
 import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
+import { useProfilePicture } from "../Providers/ProfilePictureProvider";
+import { UserCircleIcon } from "@heroicons/react/24/solid";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -14,6 +16,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
   const [loadingQuery, setLoadingQuery] = useState<boolean>(false);
   const [queryResult, setQueryResult] = useState<any | null>(null);
   const [message, setMessage] = useState<IMessageWithResults>(initialMessage);
+  const [avatarUrl] = useProfilePicture();
 
   function runQuery(code: string) {
     try {
@@ -101,15 +104,16 @@ export const Message = (initialMessage: IMessageWithResults) => {
         <div className="flex-shrink-0 flex flex-col relative items-end">
           <div className="">
             <div className="relative p-1 rounded-sm text-white flex items-center justify-center">
-              {/* TODO: Replace with user image */}
               {message.role === "assistant" ? (
                 <img src={logo} className="h-7 w-7" />
-              ) : (
+              ) : avatarUrl ? (
                 <img
                   className="h-7 w-7 rounded-sm bg-gray-800"
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                  src={avatarUrl}
                   alt=""
                 />
+              ) : (
+                <UserCircleIcon className="text-gray-300 h-8 w-8 rounded-full " />
               )}
             </div>
           </div>
