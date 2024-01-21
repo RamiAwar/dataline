@@ -3,13 +3,15 @@ import { RouterProvider } from "react-router";
 import { ConnectionListProvider } from "./components/Providers/ConnectionListProvider";
 import { ConversationListProvider } from "./components/Providers/ConversationListProvider";
 import { AuthProvider } from "./components/Providers/AuthProvider";
-
+import { ProfilePictureProvider } from "./components/Providers/ProfilePictureProvider";
 export const App = () => (
   <AuthProvider>
-    <ConnectionListProvider>
-      <ConversationListProvider>
-        <RouterProvider router={router} />
-      </ConversationListProvider>
-    </ConnectionListProvider>
+    <ProfilePictureProvider>
+      <ConnectionListProvider>
+        <ConversationListProvider>
+          <RouterProvider router={router} />
+        </ConversationListProvider>
+      </ConnectionListProvider>
+    </ProfilePictureProvider>
   </AuthProvider>
 );

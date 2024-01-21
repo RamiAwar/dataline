@@ -1,10 +1,11 @@
 import { Menu, Transition } from "@headlessui/react";
-import { ChevronDownIcon, UserCircleIcon } from "@heroicons/react/24/solid";
+import { UserCircleIcon } from "@heroicons/react/24/solid";
 import { Fragment, useEffect, useState } from "react";
 import { useAuth } from "../Providers/AuthProvider";
 import { Link } from "react-router-dom";
 import { Routes } from "../../router";
 import { supabase } from "../../supabase";
+import { useProfilePicture } from "../Providers/ProfilePictureProvider";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -12,34 +13,13 @@ function classNames(...classes: string[]) {
 
 // Create component with prop topRight boolean
 export const ProfileDropdown = ({ topRight }: { topRight?: boolean }) => {
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
   const userNavigation = [
     { name: "Your profile", href: Routes.UserProfile, onClick: () => {} },
     { name: "Sign out", href: "#", onClick: () => signOut() },
   ];
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  const { profile } = useAuth();
-
-  async function downloadImage(path: string) {
-    try {
-      const { data, error } = await supabase.storage
-        .from("avatars")
-        .download(path);
-      if (error) {
-        throw error;
-      }
-      const url = URL.createObjectURL(data);
-      setAvatarUrl(url);
-    } catch (error) {
-      console.log("Error downloading image: ", error);
-    }
-  }
-
-  useEffect(() => {
-    console.log(profile);
-    if (profile?.avatarUrl) downloadImage(profile.avatarUrl);
-  }, [profile]);
+  const [avatarUrl] = useProfilePicture();
 
   return (
     <>
