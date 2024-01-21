@@ -208,10 +208,27 @@ export const ConnectionEditor = () => {
           <div className="sm:col-span-6">
             <label
               htmlFor="name"
-              className="block text-sm font-medium leading-6 text-white"
+              className="block text-md font-medium leading-6 text-white pb-2"
             >
               Schema Descriptions
             </label>
+            <span className="block text-md text-gray-400 font-light leading-6 pb-2">
+              Adding descriptions to some hard-to-understand schema fields will
+              help generate higher quality results.
+              <br></br>
+              <br></br>
+              For example, if you have a table called "users" with a vague
+              column called 'data' that actually contains key value pairs
+              including the user's age, you could add a description to the
+              'data' column that says 'Contains key value pairs including the
+              user's age'.
+              <br></br>
+              <br></br>
+              This is needed as DataLine will never look at the actual data in
+              your database, only the schema, making it impossible to guess what
+              the data actually contains without good field names and
+              descriptions.
+            </span>
             <div className="mt-2">
               {connection && <SchemaEditorGrid connection={connection} />}
             </div>
