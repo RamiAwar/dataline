@@ -21,6 +21,7 @@ function classNames(...classes: string[]) {
 }
 
 const SPACES = ["Enter", "Tab", "Space", "Backspace"];
+const SPACE_CHARACTERS = [" ", "\n", "\t", "\r"];
 
 // Helper function to get cursor position without considering spaces
 function getCursorPositionWithoutSpaces(
@@ -35,22 +36,24 @@ function getCursorPositionWithoutSpaces(
 // Helper function to get new cursor position after formatting
 function getNewCursorPosition(
   formattedText: string,
-  oldCursorPosition: number
+  lastCharacterPosition: number
 ) {
-  let formattedNonSpaceCount = 0;
+  let nonSpaceCharacterCount = 0;
   let i = 0;
-  // Iterate through the formatted text to find the corresponding character position
-  for (
-    ;
-    i < formattedText.length && formattedNonSpaceCount < oldCursorPosition;
-    i++
-  ) {
-    if (!SPACES.includes(formattedText[i])) {
-      formattedNonSpaceCount++;
+
+  // Iterate through formatted text until we reach the same non-space character
+  // count as the original text's character count
+  for (; i < formattedText.length; i++) {
+    if (nonSpaceCharacterCount === lastCharacterPosition) {
+      break;
+    }
+
+    if (!SPACE_CHARACTERS.includes(formattedText[i])) {
+      nonSpaceCharacterCount++;
     }
   }
 
-  return Math.min(i, formattedText.length);
+  return i;
 }
 export const CodeBlock = ({
   code,
@@ -79,7 +82,16 @@ export const CodeBlock = ({
       console.log(lastChar);
       if (SPACES.includes(lastChar)) {
         setFormattedCode(savedCode);
-        console.log("not formatting");
+        return;
+      }
+
+      // If no characters are different from the saved code, don't format (ignoring spaces)
+      const savedCodeWithoutSpaces = savedCode.replace(/\s/g, "");
+      const formattedCodeWithoutSpaces = formattedCode.replace(/\s/g, "");
+      if (
+        lastChar != "" &&
+        savedCodeWithoutSpaces === formattedCodeWithoutSpaces
+      ) {
         return;
       }
 
@@ -107,10 +119,7 @@ export const CodeBlock = ({
           "forward"
         );
       }
-
-      // TODO: Handle trailing spaces getting removed
     } catch (e) {
-      console.log(e);
       setFormattedCode(savedCode);
     }
   }, [savedCode]);
@@ -123,12 +132,18 @@ export const CodeBlock = ({
   const handleKeyboardInput = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     setLastChar(e.code || e.key);
 
-    // Handle tab key
+    // Special condition: handle tab key
     if (e.key === "Tab") {
       e.preventDefault();
       const { selectionStart, selectionEnd } = e.currentTarget;
+      // Modify current textarea value by adding 2 spaces at the cursor position
+      e.currentTarget.value =
+        e.currentTarget.value.substring(0, selectionStart) +
+        "  " +
+        e.currentTarget.value.substring(selectionEnd);
       e.currentTarget.selectionStart = selectionStart + 2;
       e.currentTarget.selectionEnd = selectionEnd + 2;
+      // Handle non-letter keys
     } else {
       setSavedCode(textareaRef.current?.value || "");
     }
@@ -146,7 +161,7 @@ export const CodeBlock = ({
       <textarea
         spellCheck={false}
         ref={textareaRef}
-        className="absolute inset-0 resize-none bg-transparent text-red-300 p-2 font-mono caret-white outline-none appearance-none"
+        className="absolute inset-0 resize-none bg-transparent overflow-hidden text-red-300 p-2 font-mono caret-white outline-none appearance-none"
         onChange={handleTextUpdate}
         onKeyDown={handleKeyboardInput}
       />
