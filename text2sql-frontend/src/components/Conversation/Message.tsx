@@ -70,6 +70,20 @@ export const Message = (initialMessage: IMessageWithResults) => {
     setMessage(updatedMessage);
   }
 
+  // Update SQL in result
+  async function updateQuerySQLResult(
+    result_id: string | undefined,
+    updatedCode: string
+  ) {
+    if (result_id === undefined) return;
+
+    const data = await api.updateResult(result_id, updatedCode);
+    if (data.status !== "ok") {
+      alert("Error updating query");
+      return;
+    }
+  }
+
   useEffect(() => {
     // Add query result to results
     if (message.results !== undefined && queryResult !== null) {
@@ -162,6 +176,9 @@ export const Message = (initialMessage: IMessageWithResults) => {
                     code={result.content as string}
                     runQuery={runQuery}
                     toggleSaveQuery={() => toggleSaveQuery(result.result_id)}
+                    updateQuery={(code: string) =>
+                      updateQuerySQLResult(result.result_id, code)
+                    }
                     runnable={!loadingQuery}
                     isSaved={result.is_saved}
                   />
