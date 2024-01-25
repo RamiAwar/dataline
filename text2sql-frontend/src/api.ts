@@ -272,6 +272,17 @@ const toggleSaveQuery = async (resultId: string) => {
   return response.data;
 };
 
+export type UpdateResultResult = { status: "ok" } | ApiError;
+const updateResult = async (resultId: string, code: string) => {
+  const response = await axios.patch<UpdateResultResult>(
+    `${baseUrl}/result/${resultId}`,
+    {
+      content: code,
+    }
+  );
+  return response.data;
+};
+
 export const api = {
   healthcheck,
   getConnection,
@@ -290,4 +301,5 @@ export const api = {
   query,
   runSQL,
   toggleSaveQuery,
+  updateResult,
 };

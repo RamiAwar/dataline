@@ -708,3 +708,12 @@ def create_result(result: UnsavedResult) -> Result:
         type=result.type,
         created_at=created_at,
     )
+
+
+def update_result_content(conn: SQLiteConnection, result_id: str, content: str) -> bool:
+    """Update the content of a result"""
+    conn.execute(
+        "UPDATE results SET content = ? WHERE id = ?",
+        (content, result_id),
+    )
+    return True

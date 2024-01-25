@@ -60,6 +60,7 @@ export const CodeBlock = ({
   language,
   runQuery,
   toggleSaveQuery,
+  updateQuery,
   runnable,
   isSaved,
 }: {
@@ -67,6 +68,7 @@ export const CodeBlock = ({
   language: IResultType;
   runQuery: (code: string) => void;
   toggleSaveQuery: () => void;
+  updateQuery: (code: string) => void;
   runnable: boolean;
   isSaved?: boolean;
 }) => {
@@ -74,12 +76,12 @@ export const CodeBlock = ({
   const [formattedCode, setFormattedCode] = useState<string>(code);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [lastChar, setLastChar] = useState<string>("");
-  let BookmarkIcon = isSaved ? BookmarkIconSolid : BookmarkIconOutline;
+  // let BookmarkIcon = isSaved ? BookmarkIconSolid : BookmarkIconOutline;
+  let BookmarkIcon = BookmarkIconOutline;
 
   useEffect(() => {
     try {
       // Do not format if whitespace characters are being typed
-      console.log(lastChar);
       if (SPACES.includes(lastChar)) {
         setFormattedCode(savedCode);
         return;
@@ -161,7 +163,7 @@ export const CodeBlock = ({
       <textarea
         spellCheck={false}
         ref={textareaRef}
-        className="absolute inset-0 resize-none bg-transparent overflow-hidden text-red-300 p-2 font-mono caret-white outline-none appearance-none"
+        className="absolute inset-0 resize-none bg-transparent overflow-hidden text-transparent p-2 font-mono caret-white outline-none appearance-none focus:outline-none"
         onChange={handleTextUpdate}
         onKeyDown={handleKeyboardInput}
       />
@@ -175,47 +177,50 @@ export const CodeBlock = ({
           background: "transparent",
         }}
       />
-      {/* TODO: Make the lower icon layer be clickthrough so we can still click on the text. Only absorb click events on the icons themselves */}
       <div className="absolute bottom-0 right-0 m-1 flex gap-1">
         {/* Save Icon */}
-        <button
-          tabIndex={-1}
-          className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out"
-        >
-          <BookmarkIcon
-            onClick={() => toggleSaveQuery()}
-            className="w-5 h-5 [&>path]:stroke-[2] group-hover:-rotate-6"
-          />
-        </button>
-
-        <CustomTooltip content="COPIED!" trigger="click">
+        <CustomTooltip content="Save" trigger="hover">
           <button
             tabIndex={-1}
-            onClick={() => copyToClipboard(savedCode)}
+            onClick={() => updateQuery(savedCode)}
             className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out"
           >
-            <ClipboardIcon className="w-5 h-5 [&>path]:stroke-[2] group-hover:-rotate-6" />
+            <BookmarkIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
 
-        <button
-          tabIndex={-1}
-          className={classNames(
-            runnable
-              ? "hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100"
-              : "",
-            "group flex ml-auto gap-2 rounded-md p-1 dark:text-gray-400 bg-gray-700 transition-all duration-150 ease-in-out"
-          )}
-          onClick={() => runQuery(savedCode)}
-          disabled={!runnable}
-        >
-          <PlayIcon
+        <CustomTooltip content="COPIED!" trigger="click">
+          <CustomTooltip content="Copy" trigger="hover">
+            <button
+              tabIndex={-1}
+              onClick={() => copyToClipboard(savedCode)}
+              className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out"
+            >
+              <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+            </button>
+          </CustomTooltip>
+        </CustomTooltip>
+
+        <CustomTooltip content="Run" trigger="hover">
+          <button
+            tabIndex={-1}
             className={classNames(
-              runnable ? "group-hover:-rotate-12" : "animate-spin",
-              "w-5 h-5 [&>path]:stroke-[2]"
+              runnable
+                ? "hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100"
+                : "",
+              "group flex ml-auto gap-2 rounded-md p-1 dark:text-gray-400 bg-gray-700 transition-all duration-150 ease-in-out"
             )}
-          />
-        </button>
+            onClick={() => runQuery(savedCode)}
+            disabled={!runnable}
+          >
+            <PlayIcon
+              className={classNames(
+                runnable ? "group-hover:-rotate-12" : "animate-spin",
+                "w-6 h-6 [&>path]:stroke-[2]"
+              )}
+            />
+          </button>
+        </CustomTooltip>
       </div>
     </div>
   );

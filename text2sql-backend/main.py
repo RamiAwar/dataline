@@ -334,6 +334,16 @@ async def toggle_save_query(result_id: str) -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.patch("/result/{result_id}")
+async def update_result_content(
+    result_id: str, content: Annotated[str, Body(embed=True)]
+) -> dict[str, str]:
+    with db.DatabaseManager() as conn:
+        db.update_result_content(conn, result_id=result_id, content=content)
+        conn.commit()
+        return {"status": "ok"}
+
+
 @app.get("/query", response_model=list[UnsavedResult])
 async def query(
     conversation_id: str, query: str, limit: int = 10, execute: bool = False
