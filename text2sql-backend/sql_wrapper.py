@@ -5,7 +5,7 @@ from collections import defaultdict
 from contextvars import ContextVar
 from typing import Any, Iterable, Literal
 
-from llama_index.langchain_helpers.sql_wrapper import SQLDatabase
+from llama_index import SQLDatabase
 from rapidfuzz import fuzz
 from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
