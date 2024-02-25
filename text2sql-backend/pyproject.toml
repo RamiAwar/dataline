@@ -10,7 +10,7 @@ packages = [{include = "text2sql_backend"}]
 python = ">=3.11,<3.12"
 fastapi = "0.100.0"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
-llama-index = "^0.8.26.post1"
+llama-index = "^0.9.42.post2"
 sqlparse = "^0.4.3"
 psycopg2 = "^2.9.6"
 pygments-pprint-sql = "^0.1.0"
@@ -28,6 +28,7 @@ nltk = "^3.8.1"
 pyvis = "^0.3.2"
 pre-commit = "^3.4.0"
 pydantic = "2.4.2"
+openai = "^1.11.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -35,6 +36,7 @@ black = "^23.3.0"
 pyinstaller = "^5.10.1"
 jupyterlab = "^4.0.5"
 mypy = "^1.6.1"
+cx-freeze = "^6.15.14"
 
 [tool.ruff]
 ignore = ["E501"]
