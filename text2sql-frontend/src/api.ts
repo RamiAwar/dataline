@@ -283,6 +283,25 @@ const updateResult = async (resultId: string, code: string) => {
   return response.data;
 };
 
+export type GetAvatarResult = { status: "ok", blob: string } | ApiError;
+const getAvatar = async () => {
+  const response = await axios.get<GetAvatarResult>(`${baseUrl}/settings/avatar`);
+  return response.data;
+};
+
+export type UpdateAvatarResult = { status: "ok", blob: string} | ApiError;
+const updateAvatar = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await axios.post<UpdateAvatarResult>(`${baseUrl}/settings/avatar`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+
+}
+
 export const api = {
   healthcheck,
   getConnection,
@@ -302,4 +321,6 @@ export const api = {
   runSQL,
   toggleSaveQuery,
   updateResult,
+  getAvatar,
+  updateAvatar,
 };

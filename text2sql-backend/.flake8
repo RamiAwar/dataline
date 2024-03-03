@@ -1,2 +1,6 @@
 [flake8]
 max-line-length = 120
+max-complexity = 10
+statistics = True
+extend-ignore = E203,E701
+exclude = .git,__pycache__,.venv,.eggs,*.egg,build,dist,docs,examples,venv

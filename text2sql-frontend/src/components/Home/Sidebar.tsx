@@ -218,7 +218,7 @@ export const Sidebar = () => {
                       <li>
                         <hr className="border-gray-800 -mt-2 mb-4" />
                         {/* Section for saved queries and dashboards */}
-                        <ul role="list" className="-mx-2 space-y-1">
+                        {/* <ul role="list" className="-mx-2 space-y-1">
                           <li key="saved-queries">
                             <Link
                               to="/queries"
@@ -233,7 +233,7 @@ export const Sidebar = () => {
                               </span>
                             </Link>
                           </li>
-                        </ul>
+                        </ul> */}
                       </li>
                     </ul>
                   </nav>
@@ -355,7 +355,7 @@ export const Sidebar = () => {
               </li>
               <hr className="border-gray-800 mt-1" />
               {/* Section for saved queries and dashboards */}
-              <ul role="list" className="-mx-4 space-y-1">
+              {/* <ul role="list" className="-mx-4 space-y-1">
                 <li key="saved-queries">
                   <Link
                     to="/queries"
@@ -370,7 +370,7 @@ export const Sidebar = () => {
                     </span>
                   </Link>
                 </li>
-                {/* <li key="dashboards" className="-mx-4 space-y-1">
+                <li key="dashboards" className="-mx-4 space-y-1">
                   <div className="text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer">
                     <ChartBarSquareIcon
                       className="h-5 w-5 shrink-0"
@@ -380,8 +380,8 @@ export const Sidebar = () => {
                       Dashboards
                     </span>
                   </div>
-                </li> */}
-              </ul>
+                </li>
+              </ul> */}
               <li className="-mx-6 mt-auto">
                 <div className="flex items-center gap-x-4 px-4 py-4 text-md font-medium leading-6 text-white cursor-pointer">
                   <ProfileDropdown topRight={true}></ProfileDropdown>
