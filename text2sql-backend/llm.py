@@ -3,7 +3,7 @@ from typing import Iterator, Literal
 
 import openai
 
-from openai_utils.types import LLMApiProtocol, TMessage
+from dataline.openai_utils.types import LLMApiProtocol, TMessage
 
 
 class ChatLLM:

@@ -31,7 +31,6 @@ export const ConnectionListProvider = ({
     api
       .listConnections()
       .then((response) => {
-        console.log("HERE", response);
         if (response.status === "ok") {
           setConnections(response.connections);
         } else {

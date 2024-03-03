@@ -5,8 +5,7 @@ import { BetaSignup } from "./components/BetaSignup/BetaSignup";
 import { Conversation } from "./components/Conversation/Conversation";
 import { ConnectionSelector } from "./components/Connection/ConnectionSelector";
 import { ConnectionEditor } from "./components/Connection/ConnectionEditor";
-import { SignIn } from "./components/Authentication/SignIn";
-import Account from "./components/Home/Profile";
+import Account from "./components/Settings/Settings";
 
 export enum Routes {
   Root = "/",
@@ -51,11 +50,7 @@ let private_routes = [
         element: <Account />,
       },
     ],
-  },
-  {
-    path: Routes.SignIn,
-    element: <SignIn />,
-  },
+  }
 ];
 
 if (process.env.NODE_ENV === "local") {

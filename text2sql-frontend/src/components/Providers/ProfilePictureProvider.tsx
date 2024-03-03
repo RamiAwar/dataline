@@ -1,17 +1,18 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { IConversationResult } from "../Library/types";
 import { api } from "../../api";
-import { useAuth } from "../Providers/AuthProvider";
-import { supabase } from "../../supabase";
+import { Buffer } from 'buffer';
 
 type ProfilePictureContextType = [
   string | null,
-  React.Dispatch<React.SetStateAction<string | null>>
+  React.Dispatch<React.SetStateAction<string | null>>,
+  (blob: string) => Promise<void>
 ];
 
 const ProfilePictureContext = createContext<ProfilePictureContextType>([
   null,
   () => {},
+  async () => {}
 ]);
 
 export const useProfilePicture = () => {
@@ -29,29 +30,43 @@ export const ProfilePictureProvider = ({
 }: React.PropsWithChildren) => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  const { profile } = useAuth();
+  async function decodeBase64Data(base64Data: string) {
+    const byteCharacters = Buffer.from(base64Data, "base64").toString("binary");
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = Uint8Array.from(byteNumbers);
+    const blob = new Blob([byteArray])
+    const url = URL.createObjectURL(blob);
+    return url;
+  }
 
-  async function downloadImage(path: string) {
+  async function getAvatar() {
     try {
-      const { data, error } = await supabase.storage
-        .from("avatars")
-        .download(path);
-      if (error) {
-        throw error;
+      const response = await api.getAvatar();
+      if (response.status !== "ok") {
+        console.log("Error downloading image: ", response.message);
+        return;
       }
-      const url = URL.createObjectURL(data);
-      setAvatarUrl(url);
+
+      setAvatarBlob(response.blob);
     } catch (error) {
       console.log("Error downloading image: ", error);
     }
   }
 
+  async function setAvatarBlob(blob: string) {
+    const url = await decodeBase64Data(blob);
+    setAvatarUrl(url);
+  }
+
   useEffect(() => {
-    if (profile?.avatarUrl) downloadImage(profile.avatarUrl);
-  }, [profile]);
+    getAvatar();
+  }, []);
 
   return (
-    <ProfilePictureContext.Provider value={[avatarUrl, setAvatarUrl]}>
+    <ProfilePictureContext.Provider value={[avatarUrl, setAvatarUrl, setAvatarBlob]}>
       {children}
     </ProfilePictureContext.Provider>
   );

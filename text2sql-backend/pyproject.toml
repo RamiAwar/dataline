@@ -15,11 +15,10 @@ sqlparse = "^0.4.3"
 psycopg2 = "^2.9.6"
 pygments-pprint-sql = "^0.1.0"
 sql-formatter = "^0.6.2"
-pytest = "^6.2.4"
 pymysql = "^1.0.3"
 cryptography = "^40.0.2"
 sse-starlette = "^1.6.0"
-sqlalchemy = "^2.0.13"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.27"}
 rapidfuzz = "^3.0.0"
 psycopg = {extras = ["pool"], version = "^3.1.9"}
 sql-metadata = "^2.8.0"
@@ -29,14 +28,21 @@ pyvis = "^0.3.2"
 pre-commit = "^3.4.0"
 pydantic = "2.4.2"
 openai = "^1.11.0"
+python-multipart = "^0.0.9"
+aiosqlite = "^0.20.0"
+alembic = "^1.13.1"
+pydantic-settings = "^2.2.1"
 
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
 pyinstaller = "^5.10.1"
+pytest = "^8.0.2"
 jupyterlab = "^4.0.5"
 mypy = "^1.6.1"
 cx-freeze = "^6.15.14"
+pytest-asyncio = "^0.23.5"
+
 
 [tool.ruff]
 ignore = ["E501"]

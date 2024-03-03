@@ -17,6 +17,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
 import db
+from dataline.api.settings.router import router as settings_router
 from errors import NotFoundError
 from models import (
     Connection,
@@ -98,6 +99,9 @@ class ConnectRequest(BaseModel):
             )
 
         return value
+
+
+app.include_router(settings_router)
 
 
 # TODO: Response model
