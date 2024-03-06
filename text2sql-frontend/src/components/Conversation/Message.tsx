@@ -28,6 +28,10 @@ export const Message = (initialMessage: IMessageWithResults) => {
       const executeSQL = async () => {
         if (initialMessage.conversation_id === undefined) return;
         const data = await api.runSQL(initialMessage.conversation_id, code);
+        if (data.status !== "ok") {
+          alert("Error running query");
+          return;
+        }
         setQueryResult(data.data.content);
       };
       executeSQL();

@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import re
-from typing import Annotated, Any, Awaitable, Callable
+from typing import Annotated, Awaitable, Callable
 
 import uvicorn
 from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
@@ -21,8 +21,14 @@ from dataline.api.settings.router import router as settings_router
 from errors import NotFoundError
 from models import (
     Connection,
+    ConversationWithMessagesWithResults,
     DataResult,
+    ErrorResponse,
+    MessageWithResults,
     Result,
+    StatusType,
+    SuccessResponse,
+    TableSchema,
     UnsavedResult,
     UpdateConnectionRequest,
     UpdateConversationRequest,
@@ -104,15 +110,13 @@ class ConnectRequest(BaseModel):
 app.include_router(settings_router)
 
 
-# TODO: Response model
-@app.get("/healthcheck")
-async def healthcheck() -> dict[str, str]:
-    return {"status": "ok"}
+@app.get("/healthcheck", response_model_exclude_none=True)
+async def healthcheck() -> SuccessResponse[None] | ErrorResponse:
+    return SuccessResponse(status=StatusType.ok)
 
 
-# TODO: Add response models
-@app.post("/connect")
-async def connect_db(req: ConnectRequest) -> dict[str, str]:
+@app.post("/connect", response_model_exclude_none=True)
+async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | ErrorResponse:
     # Try to connect to provided dsn
     try:
         engine = create_engine(req.dsn)
@@ -120,13 +124,20 @@ async def connect_db(req: ConnectRequest) -> dict[str, str]:
             pass
     except OperationalError as e:
         logger.error(e)
-        return {"status": "error", "message": "Failed to connect to database"}
+        return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
 
     # Check if connection with DSN already exists, then return connection_id
     try:
         existing_connection = db.get_connection_from_dsn(req.dsn)
         if existing_connection:
-            return {"status": "ok", "connection_id": existing_connection.id}
+            # return {"status": "ok", "connection_id": existing_connection.id}
+            return SuccessResponse(
+                status=StatusType.ok,
+                data={
+                    "connection_id": existing_connection.id,
+                },
+            )
+
     except NotFoundError:
         pass
 
@@ -150,35 +161,48 @@ async def connect_db(req: ConnectRequest) -> dict[str, str]:
         SchemaService.create_or_update_tables(conn, connection_id)
         conn.commit()  # only commit if all step were successful
 
-    return {
-        "status": "ok",
-        "connection_id": connection_id,
-        "database": database,
-        "dialect": dialect,
-    }
+    return SuccessResponse(
+        status=StatusType.ok,
+        data={
+            "connection_id": connection_id,
+            "database": database,
+            "dialect": dialect,
+        },
+    )
 
 
-# TODO: Add response model
+class ConnectionsOut(BaseModel):
+    connections: list[Connection]
+
+
 @app.get("/connections")
-async def get_connections() -> dict[str, Any]:
-    return {
-        "status": "ok",
-        "connections": db.get_connections(),
-    }
+async def get_connections() -> SuccessResponse[ConnectionsOut] | ErrorResponse:
+    return SuccessResponse(
+        status=StatusType.ok,
+        data=ConnectionsOut(
+            connections=db.get_connections(),
+        ),
+    )
+
+
+class TableSchemasOut(BaseModel):
+    tables: list[TableSchema]
 
 
 @app.get("/connection/{connection_id}/schemas")
-async def get_table_schemas(connection_id: str) -> dict[str, Any]:
+async def get_table_schemas(connection_id: str) -> SuccessResponse[TableSchemasOut] | ErrorResponse:
     # Check for connection existence
     with db.DatabaseManager() as conn:
         connection = db.get_connection(conn, connection_id)
         if not connection:
-            return {"status": "error", "message": "Invalid connection_id"}
+            return ErrorResponse(data="Invalid connection_id")
 
-        return {
-            "status": "ok",
-            "tables": db.get_table_schemas_with_descriptions(connection_id),
-        }
+        return SuccessResponse(
+            status=StatusType.ok,
+            data=TableSchemasOut(
+                tables=db.get_table_schemas_with_descriptions(connection_id),
+            ),
+        )
 
 
 @app.patch("/schemas/table/{table_id}")
@@ -186,9 +210,7 @@ async def update_table_schema_description(
     table_id: str, description: Annotated[str, Body(embed=True)]
 ) -> dict[str, str]:
     with db.DatabaseManager() as conn:
-        db.update_schema_table_description(
-            conn, table_id=table_id, description=description
-        )
+        db.update_schema_table_description(conn, table_id=table_id, description=description)
         conn.commit()
 
     return {"status": "ok"}
@@ -199,27 +221,31 @@ async def update_table_schema_field_description(
     field_id: str, description: Annotated[str, Body(embed=True)]
 ) -> dict[str, str]:
     with db.DatabaseManager() as conn:
-        db.update_schema_table_field_description(
-            conn, field_id=field_id, description=description
-        )
+        db.update_schema_table_field_description(conn, field_id=field_id, description=description)
         conn.commit()
 
     return {"status": "ok"}
 
 
+class ConnectionOut(BaseModel):
+    connection: Connection
+
+
 @app.get("/connection/{connection_id}")
-async def get_connection(connection_id: str) -> dict[str, Any]:
+async def get_connection(connection_id: str) -> SuccessResponse[ConnectionOut] | ErrorResponse:
     with db.DatabaseManager() as conn:
-        return {
-            "status": "ok",
-            "connection": db.get_connection(conn, connection_id),
-        }
+        return SuccessResponse(
+            status=StatusType.ok,
+            data=ConnectionOut(
+                connection=db.get_connection(conn, connection_id),
+            ),
+        )
 
 
 @app.patch("/connection/{connection_id}")
 async def update_connection(
     connection_id: str, req: UpdateConnectionRequest
-) -> dict[str, Any]:
+) -> SuccessResponse[ConnectionOut] | ErrorResponse:
     # Try to connect to provided dsn
     try:
         engine = create_engine(req.dsn)
@@ -227,7 +253,7 @@ async def update_connection(
             pass
     except OperationalError as e:
         logger.error(e)
-        return {"status": "error", "message": "Failed to connect to database"}
+        return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
 
     # Update connection only if success
     dialect = engine.url.get_dialect().name
@@ -240,38 +266,59 @@ async def update_connection(
         name=req.name,
         dialect=dialect,
     )
-    return {
-        "status": "ok",
-        "connection": Connection(
-            id=connection_id,
-            dsn=req.dsn,
-            database=database,
-            name=req.name,
-            dialect=dialect,
+
+    return SuccessResponse(
+        status=StatusType.ok,
+        data=ConnectionOut(
+            connection=Connection(
+                id=connection_id,
+                dsn=req.dsn,
+                database=database,
+                name=req.name,
+                dialect=dialect,
+            ),
         ),
-    }
+    )
+
+
+class ConversationsOut(BaseModel):
+    conversations: list[ConversationWithMessagesWithResults]
 
 
 @app.get("/conversations")
-async def conversations() -> dict[str, Any]:
-    return {
-        "status": "ok",
-        "conversations": db.get_conversations_with_messages_with_results(),
-    }
+async def conversations() -> SuccessResponse[ConversationsOut] | ErrorResponse:
+    return SuccessResponse(
+        status=StatusType.ok,
+        data=ConversationsOut(
+            conversations=db.get_conversations_with_messages_with_results(),
+        ),
+    )
+
+
+class CreateConversationIn(BaseModel):
+    connection_id: str
+    name: str
+
+
+class CreateConversationOut(BaseModel):
+    conversation_id: int
 
 
 @app.post("/conversation")
 async def create_conversation(
-    connection_id: Annotated[str, Body()], name: Annotated[str, Body()]
-) -> dict[str, Any]:
-    conversation_id = db.create_conversation(connection_id=connection_id, name=name)
-    return {"status": "ok", "conversation_id": conversation_id}
+    conversation: CreateConversationIn,
+) -> SuccessResponse[CreateConversationOut] | ErrorResponse:
+    conversation_id = db.create_conversation(connection_id=conversation.connection_id, name=conversation.name)
+    return SuccessResponse(
+        status=StatusType.ok,
+        data=CreateConversationOut(
+            conversation_id=conversation_id,
+        ),
+    )
 
 
 @app.patch("/conversation/{conversation_id}")
-async def update_conversation(
-    conversation_id: str, req: UpdateConversationRequest
-) -> dict[str, str]:
+async def update_conversation(conversation_id: str, req: UpdateConversationRequest) -> dict[str, str]:
     db.update_conversation(conversation_id=conversation_id, name=req.name)
     return {"status": "ok"}
 
@@ -282,15 +329,24 @@ async def delete_conversation(conversation_id: str) -> dict[str, str]:
     return {"status": "ok"}
 
 
+class ListMessageOut(BaseModel):
+    messages: list[MessageWithResults]
+
+
 @app.get("/messages")
-async def messages(conversation_id: str) -> dict[str, Any]:
-    return {"status": "ok", "messages": db.get_messages_with_results(conversation_id)}
+async def messages(conversation_id: str) -> SuccessResponse[ListMessageOut] | ErrorResponse:
+    return SuccessResponse(
+        status=StatusType.ok,
+        data=ListMessageOut(
+            messages=db.get_messages_with_results(conversation_id),
+        ),
+    )
 
 
 @app.get("/execute-sql", response_model=UnsavedResult)
 async def execute_sql(
     conversation_id: str, sql: str, limit: int = 10, execute: bool = True
-) -> dict[str, str] | Response:
+) -> Response | ErrorResponse:
     request_limit.set(limit)
     request_execute.set(execute)
 
@@ -300,7 +356,7 @@ async def execute_sql(
         connection_id = conversation.connection_id
         connection = db.get_connection(conn, connection_id)
         if not connection:
-            return {"status": "error", "message": "Invalid connection_id"}
+            return ErrorResponse(status=StatusType.error, data="Invalid connection_id")
 
         query_service = QueryService(connection)
 
@@ -311,6 +367,7 @@ async def execute_sql(
             rows = [data["columns"]]
             rows.extend([x for x in r] for r in data["result"])
 
+            # TODO: Try to remove custom encoding from here
             return Response(
                 content=json.dumps(
                     {
@@ -326,32 +383,29 @@ async def execute_sql(
                 media_type="application/json",
             )
         else:
-            return Response(
-                content=json.dumps({"status": "error", "message": "No results found"}),
-                media_type="application/json",
-            )
+            return ErrorResponse(data="No results found")
 
 
 @app.get("/toggle-save-query/{result_id}")
-async def toggle_save_query(result_id: str) -> dict[str, str]:
+async def toggle_save_query(result_id: str) -> SuccessResponse[None] | ErrorResponse:
     db.toggle_save_query(result_id=result_id)
-    return {"status": "ok"}
+    return SuccessResponse()
 
 
 @app.patch("/result/{result_id}")
 async def update_result_content(
     result_id: str, content: Annotated[str, Body(embed=True)]
-) -> dict[str, str]:
+) -> SuccessResponse[None] | ErrorResponse:
     with db.DatabaseManager() as conn:
         db.update_result_content(conn, result_id=result_id, content=content)
         conn.commit()
-        return {"status": "ok"}
+        return SuccessResponse()
 
 
 @app.get("/query", response_model=list[UnsavedResult])
 async def query(
     conversation_id: str, query: str, limit: int = 10, execute: bool = False
-) -> dict[str, str] | Response:
+) -> dict[str, str] | Response | ErrorResponse:
     request_limit.set(limit)
     request_execute.set(execute)
 
@@ -363,7 +417,7 @@ async def query(
         connection_id = conversation.connection_id
         connection = db.get_connection(conn, connection_id)
         if not connection:
-            return {"status": "error", "message": "Invalid connection_id"}
+            return ErrorResponse(status=StatusType.error, data="Invalid connection_id")
 
         query_service = QueryService(connection=connection, model_name="gpt-3.5-turbo")
         response = query_service.query(query, conversation_id=conversation_id)
@@ -405,7 +459,7 @@ async def query(
 
         return Response(
             content=json.dumps(
-                {"status": "ok", "message": saved_message},
+                {"status": "ok", "data": {"message": saved_message}},
                 default=pydantic_encoder,
                 indent=4,
             ),
@@ -413,7 +467,7 @@ async def query(
         )
 
 
-def sql2html(sql) -> str:
+def sql2html(sql: str) -> str:
     return highlight(sql, lexer, formatters.HtmlFormatter())
 
 

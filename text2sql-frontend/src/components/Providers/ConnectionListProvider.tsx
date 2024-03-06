@@ -32,7 +32,7 @@ export const ConnectionListProvider = ({
       .listConnections()
       .then((response) => {
         if (response.status === "ok") {
-          setConnections(response.connections);
+          setConnections(response.data.connections);
         } else {
           alert("Error loading connections");
         }

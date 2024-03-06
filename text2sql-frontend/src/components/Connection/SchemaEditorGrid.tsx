@@ -32,7 +32,7 @@ export default function SchemaEditorGrid({
         alert("Error fetching connection");
         return;
       }
-      setTableSchemas(fetchedSchemas.tables);
+      setTableSchemas(fetchedSchemas.data.tables);
     };
     fetchTableSchemas();
   }, [connection.id]);

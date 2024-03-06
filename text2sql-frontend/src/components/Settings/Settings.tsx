@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { UserCircleIcon } from '@heroicons/react/20/solid'
 import { useProfilePicture } from "../Providers/ProfilePictureProvider";
 import { api } from "@/api";
+import MaskedInput from "./MaskedInput";
 
 
 export default function Account() {
@@ -26,7 +27,7 @@ export default function Account() {
       // Update profile avatar URL
       let response = await api.updateAvatar(file);
       if (response.status === "ok") {
-        setAvatarBlob(response.blob);
+        setAvatarBlob(response.data.blob);
       }
     } finally {
       setUploading(false);
@@ -130,14 +131,7 @@ export default function Account() {
                         API Key
                       </label>
                       <div className="mt-2">
-                        <input
-                          pattern="[A-Za-z0-9]{8,16}"
-                          id="current-password"
-                          name="current_password"
-                          type="password"
-                          autoComplete="current-password"
-                          className="block w-full rounded-md border-0 bg-white/5 py-1.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
-                        />
+                        <MaskedInput></MaskedInput>
                       </div>
                     </div>
                   </div>

@@ -54,10 +54,55 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.mypy]
+plugins = "pydantic.mypy"
+
+show_error_codes = true
+
+disallow_any_unimported = false
+disallow_any_expr = false
+disallow_any_decorated = false
+disallow_any_explicit = true
+disallow_any_generics = true
+disallow_subclassing_any = false
+
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = false
+
+no_implicit_optional = true
+no_implicit_reexport = true
+strict_optional = true
+
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unused_configs = true
+warn_return_any = false
+warn_unreachable = true
+
 exclude = [
     '^bruno/*$',  # TOML literal string (single-quotes, no escaping necessary)
     "^notebooks/*$",  # TOML basic string (double-quotes, backslash and other characters need escaping)
     "^scripts/*$",
     "^hooks/*$",
     "^notebooks/*$",
+    "^__pycache__/*$",
+    "^venv/*$",
+    "^build/*$",
 ]
+
+[[tool.mypy.overrides]]
+module = [
+    "async_asgi_testclient",
+    # https://github.com/hephex/asyncache/issues/14
+    "asyncache",
+    "deepmerge",
+]
+
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true

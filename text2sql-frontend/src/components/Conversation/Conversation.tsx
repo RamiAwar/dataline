@@ -43,7 +43,7 @@ export const Conversation = () => {
         alert("Error querying database");
         return;
       }
-      const message = res.message;
+      const message = res.data.message;
       setMessages((prevMessages) => [...prevMessages.slice(0, -1), message]);
     })();
   }
@@ -51,7 +51,11 @@ export const Conversation = () => {
   useEffect(() => {
     const loadMessages = async () => {
       const messages = await api.getMessages(params.conversationId as string);
-      setMessages(messages.messages);
+      if (messages.status !== "ok") {
+        alert("Error fetching messages");
+        return;
+      }
+      setMessages(messages.data.messages);
     };
     loadMessages();
   }, [params]);

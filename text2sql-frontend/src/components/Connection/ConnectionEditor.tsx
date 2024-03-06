@@ -68,10 +68,10 @@ export const ConnectionEditor = () => {
         alert("Error fetching connection");
         return;
       }
-      setConnection(fetchedConnection.connection);
+      setConnection(fetchedConnection.data.connection);
       setEditFields({
-        name: fetchedConnection.connection.name,
-        dsn: fetchedConnection.connection.dsn,
+        name: fetchedConnection.data.connection.name,
+        dsn: fetchedConnection.data.connection.dsn,
       });
     };
     fetchConnection();
