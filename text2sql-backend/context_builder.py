@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 
 
 class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
-
     """SQLContextContainerBuilder.
 
     Build a SQLContextContainer that can be passed to the SQL index
@@ -45,6 +44,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         self,
         connection: Connection,
         sql_database: CustomSQLDatabase,
+        openai_api_key: str,
         context_dict: Optional[dict[str, str]] = None,
         context_str: Optional[str] = None,
         model: Optional[str] = "gpt-4",
@@ -54,7 +54,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         """Initialize params."""
         self.connection: Connection = connection
         self.sql_database = sql_database
-        self.llm = ChatLLM(model=model, temperature=temperature)
+        self.llm = ChatLLM(model=model, openai_api_key=openai_api_key, temperature=temperature)
 
         # If context_dict provided, validate that all keys are valid table names
         if context_dict is not None:
@@ -79,7 +79,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         descriptions = db.get_table_schemas_with_descriptions(self.connection.id)
         return self.sql_database.get_schema_with_user_descriptions(descriptions)
 
-    def get_relevant_table_context(
+    async def get_relevant_table_context(  # type: ignore[misc]
         self,
         query_str: Union[str, QueryBundle],
         message_history: Optional[list[dict]] = [],
@@ -113,7 +113,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             )
 
         # Query LLM
-        response = self.llm.query(query=context_query_str, message_history=message_history)
+        response = await self.llm.query(query=context_query_str, message_history=message_history)
 
         # Validate table names
         try:
@@ -124,7 +124,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
             logger.debug("\n\n------------------\n\n")
             logger.debug(f"Reasking with query: {context_query_str}")
             logger.debug("\n\n------------------\n\n")
-            response = self.llm.query(query=context_query_str, message_history=message_history)
+            response = await self.llm.query(query=context_query_str, message_history=message_history)
 
         # Check if any table names are invalid
         invalid_table_names = [
@@ -151,7 +151,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
                 logger.debug("\n\n------------------\n\n")
                 logger.debug(f"Invalid table names: Reasking with query: {context_query_str}")
                 logger.debug("\n\n------------------\n\n")
-                response = self.llm.query(query=context_query_str, message_history=message_history)
+                response = await self.llm.query(query=context_query_str, message_history=message_history)
 
                 table_names = [s.strip() for s in str(response).strip().split(",")]
                 if any(table_name not in self.sql_database.get_table_names() for table_name in table_names):

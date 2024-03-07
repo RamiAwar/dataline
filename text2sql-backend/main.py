@@ -6,7 +6,7 @@ import re
 from typing import Annotated, Awaitable, Callable
 
 import uvicorn
-from fastapi import Body, FastAPI, Header, HTTPException, Request, Response
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
@@ -18,6 +18,8 @@ from sqlalchemy.exc import OperationalError
 
 import db
 from dataline.api.settings.router import router as settings_router
+from dataline.repositories.base import AsyncSession, get_session
+from dataline.services.settings import SettingsService
 from errors import NotFoundError
 from models import (
     Connection,
@@ -345,7 +347,12 @@ async def messages(conversation_id: str) -> SuccessResponse[ListMessageOut] | Er
 
 @app.get("/execute-sql", response_model=UnsavedResult)
 async def execute_sql(
-    conversation_id: str, sql: str, limit: int = 10, execute: bool = True
+    conversation_id: str,
+    sql: str,
+    limit: int = 10,
+    execute: bool = True,
+    session: AsyncSession = Depends(get_session),
+    settings_service: SettingsService = Depends(SettingsService),
 ) -> Response | ErrorResponse:
     request_limit.set(limit)
     request_execute.set(execute)
@@ -358,7 +365,8 @@ async def execute_sql(
         if not connection:
             return ErrorResponse(status=StatusType.error, data="Invalid connection_id")
 
-        query_service = QueryService(connection)
+        openai_key = await settings_service.get_openai_api_key(session)
+        query_service = QueryService(connection, openai_api_key=openai_key)
 
         # Execute query
         data = query_service.run_sql(sql)
@@ -404,7 +412,12 @@ async def update_result_content(
 
 @app.get("/query", response_model=list[UnsavedResult])
 async def query(
-    conversation_id: str, query: str, limit: int = 10, execute: bool = False
+    conversation_id: str,
+    query: str,
+    limit: int = 10,
+    execute: bool = False,
+    session: AsyncSession = Depends(get_session),
+    settings_service: SettingsService = Depends(SettingsService),
 ) -> dict[str, str] | Response | ErrorResponse:
     request_limit.set(limit)
     request_execute.set(execute)
@@ -419,8 +432,9 @@ async def query(
         if not connection:
             return ErrorResponse(status=StatusType.error, data="Invalid connection_id")
 
-        query_service = QueryService(connection=connection, model_name="gpt-3.5-turbo")
-        response = query_service.query(query, conversation_id=conversation_id)
+        openai_key = await settings_service.get_openai_api_key(session)
+        query_service = QueryService(connection=connection, openai_api_key=openai_key, model_name="gpt-3.5-turbo")
+        response = await query_service.query(query, conversation_id=conversation_id)
         unsaved_results = results_from_query_response(response)
 
         # Save results before executing query if any (without data)
