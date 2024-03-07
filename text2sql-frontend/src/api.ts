@@ -283,6 +283,25 @@ const updateAvatar = async (file: File) => {
 
 }
 
+// Optional name or openai_api_key
+export type UpdateUserInfoResult = ApiResponse<void>;
+const updateUserInfo = async (options: { name?: string, openai_api_key?: string }) => {
+  const { name, openai_api_key } = options;
+  // send only the filled in fields
+  const data = {
+    ...(name && { name }),
+    ...(openai_api_key && { openai_api_key }),
+  };
+  const response = await axios.patch<UpdateUserInfoResult>(`${baseUrl}/settings/info`, data);
+  return response.data;
+}
+
+export type GetUserInfoResult = ApiResponse<{name: string, openai_api_key: string}>;
+const getUserInfo = async () => {
+  const response = await axios.get<GetUserInfoResult>(`${baseUrl}/settings/info`);
+  return response.data;
+}
+
 export const api = {
   healthcheck,
   getConnection,
@@ -304,4 +323,6 @@ export const api = {
   updateResult,
   getAvatar,
   updateAvatar,
+  updateUserInfo,
+  getUserInfo,
 };
