@@ -345,7 +345,7 @@ def update_schema_table_field_description(conn: sqlite3.Connection, field_id: st
 # Conversation logic
 def get_conversation(conversation_id: str) -> Conversation:
     conversation = conn.execute(
-        "SELECT conversation_id, connection_id, name, created_at FROM conversations WHERE conversation_id = ?",
+        "SELECT id, connection_id, name, created_at FROM conversations WHERE id = ?",
         (conversation_id,),
     ).fetchone()
     return Conversation(
@@ -357,9 +357,7 @@ def get_conversation(conversation_id: str) -> Conversation:
 
 
 def get_conversations() -> list[Conversation]:
-    conversations = conn.execute(
-        "SELECT conversation_id, connection_id, name, created_at FROM conversations"
-    ).fetchall()
+    conversations = conn.execute("SELECT id, connection_id, name, created_at FROM conversations").fetchall()
     return [
         Conversation(
             conversation_id=conversation[0],
@@ -373,7 +371,7 @@ def get_conversations() -> list[Conversation]:
 
 def get_conversations_with_messages_with_results() -> list[ConversationWithMessagesWithResults]:
     conversations = conn.execute(
-        "SELECT conversation_id, connection_id, name, created_at FROM conversations ORDER BY created_at DESC"
+        "SELECT id, connection_id, name, created_at FROM conversations ORDER BY created_at DESC"
     ).fetchall()
 
     conversations_with_messages_with_results = []
@@ -451,7 +449,7 @@ def delete_conversation(conversation_id: str) -> None:
         "DELETE FROM messages WHERE id IN (SELECT message_id FROM conversation_messages WHERE conversation_id = ?)",
         (conversation_id,),
     )
-    conn.execute("DELETE FROM conversations WHERE conversation_id = ?", (conversation_id,))
+    conn.execute("DELETE FROM conversations WHERE id = ?", (conversation_id,))
     conn.execute(
         "DELETE FROM conversation_messages WHERE conversation_id = ?",
         (conversation_id,),
@@ -475,7 +473,7 @@ def create_conversation(connection_id: str, name: str) -> int:
 
 def update_conversation(conversation_id: str, name: str) -> Literal[True]:
     conn.execute(
-        "UPDATE conversations SET name = ? WHERE conversation_id = ?",
+        "UPDATE conversations SET name = ? WHERE id = ?",
         (name, conversation_id),
     )
     conn.commit()
