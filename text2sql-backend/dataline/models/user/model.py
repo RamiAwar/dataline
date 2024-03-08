@@ -1,10 +1,10 @@
 from sqlalchemy import String
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped
 
-from dataline.models.base import DBModel
+from dataline.models.base import DBModel, UUIDMixin
 
 
-class UserModel(DBModel):
+class UserModel(DBModel, UUIDMixin):
     __tablename__ = "user"
-    name = mapped_column("name", String(100), nullable=True)
-    openai_api_key = mapped_column("openai_api_key", String, nullable=True)
+    name: Mapped[str | None] = mapped_column("name", String(100), nullable=True)
+    openai_api_key: Mapped[str | None] = mapped_column("openai_api_key", String, nullable=True)

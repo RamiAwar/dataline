@@ -24,7 +24,7 @@ def upgrade() -> None:
         "media",
         sa.Column("key", sa.String(), nullable=False),
         sa.Column("blob", sa.LargeBinary(), nullable=False),
-        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("id", sa.Uuid(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###

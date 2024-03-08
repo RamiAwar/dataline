@@ -25,7 +25,7 @@ def upgrade() -> None:
         "user",
         sa.Column("name", sa.String(length=100), nullable=True),
         sa.Column("openai_api_key", sa.String(), nullable=True),
-        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("id", sa.Uuid(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###
