@@ -46,7 +46,10 @@ pytest-asyncio = "^0.23.5"
 
 [tool.ruff]
 ignore = ["E501"]
+line-length = 120
 
+[tool.black]
+line-length = 120
 
 [build-system]
 requires = ["poetry-core"]
@@ -106,3 +109,7 @@ module = [
 init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
+
+[tool.pylint.messages_control]
+max-line-length = 120
+disable = ["missing-class-docstring", "missing-function-docstring", "invalid-name", "unspecified-encoding", "missing-module-docstring"]

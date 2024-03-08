@@ -418,7 +418,7 @@ async def query(
     execute: bool = False,
     session: AsyncSession = Depends(get_session),
     settings_service: SettingsService = Depends(SettingsService),
-) -> dict[str, str] | Response | ErrorResponse:
+) -> Response | ErrorResponse:
     request_limit.set(limit)
     request_execute.set(execute)
 
