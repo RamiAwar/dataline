@@ -9,23 +9,27 @@ import { IEditConnection } from "./components/Library/types";
 
 const baseUrl = "http://localhost:7377";
 
-type ApiError = {
+
+type SuccessResponse<T> = {
+  status: "ok";
+  data: T;
+};
+
+type ErrorResponse = {
   status: "error";
-  message: string;
+  data: string;
 };
 
-interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-}
+type ApiResponse<T> = SuccessResponse<T> | ErrorResponse;
 
-export const isApiError = <T>(result: T | ApiError): result is ApiError => {
-  return (result as ApiError).status === "error";
-};
 
+// interface AuthTokens {
+//   accessToken: string;
+//   refreshToken: string;
+// }
 // Create wrapper around axios get/post/patch/delete to add auth tokens as headers and forward types
 // const get = async <T>(url: string, tokens: AuthTokens): Promise<T> => {
-//   const response = await axios.get<T>(url, {
+  //   const response = await axios.get<T>(url, {
 //     headers: {
 //       "X-Access-Token": tokens.accessToken,
 //       "X-Refresh-Token": tokens.refreshToken,
@@ -48,13 +52,19 @@ export const isApiError = <T>(result: T | ApiError): result is ApiError => {
 //   return response.data;
 // };
 
-type HealthcheckResult = { status: "ok" } | ApiError;
+type HealthcheckResult = ApiResponse<void>;
 const healthcheck = async (): Promise<HealthcheckResult> => {
   const response = await axios.get<HealthcheckResult>(`${baseUrl}/healthcheck`);
   return response.data;
 };
 
-type ConnectResult = { status: "ok"; connection_id: string } | ApiError;
+
+type Connection = {
+  connection_id: string;
+  database?: string;
+  dialect?: string;
+}
+type ConnectResult = ApiResponse<Connection>;
 const createConnection = async (
   connectionString: string,
   name: string
@@ -66,6 +76,7 @@ const createConnection = async (
   return response.data;
 };
 
+
 export type ConnectionResult = {
   id: string;
   dsn: string;
@@ -73,9 +84,7 @@ export type ConnectionResult = {
   name: string;
   dialect: string;
 };
-export type ListConnectionsResult =
-  | { status: "ok"; connections: ConnectionResult[] }
-  | ApiError;
+export type ListConnectionsResult = ApiResponse<{connections: ConnectionResult[]}>;
 const listConnections = async (): Promise<ListConnectionsResult> => {
   const response = await axios.get<ListConnectionsResult>(
     `${baseUrl}/connections`
@@ -83,9 +92,7 @@ const listConnections = async (): Promise<ListConnectionsResult> => {
   return response.data;
 };
 
-export type GetConnectionResult =
-  | { status: "ok"; connection: ConnectionResult }
-  | ApiError;
+export type GetConnectionResult = ApiResponse<{connection: ConnectionResult}>;
 const getConnection = async (
   connectionId: string
 ): Promise<GetConnectionResult> => {
@@ -95,9 +102,7 @@ const getConnection = async (
   return response.data;
 };
 
-export type UpdateConnectionResult =
-  | { status: "ok"; connection: ConnectionResult }
-  | ApiError;
+export type UpdateConnectionResult = ApiResponse<{connection: ConnectionResult}>;
 const updateConnection = async (
   connectionId: string,
   edits: IEditConnection
@@ -109,12 +114,7 @@ const updateConnection = async (
   return response.data;
 };
 
-export type GetTableSchemasResult =
-  | {
-      status: "ok";
-      tables: ITableSchemaResult[];
-    }
-  | ApiError;
+export type GetTableSchemasResult = ApiResponse<{tables: ITableSchemaResult[]}>;
 const getTableSchemas = async (
   connectionId: string
 ): Promise<GetTableSchemasResult> => {
@@ -124,7 +124,7 @@ const getTableSchemas = async (
   return response.data;
 };
 
-export type UpdateTableSchemaDescriptionResult = { status: "ok" } | ApiError;
+export type UpdateTableSchemaDescriptionResult = ApiResponse<void>;
 const updateTableSchemaDescription = async (
   tableId: string,
   description: string
@@ -138,9 +138,7 @@ const updateTableSchemaDescription = async (
   return response.data;
 };
 
-export type UpdateTableSchemaFieldDescriptionResult =
-  | { status: "ok" }
-  | ApiError;
+export type UpdateTableSchemaFieldDescriptionResult = ApiResponse<void>;
 const updateTableSchemaFieldDescription = async (
   fieldId: string,
   description: string
@@ -154,12 +152,7 @@ const updateTableSchemaFieldDescription = async (
   return response.data;
 };
 
-export type ConversationCreationResult =
-  | {
-      status: "ok";
-      conversation_id: string;
-    }
-  | ApiError;
+export type ConversationCreationResult = ApiResponse<{conversation_id: string}>;
 const createConversation = async (connectionId: string, name: string) => {
   const response = await axios.post<ConversationCreationResult>(
     `${baseUrl}/conversation`,
@@ -171,7 +164,7 @@ const createConversation = async (connectionId: string, name: string) => {
   return response.data;
 };
 
-export type ConversationUpdateResult = { status: "ok" } | ApiError;
+export type ConversationUpdateResult = ApiResponse<void>;
 const updateConversation = async (
   conversationId: string,
   name: string
@@ -185,11 +178,7 @@ const updateConversation = async (
   return response.data;
 };
 
-export type ConversationDeletionResult =
-  | {
-      status: "ok";
-    }
-  | ApiError;
+export type ConversationDeletionResult = ApiResponse<void>;
 const deleteConversation = async (conversationId: string) => {
   const response = await axios.delete<ConversationDeletionResult>(
     `${baseUrl}/conversation/${conversationId}`
@@ -197,9 +186,7 @@ const deleteConversation = async (conversationId: string) => {
   return response.data;
 };
 
-export type ListConversations =
-  | { status: "ok"; conversations: IConversationResult[] }
-  | ApiError;
+export type ListConversations = ApiResponse<{ conversations: IConversationResult[] }>;
 const listConversations = async (): Promise<ListConversations> => {
   const response = await axios.get<ListConversations>(
     `${baseUrl}/conversations`
@@ -207,7 +194,7 @@ const listConversations = async (): Promise<ListConversations> => {
   return response.data;
 };
 
-export type MessagesResult = { messages: IMessageWithResults[] };
+export type MessagesResult = ApiResponse<{ messages: IMessageWithResults[] }>;
 const getMessages = async (conversationId: string): Promise<MessagesResult> => {
   const response = await axios.get<MessagesResult>(`${baseUrl}/messages`, {
     params: {
@@ -217,7 +204,7 @@ const getMessages = async (conversationId: string): Promise<MessagesResult> => {
   return response.data;
 };
 
-export type MessageCreationResult = { status: "ok" } | ApiError;
+export type MessageCreationResult = ApiResponse<void>
 const createMessage = async (conversationId: string, content: string) => {
   const response = await axios.post<MessageCreationResult>(
     `${baseUrl}/message`,
@@ -229,10 +216,7 @@ const createMessage = async (conversationId: string, content: string) => {
   return response.data;
 };
 
-export type QueryResult = {
-  status: "ok";
-  message: IMessageWithResults;
-};
+export type QueryResult = ApiResponse<{message: IMessageWithResults}>;
 const query = async (
   conversationId: string,
   query: string,
@@ -249,10 +233,7 @@ const query = async (
   return response.data;
 };
 
-export type RunSQLResult = {
-  status: "ok";
-  data: IResult;
-};
+export type RunSQLResult = ApiResponse<IResult>;
 const runSQL = async (conversationId: string, code: string) => {
   const response = await axios.get<RunSQLResult>(`${baseUrl}/execute-sql`, {
     params: {
@@ -264,7 +245,7 @@ const runSQL = async (conversationId: string, code: string) => {
   return response.data;
 };
 
-export type SaveQueryResult = { status: "ok" } | ApiError;
+export type SaveQueryResult = ApiResponse<void>;
 const toggleSaveQuery = async (resultId: string) => {
   const response = await axios.get<SaveQueryResult>(
     `${baseUrl}/toggle-save-query/${resultId}`
@@ -272,7 +253,7 @@ const toggleSaveQuery = async (resultId: string) => {
   return response.data;
 };
 
-export type UpdateResultResult = { status: "ok" } | ApiError;
+export type UpdateResultResult = ApiResponse<void>;
 const updateResult = async (resultId: string, code: string) => {
   const response = await axios.patch<UpdateResultResult>(
     `${baseUrl}/result/${resultId}`,
@@ -283,13 +264,13 @@ const updateResult = async (resultId: string, code: string) => {
   return response.data;
 };
 
-export type GetAvatarResult = { status: "ok", blob: string } | ApiError;
+export type GetAvatarResult = ApiResponse<{blob: string}>;
 const getAvatar = async () => {
   const response = await axios.get<GetAvatarResult>(`${baseUrl}/settings/avatar`);
   return response.data;
 };
 
-export type UpdateAvatarResult = { status: "ok", blob: string} | ApiError;
+export type UpdateAvatarResult = ApiResponse<{blob: string}>;
 const updateAvatar = async (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -300,6 +281,25 @@ const updateAvatar = async (file: File) => {
   });
   return response.data;
 
+}
+
+// Optional name or openai_api_key
+export type UpdateUserInfoResult = ApiResponse<void>;
+const updateUserInfo = async (options: { name?: string, openai_api_key?: string }) => {
+  const { name, openai_api_key } = options;
+  // send only the filled in fields
+  const data = {
+    ...(name && { name }),
+    ...(openai_api_key && { openai_api_key }),
+  };
+  const response = await axios.patch<UpdateUserInfoResult>(`${baseUrl}/settings/info`, data);
+  return response.data;
+}
+
+export type GetUserInfoResult = ApiResponse<{name: string, openai_api_key: string}>;
+const getUserInfo = async () => {
+  const response = await axios.get<GetUserInfoResult>(`${baseUrl}/settings/info`);
+  return response.data;
 }
 
 export const api = {
@@ -323,4 +323,6 @@ export const api = {
   updateResult,
   getAvatar,
   updateAvatar,
+  updateUserInfo,
+  getUserInfo,
 };

@@ -1,6 +1,6 @@
-from typing import Protocol
+from typing import Any, Callable, Coroutine, Protocol
 
-from openai import Stream
+from openai import AsyncStream
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
     ChatCompletionChunk,
@@ -20,4 +20,4 @@ TMessage = (
 
 
 class LLMApiProtocol(Protocol):
-    def __call__(self, messages: list[TMessage]) -> Stream[ChatCompletionChunk]: ...
+    def __call__(self, messages: list[TMessage]) -> Coroutine[Any, Any, AsyncStream[ChatCompletionChunk]]: ...

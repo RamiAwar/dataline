@@ -43,13 +43,13 @@ export const ConnectionSelector = () => {
 
       // and set it as the current conversation
       setConversation({
-        id: createdConversation.conversation_id,
+        id: createdConversation.data.conversation_id,
         name: "Untitled chat",
       });
 
       // fetch conversations and navigate to new conversation
       fetchConversations();
-      navigate(`/chat/${createdConversation.conversation_id}`);
+      navigate(`/chat/${createdConversation.data.conversation_id}`);
     };
 
     createConversation();

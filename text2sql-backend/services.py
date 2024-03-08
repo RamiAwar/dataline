@@ -22,9 +22,7 @@ class SQLResults(TypedDict):
 
 class SchemaService:
     @classmethod
-    def extract_tables(
-        cls, conn: Connection, connection_id: str
-    ) -> dict[str, dict[str, TableField]]:
+    def extract_tables(cls, conn: Connection, connection_id: str) -> dict[str, dict[str, TableField]]:
         # Get DSN from connection
         connection = db.get_connection(conn, connection_id)
         engine = create_engine(connection.dsn)
@@ -41,9 +39,7 @@ class SchemaService:
             for column in table.c:
                 field_name, field_type = column.name, type(column.type).__name__
                 if field_name == pk_field_name:
-                    fields[field_name] = TableField(
-                        name=field_name, type=field_type, is_primary_key=True
-                    )
+                    fields[field_name] = TableField(name=field_name, type=field_type, is_primary_key=True)
                 else:
                     if field_name in foreign_keys:
                         fk = foreign_keys[field_name].column
@@ -54,9 +50,7 @@ class SchemaService:
                             linked_table=f"{fk.table.name}.{fk.name}",
                         )
                     else:
-                        fields[field_name] = TableField(
-                            name=field_name, type=field_type
-                        )
+                        fields[field_name] = TableField(name=field_name, type=field_type)
 
             tables[table_name] = list(fields.values())
 
@@ -107,6 +101,7 @@ class QueryService:
     def __init__(
         self,
         connection: Connection,
+        openai_api_key: str,
         model_name: str = "gpt-4",
         temperature: int = 0.0,
     ) -> None:
@@ -115,16 +110,14 @@ class QueryService:
         self.insp = inspect(self.engine)
         self.table_names = self.insp.get_table_names()
         self.sql_db = CustomSQLDatabase(self.engine, include_tables=self.table_names)
-        self.context_builder = CustomSQLContextContainerBuilder(connection, self.sql_db)
+        self.context_builder = CustomSQLContextContainerBuilder(connection, self.sql_db, openai_api_key=openai_api_key)
         self.query_manager = SQLQueryManager(
-            dsn=connection.dsn, model=model_name, temperature=temperature
+            dsn=connection.dsn, openai_api_key=openai_api_key, model=model_name, temperature=temperature
         )
 
-    def get_related_tables(
-        self, query: str, message_history: list[dict] = []
-    ) -> tuple[str, list[str]]:
+    async def get_related_tables(self, query: str, message_history: list[dict] = []) -> tuple[str, list[str]]:
         # Fetch table context
-        context_str, table_names = self.context_builder.get_relevant_table_context(
+        context_str, table_names = await self.context_builder.get_relevant_table_context(
             query_str=query,
             store_context_str=True,
             message_history=message_history,
@@ -136,24 +129,18 @@ class QueryService:
 
         return context_str, table_names
 
-    def query(self, query: str, conversation_id: str) -> SQLQueryResult:
+    async def query(self, query: str, conversation_id: str) -> SQLQueryResult:
         # Query with table context
-        message_history = db.get_message_history_with_selected_tables_with_sql(
-            conversation_id
-        )
+        message_history = db.get_message_history_with_selected_tables_with_sql(conversation_id)
 
         # Fetch table context
-        context_str, table_names = self.get_related_tables(query, message_history)
+        context_str, table_names = await self.get_related_tables(query, message_history)
 
         # Add user message to message history
-        db.add_message_to_conversation(
-            conversation_id, content=query, role="user", selected_tables=table_names
-        )
+        db.add_message_to_conversation(conversation_id, content=query, role="user", selected_tables=table_names)
 
         generated_json = "".join(
-            self.query_manager.query(
-                query, table_context=context_str, message_history=message_history
-            )
+            self.query_manager.query(query, table_context=context_str, message_history=message_history)
         )
         data = json.loads(generated_json)
         result = SQLQueryResult(**data, selected_tables=table_names)
@@ -166,9 +153,7 @@ class QueryService:
                 logger.debug("Reasking...")
                 logger.debug("\n\n------------------\n\n")
                 # Reask with error
-                generated_json = "".join(
-                    self.query_manager.reask(query, result.sql, context_str, error)
-                )
+                generated_json = "".join(self.query_manager.reask(query, result.sql, context_str, error))
                 data = json.loads(generated_json)
 
                 # TODO: Add invalid SQL status to result type so it can be communicated to frontend  # noqa

@@ -46,11 +46,11 @@ export const ProfilePictureProvider = ({
     try {
       const response = await api.getAvatar();
       if (response.status !== "ok") {
-        console.log("Error downloading image: ", response.message);
+        console.log("Error downloading image: ", response.data);
         return;
       }
 
-      setAvatarBlob(response.blob);
+      setAvatarBlob(response.data.blob);
     } catch (error) {
       console.log("Error downloading image: ", error);
     }
