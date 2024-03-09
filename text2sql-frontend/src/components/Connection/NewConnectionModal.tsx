@@ -88,7 +88,17 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                       New Connection
                     </h2>
                     <p className="mt-1 text-sm leading-6 text-gray-400">
-                      Add a new database connection
+                      Add a new database connection.{" "}
+                      <a
+                        className=" underline cursor-pointer"
+                        onClick={() =>
+                          alert(
+                            "Run this command:\n```\ndocker run -p 5433:5432 --name dvdrental -d anthony2261/dvdrental_db:latest\n```\nand use this connection string:\npostgresql://postgres:dvdrental@localhost:5433/dvdrental"
+                          )
+                        }
+                      >
+                        Need to setup a quick test db?
+                      </a>
                     </p>
 
                     <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -128,9 +138,9 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                         Connection string / DSN
                       </label>
                       {/* Hidden input field overlaying the real one
-                      
+
                       <div className="relative mt-2">
-                        
+
                         <input
                           type="text"
                           autoComplete="off"
