@@ -1,8 +1,8 @@
-"""Add all models
+"""Add initial models
 
-Revision ID: fe6be904280a
-Revises: 56925bfbf7db
-Create Date: 2024-03-08 20:09:21.572802
+Revision ID: 4b26a54d861d
+Revises:
+Create Date: 2024-03-09 22:27:52.763370
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "fe6be904280a"
-down_revision: Union[str, None] = "56925bfbf7db"
+revision: str = "4b26a54d861d"
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -31,6 +31,13 @@ def upgrade() -> None:
         sa.UniqueConstraint("dsn"),
     )
     op.create_table(
+        "media",
+        sa.Column("key", sa.String(), nullable=False),
+        sa.Column("blob", sa.LargeBinary(), nullable=False),
+        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
         "messages",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
@@ -45,6 +52,13 @@ def upgrade() -> None:
         sa.Column("content", sa.Text(), nullable=False),
         sa.Column("type", sa.String(), nullable=False),
         sa.Column("created_at", sa.String(), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "user",
+        sa.Column("name", sa.String(length=100), nullable=True),
+        sa.Column("openai_api_key", sa.String(), nullable=True),
+        sa.Column("id", sa.Uuid(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -137,7 +151,9 @@ def downgrade() -> None:
     op.drop_table("saved_queries")
     op.drop_table("message_results")
     op.drop_table("conversations")
+    op.drop_table("user")
     op.drop_table("results")
     op.drop_table("messages")
+    op.drop_table("media")
     op.drop_table("connections")
     # ### end Alembic commands ###

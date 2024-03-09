@@ -35,97 +35,6 @@ class DatabaseManager:
             self.connection.close()
 
 
-# # CONNECTIONS: Create table to connections
-# conn.execute(
-#     """CREATE TABLE IF NOT EXISTS connections (
-#         id text PRIMARY KEY,
-#         dsn text UNIQUE NOT NULL,
-#         database text NOT NULL,
-#         name text,
-#         dialect text
-#     )"""
-# )
-
-# # SCHEMA TABLE: Create table to store table names in the schema with a reference to a connection
-# conn.execute(
-#     """CREATE TABLE IF NOT EXISTS schema_tables (
-#     connection_id text NOT NULL,
-#     id text PRIMARY KEY,
-#     name text NOT NULL,
-#     description text NOT NULL,
-#     FOREIGN KEY(connection_id) REFERENCES connections(id))"""
-# )
-
-# # SCHEMA FIELDS: Create table to store a reference to a table schema, table reference, field name, field type ('table' or 'field'), and a field description (text) with a reference to a connection
-# conn.execute(
-#     """CREATE TABLE IF NOT EXISTS schema_fields (id text PRIMARY KEY,
-#     table_id text NOT NULL,
-#     name text NOT NULL,
-#     type text NOT NULL,
-#     description text NOT NULL,
-#     is_primary_key boolean NOT NULL DEFAULT 0,
-#     is_foreign_key boolean NOT NULL DEFAULT 0,
-#     foreign_table text NOT NULL DEFAULT '',
-#     FOREIGN KEY(table_id) REFERENCES schema_tables(id))"""
-# )
-
-# # MESSAGES: Create table to store messages with text, role, and connection_id
-# conn.execute(
-#     """CREATE TABLE IF NOT EXISTS messages (
-#         id integer PRIMARY KEY AUTOINCREMENT,
-#         content text NOT NULL,
-#         role text NOT NULL,
-#         created_at text,
-#         selected_tables text NOT NULL DEFAULT '')"""
-# )
-
-# # RESULTS: Create table to store results
-# conn.execute(
-#     """CREATE TABLE IF NOT EXISTS results (
-#         id integer PRIMARY KEY AUTOINCREMENT,
-#         content text NOT NULL,
-#         type text NOT NULL,
-#         created_at text)"""
-# )
-
-# # SAVED_QUERIES: Create many to many table to store saved queries with a reference to a result
-# conn.execute(
-#     """CREATE TABLE IF NOT EXISTS saved_queries (
-#         result_id integer NOT NULL,
-#         name text,
-#         description text,
-#         FOREIGN KEY(result_id) REFERENCES results(id))"""
-# )
-
-# # MESSAGE_RESULTS: Create many to many table to store message with multiple results
-# conn.execute(
-#     """CREATE TABLE IF NOT EXISTS message_results (
-#         message_id integer NOT NULL,
-#         result_id integer NOT NULL,
-#         FOREIGN KEY(message_id) REFERENCES messages(id),
-#         FOREIGN KEY(result_id) REFERENCES results(id))"""
-# )
-
-# # CONVERSATIONS: Create table to store conversations with a reference to a connection, and many results, and a datetime field
-# conn.execute(
-#     """CREATE TABLE IF NOT EXISTS conversations (
-#         id integer PRIMARY KEY AUTOINCREMENT,
-#         connection_id text NOT NULL,
-#         name text NOT NULL,
-#         created_at text,
-#         FOREIGN KEY(connection_id) REFERENCES connections(id))"""
-# )
-
-# # CONVERSATION_MESSAGES: Create many to many table to store conversation with multiple messages with order
-# conn.execute(
-#     """CREATE TABLE IF NOT EXISTS conversation_messages (
-#         conversation_id integer NOT NULL,
-#         message_id integer NOT NULL,
-#         FOREIGN KEY(conversation_id) REFERENCES conversations(id),
-#         FOREIGN KEY(message_id) REFERENCES messages(id))"""
-# )
-
-
 def create_connection(
     conn: SQLiteConnection,
     dsn: str,
@@ -137,7 +46,7 @@ def create_connection(
     connection_id = str(uuid4())
 
     conn.execute(
-        "INSERT INTO connections VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO connections (id, dsn, database, name, dialect) VALUES (?, ?, ?, ?, ?)",
         (connection_id, dsn, database, name, dialect),
     )
     return connection_id
