@@ -13,7 +13,7 @@ export const Conversation = () => {
 
   // Load messages from conversation via API on load
   const [messages, setMessages] = useState<IMessageWithResults[]>([]);
-  const scrollableDiv = useRef<HTMLDivElement | null>(null);
+  const messageListRef = useRef<HTMLDivElement | null>(null);
 
   function submitQuery(value: string) {
     // Add message to messages
@@ -60,9 +60,14 @@ export const Conversation = () => {
     loadMessages();
   }, [params]);
 
-  useLayoutEffect(() => {
-    if (scrollableDiv.current !== null) {
-      scrollableDiv.current.scrollIntoView({ behavior: "instant" });
+  useEffect(() => {
+    if (messageListRef.current !== null) {
+      console.log(messageListRef.current.lastElementChild);
+      setTimeout(() => {
+        messageListRef.current?.lastElementChild?.scrollIntoView({
+          behavior: "instant",
+        });
+      }, 10);
     }
   }, [messages]);
 
@@ -70,13 +75,13 @@ export const Conversation = () => {
     <div className="bg-gray-900 w-full h-[calc(100%-4rem)] relative flex flex-col">
       <Transition
         key={params.conversationId}
-        enter="transition duration-150 ease-out transform"
-        enterFrom="opacity-0 translate-y-1/2"
-        enterTo="opacity-100 translate-y-0"
+        enter="transition duration-200"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
         show={true}
         appear={true}
       >
-        <div className="overflow-y-auto scroll-m-0 pb-36 bg-gray-900">
+        <div className="overflow-y-auto pb-36 bg-gray-900" ref={messageListRef}>
           {messages.map((message) => (
             <Message
               key={(params.conversationId as string) + message.message_id}
@@ -87,7 +92,6 @@ export const Conversation = () => {
               conversation_id={params.conversationId}
             ></Message>
           ))}
-          <div ref={scrollableDiv} />
         </div>
       </Transition>
 
