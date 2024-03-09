@@ -115,10 +115,15 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         # Query LLM
         response = await self.llm.query(query=context_query_str, message_history=message_history)
 
-        # Validate table names
         try:
-            table_names = [s.strip() for s in str(response).strip().split(",")]
-            # print("Table names chosen: ", table_names) # TODO: Turn into event
+            table_names = []
+            split_response = str(response).strip().split(",")
+            for table_name in split_response:
+                # Remove unnecessary/invalid characters
+                table_name = table_name.strip()
+                table_name = table_name.replace("'", "").replace('"', "")
+                table_names.append(table_name)
+
         except Exception as e:
             context_query_str = f"""You returned {str(response)} but that raised an exception: {str(e)}.\n{query_tmpl.format(orig_query_str=query_str)}"""
             logger.debug("\n\n------------------\n\n")
