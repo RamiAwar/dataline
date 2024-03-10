@@ -22,7 +22,7 @@ class SQLResults(TypedDict):
 
 class SchemaService:
     @classmethod
-    def extract_tables(cls, conn: Connection, connection_id: str) -> dict[str, dict[str, TableField]]:
+    def extract_tables(cls, conn: SQLiteConnection, connection_id: str) -> dict[str, dict[str, TableField]]:
         # Get DSN from connection
         connection = db.get_connection(conn, connection_id)
         engine = create_engine(connection.dsn)
@@ -57,7 +57,7 @@ class SchemaService:
         return tables
 
     @classmethod
-    def create_or_update_tables(cls, conn: Connection, connection_id: str) -> None:
+    def create_or_update_tables(cls, conn: SQLiteConnection, connection_id: str) -> None:
         exists = db.exists_schema_table(connection_id)
         if exists:
             raise Exception("Update not implemented yet")

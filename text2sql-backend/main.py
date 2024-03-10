@@ -117,11 +117,9 @@ async def healthcheck() -> SuccessResponse[None] | ErrorResponse:
     return SuccessResponse(status=StatusType.ok)
 
 
-@app.post("/connect", response_model_exclude_none=True)
-async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | ErrorResponse:
-    # Try to connect to provided dsn
+def create_db_connection(dsn: str, name: str) -> SuccessResponse[dict[str, str]] | ErrorResponse:
     try:
-        engine = create_engine(req.dsn)
+        engine = create_engine(dsn)
         with engine.connect():
             pass
     except OperationalError as e:
@@ -130,7 +128,7 @@ async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | E
 
     # Check if connection with DSN already exists, then return connection_id
     try:
-        existing_connection = db.get_connection_from_dsn(req.dsn)
+        existing_connection = db.get_connection_from_dsn(dsn)
         if existing_connection:
             # return {"status": "ok", "connection_id": existing_connection.id}
             return SuccessResponse(
@@ -154,9 +152,9 @@ async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | E
     with db.DatabaseManager() as conn:
         connection_id = db.create_connection(
             conn,
-            req.dsn,
+            dsn,
             database=database,
-            name=req.name,
+            name=name,
             dialect=dialect,
         )
 
@@ -171,6 +169,20 @@ async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | E
             "dialect": dialect,
         },
     )
+
+
+@app.post("/create-sample-db")
+async def create_sample_db() -> SuccessResponse[dict[str, str]] | ErrorResponse:
+    # TODO: do we want to host the file somewhere and download it only if the user wants a sample db?
+    # TODO: Or just always keep it in the repository?
+    dsn = "sqlite:///dvd_rental.db"
+    name = "DVD Rental - Sample Database"
+    return create_db_connection(dsn, name)
+
+
+@app.post("/connect", response_model_exclude_none=True)
+async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | ErrorResponse:
+    return create_db_connection(req.dsn, req.name)
 
 
 class ConnectionsOut(BaseModel):
