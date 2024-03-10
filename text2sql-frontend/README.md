@@ -15,7 +15,7 @@ export NODE_ENV=local
 npm run dev
 ```
 
-Install and start supabase on Mac (https://supabase.com/docs/guides/cli/getting-started?platform=macos):
+DON'T Install and start supabase on Mac (https://supabase.com/docs/guides/cli/getting-started?platform=macos):
 ```
 brew install supabase/tap/supabase
 supabase init

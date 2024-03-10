@@ -35,97 +35,6 @@ class DatabaseManager:
             self.connection.close()
 
 
-# CONNECTIONS: Create table to connections
-conn.execute(
-    """CREATE TABLE IF NOT EXISTS connections (
-        id text PRIMARY KEY,
-        dsn text UNIQUE NOT NULL,
-        database text NOT NULL,
-        name text,
-        dialect text
-    )"""
-)
-
-# SCHEMA TABLE: Create table to store table names in the schema with a reference to a connection
-conn.execute(
-    """CREATE TABLE IF NOT EXISTS schema_tables (
-    connection_id text NOT NULL,
-    id text PRIMARY KEY,
-    name text NOT NULL,
-    description text NOT NULL,
-    FOREIGN KEY(connection_id) REFERENCES connections(id))"""
-)
-
-# SCHEMA FIELDS: Create table to store a reference to a table schema, table reference, field name, field type ('table' or 'field'), and a field description (text) with a reference to a connection
-conn.execute(
-    """CREATE TABLE IF NOT EXISTS schema_fields (id text PRIMARY KEY,
-    table_id text NOT NULL,
-    name text NOT NULL,
-    type text NOT NULL,
-    description text NOT NULL,
-    is_primary_key boolean NOT NULL DEFAULT 0,
-    is_foreign_key boolean NOT NULL DEFAULT 0,
-    foreign_table text NOT NULL DEFAULT '',
-    FOREIGN KEY(table_id) REFERENCES schema_tables(id))"""
-)
-
-# MESSAGES: Create table to store messages with text, role, and connection_id
-conn.execute(
-    """CREATE TABLE IF NOT EXISTS messages (
-        id integer PRIMARY KEY AUTOINCREMENT,
-        content text NOT NULL,
-        role text NOT NULL,
-        created_at text,
-        selected_tables text NOT NULL DEFAULT '')"""
-)
-
-# RESULTS: Create table to store results
-conn.execute(
-    """CREATE TABLE IF NOT EXISTS results (
-        id integer PRIMARY KEY AUTOINCREMENT,
-        content text NOT NULL,
-        type text NOT NULL,
-        created_at text)"""
-)
-
-# SAVED_QUERIES: Create many to many table to store saved queries with a reference to a result
-conn.execute(
-    """CREATE TABLE IF NOT EXISTS saved_queries (
-        result_id integer NOT NULL,
-        name text,
-        description text,
-        FOREIGN KEY(result_id) REFERENCES results(id))"""
-)
-
-# MESSAGE_RESULTS: Create many to many table to store message with multiple results
-conn.execute(
-    """CREATE TABLE IF NOT EXISTS message_results (
-        message_id integer NOT NULL,
-        result_id integer NOT NULL,
-        FOREIGN KEY(message_id) REFERENCES messages(id),
-        FOREIGN KEY(result_id) REFERENCES results(id))"""
-)
-
-# CONVERSATIONS: Create table to store conversations with a reference to a connection, and many results, and a datetime field
-conn.execute(
-    """CREATE TABLE IF NOT EXISTS conversations (
-        conversation_id integer PRIMARY KEY AUTOINCREMENT,
-        connection_id text NOT NULL,
-        name text NOT NULL,
-        created_at text,
-        FOREIGN KEY(connection_id) REFERENCES connections(id))"""
-)
-
-# CONVERSATION_MESSAGES: Create many to many table to store conversation with multiple messages with order
-conn.execute(
-    """CREATE TABLE IF NOT EXISTS conversation_messages (
-        conversation_id integer NOT NULL,
-        message_id integer NOT NULL,
-        FOREIGN KEY(conversation_id) REFERENCES conversations(id),
-        FOREIGN KEY(message_id) REFERENCES messages(id))"""
-)
-
-
 def create_connection(
     conn: SQLiteConnection,
     dsn: str,
@@ -137,7 +46,7 @@ def create_connection(
     connection_id = str(uuid4())
 
     conn.execute(
-        "INSERT INTO connections VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO connections (id, dsn, database, name, dialect) VALUES (?, ?, ?, ?, ?)",
         (connection_id, dsn, database, name, dialect),
     )
     return connection_id
@@ -160,9 +69,7 @@ def get_connection(conn: SQLiteConnection, connection_id: str) -> Connection:
     )
 
 
-def update_connection(
-    connection_id: str, name: str, dsn: str, database: str, dialect: str
-) -> bool:
+def update_connection(connection_id: str, name: str, dsn: str, database: str, dialect: str) -> bool:
     conn.execute(
         "UPDATE connections SET name = ?, dsn = ?, database = ?, dialect = ? WHERE id = ?",
         (name, dsn, database, dialect, connection_id),
@@ -172,9 +79,7 @@ def update_connection(
 
 
 def get_connection_from_dsn(dsn: str) -> Connection:
-    data = conn.execute(
-        "SELECT id, name, dsn, database, dialect FROM connections WHERE dsn = ?", (dsn,)
-    ).fetchone()
+    data = conn.execute("SELECT id, name, dsn, database, dialect FROM connections WHERE dsn = ?", (dsn,)).fetchone()
     if not data:
         raise NotFoundError("Connection not found")
 
@@ -190,25 +95,19 @@ def get_connection_from_dsn(dsn: str) -> Connection:
 def get_connections() -> List[Connection]:
     return [
         Connection(id=x[0], name=x[1], dsn=x[2], database=x[3], dialect=x[4])
-        for x in conn.execute(
-            "SELECT id, name, dsn, database, dialect FROM connections"
-        ).fetchall()
+        for x in conn.execute("SELECT id, name, dsn, database, dialect FROM connections").fetchall()
     ]
 
 
 def exists_schema_table(connection_id: str) -> bool:
-    result = conn.execute(
-        "SELECT * FROM schema_tables WHERE connection_id = ?", (connection_id,)
-    ).fetchone()
+    result = conn.execute("SELECT * FROM schema_tables WHERE connection_id = ?", (connection_id,)).fetchone()
 
     if result:
         return True
     return False
 
 
-def create_schema_table(
-    conn: SQLiteConnection, connection_id: str, table_name: str
-) -> str:
+def create_schema_table(conn: SQLiteConnection, connection_id: str, table_name: str) -> str:
     """Creates a table schema for a connection"""
     # Check if table already exists
     if conn.execute(
@@ -257,7 +156,7 @@ def create_schema_field(
             is_primary_key,
             is_foreign_key,
             foreign_table
-        ) 
+        )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             field_id,
@@ -337,18 +236,14 @@ def get_table_schemas_with_descriptions(connection_id: str) -> List[TableSchema]
 #     return TableSchema(id=schema_table[0])
 
 
-def update_schema_table_description(
-    conn: sqlite3.Connection, table_id: str, description: str
-) -> Cursor:
+def update_schema_table_description(conn: sqlite3.Connection, table_id: str, description: str) -> Cursor:
     return conn.execute(
         """UPDATE schema_tables SET description = ? WHERE id = ?""",
         (description, table_id),
     )
 
 
-def update_schema_table_field_description(
-    conn: sqlite3.Connection, field_id: str, description: str
-) -> Cursor:
+def update_schema_table_field_description(conn: sqlite3.Connection, field_id: str, description: str) -> Cursor:
     # Check
     return conn.execute(
         """UPDATE schema_fields SET description = ? WHERE id = ?""",
@@ -359,7 +254,7 @@ def update_schema_table_field_description(
 # Conversation logic
 def get_conversation(conversation_id: str) -> Conversation:
     conversation = conn.execute(
-        "SELECT conversation_id, connection_id, name, created_at FROM conversations WHERE conversation_id = ?",
+        "SELECT id, connection_id, name, created_at FROM conversations WHERE id = ?",
         (conversation_id,),
     ).fetchone()
     return Conversation(
@@ -371,9 +266,7 @@ def get_conversation(conversation_id: str) -> Conversation:
 
 
 def get_conversations() -> list[Conversation]:
-    conversations = conn.execute(
-        "SELECT conversation_id, connection_id, name, created_at FROM conversations"
-    ).fetchall()
+    conversations = conn.execute("SELECT id, connection_id, name, created_at FROM conversations").fetchall()
     return [
         Conversation(
             conversation_id=conversation[0],
@@ -385,11 +278,9 @@ def get_conversations() -> list[Conversation]:
     ]
 
 
-def get_conversations_with_messages_with_results() -> (
-    list[ConversationWithMessagesWithResults]
-):
+def get_conversations_with_messages_with_results() -> list[ConversationWithMessagesWithResults]:
     conversations = conn.execute(
-        "SELECT conversation_id, connection_id, name, created_at FROM conversations ORDER BY created_at DESC"
+        "SELECT id, connection_id, name, created_at FROM conversations ORDER BY created_at DESC"
     ).fetchall()
 
     conversations_with_messages_with_results = []
@@ -467,9 +358,7 @@ def delete_conversation(conversation_id: str) -> None:
         "DELETE FROM messages WHERE id IN (SELECT message_id FROM conversation_messages WHERE conversation_id = ?)",
         (conversation_id,),
     )
-    conn.execute(
-        "DELETE FROM conversations WHERE conversation_id = ?", (conversation_id,)
-    )
+    conn.execute("DELETE FROM conversations WHERE id = ?", (conversation_id,))
     conn.execute(
         "DELETE FROM conversation_messages WHERE conversation_id = ?",
         (conversation_id,),
@@ -493,7 +382,7 @@ def create_conversation(connection_id: str, name: str) -> int:
 
 def update_conversation(conversation_id: str, name: str) -> Literal[True]:
     conn.execute(
-        "UPDATE conversations SET name = ? WHERE conversation_id = ?",
+        "UPDATE conversations SET name = ? WHERE id = ?",
         (name, conversation_id),
     )
     conn.commit()
@@ -502,9 +391,7 @@ def update_conversation(conversation_id: str, name: str) -> Literal[True]:
 
 def toggle_save_query(result_id: str) -> bool:
     # check if result_id exists in saved_queries
-    exists = conn.execute(
-        "SELECT * FROM saved_queries WHERE result_id = ?", (result_id,)
-    ).fetchone()
+    exists = conn.execute("SELECT * FROM saved_queries WHERE result_id = ?", (result_id,)).fetchone()
 
     if exists:
         conn.execute("DELETE FROM saved_queries WHERE result_id = ?", (result_id,))
@@ -659,12 +546,7 @@ def get_message_history_with_selected_tables_with_sql(
     return [
         {
             "role": message[1],
-            "content": "Selected tables: "
-            + message[4]
-            + "\n"
-            + message[0]
-            + "\nSQL: "
-            + message[3],
+            "content": "Selected tables: " + message[4] + "\n" + message[0] + "\nSQL: " + message[3],
         }
         for message in messages
     ]
@@ -685,10 +567,7 @@ def get_message_history_with_sql(conversation_id: str) -> list[dict[str, Any]]:
         (conversation_id,),
     )
 
-    return [
-        {"role": message[1], "content": message[0] + "\nSQL: " + message[3]}
-        for message in messages_with_sql
-    ]
+    return [{"role": message[1], "content": message[0] + "\nSQL: " + message[3]} for message in messages_with_sql]
 
 
 def create_result(result: UnsavedResult) -> Result:

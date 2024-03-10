@@ -1,11 +1,9 @@
-
-
 from typing import Optional, Type
 
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 
-from dataline.models.user.model import UserModel
+from dataline.models.user import UserModel
 from dataline.repositories.base import AsyncSession, BaseRepository, NotFoundError
 
 
@@ -16,7 +14,8 @@ class UserCreate(BaseModel):
     openai_api_key: Optional[str] = None
 
 
-class UserUpdate(UserCreate): ...
+class UserUpdate(UserCreate):
+    ...
 
 
 class UserRepository(BaseRepository[UserModel, UserCreate, UserUpdate]):
