@@ -5,7 +5,7 @@ import { DynamicTable } from "../Library/DynamicTable";
 import { useEffect, useState } from "react";
 import { api } from "../../api";
 import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
-import { useProfilePicture } from "../Providers/ProfilePictureProvider";
+import { useUserInfo } from "../Providers/UserInfoProvider";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 
 function classNames(...classes: string[]) {
@@ -16,7 +16,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
   const [loadingQuery, setLoadingQuery] = useState<boolean>(false);
   const [queryResult, setQueryResult] = useState<any | null>(null);
   const [message, setMessage] = useState<IMessageWithResults>(initialMessage);
-  const [avatarUrl] = useProfilePicture();
+  const [userInfo, _] = useUserInfo();
 
   function runQuery(code: string) {
     try {
@@ -124,10 +124,10 @@ export const Message = (initialMessage: IMessageWithResults) => {
             <div className="relative p-1 rounded-sm text-white flex items-center justify-center">
               {message.role === "assistant" ? (
                 <img src={logo} className="h-7 w-7" />
-              ) : avatarUrl ? (
+              ) : userInfo?.avatarUrl ? (
                 <img
                   className="h-7 w-7 rounded-sm bg-gray-800"
-                  src={avatarUrl}
+                  src={userInfo.avatarUrl}
                   alt=""
                 />
               ) : (

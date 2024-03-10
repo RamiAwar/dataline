@@ -1,29 +1,60 @@
-import { Alert, AlertActions, AlertBody, AlertDescription, AlertTitle } from '@components/Catalyst/alert'
-import { Button } from "@components/Catalyst/button"
-import { Input } from '@components/Catalyst/input'
-import { useState } from 'react'
+import {
+  Alert,
+  AlertActions,
+  AlertBody,
+  AlertDescription,
+  AlertTitle,
+} from "@components/Catalyst/alert";
+import { Button } from "@components/Catalyst/button";
+import { useState } from "react";
+import MaskedInput from "@components/Settings/MaskedInput";
+import { updateApiKey } from "./utils";
+import { useUserInfo } from "../Providers/UserInfoProvider";
 
 export function OpenAIKeyPopup() {
-  let [isOpen, setIsOpen] = useState(false)
+  let [isOpen, setIsOpen] = useState(true);
+  let [apiKey, setApiKey] = useState("");
+  const [userInfo, setUserInfo] = useUserInfo();
+
+  async function saveApiKey() {
+    // Check that not empty
+    if (apiKey === "") {
+      alert("Cannot store empty key");
+      return;
+    }
+
+    const sucessful = await updateApiKey(apiKey);
+    if (!sucessful) {
+      return;
+    }
+
+    setUserInfo((prev) => ({ ...prev, openaiApiKey: apiKey }));
+    setIsOpen(false);
+  }
+
+  function handleKeyPress(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      saveApiKey();
+    }
+  }
 
   return (
-    <>
-      <Button type="button" onClick={() => setIsOpen(true)}>
-        Edit OpenAI api key
-      </Button>
-      <Alert open={isOpen} onClose={setIsOpen} size="sm">
-        <AlertTitle>Configure OpenAI</AlertTitle>
-        <AlertDescription>To continue, please enter your OpenAI api key.</AlertDescription>
-        <AlertBody>
-          <Input autoFocus name="password" type="password" aria-label="Password" placeholder="•••••••" />
-        </AlertBody>
-        <AlertActions>
-          <Button plain onClick={() => setIsOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={() => setIsOpen(false)}>Continue</Button>
-        </AlertActions>
-      </Alert>
-    </>
-  )
+    <Alert open={isOpen} onClose={() => setIsOpen(true)} size="sm">
+      <AlertTitle>Configure OpenAI</AlertTitle>
+      <AlertDescription>
+        To continue, please enter your OpenAI api key.
+      </AlertDescription>
+      <AlertBody>
+        <MaskedInput
+          autoFocus
+          value={apiKey || ""}
+          onChange={setApiKey}
+          onKeyUp={handleKeyPress}
+        />
+      </AlertBody>
+      <AlertActions>
+        <Button onClick={() => saveApiKey()}>Continue</Button>
+      </AlertActions>
+    </Alert>
+  );
 }
