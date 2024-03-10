@@ -2,14 +2,16 @@ import { api } from "@/api";
 
 export async function updateName(name: string | null) {
   if (name === null || name === "") {
-    return;
+    return false;
   }
   let response = await api.updateUserInfo({ name });
   if (response.status === "ok") {
     console.log("Name updated successfully");
+    return true;
   } else {
     console.error("Error updating name");
   }
+  return false;
 }
 
 export async function updateApiKey(apiKey: string | null): Promise<boolean> {

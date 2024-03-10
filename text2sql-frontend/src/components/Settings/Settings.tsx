@@ -6,7 +6,7 @@ import MaskedInput from "./MaskedInput";
 import { updateApiKey, updateName } from "./utils";
 
 export default function Account() {
-  const [userInfo, _, setAvatarBlob] = useUserInfo();
+  const [userInfo, setUserInfo, setAvatarBlob] = useUserInfo();
 
   const avatarUploadRef = useRef<HTMLInputElement>(null);
 
@@ -40,6 +40,20 @@ export default function Account() {
       }
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function _updateName() {
+    const successful = await updateName(name);
+    if (successful) {
+      setUserInfo((prev) => ({ ...prev, name: name }));
+    }
+  }
+
+  async function _updateApiKey() {
+    const successful = await updateApiKey(apiKey);
+    if (successful) {
+      setUserInfo((prev) => ({ ...prev, openaiApiKey: apiKey }));
     }
   }
 
@@ -127,9 +141,7 @@ export default function Account() {
                     <button
                       type="submit"
                       className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                      onClick={() => {
-                        updateName(name);
-                      }}
+                      onClick={_updateName}
                     >
                       Save
                     </button>
@@ -168,9 +180,7 @@ export default function Account() {
                     <button
                       type="submit"
                       className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                      onClick={() => {
-                        updateApiKey(apiKey);
-                      }}
+                      onClick={_updateApiKey}
                     >
                       Save
                     </button>
