@@ -163,7 +163,7 @@ export const CodeBlock = ({
       <textarea
         spellCheck={false}
         ref={textareaRef}
-        className="absolute inset-0 resize-none bg-transparent overflow-hidden text-transparent p-2 font-mono caret-white outline-none appearance-none focus:outline-none"
+        className="absolute h-full w-full inset-0 resize-none bg-transparent overflow-hidden text-transparent p-2 font-mono caret-white outline-none appearance-none focus:outline-none"
         onChange={handleTextUpdate}
         onKeyDown={handleKeyboardInput}
       />
