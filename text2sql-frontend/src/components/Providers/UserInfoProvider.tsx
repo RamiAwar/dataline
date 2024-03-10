@@ -21,10 +21,15 @@ type UserInfo = {
   avatarUrl: string | null;
 };
 
-type UserInfoContextType = [UserInfo | null, (blob: string) => Promise<void>];
+type UserInfoContextType = [
+  UserInfo | null,
+  React.Dispatch<React.SetStateAction<UserInfo>>,
+  (blob: string) => Promise<void>
+];
 
 const UserInfoContext = createContext<UserInfoContextType>([
   null,
+  () => {},
   async () => {},
 ]);
 
@@ -97,12 +102,8 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
     getUserInfo();
   }, []);
 
-  useEffect(() => {
-    console.log(userInfo);
-  }, [userInfo]);
-
   return (
-    <UserInfoContext.Provider value={[userInfo, setAvatarBlob]}>
+    <UserInfoContext.Provider value={[userInfo, setUserInfo, setAvatarBlob]}>
       {children}
     </UserInfoContext.Provider>
   );

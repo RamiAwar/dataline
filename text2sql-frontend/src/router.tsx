@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { RouteObject, createBrowserRouter } from "react-router-dom";
 import { Home } from "./components/Home/Home";
 import { Landing } from "./components/Landing/Landing";
 import { BetaSignup } from "./components/BetaSignup/BetaSignup";
@@ -17,7 +17,7 @@ export enum Routes {
   NewChat = "/chat/new",
 }
 
-let routes = [
+let routes: RouteObject[] = [
   {
     path: Routes.BetaSignup,
     element: <BetaSignup />,
@@ -28,14 +28,19 @@ let routes = [
   },
 ];
 
-let private_routes = [
+let private_routes: RouteObject[] = [
   {
     path: Routes.Root,
     element: <Home />,
     children: [
       {
+        element: <ConnectionSelector />,
+        index: true,
+      },
+      {
         path: Routes.NewChat,
         element: <ConnectionSelector />,
+        index: true,
       },
       {
         path: Routes.Connection,
@@ -50,7 +55,7 @@ let private_routes = [
         element: <Account />,
       },
     ],
-  }
+  },
 ];
 
 if (process.env.NODE_ENV === "local") {

@@ -62,7 +62,6 @@ export const Conversation = () => {
 
   useEffect(() => {
     if (messageListRef.current !== null) {
-      console.log(messageListRef.current.lastElementChild);
       setTimeout(() => {
         messageListRef.current?.lastElementChild?.scrollIntoView({
           behavior: "instant",

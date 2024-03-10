@@ -3,9 +3,10 @@ import { UserCircleIcon } from "@heroicons/react/20/solid";
 import { useUserInfo } from "../Providers/UserInfoProvider";
 import { api } from "@/api";
 import MaskedInput from "./MaskedInput";
+import { updateApiKey, updateName } from "./utils";
 
 export default function Account() {
-  const [userInfo, setAvatarBlob] = useUserInfo();
+  const [userInfo, _, setAvatarBlob] = useUserInfo();
 
   const avatarUploadRef = useRef<HTMLInputElement>(null);
 
@@ -39,30 +40,6 @@ export default function Account() {
       }
     } finally {
       setUploading(false);
-    }
-  }
-
-  async function updateName() {
-    if (name === null || name === "") {
-      return;
-    }
-    let response = await api.updateUserInfo({ name });
-    if (response.status === "ok") {
-      console.log("Name updated successfully");
-    } else {
-      console.error("Error updating name");
-    }
-  }
-
-  async function updateApiKey() {
-    if (apiKey === null || apiKey === "") {
-      return;
-    }
-    let response = await api.updateUserInfo({ openai_api_key: apiKey });
-    if (response.status === "ok") {
-      console.log("API key updated successfully");
-    } else {
-      console.error("Error updating API key");
     }
   }
 
@@ -151,7 +128,7 @@ export default function Account() {
                       type="submit"
                       className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
                       onClick={() => {
-                        updateName();
+                        updateName(name);
                       }}
                     >
                       Save
@@ -192,7 +169,7 @@ export default function Account() {
                       type="submit"
                       className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
                       onClick={() => {
-                        updateApiKey();
+                        updateApiKey(apiKey);
                       }}
                     >
                       Save
