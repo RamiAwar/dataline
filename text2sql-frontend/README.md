@@ -6,6 +6,9 @@ Rest should be self-explanatory!
 ## Installation
 `npm install`
 
+## Building
+
+Something to keep in mind is having a .env.sentry-build-plugin file with the SENTRY_AUTH_TOKEN variable to send sourcemaps to sentry.
 
 ## Running
 You should make sure the backend is running for this part (port 7377).

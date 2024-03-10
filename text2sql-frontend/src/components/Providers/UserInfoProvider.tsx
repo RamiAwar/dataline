@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { IConversationResult } from "../Library/types";
 import { api } from "../../api";
 import { Buffer } from "buffer";
+import * as Sentry from "@sentry/react";
 
 async function decodeBase64Data(base64Data: string) {
   const byteCharacters = Buffer.from(base64Data, "base64").toString("binary");
@@ -19,6 +20,7 @@ type UserInfo = {
   name: string | null;
   openaiApiKey: string | null;
   avatarUrl: string | null;
+  sentryEnabled: boolean | null;
 };
 
 type UserInfoContextType = [
@@ -47,6 +49,7 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
     name: null,
     openaiApiKey: null,
     avatarUrl: null,
+    sentryEnabled: null,
   });
 
   async function setAvatarBlob(blob: string) {
@@ -86,10 +89,14 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
       const avatarUrl = await getAvatarUrl();
       const name = response.data.name;
       const openaiApiKey = response.data.openai_api_key;
-
+      const sentryEnabled = response.data.sentry_enabled;
+      if (!sentryEnabled) {
+        Sentry.close();
+      }
       setUserInfo({
-        name: name,
-        openaiApiKey: openaiApiKey,
+        name,
+        openaiApiKey,
+        sentryEnabled,
         avatarUrl: avatarUrl !== null ? avatarUrl : userInfo.avatarUrl,
       });
     } catch (error) {

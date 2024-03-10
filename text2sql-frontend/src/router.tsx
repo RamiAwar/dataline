@@ -17,6 +17,9 @@ export enum Routes {
   NewChat = "/chat/new",
 }
 
+// Check https://docs.sentry.io/platforms/javascript/guides/react/features/react-router/#usage-with-react-router-64-data-api
+// for sentry + react router integration
+
 let routes: RouteObject[] = [
   {
     path: Routes.BetaSignup,

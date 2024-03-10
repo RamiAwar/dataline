@@ -1,3 +1,4 @@
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -27,7 +28,10 @@ export default defineConfig({
     // don't minify for debug builds
     minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
     // produce sourcemaps for debug builds
-    sourcemap: !!process.env.TAURI_DEBUG,
+    sourcemap: true,
   },
-  plugins: [react()],
+  plugins: [react(), sentryVitePlugin({
+    org: "dataline-5g",
+    project: "dataline-frontend-react"
+  })],
 });

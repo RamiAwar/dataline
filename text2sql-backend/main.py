@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+from contextlib import asynccontextmanager
 from typing import Annotated, Awaitable, Callable
 
 import uvicorn
@@ -20,6 +21,7 @@ import db
 from dataline.api.settings.router import router as settings_router
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.settings import SettingsService
+from sentry import maybe_init_sentry, opt_out_of_sentry, setup_sentry  # , log_sentry_info
 from errors import NotFoundError
 from models import (
     Connection,
@@ -44,7 +46,16 @@ logger = logging.getLogger(__name__)
 lexer = lexers.MySqlLexer()
 lexer.add_filter(SqlFilter())
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # On startup
+    await maybe_init_sentry()
+    yield
+    # On shutdown
+
+
+app = FastAPI(lifespan=lifespan)
 origins = ["*"]
 loaded = None
 
@@ -115,6 +126,29 @@ app.include_router(settings_router)
 @app.get("/healthcheck", response_model_exclude_none=True)
 async def healthcheck() -> SuccessResponse[None] | ErrorResponse:
     return SuccessResponse(status=StatusType.ok)
+
+
+@app.get("/disable-sentry")
+async def disable_sentry() -> SuccessResponse[None] | ErrorResponse:
+    opt_out_of_sentry()
+    return SuccessResponse(status=StatusType.ok)
+
+
+@app.get("/enable-sentry")
+async def enable_sentry() -> SuccessResponse[None] | ErrorResponse:
+    setup_sentry()
+    return SuccessResponse(status=StatusType.ok)
+
+
+# @app.get("/sentry-info")
+# async def sentry_info() -> SuccessResponse[None] | ErrorResponse:
+#     log_sentry_info()
+#     return SuccessResponse(status=StatusType.ok)
+
+
+# @app.get("/sentry-debug")
+# async def trigger_error():
+#     division_by_zero = 1 / 0
 
 
 @app.post("/connect", response_model_exclude_none=True)

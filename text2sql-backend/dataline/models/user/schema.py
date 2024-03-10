@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 class UserUpdateIn(BaseModel):
     name: Optional[str] = None
     openai_api_key: Optional[str] = None
+    sentry_enabled: bool | None = None
 
 
 class UserOut(BaseModel):
@@ -13,6 +14,7 @@ class UserOut(BaseModel):
 
     name: Optional[str] = None
     openai_api_key: Optional[str] = None
+    sentry_enabled: bool
 
 
 class AvatarOut(BaseModel):

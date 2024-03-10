@@ -17,6 +17,8 @@
     "@formkit/auto-animate": "^0.8.0",
     "@headlessui/react": "^0.0.0-insiders.043edb8",
     "@heroicons/react": "^2.0.17",
+    "@sentry/react": "^7.106.0",
+    "@sentry/vite-plugin": "^2.14.3",
     "@supabase/auth-ui-react": "^0.4.5",
     "@supabase/auth-ui-shared": "^0.1.7",
     "@supabase/supabase-js": "^2.38.0",
