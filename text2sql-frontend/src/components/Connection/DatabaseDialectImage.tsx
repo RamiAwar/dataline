@@ -17,7 +17,7 @@ const DatabaseDialectImage: React.FC<DatabaseDialectImageProps> = ({
   const imageSrc = imageMap[databaseDialect];
 
   if (!imageSrc) {
-    return <CircleStackIcon className="text-gray-400" />;
+    return <CircleStackIcon className="text-gray-400 h-3/4 lg:h-2/3 my-auto" />;
   }
 
   return (

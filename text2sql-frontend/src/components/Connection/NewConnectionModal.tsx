@@ -128,9 +128,9 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                         Connection string / DSN
                       </label>
                       {/* Hidden input field overlaying the real one
-                      
+
                       <div className="relative mt-2">
-                        
+
                         <input
                           type="text"
                           autoComplete="off"
@@ -176,7 +176,8 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                       className="inline-flex items-center rounded-md bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
                     >
                       {isLoading && (
-                        <Spinner className="pointer-events-none h-5 w-5"></Spinner>
+                        // <Spinner className="pointer-events-none h-5 w-5"></Spinner>
+                        <Spinner></Spinner>
                       )}
                       Save
                     </button>

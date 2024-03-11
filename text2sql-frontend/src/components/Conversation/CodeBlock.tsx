@@ -5,7 +5,6 @@ import {
   PlayIcon,
   BookmarkIcon as BookmarkIconOutline,
 } from "@heroicons/react/24/outline";
-import { BookmarkIcon as BookmarkIconSolid } from "@heroicons/react/24/solid";
 import CustomTooltip from "../Library/Tooltip";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { format } from "prettier-sql";
@@ -59,10 +58,8 @@ export const CodeBlock = ({
   code,
   language,
   runQuery,
-  toggleSaveQuery,
   updateQuery,
   runnable,
-  isSaved,
 }: {
   code: string;
   language: IResultType;
@@ -77,7 +74,7 @@ export const CodeBlock = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [lastChar, setLastChar] = useState<string>("");
   // let BookmarkIcon = isSaved ? BookmarkIconSolid : BookmarkIconOutline;
-  let BookmarkIcon = BookmarkIconOutline;
+  const BookmarkIcon = BookmarkIconOutline;
 
   useEffect(() => {
     try {

@@ -12,9 +12,9 @@ import { updateApiKey } from "./utils";
 import { useUserInfo } from "../Providers/UserInfoProvider";
 
 export function OpenAIKeyPopup() {
-  let [isOpen, setIsOpen] = useState(true);
-  let [apiKey, setApiKey] = useState("");
-  const [userInfo, setUserInfo] = useUserInfo();
+  const [isOpen, setIsOpen] = useState(true);
+  const [apiKey, setApiKey] = useState("");
+  const [, setUserInfo] = useUserInfo();
 
   async function saveApiKey() {
     // Check that not empty

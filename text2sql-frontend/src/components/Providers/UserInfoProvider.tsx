@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { IConversationResult } from "../Library/types";
 import { api } from "../../api";
 import { Buffer } from "buffer";
 import * as Sentry from "@sentry/react";
@@ -21,6 +20,7 @@ type UserInfo = {
   openaiApiKey: string | null;
   avatarUrl: string | null;
   sentryEnabled: boolean | null;
+  isLoaded: boolean;
 };
 
 type UserInfoContextType = [
@@ -50,6 +50,7 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
     openaiApiKey: null,
     avatarUrl: null,
     sentryEnabled: null,
+    isLoaded: false,
   });
 
   async function setAvatarBlob(blob: string) {
@@ -77,35 +78,36 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
     }
   }
 
-  async function getUserInfo() {
-    try {
-      let response = await api.getUserInfo();
-      if (response.status !== "ok") {
-        // TODO: Handle error
-        console.log("Error getting user info: ", response.data);
-        return;
-      }
-
-      const avatarUrl = await getAvatarUrl();
-      const name = response.data.name;
-      const openaiApiKey = response.data.openai_api_key;
-      const sentryEnabled = response.data.sentry_enabled;
-      if (!sentryEnabled) {
-        Sentry.close();
-      }
-      setUserInfo({
-        name,
-        openaiApiKey,
-        sentryEnabled,
-        avatarUrl: avatarUrl !== null ? avatarUrl : userInfo.avatarUrl,
-      });
-    } catch (error) {
-      // TODO: Handle error
-      console.log("Error getting user info: ", error);
-    }
-  }
-
   useEffect(() => {
+    async function getUserInfo() {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      try {
+        const response = await api.getUserInfo();
+        if (response.status !== "ok") {
+          // TODO: Handle error
+          console.log("Error getting user info: ", response.data);
+          return;
+        }
+
+        const avatarUrl = await getAvatarUrl();
+        const name = response.data.name;
+        const openaiApiKey = response.data.openai_api_key;
+        const sentryEnabled = response.data.sentry_enabled;
+        if (!sentryEnabled) {
+          Sentry.close();
+        }
+        setUserInfo((prevUserInfo) => ({
+          name,
+          openaiApiKey,
+          sentryEnabled,
+          avatarUrl: avatarUrl !== null ? avatarUrl : prevUserInfo.avatarUrl,
+          isLoaded: true,
+        }));
+      } catch (error) {
+        // TODO: Handle error
+        console.log("Error getting user info: ", error);
+      }
+    }
     getUserInfo();
   }, []);
 

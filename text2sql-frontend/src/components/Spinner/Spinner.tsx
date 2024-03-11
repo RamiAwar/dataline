@@ -1,4 +1,5 @@
-export const Spinner = ({ className = "" }) => {
+// export const Spinner = ({ className = "" }) => {
+export const Spinner = () => {
   return (
     <svg
       className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"

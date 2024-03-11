@@ -2,9 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 import MaskedInput from "@components/Settings/MaskedInput";
 
-const meta: Meta<typeof MaskedInput> = {
-  component: MaskedInput
-};
+const meta: Meta<typeof MaskedInput> = { component: MaskedInput };
 
 export default meta;
 type Story = StoryObj<typeof MaskedInput>;
@@ -16,6 +14,6 @@ type Story = StoryObj<typeof MaskedInput>;
  */
 export const Primary: Story = {
   args: {
-    "defaultValue": "sk-WuQk8129laksldjoisadlkfjo12189120-129812kasj"
+    value: "sk-WuQk8129laksldjoisadlkfjo12189120-129812kasj",
   },
 };

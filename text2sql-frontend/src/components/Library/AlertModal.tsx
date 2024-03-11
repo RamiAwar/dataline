@@ -1,4 +1,4 @@
-import React, { Fragment, useRef, useState } from "react";
+import { Fragment, useRef } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import {
   CheckCircleIcon,
@@ -30,7 +30,6 @@ export function AlertModal({
   title,
   message,
   okText,
-  color,
   icon,
   onSuccess,
   onCancel,

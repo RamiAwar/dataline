@@ -1,20 +1,11 @@
-import { Menu, Transition } from "@headlessui/react";
+import { Menu } from "@headlessui/react";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
-import { Fragment } from "react";
 import { Link } from "react-router-dom";
 import { Routes } from "../../router";
 import { useUserInfo } from "../Providers/UserInfoProvider";
 
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ");
-}
-
 // Create component with prop topRight boolean
-export const ProfileDropdown = ({ topRight }: { topRight?: boolean }) => {
-  const userNavigation = [
-    { name: "Your profile", href: Routes.UserProfile, onClick: () => {} },
-  ];
-
+export const ProfileDropdown = () => {
   const [userInfo] = useUserInfo();
 
   return (

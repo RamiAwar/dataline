@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { Input } from "@catalyst/input";
 
 interface MaskedInputProps {
@@ -16,7 +16,6 @@ export default function MaskedInput({
 }: MaskedInputProps) {
   const passwordInputRef = useRef<HTMLInputElement | null>(null);
   const originalPasswordRef = useRef<HTMLInputElement | null>(null);
-  const [maskedValue, setMaskedValue] = useState<string>("");
 
   const maskPassword = () => {
     const passwordValue = passwordInputRef.current?.value ?? "";
@@ -25,7 +24,6 @@ export default function MaskedInput({
       "*".repeat(Math.max(0, passwordValue.length - 5));
     passwordInputRef.current!.value = maskedPassword;
     originalPasswordRef.current!.value = passwordValue;
-    setMaskedValue(maskedPassword);
     if (onChange) {
       onChange(passwordValue);
     }

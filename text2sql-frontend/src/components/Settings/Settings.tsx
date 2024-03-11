@@ -34,7 +34,7 @@ export default function Account() {
       const file = event.target.files[0];
 
       // Update profile avatar URL
-      let response = await api.updateAvatar(file);
+      const response = await api.updateAvatar(file);
       if (response.status === "ok") {
         setAvatarBlob(response.data.blob);
       }
