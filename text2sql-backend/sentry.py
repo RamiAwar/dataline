@@ -11,20 +11,6 @@ from dataline.models.user import UserModel
 logger = logging.getLogger(__name__)
 
 
-# def before_event(event: dict[str, Any], hint: dict[str, Any]):
-#     if event.get("level", None) != "error":
-#         return
-#     values: list[dict]
-#     if values := event.get("exception", {}).get("values", []):
-#         for value in values:
-#             if not (frames := value.get("stacktrace", {}).get("frames")):
-#                 continue
-#             for frame in frames:
-#                 frame["vars"] = {k: type(v) for k, v in frame.get("vars", {}).items()}
-
-#     return event
-
-
 def setup_sentry():
     sentry_sdk.init(
         dsn="https://3efb5a2ad9ae364b894842ea76caa57f@o4506888560508928.ingest.us.sentry.io/4506888562606080",
@@ -33,7 +19,6 @@ def setup_sentry():
         profiles_sample_rate=1.0,
         traces_sample_rate=1.0,
         include_local_variables=False,
-        # before_send=before_event,
         ignore_errors=[KeyboardInterrupt],
     )
 
