@@ -379,7 +379,7 @@ export const Sidebar = () => {
                 </li>
               </ul> */}
               <li className="-mx-6 mt-auto">
-                <div className="flex items-center gap-x-4 px-4 py-4 text-md font-medium leading-6 text-white cursor-pointer">
+                <div className="flex items-center gap-x-4 px-4 py-4 text-md font-medium leading-6 text-white">
                   <ProfileDropdown />
                 </div>
               </li>

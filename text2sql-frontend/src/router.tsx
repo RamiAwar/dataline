@@ -6,6 +6,7 @@ import { Conversation } from "./components/Conversation/Conversation";
 import { ConnectionSelector } from "./components/Connection/ConnectionSelector";
 import { ConnectionEditor } from "./components/Connection/ConnectionEditor";
 import Account from "./components/Settings/Settings";
+import SentryHandler from "@components/Library/SentryHandler";
 
 export enum Routes {
   Root = "/",
@@ -34,7 +35,12 @@ let routes: RouteObject[] = [
 const private_routes: RouteObject[] = [
   {
     path: Routes.Root,
-    element: <Home />,
+    element: (
+      <>
+        <SentryHandler />
+        <Home />
+      </>
+    ),
     children: [
       {
         element: <ConnectionSelector />,

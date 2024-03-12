@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "../../api";
 import { Buffer } from "buffer";
-import * as Sentry from "@sentry/react";
 
 async function decodeBase64Data(base64Data: string) {
   const byteCharacters = Buffer.from(base64Data, "base64").toString("binary");
@@ -93,9 +92,6 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
         const name = response.data.name;
         const openaiApiKey = response.data.openai_api_key;
         const sentryEnabled = response.data.sentry_enabled;
-        if (!sentryEnabled) {
-          Sentry.close();
-        }
         setUserInfo((prevUserInfo) => ({
           name,
           openaiApiKey,

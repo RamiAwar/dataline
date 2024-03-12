@@ -1,4 +1,6 @@
 import defaultTheme from "tailwindcss/defaultTheme";
+import twforms from "@tailwindcss/forms";
+import flowbite from "flowbite/plugin";
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -36,5 +38,5 @@ export default {
   extend: {
     display: ["group-hover"],
   },
-  plugins: [require("@tailwindcss/forms"), require("flowbite/plugin")],
+  plugins: [twforms, flowbite],
 };

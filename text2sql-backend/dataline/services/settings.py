@@ -61,11 +61,11 @@ class SettingsService:
         user = None
         if user_info is None:
             # Create user with data
-            user_create = UserCreate.model_construct(**data.model_dump(exclude_none=True))
+            user_create = UserCreate.model_construct(**data.model_dump(exclude_unset=True))
             user = await self.user_repo.create(session, user_create)
         else:
             # Update user with data
-            user_update = UserUpdate.model_construct(**data.model_dump(exclude_none=True))
+            user_update = UserUpdate.model_construct(**data.model_dump(exclude_unset=True))
             user = await self.user_repo.update_by_id(session, record_id=user_info.id, data=user_update)
 
         return UserOut.model_validate(user)

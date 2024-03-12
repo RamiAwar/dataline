@@ -3,7 +3,10 @@ import { UserCircleIcon } from "@heroicons/react/20/solid";
 import { useUserInfo } from "../Providers/UserInfoProvider";
 import { api } from "@/api";
 import MaskedInput from "./MaskedInput";
-import { updateApiKey, updateName } from "./utils";
+import { updateApiKey, updateName, updateSentryPreference } from "./utils";
+import { Switch, SwitchField } from "@components/Catalyst/switch";
+import { Label } from "@components/Catalyst/fieldset";
+import { clsx } from "clsx";
 
 export default function Account() {
   const [userInfo, setUserInfo, setAvatarBlob] = useUserInfo();
@@ -11,14 +14,15 @@ export default function Account() {
   const avatarUploadRef = useRef<HTMLInputElement>(null);
 
   // Store values from inputs
-  const [name, setName] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<string | null>(null);
-
-  // Update name and api key when user info changes
-  useEffect(() => {
-    setName(userInfo?.name || null);
-    setApiKey(userInfo?.openaiApiKey || null);
-  }, [userInfo]);
+  const [name, setName] = useState<string | null>(userInfo?.name || null);
+  const [apiKey, setApiKey] = useState<string | null>(
+    userInfo?.openaiApiKey || null
+  );
+  const [sentryEnabled, setSentryEnabled] = useState(
+    userInfo === null || userInfo.sentryEnabled === null
+      ? true
+      : userInfo.sentryEnabled
+  );
 
   // Manage avatar uploading state
   const [uploading, setUploading] = useState<boolean>(false);
@@ -51,9 +55,16 @@ export default function Account() {
   }
 
   async function _updateApiKey() {
-    const successful = await updateApiKey(apiKey);
+    const successful = await updateApiKey(apiKey || "");
     if (successful) {
       setUserInfo((prev) => ({ ...prev, openaiApiKey: apiKey }));
+    }
+  }
+
+  async function _updateSentryPreference() {
+    const successful = await updateSentryPreference(sentryEnabled);
+    if (successful) {
+      setUserInfo((prev) => ({ ...prev, sentryEnabled: sentryEnabled }));
     }
   }
 
@@ -181,6 +192,44 @@ export default function Account() {
                       type="submit"
                       className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
                       onClick={_updateApiKey}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
+                <div>
+                  <h2 className="text-base font-semibold leading-7 text-white">
+                    Preferences
+                  </h2>
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
+                    <div className="col-span-full">
+                      <SwitchField>
+                        <Label>Send Error Reports</Label>
+                        <Switch
+                          name="allow_sentry"
+                          checked={sentryEnabled}
+                          onChange={setSentryEnabled}
+                        />
+                      </SwitchField>
+                    </div>
+                  </div>
+                  <div className="mt-8 flex">
+                    <button
+                      disabled={sentryEnabled === userInfo?.sentryEnabled}
+                      type="submit"
+                      className={clsx(
+                        "rounded-md px-3 py-2 text-sm font-semibold  shadow-sm",
+                        sentryEnabled !== userInfo?.sentryEnabled
+                          ? "bg-indigo-500 text-white hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                          : "text-gray-300 bg-indigo-700"
+                      )}
+                      onClick={_updateSentryPreference}
                     >
                       Save
                     </button>

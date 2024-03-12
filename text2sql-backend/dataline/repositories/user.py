@@ -12,6 +12,7 @@ class UserCreate(BaseModel):
 
     name: Optional[str] = None
     openai_api_key: Optional[str] = None
+    sentry_enabled: bool | None = None
 
 
 class UserUpdate(UserCreate):

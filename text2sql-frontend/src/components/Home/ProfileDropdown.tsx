@@ -12,10 +12,10 @@ export const ProfileDropdown = () => {
     <>
       {/* Profile dropdown */}
       <Menu as="div" className="relative">
-        <Menu.Button className="flex items-center p-1.5 cursor-pointer">
+        <Menu.Button className="flex items-center p-1.5 cursor-default">
           <Link
             to={Routes.UserProfile}
-            className="block px-3 py-2 m-1 rounded-md text-sm leading-6 text-white overflow-hidden transition-colors duration-100"
+            className="flex items-center gap-2 px-3 py-2 m-1 rounded-md text-sm leading-6 text-white overflow-hidden transition-colors duration-100"
           >
             {userInfo?.avatarUrl ? (
               <img
@@ -26,6 +26,7 @@ export const ProfileDropdown = () => {
             ) : (
               <UserCircleIcon className="text-gray-300 h-10 w-10 rounded-full " />
             )}
+            {userInfo?.name}
           </Link>
         </Menu.Button>
       </Menu>

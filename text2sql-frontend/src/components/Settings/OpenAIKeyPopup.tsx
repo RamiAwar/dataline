@@ -6,35 +6,45 @@ import {
   AlertTitle,
 } from "@components/Catalyst/alert";
 import { Button } from "@components/Catalyst/button";
+import { SwitchField, Switch } from "@components/Catalyst/switch";
+import { Label } from "@components/Catalyst/fieldset";
 import { useState } from "react";
 import MaskedInput from "@components/Settings/MaskedInput";
-import { updateApiKey } from "./utils";
-import { useUserInfo } from "../Providers/UserInfoProvider";
+import { updateApiKeyAndSentryPreference } from "./utils";
+import { useUserInfo } from "@components/Providers/UserInfoProvider";
 
 export function OpenAIKeyPopup() {
   const [isOpen, setIsOpen] = useState(true);
   const [apiKey, setApiKey] = useState("");
-  const [, setUserInfo] = useUserInfo();
+  const [userInfo, setUserInfo] = useUserInfo();
+  const [sentryEnabled, setSentryEnabled] = useState(
+    userInfo === null || userInfo.sentryEnabled === null
+      ? true
+      : userInfo.sentryEnabled
+  );
 
-  async function saveApiKey() {
+  async function submit() {
     // Check that not empty
     if (apiKey === "") {
       alert("Cannot store empty key");
       return;
     }
 
-    const sucessful = await updateApiKey(apiKey);
+    const sucessful = await updateApiKeyAndSentryPreference(
+      apiKey,
+      sentryEnabled
+    );
     if (!sucessful) {
       return;
     }
 
-    setUserInfo((prev) => ({ ...prev, openaiApiKey: apiKey }));
+    setUserInfo((prev) => ({ ...prev, openaiApiKey: apiKey, sentryEnabled }));
     setIsOpen(false);
   }
 
   function handleKeyPress(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter") {
-      saveApiKey();
+      submit();
     }
   }
 
@@ -51,9 +61,17 @@ export function OpenAIKeyPopup() {
           onChange={setApiKey}
           onKeyUp={handleKeyPress}
         />
+        <SwitchField className="mt-4">
+          <Label>Send Error Reports</Label>
+          <Switch
+            name="allow_sentry"
+            checked={sentryEnabled}
+            onChange={setSentryEnabled}
+          />
+        </SwitchField>
       </AlertBody>
       <AlertActions>
-        <Button onClick={() => saveApiKey()}>Continue</Button>
+        <Button onClick={() => submit()}>Continue</Button>
       </AlertActions>
     </Alert>
   );

@@ -64,8 +64,9 @@ export const Conversation = () => {
     if (messageListRef.current !== null) {
       setTimeout(() => {
         messageListRef.current?.lastElementChild?.scrollIntoView({
-          // @ts-expect-error https://github.com/Microsoft/TypeScript/issues/28755
-          behavior: "instant",
+          // typescript doesn't like "instant" and will throw an error
+          // https://github.com/Microsoft/TypeScript/issues/28755
+          behavior: "auto",
         });
       }, 10);
     }

@@ -299,12 +299,14 @@ export type UpdateUserInfoResult = ApiResponse<void>;
 const updateUserInfo = async (options: {
   name?: string;
   openai_api_key?: string;
+  sentryEnabled?: boolean;
 }) => {
-  const { name, openai_api_key } = options;
+  const { name, openai_api_key, sentryEnabled } = options;
   // send only the filled in fields
   const data = {
     ...(name && { name }),
     ...(openai_api_key && { openai_api_key }),
+    ...(sentryEnabled !== undefined && { sentryEnabled }),
   };
   const response = await axios.patch<UpdateUserInfoResult>(
     `${baseUrl}/settings/info`,

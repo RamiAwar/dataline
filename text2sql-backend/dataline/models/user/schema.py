@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import Annotated, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UserUpdateIn(BaseModel):
     name: Optional[str] = None
     openai_api_key: Optional[str] = None
-    sentry_enabled: bool | None = None
+    sentry_enabled: Annotated[bool | None, Field(alias="sentryEnabled")] = None
 
 
 class UserOut(BaseModel):
