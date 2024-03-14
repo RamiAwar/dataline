@@ -1,19 +1,10 @@
 # DataLine
 
-### Running this
+## Running
 
-For the backend, simple FastAPI app with poetry. Make sure you have the latest poetry installed, and an OPENAI API KEY configured in your .env file as (OPENAI_API_KEY=...):
+To run DataLine, you can use our official docker image:
+```docker run ramiawar/dataline -p 2222:2222 -p 7377:7377```
 
-```bash
-poetry install
-uvicorn main:app --reload --port=7377
-```
-
-For the frontend, React app with npm (started off as Svelte, then moved to React to allow more people to contribute)
-```bash
-npm i
-npm run dev
-```
 
 
 ### ⚠️ Connecting to the database

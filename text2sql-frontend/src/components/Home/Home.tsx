@@ -2,15 +2,11 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { useUserInfo } from "../Providers/UserInfoProvider";
 import { OpenAIKeyPopup } from "../Settings/OpenAIKeyPopup";
-import { useEffect, useState } from "react";
 
 export const Home = () => {
   const [userInfo] = useUserInfo();
-  const [hasKey, setHasKey] = useState<boolean>(false);
-
-  useEffect(() => {
-    setHasKey(userInfo?.openaiApiKey !== "" && userInfo?.openaiApiKey !== null);
-  }, [userInfo]);
+  const hasKey =
+    userInfo?.openaiApiKey !== "" && userInfo?.openaiApiKey !== null;
 
   return hasKey ? (
     <div className="w-full bg-gray-900">

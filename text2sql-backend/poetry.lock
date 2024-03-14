@@ -1428,22 +1428,6 @@ files = [
 dev = ["hypothesis"]
 
 [[package]]
-name = "jsonpickle"
-version = "3.0.2"
-description = "Python library for serializing any arbitrary object graph into JSON"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "jsonpickle-3.0.2-py3-none-any.whl", hash = "sha256:4a8442d97ca3f77978afa58068768dba7bff2dbabe79a9647bc3cdafd4ef019f"},
-    {file = "jsonpickle-3.0.2.tar.gz", hash = "sha256:e37abba4bfb3ca4a4647d28bb9f4706436f7b46c8a8333b4a718abafa8e46b37"},
-]
-
-[package.extras]
-docs = ["jaraco.packaging (>=3.2)", "rst.linker (>=1.9)", "sphinx"]
-testing = ["ecdsa", "feedparser", "gmpy2", "numpy", "pandas", "pymongo", "pytest (>=3.5,!=3.7.3)", "pytest-black-multipy", "pytest-checkdocs (>=1.2.3)", "pytest-cov", "pytest-flake8 (>=1.1.1)", "scikit-learn", "sqlalchemy"]
-testing-libs = ["simplejson", "ujson"]
-
-[[package]]
 name = "jsonpointer"
 version = "2.4"
 description = "Identify specific nodes in a JSON document (RFC 6901)"
@@ -3002,22 +2986,6 @@ files = [
 ]
 
 [[package]]
-name = "pyvis"
-version = "0.3.2"
-description = "A Python network graph visualization library"
-optional = false
-python-versions = ">3.6"
-files = [
-    {file = "pyvis-0.3.2-py3-none-any.whl", hash = "sha256:5720c4ca8161dc5d9ab352015723abb7a8bb8fb443edeb07f7a322db34a97555"},
-]
-
-[package.dependencies]
-ipython = ">=5.3.0"
-jinja2 = ">=2.9.6"
-jsonpickle = ">=1.4.1"
-networkx = ">=1.11"
-
-[[package]]
 name = "pywin32"
 version = "306"
 description = "Python for Window Extensions"
@@ -3680,20 +3648,6 @@ files = [
 ]
 
 [[package]]
-name = "sql-metadata"
-version = "2.9.0"
-description = "Uses tokenized query returned by python-sqlparse and generates query metadata"
-optional = false
-python-versions = ">=3.8,<4.0"
-files = [
-    {file = "sql_metadata-2.9.0-py3-none-any.whl", hash = "sha256:82791389ca1b37829c75a7f4cff854352ec8ec19ebcdbf59aa7965698f29b15e"},
-    {file = "sql_metadata-2.9.0.tar.gz", hash = "sha256:0243bfc80f93337ee89a438d416b28e5f301deb1e328245e2b974da14321dece"},
-]
-
-[package.dependencies]
-sqlparse = ">=0.4.1,<0.5.0"
-
-[[package]]
 name = "sqlalchemy"
 version = "2.0.27"
 description = "Database Abstraction Library"
@@ -3779,36 +3733,6 @@ postgresql-psycopg2cffi = ["psycopg2cffi"]
 postgresql-psycopgbinary = ["psycopg[binary] (>=3.0.7)"]
 pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3_binary"]
-
-[[package]]
-name = "sqlparse"
-version = "0.4.4"
-description = "A non-validating SQL parser."
-optional = false
-python-versions = ">=3.5"
-files = [
-    {file = "sqlparse-0.4.4-py3-none-any.whl", hash = "sha256:5430a4fe2ac7d0f93e66f1efc6e1338a41884b7ddf2a350cedd20ccc4d9d28f3"},
-    {file = "sqlparse-0.4.4.tar.gz", hash = "sha256:d446183e84b8349fa3061f0fe7f06ca94ba65b426946ffebe6e3e8295332420c"},
-]
-
-[package.extras]
-dev = ["build", "flake8"]
-doc = ["sphinx"]
-test = ["pytest", "pytest-cov"]
-
-[[package]]
-name = "sse-starlette"
-version = "1.6.5"
-description = "\"SSE plugin for Starlette\""
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "sse-starlette-1.6.5.tar.gz", hash = "sha256:819f2c421fb37067380fe3dcaba246c476b02651b7bb7601099a378ad802a0ac"},
-    {file = "sse_starlette-1.6.5-py3-none-any.whl", hash = "sha256:68b6b7eb49be0c72a2af80a055994c13afcaa4761b29226beb208f954c25a642"},
-]
-
-[package.dependencies]
-starlette = "*"
 
 [[package]]
 name = "stack-data"
@@ -4503,4 +4427,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "2b8a8d46885042a40349c44343dbcc7eb2e712bef2932916a5955bc629618e6f"
+content-hash = "ec19e245f036cdb3b178126bc6f34161d4e168edd3640685cb3c370a90bc0205"

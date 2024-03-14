@@ -64,7 +64,7 @@ export const Conversation = () => {
     if (messageListRef.current !== null) {
       setTimeout(() => {
         messageListRef.current?.lastElementChild?.scrollIntoView({
-          behavior: "instant",
+          behavior: "auto",
         });
       }, 10);
     }
