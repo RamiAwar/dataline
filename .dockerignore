@@ -1,0 +1,45 @@
+text2sql-backend/__pycache__
+text2sql-backend/*.pyc
+text2sql-backend/*.pyo
+text2sql-backend/*.pyd
+text2sql-backend/.Python
+text2sql-backend/env
+text2sql-backend/build
+text2sql-backend/dist
+text2sql-backend/pip-log.txt
+text2sql-backend/pip-delete-this-directory.txt
+text2sql-backend/.tox
+text2sql-backend/.coverage
+text2sql-backend/.coverage.*
+text2sql-backend/.cache
+text2sql-backend/.venv
+text2sql-backend/.vscode
+text2sql-backend/.mypy_cache
+text2sql-backend/.pytest_cache
+text2sql-backend/.hypothesis
+text2sql-backend/nosetests.xml
+text2sql-backend/coverage.xml
+text2sql-backend/*.cover
+text2sql-backend/*.log
+text2sql-backend/.git
+
+# Don't need tests or hooks
+*/tests
+hooks
+images
+
+# Exclude bruno
+*/bruno
+
+# Ignore testing SQLite DB
+*/*.sqlite3
+
+*/.storybook
+*/node_modules/
+*/dist
+*/.git
+*/npm-debug.log
+*/.coverage
+*/.coverage.*
+*/.env
+*/.aws
