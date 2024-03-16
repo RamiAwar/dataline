@@ -48,9 +48,9 @@ RUN apt update && \
 COPY text2sql-backend/pyproject.toml text2sql-backend/poetry.lock ./
 RUN poetry config virtualenvs.in-project true && poetry install --only main --no-root
 
-# ------------------------------
+# -------------------------------
 # PROD BUILD WITH MINIMAL DEPS
-# ------------------------------
+# -------------------------------
 # FROM python:3.11.8-alpine as prod
 FROM python:3.11.6-slim-bookworm as prod
 
@@ -68,6 +68,8 @@ RUN apt update && apt install caddy -y
 # Last stage - Copy frontend build and backend source and run
 FROM prod as runner
 
+RUN apt-get update && apt-get -y install --no-install-recommends libpq5
+
 # Copy in supervisor config, frontend build, backend source
 COPY supervisord.conf .
 COPY --from=temp-frontend /home/dataline/frontend/dist /home/dataline/frontend/dist
@@ -80,6 +82,7 @@ WORKDIR /home/dataline/backend
 COPY text2sql-backend/*.py .
 COPY text2sql-backend/dataline ./dataline
 COPY text2sql-backend/alembic ./alembic
+COPY text2sql-backend/alembic.ini .
 
 WORKDIR /home/dataline
 CMD ["supervisord", "-n"]

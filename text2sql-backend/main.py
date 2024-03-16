@@ -5,22 +5,15 @@ import os
 import re
 from typing import Annotated, Awaitable, Callable
 
-import uvicorn
-from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
-from pydantic.json import pydantic_encoder
-from pygments import formatters, highlight, lexers
-from pygments_pprint_sql import SqlFilter
-from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError
-
 import db
+import uvicorn
 from dataline.api.settings.router import router as settings_router
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.settings import SettingsService
 from errors import NotFoundError
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from models import (
     Connection,
     ConversationWithMessagesWithResults,
@@ -35,8 +28,14 @@ from models import (
     UpdateConnectionRequest,
     UpdateConversationRequest,
 )
+from pydantic import BaseModel, Field, validator
+from pydantic.json import pydantic_encoder
+from pygments import formatters, highlight, lexers
+from pygments_pprint_sql import SqlFilter
 from services import QueryService, SchemaService, results_from_query_response
 from sql_wrapper import request_execute, request_limit
+from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -99,7 +98,7 @@ class ConnectRequest(BaseModel):
     @validator("dsn")
     def validate_dsn_format(cls, value: str) -> str:
         # Define a regular expression to match the DSN format
-        dsn_regex = r"^[\w\+]+:\/\/\w+:\w+@[\w.-]+[:\d]*\/\w+$"
+        dsn_regex = r"^[\w\+]+:\/\/[\w-]+:\w+@[\w.-]+[:\d]*\/\w+$"
 
         if not re.match(dsn_regex, value):
             raise ValueError(

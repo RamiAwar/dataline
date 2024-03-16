@@ -11,7 +11,7 @@ python = ">=3.11,<3.12"
 fastapi = "0.100.0"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
 llama-index = "^0.9.42.post2"
-psycopg2 = "^2.9.6"
+psycopg2-binary = "^2.9.9"
 pygments-pprint-sql = "^0.1.0"
 sql-formatter = "^0.6.2"
 pymysql = "^1.0.3"
