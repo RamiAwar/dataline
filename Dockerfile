@@ -85,5 +85,10 @@ COPY text2sql-backend/alembic ./alembic
 COPY text2sql-backend/alembic.ini .
 
 WORKDIR /home/dataline
-RUN mkdir -p backend/dataline/configuration
+
+RUN mkdir -p /home/.dataline
+
+# Supervisord will forward the env vars to the subprocess envs
+ENV SQLITE_PATH="/home/.dataline/db.sqlite3"
+
 CMD ["supervisord", "-n"]

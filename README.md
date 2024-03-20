@@ -3,7 +3,7 @@
 ## Running
 
 To run DataLine, you can use our official docker image:
-```docker run ramiawar/dataline -p 2222:2222 -p 7377:7377```
+```docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/dataline/backend/dataline/configuration --name dataline ramiawar/dataline:v0.1.0```
 
 
 
