@@ -5,6 +5,7 @@ from sqlite3.dbapi2 import Connection as SQLiteConnection
 from typing import Any, List, Literal, Optional
 from uuid import uuid4
 
+from dataline.config import config as dataline_config
 from errors import DuplicateError, NotFoundError
 from models import (
     Connection,
@@ -18,11 +19,11 @@ from models import (
 )
 
 # Old way of using database - this is a single connection, hard to manage transactions
-conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
+conn = sqlite3.connect(dataline_config.sqlite_path, check_same_thread=False)
 
 
 class DatabaseManager:
-    def __init__(self, db_file: str = "db.sqlite3") -> None:
+    def __init__(self, db_file: str = dataline_config.sqlite_path) -> None:
         self.db_file = db_file
         self.connection: Optional[SQLiteConnection] = None
 

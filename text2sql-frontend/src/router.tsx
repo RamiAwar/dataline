@@ -14,7 +14,6 @@ export enum Routes {
   UserProfile = "/user",
   Connection = "/connection/:connectionId",
   Chat = "/chat/:conversationId",
-  NewChat = "/chat/new",
 }
 
 let routes: RouteObject[] = [
@@ -34,11 +33,6 @@ let private_routes: RouteObject[] = [
     element: <Home />,
     children: [
       {
-        element: <ConnectionSelector />,
-        index: true,
-      },
-      {
-        path: Routes.NewChat,
         element: <ConnectionSelector />,
         index: true,
       },

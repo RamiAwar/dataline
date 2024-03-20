@@ -85,4 +85,5 @@ COPY text2sql-backend/alembic ./alembic
 COPY text2sql-backend/alembic.ini .
 
 WORKDIR /home/dataline
+RUN mkdir -p backend/dataline/configuration
 CMD ["supervisord", "-n"]
