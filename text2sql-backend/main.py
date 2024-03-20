@@ -5,15 +5,22 @@ import os
 import re
 from typing import Annotated, Awaitable, Callable
 
-import db
 import uvicorn
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, validator
+from pydantic.json import pydantic_encoder
+from pygments import formatters, highlight, lexers
+from pygments_pprint_sql import SqlFilter
+from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
+
+import db
 from dataline.api.settings.router import router as settings_router
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.settings import SettingsService
 from errors import NotFoundError
-from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from models import (
     Connection,
     ConversationWithMessagesWithResults,
@@ -28,14 +35,8 @@ from models import (
     UpdateConnectionRequest,
     UpdateConversationRequest,
 )
-from pydantic import BaseModel, Field, validator
-from pydantic.json import pydantic_encoder
-from pygments import formatters, highlight, lexers
-from pygments_pprint_sql import SqlFilter
 from services import QueryService, SchemaService, results_from_query_response
 from sql_wrapper import request_execute, request_limit
-from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -123,9 +124,20 @@ async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | E
         engine = create_engine(req.dsn)
         with engine.connect():
             pass
-    except OperationalError as e:
-        logger.error(e)
-        return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
+    except OperationalError as exc:
+        # Try again replacing localhost with host.docker.internal to connect with DBs running in docker
+        if "localhost" in req.dsn:
+            req.dsn = req.dsn.replace("localhost", "host.docker.internal")
+            try:
+                engine = create_engine(req.dsn)
+                with engine.connect():
+                    pass
+            except OperationalError as e:
+                logger.error(e)
+                return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
+        else:
+            logger.error(exc)
+            return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
 
     # Check if connection with DSN already exists, then return connection_id
     try:

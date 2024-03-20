@@ -64,15 +64,14 @@ RUN pip install --no-cache-dir supervisor
 # RUN apk update && apk add caddy
 RUN apt update && apt install caddy -y
 
-# ------------------------------
-# Last stage - Copy frontend build and backend source and run
-FROM prod as runner
-
-RUN apt-get update && apt-get -y install --no-install-recommends libpq5
+# Install postgres connector dependencies
+RUN apt update && apt install --no-install-recommends libpq5 -y
 
 # Copy in supervisor config, frontend build, backend source
 COPY supervisord.conf .
 COPY --from=temp-frontend /home/dataline/frontend/dist /home/dataline/frontend/dist
+COPY text2sql-frontend/Caddyfile /home/dataline/frontend/Caddyfile
+
 # Move it to venv not .venv so supervisord does not cry
 COPY --from=temp-backend /home/dataline/backend/.venv /home/dataline/backend/venv
 ENV PATH="/home/dataline/backend/venv/bin:$PATH"
