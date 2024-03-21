@@ -33,7 +33,7 @@ export const ConnectionEditor = () => {
     if (unsavedChanges) {
       setShowAlert(true);
     } else {
-      navigate(Routes.NewChat);
+      navigate(Routes.Root);
     }
   }
 
@@ -79,7 +79,7 @@ export const ConnectionEditor = () => {
 
   function handleSubmit() {
     if (!unsavedChanges) {
-      navigate(Routes.NewChat); // Return to previous page
+      navigate(Routes.Root); // Return to previous page
       return;
     }
 
@@ -99,7 +99,7 @@ export const ConnectionEditor = () => {
 
       // Refresh connections
       fetchConnections();
-      navigate(Routes.NewChat);
+      navigate(Routes.Root);
     };
 
     updateConnection();

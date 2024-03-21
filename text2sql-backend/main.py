@@ -99,7 +99,7 @@ class ConnectRequest(BaseModel):
     @validator("dsn")
     def validate_dsn_format(cls, value: str) -> str:
         # Define a regular expression to match the DSN format
-        dsn_regex = r"^[\w\+]+:\/\/\w+:\w+@[\w.-]+[:\d]*\/\w+$"
+        dsn_regex = r"^[\w\+]+:\/\/[\w-]+:\w+@[\w.-]+[:\d]*\/\w+$"
 
         if not re.match(dsn_regex, value):
             raise ValueError(
@@ -124,9 +124,20 @@ async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | E
         engine = create_engine(req.dsn)
         with engine.connect():
             pass
-    except OperationalError as e:
-        logger.error(e)
-        return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
+    except OperationalError as exc:
+        # Try again replacing localhost with host.docker.internal to connect with DBs running in docker
+        if "localhost" in req.dsn:
+            req.dsn = req.dsn.replace("localhost", "host.docker.internal")
+            try:
+                engine = create_engine(req.dsn)
+                with engine.connect():
+                    pass
+            except OperationalError as e:
+                logger.error(e)
+                return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
+        else:
+            logger.error(exc)
+            return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
 
     # Check if connection with DSN already exists, then return connection_id
     try:

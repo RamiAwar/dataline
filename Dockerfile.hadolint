@@ -1,0 +1,9 @@
+# Run linter on dockerfile to make sure we are following best practices
+FROM hadolint/hadolint:v1.17.5-6-gbc8bab9-alpine
+
+# Copy the dockerfile and linter config from the context
+COPY hadolint.yaml /config/
+COPY Dockerfile .
+
+# Execute the linting process
+RUN echo "### Linting Dockerfile ###" && /bin/hadolint --config /config/hadolint.yaml Dockerfile
