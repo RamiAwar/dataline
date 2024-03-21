@@ -2,6 +2,8 @@ import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { api } from "../../api";
 import { Spinner } from "../Spinner/Spinner";
+import { isAxiosError } from "axios";
+import { enqueueSnackbar } from "notistack";
 
 interface NewConnectionModalFormProps {
   isOpen: boolean;
@@ -58,10 +60,17 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
 
     // Enable loading state
     setIsLoading(true);
-
-    const res = await api.createConnection(unmaskedDsn, connectionName);
-    if (res.status !== "ok") {
-      alert("Error creating connection");
+    try {
+      const res = await api.createConnection(unmaskedDsn, connectionName);
+      if (res.status !== "ok") {
+        alert("Error creating connection");
+        return;
+      }
+    } catch (error) {
+      enqueueSnackbar({
+        variant: "error",
+        message: "Error creating connection",
+      });
       return;
     }
 

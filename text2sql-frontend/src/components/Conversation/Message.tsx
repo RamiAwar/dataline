@@ -7,6 +7,7 @@ import { api } from "../../api";
 import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
 import { useUserInfo } from "../Providers/UserInfoProvider";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
+import { enqueueSnackbar } from "notistack";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -28,20 +29,15 @@ export const Message = (initialMessage: IMessageWithResults) => {
       const executeSQL = async () => {
         if (initialMessage.conversation_id === undefined) return;
         const data = await api.runSQL(initialMessage.conversation_id, code);
-        if (data.status !== "ok") {
-          alert("Error running query");
-          return;
-        }
         setQueryResult(data.data.content);
       };
       executeSQL();
-
-      // Re-enable the button
-      setLoadingQuery(false);
     } catch (error) {
       // Handle any errors that occurred during the backend communication
+      enqueueSnackbar({ variant: "error", message: "Error running query" });
+    } finally {
+      // Re-enable the button
       setLoadingQuery(false);
-      alert("Error running query");
     }
   }
 
@@ -52,26 +48,25 @@ export const Message = (initialMessage: IMessageWithResults) => {
       (result) => result.result_id === result_id
     );
     if (result === undefined) return;
-
-    const data = await api.toggleSaveQuery(result_id);
-    if (data.status !== "ok") {
-      alert("Error saving query");
-      return;
+    try {
+      const data = await api.toggleSaveQuery(result_id);
+      // Update is_saved in message
+      const updatedMessage = {
+        ...message,
+        results: message.results?.map((result) => {
+          if (result.result_id === result_id) {
+            return {
+              ...result,
+              is_saved: !result.is_saved,
+            };
+          }
+          return result;
+        }),
+      } as IMessageWithResults;
+      setMessage(updatedMessage);
+    } catch (exception) {
+      enqueueSnackbar({ variant: "error", message: "Error saving query" });
     }
-    // Update is_saved in message
-    const updatedMessage = {
-      ...message,
-      results: message.results?.map((result) => {
-        if (result.result_id === result_id) {
-          return {
-            ...result,
-            is_saved: !result.is_saved,
-          };
-        }
-        return result;
-      }),
-    } as IMessageWithResults;
-    setMessage(updatedMessage);
   }
 
   // Update SQL in result
@@ -81,10 +76,10 @@ export const Message = (initialMessage: IMessageWithResults) => {
   ) {
     if (result_id === undefined) return;
 
-    const data = await api.updateResult(result_id, updatedCode);
-    if (data.status !== "ok") {
-      alert("Error updating query");
-      return;
+    try {
+      const data = await api.updateResult(result_id, updatedCode);
+    } catch (exception) {
+      enqueueSnackbar({ variant: "error", message: "Error updating query" });
     }
   }
 

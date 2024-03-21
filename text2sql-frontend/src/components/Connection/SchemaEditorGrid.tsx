@@ -12,6 +12,7 @@ import {
   ITableSchemaResult,
 } from "../Library/types";
 import { api } from "../../api";
+import { enqueueSnackbar } from "notistack";
 
 interface SchemaEditorGridProps {
   connection: IConnection;
@@ -27,12 +28,16 @@ export default function SchemaEditorGrid({
     // Load the initial table schemas from API
 
     const fetchTableSchemas = async () => {
-      let fetchedSchemas = await api.getTableSchemas(connection.id);
-      if (fetchedSchemas.status !== "ok") {
-        alert("Error fetching connection");
+      try {
+        const fetchedSchemas = await api.getTableSchemas(connection.id);
+        setTableSchemas(fetchedSchemas.data.tables);
+      } catch (exception) {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error fetching connection",
+        });
         return;
       }
-      setTableSchemas(fetchedSchemas.data.tables);
     };
     fetchTableSchemas();
   }, [connection.id]);

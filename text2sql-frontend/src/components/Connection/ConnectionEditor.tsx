@@ -7,6 +7,7 @@ import { AlertIcon, AlertModal } from "../Library/AlertModal";
 import { useConnectionList } from "../Providers/ConnectionListProvider";
 import { Routes } from "../../router";
 import SchemaEditorGrid from "./SchemaEditorGrid";
+import { enqueueSnackbar } from "notistack";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -60,19 +61,22 @@ export const ConnectionEditor = () => {
       if (!params.connectionId) {
         alert("No connection id provided - something went wrong");
       }
-
-      let fetchedConnection = await api.getConnection(
-        params.connectionId as string
-      );
-      if (fetchedConnection.status !== "ok") {
-        alert("Error fetching connection");
+      try {
+        const fetchedConnection = await api.getConnection(
+          params.connectionId as string
+        );
+        setConnection(fetchedConnection.data.connection);
+        setEditFields({
+          name: fetchedConnection.data.connection.name,
+          dsn: fetchedConnection.data.connection.dsn,
+        });
+      } catch (exception) {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error fetching connection",
+        });
         return;
       }
-      setConnection(fetchedConnection.data.connection);
-      setEditFields({
-        name: fetchedConnection.data.connection.name,
-        dsn: fetchedConnection.data.connection.dsn,
-      });
     };
     fetchConnection();
   }, [params.connectionId]);
@@ -84,19 +88,21 @@ export const ConnectionEditor = () => {
     }
 
     const updateConnection = async () => {
-      let updatedConnection = await api.updateConnection(
-        params.connectionId as string,
-        {
-          name: editFields.name,
-          dsn: editFields.dsn,
-        }
-      );
-
-      if (updatedConnection.status !== "ok") {
-        alert("Error updating connection");
+      try {
+        const updatedConnection = await api.updateConnection(
+          params.connectionId as string,
+          {
+            name: editFields.name,
+            dsn: editFields.dsn,
+          }
+        );
+      } catch (exception) {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error updating connection",
+        });
         return;
       }
-
       // Refresh connections
       fetchConnections();
       navigate(Routes.Root);
