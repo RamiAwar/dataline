@@ -7,6 +7,7 @@ import { IConnection, IConversation } from "../Library/types";
 import { useConversationList } from "../Providers/ConversationListProvider";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { enqueueSnackbar } from "notistack";
 
 export const ConnectionSelector = () => {
   let navigate = useNavigate();
@@ -31,25 +32,26 @@ export const ConnectionSelector = () => {
     // Create a new conversation with the selected connection
     console.log("Selected: ", connection);
     const createConversation = async () => {
-      let createdConversation = await api.createConversation(
-        connection.id,
-        "Untitled chat"
-      );
+      try {
+        const createdConversation = await api.createConversation(
+          connection.id,
+          "Untitled chat"
+        );
+        // and set it as the current conversation
+        setConversation({
+          id: createdConversation.data.conversation_id,
+          name: "Untitled chat",
+        });
 
-      if (createdConversation.status !== "ok") {
-        alert("Error creating conversation");
-        return;
+        // fetch conversations and navigate to new conversation
+        fetchConversations();
+        navigate(`/chat/${createdConversation.data.conversation_id}`);
+      } catch (exception) {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error creating conversation",
+        });
       }
-
-      // and set it as the current conversation
-      setConversation({
-        id: createdConversation.data.conversation_id,
-        name: "Untitled chat",
-      });
-
-      // fetch conversations and navigate to new conversation
-      fetchConversations();
-      navigate(`/chat/${createdConversation.data.conversation_id}`);
     };
 
     createConversation();

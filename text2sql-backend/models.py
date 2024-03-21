@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Generic, Literal, Optional, TypeVar, Union
+from typing import Any, Generic, Literal, Optional, TypeVar, Union
 
 from pydantic import BaseModel, Field, validator
 from pydantic.dataclasses import dataclass
@@ -27,11 +27,6 @@ T = TypeVar("T")
 class ApiResponse(BaseModel, Generic[T]):
     status: Literal[StatusType.ok, StatusType.error]
     data: Union[Optional[T], str]
-
-
-class ErrorResponse(ApiResponse[str]):
-    status: Literal[StatusType.error] = StatusType.error
-    data: str
 
 
 class SuccessResponse(ApiResponse[T], Generic[T]):

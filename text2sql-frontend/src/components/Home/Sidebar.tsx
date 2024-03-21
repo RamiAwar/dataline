@@ -18,6 +18,7 @@ import { api } from "../../api";
 import { PencilSquareIcon } from "@heroicons/react/20/solid";
 import { Link, useParams } from "react-router-dom";
 import { ProfileDropdown } from "./ProfileDropdown";
+import { enqueueSnackbar } from "notistack";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -34,7 +35,15 @@ export const Sidebar = () => {
   const [editedName, setEditedName] = useState(currentConversation?.name || "");
 
   async function deleteConversation(conversationId: string) {
-    await api.deleteConversation(conversationId);
+    try {
+      await api.deleteConversation(conversationId);
+    } catch (exception) {
+      enqueueSnackbar({
+        variant: "error",
+        message: "Error deleting conversation",
+      });
+    }
+
     fetchConversations();
   }
 
@@ -64,18 +73,21 @@ export const Sidebar = () => {
 
     // Update conversation in backend
     (async () => {
-      const res = await api.updateConversation(
-        currentConversation.id,
-        editedName
-      );
-      if (res.status !== "ok") {
-        alert("Error updating conversation");
-        return;
+      try {
+        const res = await api.updateConversation(
+          currentConversation.id,
+          editedName
+        );
+        setCurrentConversation({
+          ...currentConversation,
+          name: editedName,
+        });
+      } catch (exception) {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error updating conversation",
+        });
       }
-      setCurrentConversation({
-        ...currentConversation,
-        name: editedName,
-      });
 
       fetchConversations();
     })();

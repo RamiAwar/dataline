@@ -25,7 +25,6 @@ from models import (
     Connection,
     ConversationWithMessagesWithResults,
     DataResult,
-    ErrorResponse,
     MessageWithResults,
     Result,
     StatusType,
@@ -113,12 +112,12 @@ app.include_router(settings_router)
 
 
 @app.get("/healthcheck", response_model_exclude_none=True)
-async def healthcheck() -> SuccessResponse[None] | ErrorResponse:
+async def healthcheck() -> SuccessResponse[None]:
     return SuccessResponse(status=StatusType.ok)
 
 
 @app.post("/connect", response_model_exclude_none=True)
-async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | ErrorResponse:
+async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]]:
     # Try to connect to provided dsn
     try:
         engine = create_engine(req.dsn)
@@ -126,7 +125,7 @@ async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | E
             pass
     except OperationalError as e:
         logger.error(e)
-        return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
+        raise HTTPException(status_code=404, detail="Failed to connect to database")
 
     # Check if connection with DSN already exists, then return connection_id
     try:
@@ -178,7 +177,7 @@ class ConnectionsOut(BaseModel):
 
 
 @app.get("/connections")
-async def get_connections() -> SuccessResponse[ConnectionsOut] | ErrorResponse:
+async def get_connections() -> SuccessResponse[ConnectionsOut]:
     return SuccessResponse(
         status=StatusType.ok,
         data=ConnectionsOut(
@@ -192,12 +191,12 @@ class TableSchemasOut(BaseModel):
 
 
 @app.get("/connection/{connection_id}/schemas")
-async def get_table_schemas(connection_id: str) -> SuccessResponse[TableSchemasOut] | ErrorResponse:
+async def get_table_schemas(connection_id: str) -> SuccessResponse[TableSchemasOut]:
     # Check for connection existence
     with db.DatabaseManager() as conn:
         connection = db.get_connection(conn, connection_id)
         if not connection:
-            return ErrorResponse(data="Invalid connection_id")
+            raise HTTPException(status_code=404, detail="Invalid connection_id")
 
         return SuccessResponse(
             status=StatusType.ok,
@@ -234,7 +233,7 @@ class ConnectionOut(BaseModel):
 
 
 @app.get("/connection/{connection_id}")
-async def get_connection(connection_id: str) -> SuccessResponse[ConnectionOut] | ErrorResponse:
+async def get_connection(connection_id: str) -> SuccessResponse[ConnectionOut]:
     with db.DatabaseManager() as conn:
         return SuccessResponse(
             status=StatusType.ok,
@@ -245,9 +244,7 @@ async def get_connection(connection_id: str) -> SuccessResponse[ConnectionOut] |
 
 
 @app.patch("/connection/{connection_id}")
-async def update_connection(
-    connection_id: str, req: UpdateConnectionRequest
-) -> SuccessResponse[ConnectionOut] | ErrorResponse:
+async def update_connection(connection_id: str, req: UpdateConnectionRequest) -> SuccessResponse[ConnectionOut]:
     # Try to connect to provided dsn
     try:
         engine = create_engine(req.dsn)
@@ -255,7 +252,7 @@ async def update_connection(
             pass
     except OperationalError as e:
         logger.error(e)
-        return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
+        raise HTTPException(status_code=400, detail="Failed to connect to database")
 
     # Update connection only if success
     dialect = engine.url.get_dialect().name
@@ -288,7 +285,7 @@ class ConversationsOut(BaseModel):
 
 
 @app.get("/conversations")
-async def conversations() -> SuccessResponse[ConversationsOut] | ErrorResponse:
+async def conversations() -> SuccessResponse[ConversationsOut]:
     return SuccessResponse(
         status=StatusType.ok,
         data=ConversationsOut(
@@ -309,7 +306,7 @@ class CreateConversationOut(BaseModel):
 @app.post("/conversation")
 async def create_conversation(
     conversation: CreateConversationIn,
-) -> SuccessResponse[CreateConversationOut] | ErrorResponse:
+) -> SuccessResponse[CreateConversationOut]:
     conversation_id = db.create_conversation(connection_id=conversation.connection_id, name=conversation.name)
     return SuccessResponse(
         status=StatusType.ok,
@@ -336,7 +333,7 @@ class ListMessageOut(BaseModel):
 
 
 @app.get("/messages")
-async def messages(conversation_id: str) -> SuccessResponse[ListMessageOut] | ErrorResponse:
+async def messages(conversation_id: str) -> SuccessResponse[ListMessageOut]:
     return SuccessResponse(
         status=StatusType.ok,
         data=ListMessageOut(
@@ -353,7 +350,7 @@ async def execute_sql(
     execute: bool = True,
     session: AsyncSession = Depends(get_session),
     settings_service: SettingsService = Depends(SettingsService),
-) -> Response | ErrorResponse:
+) -> Response:
     request_limit.set(limit)
     request_execute.set(execute)
 
@@ -363,7 +360,7 @@ async def execute_sql(
         connection_id = conversation.connection_id
         connection = db.get_connection(conn, connection_id)
         if not connection:
-            return ErrorResponse(status=StatusType.error, data="Invalid connection_id")
+            raise HTTPException(status_code=404, detail="Invalid connection_id")
 
         openai_key = await settings_service.get_openai_api_key(session)
         query_service = QueryService(connection, openai_api_key=openai_key)
@@ -391,19 +388,17 @@ async def execute_sql(
                 media_type="application/json",
             )
         else:
-            return ErrorResponse(data="No results found")
+            raise HTTPException(status_code=404, detail="No results found")
 
 
 @app.get("/toggle-save-query/{result_id}")
-async def toggle_save_query(result_id: str) -> SuccessResponse[None] | ErrorResponse:
+async def toggle_save_query(result_id: str) -> SuccessResponse[None]:
     db.toggle_save_query(result_id=result_id)
     return SuccessResponse()
 
 
 @app.patch("/result/{result_id}")
-async def update_result_content(
-    result_id: str, content: Annotated[str, Body(embed=True)]
-) -> SuccessResponse[None] | ErrorResponse:
+async def update_result_content(result_id: str, content: Annotated[str, Body(embed=True)]) -> SuccessResponse[None]:
     with db.DatabaseManager() as conn:
         db.update_result_content(conn, result_id=result_id, content=content)
         conn.commit()
@@ -418,7 +413,7 @@ async def query(
     execute: bool = False,
     session: AsyncSession = Depends(get_session),
     settings_service: SettingsService = Depends(SettingsService),
-) -> Response | ErrorResponse:
+) -> Response:
     request_limit.set(limit)
     request_execute.set(execute)
 
@@ -430,7 +425,7 @@ async def query(
         connection_id = conversation.connection_id
         connection = db.get_connection(conn, connection_id)
         if not connection:
-            return ErrorResponse(status=StatusType.error, data="Invalid connection_id")
+            raise HTTPException(status_code=404, detail="Invalid connection_id")
 
         openai_key = await settings_service.get_openai_api_key(session)
         query_service = QueryService(connection=connection, openai_api_key=openai_key, model_name="gpt-3.5-turbo")
