@@ -17,7 +17,10 @@ export async function updateName(name: string | null) {
 export async function updateApiKey(apiKey: string | null): Promise<boolean> {
   if (apiKey === null || apiKey === "" || !apiKey.startsWith("sk-")) {
     // TODO: Show error banner: Invalid OpenAI API key
-    alert("Invalid OpenAI API key.");
+    enqueueSnackbar({
+      variant: "error",
+      message: "Invalid OpenAI API key.",
+    });
     return false;
   }
   try {

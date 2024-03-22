@@ -6,13 +6,13 @@ import { UserInfoProvider } from "./components/Providers/UserInfoProvider";
 import { SnackbarProvider } from "notistack";
 
 export const App = () => (
-  <UserInfoProvider>
-    <ConnectionListProvider>
-      <ConversationListProvider>
-        <SnackbarProvider>
+  <SnackbarProvider autoHideDuration={10000} maxSnack={5}>
+    <UserInfoProvider>
+      <ConnectionListProvider>
+        <ConversationListProvider>
           <RouterProvider router={router} />
-        </SnackbarProvider>
-      </ConversationListProvider>
-    </ConnectionListProvider>
-  </UserInfoProvider>
+        </ConversationListProvider>
+      </ConnectionListProvider>
+    </UserInfoProvider>
+  </SnackbarProvider>
 );

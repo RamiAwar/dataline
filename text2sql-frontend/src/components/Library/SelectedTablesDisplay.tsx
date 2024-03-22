@@ -9,7 +9,7 @@ export const SelectedTablesDisplay = ({ tables }: { tables: string }) => {
   }, [tables]);
 
   return (
-    <div className="flex space-x-2 items-center">
+    <div className="flex space-x-2 items-center overflow-x-scroll">
       <span className="text-gray-400 text-sm font-normal">
         Detected tables{" "}
       </span>

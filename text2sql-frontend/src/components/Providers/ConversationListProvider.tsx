@@ -38,7 +38,10 @@ export const ConversationListProvider = ({
           if (response.status === "ok") {
             setConversations(response.data.conversations);
           } else {
-            alert("Error loading Conversations");
+            enqueueSnackbar({
+              variant: "error",
+              message: "Error loading Conversations",
+            });
           }
         })
         .catch((err) => {

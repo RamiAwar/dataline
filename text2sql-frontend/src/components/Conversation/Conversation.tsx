@@ -46,11 +46,16 @@ export const Conversation = () => {
           true
         );
         const message = res.data.message;
+
+        // Clear loading message and add response
         setMessages((prevMessages) => [...prevMessages.slice(0, -1), message]);
       } catch (exception) {
+        // Clear loading message
+        setMessages((prevMessages) => prevMessages.slice(0, -1));
+
         enqueueSnackbar({
           variant: "error",
-          message: "Error querying database",
+          message: "Error querying assistant",
         });
       }
     })();

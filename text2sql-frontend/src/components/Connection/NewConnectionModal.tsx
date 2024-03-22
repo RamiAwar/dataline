@@ -44,7 +44,10 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
 
     const res = await api.createTestConnection();
     if (res.status !== "ok") {
-      alert("Error creating connection");
+      enqueueSnackbar({
+        variant: "error",
+        message: "Error creating connection",
+      });
       return;
     }
 
@@ -63,7 +66,10 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
     try {
       const res = await api.createConnection(unmaskedDsn, connectionName);
       if (res.status !== "ok") {
-        alert("Error creating connection");
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error creating connection",
+        });
         return;
       }
     } catch (error) {

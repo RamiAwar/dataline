@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { IConversationResult } from "../Library/types";
 import { api } from "../../api";
 import { Buffer } from "buffer";
 import { isAxiosError } from "axios";

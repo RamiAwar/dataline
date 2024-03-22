@@ -59,7 +59,10 @@ export const ConnectionEditor = () => {
   useEffect(() => {
     const fetchConnection = async () => {
       if (!params.connectionId) {
-        alert("No connection id provided - something went wrong");
+        enqueueSnackbar({
+          variant: "error",
+          message: "No connection id provided - something went wrong",
+        });
       }
       try {
         const fetchedConnection = await api.getConnection(

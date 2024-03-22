@@ -10,6 +10,7 @@ import { useState } from "react";
 import MaskedInput from "@components/Settings/MaskedInput";
 import { updateApiKey } from "./utils";
 import { useUserInfo } from "../Providers/UserInfoProvider";
+import { enqueueSnackbar } from "notistack";
 
 export function OpenAIKeyPopup() {
   let [isOpen, setIsOpen] = useState(true);
@@ -19,7 +20,10 @@ export function OpenAIKeyPopup() {
   async function saveApiKey() {
     // Check that not empty
     if (apiKey === "") {
-      alert("Cannot store empty key");
+      enqueueSnackbar({
+        variant: "error",
+        message: "Cannot store empty key",
+      });
       return;
     }
 

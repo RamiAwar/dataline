@@ -85,7 +85,7 @@ export default function ExpandableTableSchemaViewer({
 
   return (
     <div className="flow-root">
-      <div className="overflow-x-scroll sm:-mx-6 lg:-mx-8">
+      <div className="overflow-x-scroll scrollbar-hide">
         <div
           ref={parent}
           className="inline-block min-w-full max-w-full align-middle sm:px-6 lg:px-8"

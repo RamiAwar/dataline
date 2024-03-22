@@ -182,14 +182,14 @@ def create_db_connection(dsn: str, name: str) -> SuccessResponse[dict[str, str]]
 
 
 @app.post("/create-sample-db")
-async def create_sample_db() -> SuccessResponse[dict[str, str]] | ErrorResponse:
+async def create_sample_db() -> SuccessResponse[dict[str, str]]:
     name = "DVD Rental (Sample)"
     dsn = get_sqlite_dsn(config.sample_postgres_path)
     return create_db_connection(dsn, name)
 
 
 @app.post("/connect", response_model_exclude_none=True)
-async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | ErrorResponse:
+async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]]:
     return create_db_connection(req.dsn, req.name)
 
 

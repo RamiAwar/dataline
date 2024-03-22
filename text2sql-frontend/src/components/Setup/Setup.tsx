@@ -4,6 +4,7 @@ import { api } from "../../api";
 import { useNavigate } from "react-router-dom";
 import { Routes } from "../../router";
 import { CenteredLayout } from "../Layouts/CenteredLayout";
+import { enqueueSnackbar } from "notistack";
 
 export const Setup = () => {
   const navigate = useNavigate();
@@ -26,7 +27,10 @@ export const Setup = () => {
       intervalId = setInterval(checkBackendHealth, 50);
       timeoutId = setTimeout(() => {
         clearInterval(intervalId as number);
-        alert("Failed to connect to backend.");
+        enqueueSnackbar({
+          variant: "error",
+          message: "Failed to connect to backend.",
+        });
         window.close();
       }, 20000);
     };
