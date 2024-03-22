@@ -3,12 +3,9 @@ import asyncio
 from logging.config import fileConfig
 from typing import Any
 
-from sqlalchemy import pool
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
-
 from alembic import context
 from dataline.config import config as dataline_config
+from sqlalchemy.engine import Connection
 
 from dataline.models import DBModel  # noqa: F401 isort:skip
 
@@ -62,6 +59,7 @@ def do_run_migrations(connection: Connection) -> None:
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 def process_revision_directives(context: Any, revision: Any, directives: Any) -> None:
     if context.config.cmd_opts.autogenerate:

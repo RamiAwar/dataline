@@ -16,6 +16,6 @@ type Story = StoryObj<typeof MaskedInput>;
  */
 export const Primary: Story = {
   args: {
-    "defaultValue": "sk-WuQk8129laksldjoisadlkfjo12189120-129812kasj"
+    "value": "sk-Wuasdfasfdfasdfasdffjo12189120-129812kasj"
   },
 };

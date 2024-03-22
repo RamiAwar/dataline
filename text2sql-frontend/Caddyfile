@@ -1,0 +1,5 @@
+:2222 {
+    root * dist
+    try_files {path} /index.html
+    file_server
+}

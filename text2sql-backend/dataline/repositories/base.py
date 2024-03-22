@@ -18,9 +18,7 @@ engine = create_async_engine(config.sqlite_dsn)
 
 # We set expire_on_commit to False so that subsequent access to objects that came from a session do not
 # need to emit new SQL queries to refresh the objects if the transaction has been committed already
-SessionCreator = async_sessionmaker(
-    autocommit=False, autoflush=False, bind=engine, expire_on_commit=False
-)
+SessionCreator = async_sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
 
 AsyncSession = _AsyncSession
 
@@ -103,9 +101,7 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         except NoResultFound:
             raise NotFoundError(f"{self.model.__name__.replace('Model', '')} not found")
         except MultipleResultsFound:
-            raise NotUniqueError(
-                f"{self.model.__name__.replace('Model', '')} not unique"
-            )
+            raise NotUniqueError(f"{self.model.__name__.replace('Model', '')} not unique")
 
     async def first(self, session: AsyncSession, query: Select[tuple[Model]]) -> Model:
         """
@@ -118,9 +114,7 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
             raise NotFoundError(f"{self.model.__name__.replace('Model', '')} not found")
         return instance
 
-    async def get_unique(
-        self, session: AsyncSession, query: Select[tuple[Model]]
-    ) -> Model:
+    async def get_unique(self, session: AsyncSession, query: Select[tuple[Model]]) -> Model:
         """
         Same as 'get' but supports joinedload.
         https://docs.sqlalchemy.org/en/20/orm/queryguide/relationships.html#joined-eager-loading
@@ -128,38 +122,28 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         :raises: NotUniqueError if more than one result is found
         """
         result = await session.execute(query)
-        instance = (
-            result.scalars().unique().all()
-        )  # scalar_one would fail here cause of the join
+        instance = result.scalars().unique().all()  # scalar_one would fail here cause of the join
         if len(instance) > 1:
-            raise NotUniqueError(
-                f"More than one {self.model.__name__.replace('Model', '')} found"
-            )
+            raise NotUniqueError(f"More than one {self.model.__name__.replace('Model', '')} found")
         elif len(instance) == 0:
             raise NotFoundError(f"{self.model.__name__.replace('Model', '')} not found")
         return instance[0]
 
-    async def list(
-        self, session: AsyncSession, query: Select[tuple[Model]]
-    ) -> Sequence[Model]:
+    async def list(self, session: AsyncSession, query: Select[tuple[Model]]) -> Sequence[Model]:
         """
         Execute a query and return all scalar results.
         """
         results = await session.execute(query)
         return results.scalars().all()
 
-    async def list_unique(
-        self, session: AsyncSession, query: Select[tuple[Model]]
-    ) -> Sequence[Model]:
+    async def list_unique(self, session: AsyncSession, query: Select[tuple[Model]]) -> Sequence[Model]:
         """
         Same as `list` but supports joinedload.
         """
         results = await session.execute(query)
         return results.scalars().unique().all()
 
-    async def create(
-        self, session: AsyncSession, data: TCreate, flush: bool = True
-    ) -> Model:
+    async def create(self, session: AsyncSession, data: TCreate, flush: bool = True) -> Model:
         """
         Create a new instance of the model and save it to the database.
         """
@@ -172,16 +156,12 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         await session.refresh(instance)
         return instance
 
-    async def create_many(
-        self, session: AsyncSession, data: Iterable[TCreate]
-    ) -> Sequence[Model]:
+    async def create_many(self, session: AsyncSession, data: Iterable[TCreate]) -> Sequence[Model]:
         """
         Create new instances of the model and save them to the database.
         """
         instances = [item.model_dump() for item in data]
-        results = await session.scalars(
-            insert(self.model).returning(self.model).values(instances)
-        )
+        results = await session.scalars(insert(self.model).returning(self.model).values(instances))
 
         # Flush commands to DB (within transaction) so we can refresh instance from DB
         await session.flush()
@@ -192,9 +172,7 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         if query.whereclause is None:
             raise ValueError("Attempting an update without a where clause")
 
-    async def update_many(
-        self, session: AsyncSession, query: Update
-    ) -> Sequence[Model]:
+    async def update_many(self, session: AsyncSession, query: Update) -> Sequence[Model]:
         """
         Execute an update query and return the updated instances.
         :raises: ConstraintViolationError if an integrity constraint is violated
@@ -245,9 +223,7 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         if result.rowcount == 0:
             raise NotFoundError(f"{self.model.__name__.replace('Model', '')} not found")
         elif result.rowcount > 1:
-            raise NotUniqueError(
-                "More than one record will be deleted but only one is expected"
-            )
+            raise NotUniqueError("More than one record will be deleted but only one is expected")
 
         # Flush changes to DB (within transaction)
         await session.flush()
@@ -260,9 +236,7 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         query = select(self.model).filter_by(id=record_id)
         return await self.get(session, query)
 
-    async def update_by_id(
-        self, session: AsyncSession, record_id: UUID, data: TUpdate
-    ) -> Model:
+    async def update_by_id(self, session: AsyncSession, record_id: UUID, data: TUpdate) -> Model:
         """
         Update a record by id.
         :raises: NotFoundError if no instance or more than one instance is updated
