@@ -6,7 +6,6 @@ import { Spinner } from "../Spinner/Spinner";
 interface NewConnectionModalFormProps {
   isOpen: boolean;
   onClose: () => void;
-  hasExistingConnections: boolean;
 }
 
 function classNames(...classes: string[]) {
