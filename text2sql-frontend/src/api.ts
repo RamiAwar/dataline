@@ -19,7 +19,7 @@ type ErrorResponse = {
   data: string;
 };
 
-type ApiResponse<T> = SuccessResponse<T> | ErrorResponse;
+type ApiResponse<T> = SuccessResponse<T>;
 
 // interface AuthTokens {
 //   accessToken: string;
@@ -72,6 +72,15 @@ const createConnection = async (
   });
   return response.data;
 };
+
+
+const createTestConnection = async (): Promise<ConnectResult> => {
+  const response = await axios.post<ConnectResult>(
+    `${baseUrl}/create-sample-db`
+  );
+  return response.data;
+};
+
 
 export type ConnectionResult = {
   id: string;
@@ -320,13 +329,6 @@ export type GetUserInfoResult = ApiResponse<{
 const getUserInfo = async () => {
   const response = await axios.get<GetUserInfoResult>(
     `${baseUrl}/settings/info`
-  );
-  return response.data;
-};
-
-const createTestConnection = async (): Promise<ConnectResult> => {
-  const response = await axios.post<ConnectResult>(
-    `${baseUrl}/create-sample-db`
   );
   return response.data;
 };

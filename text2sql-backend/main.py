@@ -118,7 +118,7 @@ async def healthcheck() -> SuccessResponse[None]:
     return SuccessResponse(status=StatusType.ok)
 
 
-def create_db_connection(dsn: str, name: str) -> SuccessResponse[dict[str, str]] | ErrorResponse:
+def create_db_connection(dsn: str, name: str) -> SuccessResponse[dict[str, str]]:
     try:
         engine = create_engine(dsn)
         with engine.connect():
@@ -133,10 +133,10 @@ def create_db_connection(dsn: str, name: str) -> SuccessResponse[dict[str, str]]
                     pass
             except OperationalError as e:
                 logger.error(e)
-                return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
+                raise HTTPException(status_code=404, detail="Failed to connect to database")
         else:
             logger.error(exc)
-            return ErrorResponse(status=StatusType.error, data="Failed to connect to database")
+            raise HTTPException(status_code=404, detail="Failed to connect to database")
 
     # Check if connection with DSN already exists, then return connection_id
     try:
