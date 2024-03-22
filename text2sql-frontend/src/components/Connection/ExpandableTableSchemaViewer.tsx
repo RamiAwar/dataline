@@ -7,6 +7,7 @@ import React from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { ITableSchema, ITableSchemaResult } from "../Library/types";
 import { api } from "../../api";
+import { enqueueSnackbar } from "notistack";
 
 interface ExpandableTableSchemaViewerProps {
   tableSchema: ITableSchemaResult;
@@ -46,13 +47,16 @@ export default function ExpandableTableSchemaViewer({
   function updateTableDescription(tableId: string, description: string) {
     // Make an API call to update table description
     const updateDescription = async () => {
-      const result = await api.updateTableSchemaDescription(
-        tableId,
-        description
-      );
-
-      if (result.status !== "ok") {
-        alert("Error updating table description");
+      try {
+        const result = await api.updateTableSchemaDescription(
+          tableId,
+          description
+        );
+      } catch (exception) {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error updating table description",
+        });
         return;
       }
     };
@@ -63,14 +67,16 @@ export default function ExpandableTableSchemaViewer({
   function updateFieldDescription(fieldId: string, description: string) {
     // Make an API call to update table description
     const updateDescription = async () => {
-      const result = await api.updateTableSchemaFieldDescription(
-        fieldId,
-        description
-      );
-
-      if (result.status !== "ok") {
-        alert("Error updating table description");
-        return;
+      try {
+        const result = await api.updateTableSchemaFieldDescription(
+          fieldId,
+          description
+        );
+      } catch (exception) {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error updating table description",
+        });
       }
     };
 
@@ -79,7 +85,7 @@ export default function ExpandableTableSchemaViewer({
 
   return (
     <div className="flow-root">
-      <div className="overflow-x-scroll sm:-mx-6 lg:-mx-8">
+      <div className="overflow-x-scroll scrollbar-hide">
         <div
           ref={parent}
           className="inline-block min-w-full max-w-full align-middle sm:px-6 lg:px-8"

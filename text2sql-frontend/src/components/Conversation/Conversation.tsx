@@ -7,6 +7,7 @@ import ExpandingInput from "./ExpandingInput";
 
 import { Transition } from "@headlessui/react";
 import { generateUUID } from "../Library/utils";
+import { enqueueSnackbar } from "notistack";
 
 export const Conversation = () => {
   const params = useParams<{ conversationId: string }>();
@@ -38,24 +39,39 @@ export const Conversation = () => {
 
     // Get API response
     (async () => {
-      const res = await api.query(params.conversationId as string, value, true);
-      if (res.status !== "ok") {
-        alert("Error querying database");
-        return;
+      try {
+        const res = await api.query(
+          params.conversationId as string,
+          value,
+          true
+        );
+        const message = res.data.message;
+
+        // Clear loading message and add response
+        setMessages((prevMessages) => [...prevMessages.slice(0, -1), message]);
+      } catch (exception) {
+        // Clear loading message
+        setMessages((prevMessages) => prevMessages.slice(0, -1));
+
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error querying assistant",
+        });
       }
-      const message = res.data.message;
-      setMessages((prevMessages) => [...prevMessages.slice(0, -1), message]);
     })();
   }
 
   useEffect(() => {
     const loadMessages = async () => {
-      const messages = await api.getMessages(params.conversationId as string);
-      if (messages.status !== "ok") {
-        alert("Error fetching messages");
-        return;
+      try {
+        const messages = await api.getMessages(params.conversationId as string);
+        setMessages(messages.data.messages);
+      } catch (exception) {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error fetching messages",
+        });
       }
-      setMessages(messages.data.messages);
     };
     loadMessages();
   }, [params]);

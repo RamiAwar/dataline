@@ -4,6 +4,7 @@ import { useUserInfo } from "../Providers/UserInfoProvider";
 import { api } from "@/api";
 import MaskedInput from "./MaskedInput";
 import { updateApiKey, updateName } from "./utils";
+import { enqueueSnackbar } from "notistack";
 
 export default function Account() {
   const [userInfo, setUserInfo, setAvatarBlob] = useUserInfo();
@@ -32,11 +33,17 @@ export default function Account() {
       }
 
       const file = event.target.files[0];
-
-      // Update profile avatar URL
-      let response = await api.updateAvatar(file);
-      if (response.status === "ok") {
-        setAvatarBlob(response.data.blob);
+      try {
+        // Update profile avatar URL
+        const response = await api.updateAvatar(file);
+        if (response.status === "ok") {
+          setAvatarBlob(response.data.blob);
+        }
+      } catch (exception) {
+        enqueueSnackbar({
+          variant: "error",
+          message: "There was a problem updating your avatar",
+        });
       }
     } finally {
       setUploading(false);

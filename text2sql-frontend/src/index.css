@@ -39,3 +39,7 @@
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+:root {
+  scrollbar-color: rgba(255,255,255,0.1) rgb(31,41,55);
+}

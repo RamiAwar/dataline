@@ -27,6 +27,7 @@
     "flowbite": "^1.6.5",
     "flowbite-react": "^0.4.3",
     "headlessui": "^0.0.0",
+    "notistack": "^3.0.1",
     "prettier-sql": "^5.1.1",
     "prism-react-renderer": "^2.0.4",
     "react": "^18.2.0",

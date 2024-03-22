@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { IConnection } from "../Library/types";
 import { api } from "../../api";
+import { enqueueSnackbar } from "notistack";
 
 type ConnectionListContextType = [
   IConnection[] | null,
@@ -31,15 +32,13 @@ export const ConnectionListProvider = ({
     api
       .listConnections()
       .then((response) => {
-        if (response.status === "ok") {
-          setConnections(response.data.connections);
-        } else {
-          alert("Error loading connections");
-        }
+        setConnections(response.data.connections);
       })
       .catch((err) => {
-        alert("Error loading conversations");
-        console.log(err);
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error loading conversations",
+        });
       });
   }
 

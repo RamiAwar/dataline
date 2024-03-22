@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { IConversationResult } from "../Library/types";
 import { api } from "../../api";
+import { enqueueSnackbar } from "notistack";
 
 type ConversationListContextType = [
   IConversationResult[],
@@ -37,12 +38,17 @@ export const ConversationListProvider = ({
           if (response.status === "ok") {
             setConversations(response.data.conversations);
           } else {
-            alert("Error loading Conversations");
+            enqueueSnackbar({
+              variant: "error",
+              message: "Error loading Conversations",
+            });
           }
         })
         .catch((err) => {
-          alert("Error loading conversations");
-          console.log(err);
+          enqueueSnackbar({
+            variant: "error",
+            message: "Error loading conversations",
+          });
         });
     }
     f();

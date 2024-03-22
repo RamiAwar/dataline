@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { IConversationResult } from "../Library/types";
 import { api } from "../../api";
 import { Buffer } from "buffer";
+import { isAxiosError } from "axios";
+import { enqueueSnackbar } from "notistack";
 
 async function decodeBase64Data(base64Data: string) {
   const byteCharacters = Buffer.from(base64Data, "base64").toString("binary");
@@ -60,29 +61,24 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
   async function getAvatarUrl(): Promise<string | null> {
     try {
       const response = await api.getAvatar();
-      if (response.status !== "ok") {
-        // TODO: Handle error
-        console.log("Error downloading image: ", response.data);
-        return "";
-      }
-
       return await decodeBase64Data(response.data.blob);
     } catch (error) {
-      // TODO: Handle error
-      console.log("Error downloading image: ", error);
+      if (isAxiosError(error)) {
+        if (error.response?.status !== 404) {
+          enqueueSnackbar({
+            variant: "error",
+            message: error.response?.data.detail,
+          });
+        }
+        return null;
+      }
       return null;
     }
   }
 
   async function getUserInfo() {
     try {
-      let response = await api.getUserInfo();
-      if (response.status !== "ok") {
-        // TODO: Handle error
-        console.log("Error getting user info: ", response.data);
-        return;
-      }
-
+      const response = await api.getUserInfo();
       const avatarUrl = await getAvatarUrl();
       const name = response.data.name;
       const openaiApiKey = response.data.openai_api_key;
@@ -92,9 +88,8 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
         openaiApiKey: openaiApiKey,
         avatarUrl: avatarUrl !== null ? avatarUrl : userInfo.avatarUrl,
       });
-    } catch (error) {
-      // TODO: Handle error
-      console.log("Error getting user info: ", error);
+    } catch {
+      enqueueSnackbar({ variant: "error", message: "Error getting user info" });
     }
   }
 

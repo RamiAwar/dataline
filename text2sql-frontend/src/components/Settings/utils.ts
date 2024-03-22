@@ -1,31 +1,33 @@
 import { api } from "@/api";
+import { enqueueSnackbar } from "notistack";
 
 export async function updateName(name: string | null) {
   if (name === null || name === "") {
     return false;
   }
-  let response = await api.updateUserInfo({ name });
-  if (response.status === "ok") {
-    console.log("Name updated successfully");
+  try {
+    const response = await api.updateUserInfo({ name });
     return true;
-  } else {
-    console.error("Error updating name");
+  } catch {
+    enqueueSnackbar({ variant: "error", message: "Error updating name" });
+    return false;
   }
-  return false;
 }
 
 export async function updateApiKey(apiKey: string | null): Promise<boolean> {
   if (apiKey === null || apiKey === "" || !apiKey.startsWith("sk-")) {
     // TODO: Show error banner: Invalid OpenAI API key
-    alert("Invalid OpenAI API key.")
+    enqueueSnackbar({
+      variant: "error",
+      message: "Invalid OpenAI API key.",
+    });
     return false;
   }
-  let response = await api.updateUserInfo({ openai_api_key: apiKey });
-  if (response.status === "ok") {
-    console.log("API key updated successfully");
+  try {
+    const response = await api.updateUserInfo({ openai_api_key: apiKey });
     return true;
-  } else {
-    console.error("Error updating API key");
+  } catch {
+    enqueueSnackbar({ variant: "error", message: "Error updating API key" });
+    return false;
   }
-  return false;
 }
