@@ -36,6 +36,23 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
     setConnectionName(value);
   };
 
+  const handleCreateTestConnection = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+
+    const res = await api.createTestConnection();
+    if (res.status !== "ok") {
+      alert("Error creating connection");
+      return;
+    }
+
+    // Fake loading for 2 seconds
+    await new Promise((resolve) => setTimeout(resolve, 4000));
+
+    setIsLoading(false);
+    onClose();
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -88,7 +105,14 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                       New Connection
                     </h2>
                     <p className="mt-1 text-sm leading-6 text-gray-400">
-                      Add a new database connection
+                      Add a new database connection or{" "}
+                      <a
+                        className="underline cursor-pointer"
+                        onClick={handleCreateTestConnection}
+                      >
+                        create a sample db
+                      </a>
+                      .
                     </p>
 
                     <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -128,9 +152,9 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                         Connection string / DSN
                       </label>
                       {/* Hidden input field overlaying the real one
-                      
+
                       <div className="relative mt-2">
-                        
+
                         <input
                           type="text"
                           autoComplete="off"

@@ -18,8 +18,10 @@ from sqlalchemy.exc import OperationalError
 
 import db
 from dataline.api.settings.router import router as settings_router
+from dataline.config import config
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.settings import SettingsService
+from dataline.utils import get_sqlite_dsn
 from errors import NotFoundError
 from models import (
     Connection,
@@ -117,19 +119,17 @@ async def healthcheck() -> SuccessResponse[None] | ErrorResponse:
     return SuccessResponse(status=StatusType.ok)
 
 
-@app.post("/connect", response_model_exclude_none=True)
-async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | ErrorResponse:
-    # Try to connect to provided dsn
+def create_db_connection(dsn: str, name: str) -> SuccessResponse[dict[str, str]] | ErrorResponse:
     try:
-        engine = create_engine(req.dsn)
+        engine = create_engine(dsn)
         with engine.connect():
             pass
     except OperationalError as exc:
         # Try again replacing localhost with host.docker.internal to connect with DBs running in docker
-        if "localhost" in req.dsn:
-            req.dsn = req.dsn.replace("localhost", "host.docker.internal")
+        if "localhost" in dsn:
+            dsn = dsn.replace("localhost", "host.docker.internal")
             try:
-                engine = create_engine(req.dsn)
+                engine = create_engine(dsn)
                 with engine.connect():
                     pass
             except OperationalError as e:
@@ -141,9 +141,8 @@ async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | E
 
     # Check if connection with DSN already exists, then return connection_id
     try:
-        existing_connection = db.get_connection_from_dsn(req.dsn)
+        existing_connection = db.get_connection_from_dsn(dsn)
         if existing_connection:
-            # return {"status": "ok", "connection_id": existing_connection.id}
             return SuccessResponse(
                 status=StatusType.ok,
                 data={
@@ -161,13 +160,12 @@ async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | E
     if not database:
         raise Exception("Invalid DSN. Database name is required.")
 
-    # TODO: Refactor to session dependency
     with db.DatabaseManager() as conn:
         connection_id = db.create_connection(
             conn,
-            req.dsn,
+            dsn,
             database=database,
-            name=req.name,
+            name=name,
             dialect=dialect,
         )
 
@@ -182,6 +180,18 @@ async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | E
             "dialect": dialect,
         },
     )
+
+
+@app.post("/create-sample-db")
+async def create_sample_db() -> SuccessResponse[dict[str, str]] | ErrorResponse:
+    name = "DVD Rental (Sample)"
+    dsn = get_sqlite_dsn(config.sample_postgres_path)
+    return create_db_connection(dsn, name)
+
+
+@app.post("/connect", response_model_exclude_none=True)
+async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]] | ErrorResponse:
+    return create_db_connection(req.dsn, req.name)
 
 
 class ConnectionsOut(BaseModel):

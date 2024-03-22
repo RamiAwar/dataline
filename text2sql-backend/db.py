@@ -31,7 +31,7 @@ class DatabaseManager:
         self.connection = sqlite3.connect(self.db_file)
         return self.connection
 
-    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:  # type:ignore[misc]
         if self.connection:
             self.connection.close()
 
@@ -364,6 +364,7 @@ def delete_conversation(conversation_id: str) -> None:
         "DELETE FROM conversation_messages WHERE conversation_id = ?",
         (conversation_id,),
     )
+    conn.commit()
 
 
 # Create empty converstaion

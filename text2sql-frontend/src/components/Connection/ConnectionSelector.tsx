@@ -29,7 +29,6 @@ export const ConnectionSelector = () => {
 
   function selectConnection(connection: IConnection) {
     // Create a new conversation with the selected connection
-    console.log("Selected: ", connection);
     const createConversation = async () => {
       let createdConversation = await api.createConversation(
         connection.id,
@@ -66,13 +65,13 @@ export const ConnectionSelector = () => {
             {connections?.map((connection) => (
               <div
                 key={connection.id}
-                className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75"
+                className="hover:cursor-pointer mx-auto md:hover:ring-2 ring-gray-600 border border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-2/3 sm:w-auto sm:max-w-xs"
                 onClick={() => selectConnection(connection)}
               >
                 <div className="hidden sm:flex overflow-hidden w-full justify-center items-center sm:mt-4">
                   <DatabaseDialectImage databaseDialect={connection.dialect} />
                 </div>
-                <div className="h-full flex justify-center items-center gap-6 text-gray-50 px-4 pb-2">
+                <div className="h-full sm:h-auto flex justify-center items-center gap-6 text-gray-50 px-4 pb-4 sm:-mt-2">
                   <div className="flex-initial h-full lg:h-fit flex flex-col justify-center md:items-start">
                     <div className="text-xs md:text-sm xxl:text-md font-normal text-gray-400">
                       {connection.dialect.charAt(0).toUpperCase() +
@@ -101,7 +100,7 @@ export const ConnectionSelector = () => {
               onClose={closeNewConnectionModal}
             />
             <div
-              className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75"
+              className="hover:cursor-pointer mx-auto md:hover:ring-2 ring-gray-600 border border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-2/3 sm:w-auto sm:max-w-xs"
               onClick={openNewConnectionModal}
             >
               {/* Item to add new connection */}

@@ -1,5 +1,6 @@
 import React from "react";
 import postgresImage from "../../assets/images/postgres.png";
+import sqliteImage from "../../assets/images/sqlite.png";
 import { CircleStackIcon } from "@heroicons/react/24/outline";
 
 interface DatabaseDialectImageProps {
@@ -11,6 +12,7 @@ const DatabaseDialectImage: React.FC<DatabaseDialectImageProps> = ({
 }) => {
   const imageMap: { [key: string]: string } = {
     postgresql: postgresImage,
+    sqlite: sqliteImage,
     // You can add more mappings here as needed
   };
 
@@ -20,13 +22,7 @@ const DatabaseDialectImage: React.FC<DatabaseDialectImageProps> = ({
     return <CircleStackIcon className="text-gray-400" />;
   }
 
-  return (
-    <img
-      className="h-3/4 lg:h-2/3 my-auto"
-      src={imageSrc}
-      alt={databaseDialect}
-    />
-  );
+  return <img className="h-full" src={imageSrc} alt={databaseDialect} />;
 };
 
 export default DatabaseDialectImage;
