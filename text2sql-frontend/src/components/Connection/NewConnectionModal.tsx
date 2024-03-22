@@ -13,11 +13,7 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-function NewConnectionModal({
-  isOpen,
-  onClose,
-  hasExistingConnections,
-}: NewConnectionModalFormProps) {
+function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
   // const maskDSNCredentials = (dsn: string) => {
   //   const regex = /^(.*\/\/)(.*?:.*?@)(.*)$/;
   //   return dsn.replace(regex, (_, prefix, credentials, rest) => {
@@ -110,18 +106,13 @@ function NewConnectionModal({
                       New Connection
                     </h2>
                     <p className="mt-1 text-sm leading-6 text-gray-400">
-                      Add a new database connection
-                      {!hasExistingConnections && (
-                        <>
-                          , or{" "}
-                          <a
-                            className="underline cursor-pointer"
-                            onClick={handleCreateTestConnection}
-                          >
-                            create a sample db
-                          </a>
-                        </>
-                      )}
+                      Add a new database connection or{" "}
+                      <a
+                        className="underline cursor-pointer"
+                        onClick={handleCreateTestConnection}
+                      >
+                        create a sample db
+                      </a>
                       .
                     </p>
 

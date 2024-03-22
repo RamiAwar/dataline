@@ -3,11 +3,13 @@ import asyncio
 from logging.config import fileConfig
 from typing import Any
 
-from alembic import context
-from dataline.config import config as dataline_config
 from sqlalchemy.engine import Connection
 
-from dataline.models import DBModel  # noqa: F401 isort:skip
+from alembic import context
+from dataline.config import config as dataline_config
+from dataline.models import DBModel
+
+from dataline.utils import get_sqlite_dsn_async  # noqa: F401 isort:skip
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -75,7 +77,8 @@ async def run_async_migrations() -> None:
     """
     from sqlalchemy.ext.asyncio import create_async_engine
 
-    engine = create_async_engine(dataline_config.sqlite_dsn, echo=dataline_config.sqlite_echo)
+    dsn = get_sqlite_dsn_async(dataline_config.sqlite_path)
+    engine = create_async_engine(dsn, echo=dataline_config.sqlite_echo)
 
     async with engine.connect() as connection:
         await connection.run_sync(do_run_migrations)

@@ -22,7 +22,7 @@ class SQLResults(TypedDict):
 
 class SchemaService:
     @classmethod
-    def extract_tables(cls, conn: SQLiteConnection, connection_id: str) -> dict[str, dict[str, TableField]]:
+    def extract_tables(cls, conn: SQLiteConnection, connection_id: str) -> dict[str, list[TableField]]:
         # Get DSN from connection
         connection = db.get_connection(conn, connection_id)
         engine = create_engine(connection.dsn)
@@ -73,7 +73,7 @@ class SchemaService:
         connection_id: str,
         table_name: str,
         fields: list[TableField],
-    ):
+    ) -> None:
         """Creates a schema from scratch with empty descriptions or adds missing
         fields to one that already exists."""
         # TODO: Delete removed fields as well

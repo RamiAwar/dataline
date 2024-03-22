@@ -99,7 +99,6 @@ export const ConnectionSelector = () => {
             <NewConnectionModal
               isOpen={isNewConnectionModalOpen}
               onClose={closeNewConnectionModal}
-              hasExistingConnections={connections?.length !== 0}
             />
             <div
               className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75"

@@ -18,8 +18,10 @@ from sqlalchemy.exc import OperationalError
 
 import db
 from dataline.api.settings.router import router as settings_router
+from dataline.config import config
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.settings import SettingsService
+from dataline.utils import get_sqlite_dsn
 from errors import NotFoundError
 from models import (
     Connection,
@@ -124,10 +126,10 @@ def create_db_connection(dsn: str, name: str) -> SuccessResponse[dict[str, str]]
             pass
     except OperationalError as exc:
         # Try again replacing localhost with host.docker.internal to connect with DBs running in docker
-        if "localhost" in req.dsn:
-            req.dsn = req.dsn.replace("localhost", "host.docker.internal")
+        if "localhost" in dsn:
+            dsn = dsn.replace("localhost", "host.docker.internal")
             try:
-                engine = create_engine(req.dsn)
+                engine = create_engine(dsn)
                 with engine.connect():
                     pass
             except OperationalError as e:
@@ -141,7 +143,6 @@ def create_db_connection(dsn: str, name: str) -> SuccessResponse[dict[str, str]]
     try:
         existing_connection = db.get_connection_from_dsn(dsn)
         if existing_connection:
-            # return {"status": "ok", "connection_id": existing_connection.id}
             return SuccessResponse(
                 status=StatusType.ok,
                 data={
@@ -159,7 +160,6 @@ def create_db_connection(dsn: str, name: str) -> SuccessResponse[dict[str, str]]
     if not database:
         raise Exception("Invalid DSN. Database name is required.")
 
-    # TODO: Refactor to session dependency
     with db.DatabaseManager() as conn:
         connection_id = db.create_connection(
             conn,
@@ -184,10 +184,8 @@ def create_db_connection(dsn: str, name: str) -> SuccessResponse[dict[str, str]]
 
 @app.post("/create-sample-db")
 async def create_sample_db() -> SuccessResponse[dict[str, str]] | ErrorResponse:
-    # TODO: do we want to host the file somewhere and download it only if the user wants a sample db?
-    # TODO: Or just always keep it in the repository?
-    dsn = "sqlite:///dvd_rental.db"
-    name = "DVD Rental - Sample Database"
+    name = "DVD Rental (Sample)"
+    dsn = get_sqlite_dsn(config.sample_postgres_path)
     return create_db_connection(dsn, name)
 
 
