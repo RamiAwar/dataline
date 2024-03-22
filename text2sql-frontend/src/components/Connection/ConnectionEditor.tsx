@@ -217,17 +217,32 @@ export const ConnectionEditor = () => {
               help generate higher quality results.
               <br></br>
               <br></br>
-              For example, if you have a table called "users" with a vague
-              column called 'data' that actually contains key value pairs
-              including the user's age, you could add a description to the
-              'data' column that says 'Contains key value pairs including the
-              user's age'.
+              For example, consider a table called{" "}
+              <span className="font-mono text-lime-300 bg-slate-600 rounded-md px-2 py-1">
+                users
+              </span>{" "}
+              with a vague column called{" "}
+              <span className="font-mono text-lime-300 bg-slate-600 rounded-md px-2 py-1">
+                type
+              </span>{" "}
+              that contains one of{" "}
+              <span className="font-mono text-white bg-slate-600 rounded-md px-2 py-1">
+                admin, basic, beta
+              </span>
+              . You could add a description to the{" "}
+              <span className="font-mono text-lime-300 bg-slate-600 rounded-md px-2 py-1">
+                type
+              </span>{" "}
+              column that says <br></br>
+              <br></br>
+              <span className="font-mono text-gray-300 rounded-md bg-slate-600 px-2 py-1">
+                Contains one of 'admin', 'basic', 'beta'.
+              </span>
               <br></br>
               <br></br>
-              This is needed as DataLine will never look at the actual data in
-              your database, only the schema, making it impossible to guess what
-              the data actually contains without good field names and
-              descriptions.
+              This is helpful as DataLine will never look at the actual rows in
+              your database, only the schema, making it hard to guess what the
+              data actually contains.
             </span>
             <div className="mt-2">
               {connection && <SchemaEditorGrid connection={connection} />}

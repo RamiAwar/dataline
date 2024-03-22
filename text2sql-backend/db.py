@@ -364,6 +364,7 @@ def delete_conversation(conversation_id: str) -> None:
         "DELETE FROM conversation_messages WHERE conversation_id = ?",
         (conversation_id,),
     )
+    conn.commit()
 
 
 # Create empty converstaion
