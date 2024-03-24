@@ -79,6 +79,9 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
   async function getUserInfo() {
     try {
       const response = await api.getUserInfo();
+      if (response.data === null) {
+        return; // Usually on first time setup, no user created yet
+      }
       const avatarUrl = await getAvatarUrl();
       const name = response.data.name;
       const openaiApiKey = response.data.openai_api_key;
