@@ -258,6 +258,8 @@ def get_conversation(conversation_id: str) -> Conversation:
         "SELECT id, connection_id, name, created_at FROM conversations WHERE id = ?",
         (conversation_id,),
     ).fetchone()
+    if conversation is None:
+        raise ValueError("Conversation does not exist")
     return Conversation(
         conversation_id=str(conversation[0]),
         connection_id=conversation[1],

@@ -90,7 +90,7 @@ async def catch_exceptions_middleware(
         return JSONResponse({"status": "error", "message": str(e)})
 
 
-app.middleware("http")(catch_exceptions_middleware)
+# app.middleware("http")(catch_exceptions_middleware)
 
 
 class ConnectRequest(BaseModel):
@@ -353,7 +353,14 @@ class ListMessageOut(BaseModel):
     messages: list[MessageWithResults]
 
 
-@app.get("/messages")
+def conversation_exists(conversation_id: str):
+    try:
+        db.get_conversation(conversation_id)  # check that it exists first
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Conversation does not exist") from exc
+
+
+@app.get("/messages", dependencies=[Depends(conversation_exists)])
 async def messages(conversation_id: str) -> SuccessResponse[ListMessageOut]:
     return SuccessResponse(
         status=StatusType.ok,
@@ -363,7 +370,7 @@ async def messages(conversation_id: str) -> SuccessResponse[ListMessageOut]:
     )
 
 
-@app.get("/execute-sql", response_model=UnsavedResult)
+@app.get("/execute-sql", response_model=UnsavedResult, dependencies=[Depends(conversation_exists)])
 async def execute_sql(
     conversation_id: str,
     sql: str,
@@ -426,7 +433,7 @@ async def update_result_content(result_id: str, content: Annotated[str, Body(emb
         return SuccessResponse()
 
 
-@app.get("/query", response_model=list[UnsavedResult])
+@app.get("/query", response_model=list[UnsavedResult], dependencies=[Depends(conversation_exists)])
 async def query(
     conversation_id: str,
     query: str,

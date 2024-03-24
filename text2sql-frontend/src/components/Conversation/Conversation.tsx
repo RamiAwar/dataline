@@ -2,21 +2,23 @@ import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { api } from "../../api";
 import { Message } from "./Message";
 import { IMessageWithResults } from "../Library/types";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import ExpandingInput from "./ExpandingInput";
 
 import { Transition } from "@headlessui/react";
 import { generateUUID } from "../Library/utils";
 import { enqueueSnackbar } from "notistack";
 import { useConnectionList } from "../Providers/ConnectionListProvider";
+import { isAxiosError } from "axios";
 import { Routes } from "@/router";
 
 export const Conversation = () => {
   const params = useParams<{ conversationId: string }>();
+  const navigate = useNavigate();
 
   // Load messages from conversation via API on load
   const [messages, setMessages] = useState<IMessageWithResults[]>([]);
-  const [connections, _] = useConnectionList();
+  const [connections] = useConnectionList();
   const messageListRef = useRef<HTMLDivElement | null>(null);
 
   function submitQuery(value: string) {
@@ -70,6 +72,10 @@ export const Conversation = () => {
         const messages = await api.getMessages(params.conversationId as string);
         setMessages(messages.data.messages);
       } catch (exception) {
+        if (isAxiosError(exception) && exception.response?.status === 404) {
+          navigate(Routes.Root);
+          return;
+        }
         enqueueSnackbar({
           variant: "error",
           message: "Error fetching messages",
