@@ -35,6 +35,11 @@ export const ConnectionListProvider = ({
         setConnections(response.data.connections);
       })
       .catch((err) => {
+        // If 404, do nothing
+        if (err.response.status === 404) {
+          return;
+        }
+
         enqueueSnackbar({
           variant: "error",
           message: "Error loading conversations",
