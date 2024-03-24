@@ -2,18 +2,21 @@ import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { api } from "../../api";
 import { Message } from "./Message";
 import { IMessageWithResults } from "../Library/types";
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import ExpandingInput from "./ExpandingInput";
 
 import { Transition } from "@headlessui/react";
 import { generateUUID } from "../Library/utils";
 import { enqueueSnackbar } from "notistack";
+import { useConnectionList } from "../Providers/ConnectionListProvider";
+import { Routes } from "@/router";
 
 export const Conversation = () => {
   const params = useParams<{ conversationId: string }>();
 
   // Load messages from conversation via API on load
   const [messages, setMessages] = useState<IMessageWithResults[]>([]);
+  const [connections, _] = useConnectionList();
   const messageListRef = useRef<HTMLDivElement | null>(null);
 
   function submitQuery(value: string) {
@@ -85,6 +88,11 @@ export const Conversation = () => {
       }, 10);
     }
   }, [messages]);
+
+  if (connections === null || connections?.length === 0) {
+    // Redirect to connection selector route
+    return <Navigate to={Routes.Root} />;
+  }
 
   return (
     <div className="bg-gray-900 w-full h-[calc(100%-4rem)] relative flex flex-col">
