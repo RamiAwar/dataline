@@ -19,6 +19,8 @@ import { PencilSquareIcon } from "@heroicons/react/20/solid";
 import { Link, useParams } from "react-router-dom";
 import { ProfileDropdown } from "./ProfileDropdown";
 import { enqueueSnackbar } from "notistack";
+import { useNavigate } from "react-router-dom";
+import { n } from "@tauri-apps/api/fs-4bb77382";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -33,10 +35,12 @@ export const Sidebar = () => {
     useState<IConversation | null>();
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(currentConversation?.name || "");
+  const navigate = useNavigate();
 
   async function deleteConversation(conversationId: string) {
     try {
       await api.deleteConversation(conversationId);
+      navigate("/");
     } catch (exception) {
       enqueueSnackbar({
         variant: "error",
