@@ -20,6 +20,7 @@ type UserInfo = {
   name: string | null;
   openaiApiKey: string | null;
   avatarUrl: string | null;
+  isLoaded: boolean;
 };
 
 type UserInfoContextType = [
@@ -48,6 +49,7 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
     name: null,
     openaiApiKey: null,
     avatarUrl: null,
+    isLoaded: false,
   });
 
   async function setAvatarBlob(blob: string) {
@@ -87,6 +89,7 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
         name: name,
         openaiApiKey: openaiApiKey,
         avatarUrl: avatarUrl !== null ? avatarUrl : userInfo.avatarUrl,
+        isLoaded: true,
       });
     } catch {
       enqueueSnackbar({ variant: "error", message: "Error getting user info" });
