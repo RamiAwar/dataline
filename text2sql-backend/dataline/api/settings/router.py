@@ -1,6 +1,6 @@
 import base64
 
-from fastapi import APIRouter, Depends, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
 from dataline.models.user.schema import AvatarOut, UserOut, UserUpdateIn
 from dataline.repositories.base import AsyncSession, get_session

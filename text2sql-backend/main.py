@@ -1,25 +1,22 @@
-import argparse
 import json
 import logging
-import os
 import re
 from typing import Annotated, Awaitable, Callable
 
-import uvicorn
 from fastapi import (
     Body,
     Depends,
     FastAPI,
-    Header,
     HTTPException,
     Request,
     Response,
     status,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
 from pydantic.json import pydantic_encoder
-from pygments import formatters, highlight, lexers
+from pygments import lexers
 from pygments_pprint_sql import SqlFilter
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
@@ -53,54 +50,30 @@ lexer = lexers.MySqlLexer()
 lexer.add_filter(SqlFilter())
 
 app = FastAPI()
-origins = ["*"]
-loaded = None
-
-_environ = os.environ.copy()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-async def check_secret(secret_token: str = Header(None)) -> None:
-    """Dependency to check if a secret token is valid.
-    This ensures only applications with the secret key specified when starting
-    the server or in environment variable is able to post to the server.
-    If no secret token is specified while starting or in environment variables
-    this dependency does nothing.
-
-    Args:
-        secret_token (str, optional): Secret token sent with request.
-            Defaults to None.
-
-    Raises:
-        HTTPException: Secret Token invalid
-    """
-    if _environ.get("SECRET_TOKEN") and secret_token != _environ.get("SECRET_TOKEN"):
-        raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 async def catch_exceptions_middleware(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
-    global loaded
     try:
         return await call_next(request)
     except NotFoundError as e:
-        # No need to log these, expected
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+        # No need to log these, expected errors
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": e.message})
     except Exception as e:
         # Log for collection
         logger.exception(e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"message": str(e)})
 
 
-# app.middleware("http")(catch_exceptions_middleware)
+app.middleware("http")(catch_exceptions_middleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class ConnectRequest(BaseModel):
@@ -509,55 +482,3 @@ async def query(
             ),
             media_type="application/json",
         )
-
-
-def sql2html(sql: str) -> str:
-    return highlight(sql, lexer, formatters.HtmlFormatter())
-
-
-def init_argparse() -> argparse.ArgumentParser:
-    """Initialises argparse and returns an argument parser
-
-    Returns:
-        argparse.ArgumentParser: Object for parsing CLI arguments
-    """
-    parser = argparse.ArgumentParser(
-        description="Launches the Python API",
-    )
-    parser.add_argument(
-        "--host",
-        dest="host",
-        default="127.0.0.1",
-        help="Bind socket to host. [default: %(default)s]",
-    )
-    parser.add_argument(
-        "--port",
-        dest="port",
-        default=7377,
-        type=int,
-        help="Bind socket to port. [default: %(default)s]",
-    )
-    parser.add_argument(
-        "--log-level",
-        dest="log_level",
-        default="info",
-        choices=["critical", "error", "warning", "info", "debug", "trace"],
-        help="Log level. [default: %(default)s]",
-    )
-    parser.add_argument(
-        "--secret",
-        dest="secret",
-        default=None,
-        help="Server secret token. [default: %(default)s]",
-    )
-    return parser
-
-
-if __name__ == "__main__":
-    parser = init_argparse()
-    args = parser.parse_args()
-
-    if args.secret:
-        _environ["SECRET_TOKEN"] = args.secret
-
-    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)

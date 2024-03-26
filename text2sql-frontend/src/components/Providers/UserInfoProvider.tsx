@@ -79,9 +79,6 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
   async function getUserInfo() {
     try {
       const response = await api.getUserInfo();
-      if (response.data === null) {
-        return; // Usually on first time setup, no user created yet
-      }
       const avatarUrl = await getAvatarUrl();
       const name = response.data.name;
       const openaiApiKey = response.data.openai_api_key;
@@ -91,7 +88,10 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
         openaiApiKey: openaiApiKey,
         avatarUrl: avatarUrl !== null ? avatarUrl : userInfo.avatarUrl,
       });
-    } catch {
+    } catch (exception) {
+      if (isAxiosError(exception) && exception.response?.status === 404) {
+        return;
+      }
       enqueueSnackbar({ variant: "error", message: "Error getting user info" });
     }
   }

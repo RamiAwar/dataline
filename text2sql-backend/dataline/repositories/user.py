@@ -14,8 +14,7 @@ class UserCreate(BaseModel):
     openai_api_key: Optional[str] = None
 
 
-class UserUpdate(UserCreate):
-    ...
+class UserUpdate(UserCreate): ...
 
 
 class UserRepository(BaseRepository[UserModel, UserCreate, UserUpdate]):

@@ -323,7 +323,7 @@ const updateUserInfo = async (options: {
 export type GetUserInfoResult = ApiResponse<{
   name: string;
   openai_api_key: string;
-} | null>;
+}>;
 const getUserInfo = async () => {
   const response = await axios.get<GetUserInfoResult>(
     `${baseUrl}/settings/info`

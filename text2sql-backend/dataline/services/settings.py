@@ -6,7 +6,7 @@ from fastapi import Depends, UploadFile
 
 from dataline.models.media.model import MediaModel
 from dataline.models.user.schema import UserOut, UserUpdateIn
-from dataline.repositories.base import AsyncSession
+from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.media import MediaCreate, MediaRepository
 from dataline.repositories.user import UserCreate, UserRepository, UserUpdate
 
@@ -57,8 +57,8 @@ class SettingsService:
 
     async def update_user_info(self, session: AsyncSession, data: UserUpdateIn) -> UserOut:
         # Check if user exists
-        user_info = await self.user_repo.get_one_or_none(session)
         user = None
+        user_info = await self.user_repo.get_one_or_none(session)
         if user_info is None:
             # Create user with data
             user_create = UserCreate.model_construct(**data.model_dump(exclude_none=True))
@@ -70,14 +70,14 @@ class SettingsService:
 
         return UserOut.model_validate(user)
 
-    async def get_user_info(self, session: AsyncSession) -> Optional[UserOut]:
+    async def get_user_info(self, session: AsyncSession) -> UserOut:
         user_info = await self.user_repo.get_one_or_none(session)
         if user_info is None:
-            return None
+            raise NotFoundError("No user or multiple users found")
 
         return UserOut.model_validate(user_info)
 
-    async def get_openai_api_key(self, session: AsyncSession) -> str:
+    async def get_openai_api_key(self, session: AsyncSession) -> Optional[str]:
         user_info = await self.user_repo.get_one_or_none(session)
         if user_info is None:
             raise Exception("User does not exist. Please setup your application.")
