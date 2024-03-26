@@ -6,9 +6,17 @@ import re
 from typing import Annotated, Awaitable, Callable
 
 import uvicorn
-from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request, Response
+from fastapi import (
+    Body,
+    Depends,
+    FastAPI,
+    Header,
+    HTTPException,
+    Request,
+    Response,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
 from pydantic.json import pydantic_encoder
 from pygments import formatters, highlight, lexers
@@ -19,10 +27,9 @@ from sqlalchemy.exc import OperationalError
 import db
 from dataline.api.settings.router import router as settings_router
 from dataline.config import config
-from dataline.repositories.base import AsyncSession, get_session
+from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.settings import SettingsService
 from dataline.utils import get_sqlite_dsn
-from errors import NotFoundError
 from models import (
     Connection,
     ConversationWithMessagesWithResults,
@@ -80,14 +87,17 @@ async def check_secret(secret_token: str = Header(None)) -> None:
 
 async def catch_exceptions_middleware(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
-) -> Response | JSONResponse:
+) -> Response:
     global loaded
     try:
         return await call_next(request)
+    except NotFoundError as e:
+        # No need to log these, expected
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
     except Exception as e:
-        logger.exception("internal_server_error")
-        loaded = JSONResponse({"status": "error", "message": str(e)})
-        return JSONResponse({"status": "error", "message": str(e)})
+        # Log for collection
+        logger.exception(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 # app.middleware("http")(catch_exceptions_middleware)
@@ -353,7 +363,7 @@ class ListMessageOut(BaseModel):
     messages: list[MessageWithResults]
 
 
-def conversation_exists(conversation_id: str):
+def conversation_exists(conversation_id: str) -> None:
     try:
         db.get_conversation(conversation_id)  # check that it exists first
     except ValueError as exc:
