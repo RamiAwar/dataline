@@ -9,6 +9,6 @@ from dataline.models.connection import ConnectionModel
 
 class SchemaTableModel(DBModel, UUIDMixin):
     __tablename__ = "schema_tables"
-    connection_id: Mapped[UUID] = mapped_column(ForeignKey(ConnectionModel.id))
+    connection_id: Mapped[UUID] = mapped_column(ForeignKey(ConnectionModel.id, ondelete="CASCADE"))
     name: Mapped[str] = mapped_column("name", String, nullable=False)
     description: Mapped[str] = mapped_column("description", Text, nullable=False)

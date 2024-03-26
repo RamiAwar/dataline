@@ -8,5 +8,5 @@ from dataline.models.result import ResultModel
 
 class MessageResultModel(DBModel):
     __tablename__ = "message_results"
-    message_id: Mapped[int] = mapped_column(ForeignKey(MessageModel.id), primary_key=True)
-    result_id: Mapped[int] = mapped_column(ForeignKey(ResultModel.id), primary_key=True)
+    message_id: Mapped[int] = mapped_column(ForeignKey(MessageModel.id, ondelete="CASCADE"), primary_key=True)
+    result_id: Mapped[int] = mapped_column(ForeignKey(ResultModel.id, ondelete="CASCADE"), primary_key=True)

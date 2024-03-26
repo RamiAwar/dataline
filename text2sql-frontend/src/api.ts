@@ -73,14 +73,12 @@ const createConnection = async (
   return response.data;
 };
 
-
 const createTestConnection = async (): Promise<ConnectResult> => {
   const response = await axios.post<ConnectResult>(
     `${baseUrl}/create-sample-db`
   );
   return response.data;
 };
-
 
 export type ConnectionResult = {
   id: string;
@@ -119,6 +117,15 @@ const updateConnection = async (
   const response = await axios.patch<UpdateConnectionResult>(
     `${baseUrl}/connection/${connectionId}`,
     edits
+  );
+  return response.data;
+};
+
+const deleteConnection = async (
+  connectionId: string
+): Promise<ApiResponse<void>> => {
+  const response = await axios.delete<ApiResponse<void>>(
+    `${baseUrl}/connection/${connectionId}`
   );
   return response.data;
 };
@@ -342,6 +349,7 @@ export const api = {
   createConnection,
   createTestConnection,
   updateConnection,
+  deleteConnection,
   listConnections,
   listConversations,
   createConversation,

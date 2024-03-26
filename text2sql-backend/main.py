@@ -264,6 +264,13 @@ async def get_connection(connection_id: str) -> SuccessResponse[ConnectionOut]:
         )
 
 
+@app.delete("/connection/{connection_id}")
+async def delete_connection(connection_id: str) -> SuccessResponse[None]:
+    with db.DatabaseManager() as conn:
+        db.delete_connection(conn, connection_id)
+    return SuccessResponse(status=StatusType.ok)
+
+
 @app.patch("/connection/{connection_id}")
 async def update_connection(connection_id: str, req: UpdateConnectionRequest) -> SuccessResponse[ConnectionOut]:
     # Try to connect to provided dsn

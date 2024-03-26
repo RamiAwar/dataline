@@ -8,5 +8,5 @@ from dataline.models.conversation import ConversationModel
 
 class ConversationMessageModel(DBModel):
     __tablename__ = "conversation_messages"
-    message_id: Mapped[int] = mapped_column(ForeignKey(MessageModel.id), primary_key=True)
-    conversation_id: Mapped[int] = mapped_column(ForeignKey(ConversationModel.id), primary_key=True)
+    message_id: Mapped[int] = mapped_column(ForeignKey(MessageModel.id, ondelete="CASCADE"), primary_key=True)
+    conversation_id: Mapped[int] = mapped_column(ForeignKey(ConversationModel.id, ondelete="CASCADE"), primary_key=True)

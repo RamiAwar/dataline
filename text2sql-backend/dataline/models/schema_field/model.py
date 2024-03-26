@@ -9,7 +9,7 @@ from dataline.models.schema_table import SchemaTableModel
 
 class SchemaFieldModel(DBModel, UUIDMixin):
     __tablename__ = "schema_fields"
-    table_id: Mapped[UUID] = mapped_column(ForeignKey(SchemaTableModel.id))
+    table_id: Mapped[UUID] = mapped_column(ForeignKey(SchemaTableModel.id, ondelete="CASCADE"))
     name: Mapped[str] = mapped_column("name", String, nullable=False)
     type: Mapped[str] = mapped_column("type", String, nullable=False)
     description: Mapped[str] = mapped_column("description", Text, nullable=False)
