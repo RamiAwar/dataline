@@ -18,8 +18,20 @@ from models import (
     UnsavedResult,
 )
 
+from sqlalchemy.engine import Engine
+from sqlalchemy import event
+
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
 # Old way of using database - this is a single connection, hard to manage transactions
 conn = sqlite3.connect(dataline_config.sqlite_path, check_same_thread=False)
+conn.execute("PRAGMA foreign_keys = ON")
 
 
 class DatabaseManager:
@@ -29,6 +41,7 @@ class DatabaseManager:
 
     def __enter__(self) -> SQLiteConnection:
         self.connection = sqlite3.connect(self.db_file)
+        self.connection.execute("PRAGMA foreign_keys = ON")
         return self.connection
 
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:  # type:ignore[misc]
@@ -75,6 +88,12 @@ def update_connection(connection_id: str, name: str, dsn: str, database: str, di
         "UPDATE connections SET name = ?, dsn = ?, database = ?, dialect = ? WHERE id = ?",
         (name, dsn, database, dialect, connection_id),
     )
+    conn.commit()
+    return True
+
+
+def delete_connection(conn: SQLiteConnection, connection_id: str) -> bool:
+    conn.execute("DELETE FROM connections WHERE id = ?", (connection_id,))
     conn.commit()
     return True
 
