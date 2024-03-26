@@ -6,7 +6,7 @@ from typing import Any, List, Literal, Optional
 from uuid import uuid4
 
 from dataline.config import config as dataline_config
-from errors import DuplicateError, NotFoundError
+from dataline.repositories.base import NotFoundError, NotUniqueError
 from models import (
     Connection,
     Conversation,
@@ -115,7 +115,7 @@ def create_schema_table(conn: SQLiteConnection, connection_id: str, table_name: 
         "SELECT * FROM schema_tables WHERE connection_id = ? AND name = ?",
         (connection_id, table_name),
     ).fetchone():
-        raise DuplicateError("Table already exists")
+        raise NotUniqueError("Table already exists")
 
     # Insert table with UUID for ID
     table_id = uuid4().hex
@@ -142,7 +142,7 @@ def create_schema_field(
         "SELECT * FROM schema_fields WHERE table_id = ? AND name = ?",
         (table_id, field_name),
     ).fetchone():
-        raise DuplicateError("Field already exists")
+        raise NotUniqueError("Field already exists")
 
     # Insert field and return ID of row
     field_id = uuid4().hex
@@ -258,8 +258,10 @@ def get_conversation(conversation_id: str) -> Conversation:
         "SELECT id, connection_id, name, created_at FROM conversations WHERE id = ?",
         (conversation_id,),
     ).fetchone()
+
     if conversation is None:
-        raise ValueError("Conversation does not exist")
+        raise NotFoundError("Conversation does not exist")
+
     return Conversation(
         conversation_id=str(conversation[0]),
         connection_id=conversation[1],

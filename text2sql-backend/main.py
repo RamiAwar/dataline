@@ -363,15 +363,11 @@ class ListMessageOut(BaseModel):
     messages: list[MessageWithResults]
 
 
-def conversation_exists(conversation_id: str) -> None:
-    try:
-        db.get_conversation(conversation_id)  # check that it exists first
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail="Conversation does not exist") from exc
-
-
-@app.get("/messages", dependencies=[Depends(conversation_exists)])
+@app.get("/messages")
 async def messages(conversation_id: str) -> SuccessResponse[ListMessageOut]:
+    # Will raise error that's auto captured by middleware if not exists
+    db.get_conversation(conversation_id)
+
     return SuccessResponse(
         status=StatusType.ok,
         data=ListMessageOut(
@@ -380,7 +376,7 @@ async def messages(conversation_id: str) -> SuccessResponse[ListMessageOut]:
     )
 
 
-@app.get("/execute-sql", response_model=UnsavedResult, dependencies=[Depends(conversation_exists)])
+@app.get("/execute-sql", response_model=UnsavedResult)
 async def execute_sql(
     conversation_id: str,
     sql: str,
@@ -394,6 +390,7 @@ async def execute_sql(
 
     # Get conversation
     with db.DatabaseManager() as conn:
+        # Will raise error that's auto captured by middleware if not exists
         conversation = db.get_conversation(conversation_id)
         connection_id = conversation.connection_id
         connection = db.get_connection(conn, connection_id)
@@ -443,7 +440,7 @@ async def update_result_content(result_id: str, content: Annotated[str, Body(emb
         return SuccessResponse()
 
 
-@app.get("/query", response_model=list[UnsavedResult], dependencies=[Depends(conversation_exists)])
+@app.get("/query", response_model=list[UnsavedResult])
 async def query(
     conversation_id: str,
     query: str,
