@@ -73,14 +73,12 @@ const createConnection = async (
   return response.data;
 };
 
-
 const createTestConnection = async (): Promise<ConnectResult> => {
   const response = await axios.post<ConnectResult>(
     `${baseUrl}/create-sample-db`
   );
   return response.data;
 };
-
 
 export type ConnectionResult = {
   id: string;

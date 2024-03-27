@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import AsyncGenerator, Generic, Iterable, Protocol, Sequence, Type, TypeVar
 from uuid import UUID
 
+from asyncpg import NotNullViolationError, UniqueViolationError
 from pydantic import BaseModel
 from sqlalchemy import Delete, Select, Update, delete, insert, select, update
 from sqlalchemy.exc import IntegrityError, MultipleResultsFound, NoResultFound
@@ -40,13 +41,26 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         await session.close()
 
 
-class ConstraintViolationError(Exception): ...
+class ConstraintViolationError(Exception):
+    ...
 
 
-class NotFoundError(Exception): ...
+class NotFoundError(Exception):
+    message: str
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+        super().__init__(message)
 
 
-class NotUniqueError(Exception): ...
+class NotUniqueError(Exception):
+    message: str
+    model_name: str | None
+
+    def __init__(self, message: str, model_name: str | None = None) -> None:
+        self.message = message
+        self.model_name = model_name
+        super().__init__(message)
 
 
 # Generic types per repository
@@ -61,30 +75,56 @@ Data = TypeVar("Data", bound=BaseModel)
 
 class RepositoryProtocol(Protocol[Model, TCreate, TUpdate]):
     @property
-    def model(self) -> Type[Model]: ...
+    def model(self) -> Type[Model]:
+        ...
 
     # Low level ops
-    async def get(self, session: AsyncSession, query: Select[tuple[Model]]) -> Model: ...
-    async def first(self, session: AsyncSession, query: Select[tuple[Model]]) -> Model: ...
-    async def list(self, session: AsyncSession, query: Select[tuple[Model]]) -> Sequence[Model]: ...
-    async def get_unique(self, session: AsyncSession, query: Select[tuple[Model]]) -> Model: ...
-    async def list_unique(self, session: AsyncSession, query: Select[tuple[Model]]) -> Sequence[Model]: ...
-    async def update_one(self, session: AsyncSession, query: Update) -> Model: ...
-    async def update_many(self, session: AsyncSession, query: Update) -> Sequence[Model]: ...
-    async def delete_one(self, session: AsyncSession, query: Delete) -> None: ...
+    async def get(self, session: AsyncSession, query: Select[tuple[Model]]) -> Model:
+        ...
+
+    async def first(self, session: AsyncSession, query: Select[tuple[Model]]) -> Model:
+        ...
+
+    async def list(self, session: AsyncSession, query: Select[tuple[Model]]) -> Sequence[Model]:
+        ...
+
+    async def get_unique(self, session: AsyncSession, query: Select[tuple[Model]]) -> Model:
+        ...
+
+    async def list_unique(self, session: AsyncSession, query: Select[tuple[Model]]) -> Sequence[Model]:
+        ...
+
+    async def update_one(self, session: AsyncSession, query: Update) -> Model:
+        ...
+
+    async def update_many(self, session: AsyncSession, query: Update) -> Sequence[Model]:
+        ...
+
+    async def delete_one(self, session: AsyncSession, query: Delete) -> None:
+        ...
 
     # Higher level ops
-    async def create(self, session: AsyncSession, data: TCreate, flush: bool = True) -> Model: ...
-    async def create_many(self, session: AsyncSession, data: Iterable[TCreate]) -> Sequence[Model]: ...
-    async def get_by_id(self, session: AsyncSession, record_id: UUID) -> Model: ...
-    async def update_by_id(self, session: AsyncSession, record_id: UUID, data: TUpdate) -> Model: ...
-    async def delete_by_id(self, session: AsyncSession, record_id: UUID) -> None: ...
+    async def create(self, session: AsyncSession, data: TCreate, flush: bool = True) -> Model:
+        ...
+
+    async def create_many(self, session: AsyncSession, data: Iterable[TCreate]) -> Sequence[Model]:
+        ...
+
+    async def get_by_id(self, session: AsyncSession, record_id: UUID) -> Model:
+        ...
+
+    async def update_by_id(self, session: AsyncSession, record_id: UUID, data: TUpdate) -> Model:
+        ...
+
+    async def delete_by_id(self, session: AsyncSession, record_id: UUID) -> None:
+        ...
 
 
 class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
     # This override is needed because of https://github.com/python/typing/issues/644
     # seems like the issue is not fixed yet, added a comment there
-    def __init__(self) -> None: ...
+    def __init__(self) -> None:
+        ...
 
     @property
     @abstractmethod
@@ -148,14 +188,25 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         """
         Create a new instance of the model and save it to the database.
         """
-        instance = self.model(**data.model_dump())
-        session.add(instance)
+        try:
+            # Insert the instance into the database
+            result = await session.execute(insert(self.model).returning(self.model).values(data.model_dump()))
+            if flush:
+                await session.flush()
+            return result.scalar_one()
+        except IntegrityError as e:
+            cause = e.orig.__getattribute__("__cause__")
+            # If cause is None, just default to constraint violation error
+            if cause is None:
+                raise ConstraintViolationError(e)
 
-        # Flush commands to DB (within transaction) so we can refresh instance from DB
-        if flush:
-            await session.flush()
-        await session.refresh(instance)
-        return instance
+            if isinstance(cause, NotNullViolationError):
+                # Can't type this well as asyncpg error attributes are set dynamically by a metaclass
+                raise ConstraintViolationError(cause.__getattribute__("message"))
+            elif isinstance(cause, UniqueViolationError):
+                raise NotUniqueError(message=cause.__getattribute__("message"), model_name=self.model.__name__)
+            else:
+                raise ConstraintViolationError(cause.__getattribute__("message"))
 
     async def create_many(self, session: AsyncSession, data: Iterable[TCreate]) -> Sequence[Model]:
         """
@@ -181,6 +232,7 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         """
         self._check_query_for_where(query)
 
+        # TODO: TEST THIS
         # Execute the update
         try:
             results = await session.scalars(query)

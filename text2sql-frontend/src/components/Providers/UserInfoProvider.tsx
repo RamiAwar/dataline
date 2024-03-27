@@ -88,7 +88,10 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
         openaiApiKey: openaiApiKey,
         avatarUrl: avatarUrl !== null ? avatarUrl : userInfo.avatarUrl,
       });
-    } catch {
+    } catch (exception) {
+      if (isAxiosError(exception) && exception.response?.status === 404) {
+        return;
+      }
       enqueueSnackbar({ variant: "error", message: "Error getting user info" });
     }
   }

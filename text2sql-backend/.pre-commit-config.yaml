@@ -20,7 +20,7 @@ repos:
         description: Forces to replace line ending by the UNIX 'lf' character.
 
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 24.3.0
     hooks:
       - id: black
         args: [--config=./text2sql-backend/pyproject.toml, --target-version=py311]
