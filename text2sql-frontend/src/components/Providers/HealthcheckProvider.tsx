@@ -2,9 +2,8 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "../../api";
 import { enqueueSnackbar } from "notistack";
 
-type HealthCheckContextType = [boolean | null];
-
-const HealthCheckContext = createContext<HealthCheckContextType>([null]);
+type HealthCheckContextType = [boolean];
+const HealthCheckContext = createContext<HealthCheckContextType>([true]);
 
 // Custom hook that returns the user info and a function to set the avatar blob
 export const useHealthCheck = () => {
@@ -15,46 +14,41 @@ export const useHealthCheck = () => {
   return context;
 };
 
+const reconnectSnackbar = () => {
+  enqueueSnackbar({
+    variant: "success",
+    message: "Successfully reconnected to the backend.",
+  });
+};
+
+const disconnectSnackbar = () => {
+  enqueueSnackbar({
+    variant: "error",
+    message: "Failed to connect to the backend.",
+  });
+};
+
 export const HealthCheckProvider = ({ children }: React.PropsWithChildren) => {
-  const [isHealthy, setIsHealthy] = useState<boolean | null>(null);
+  const [isHealthy, setIsHealthy] = useState<boolean>(true);
 
   useEffect(() => {
     const checkBackendHealth = async () => {
       try {
-        console.log("Performing healthcheck");
         await api.healthcheck();
-        if (isHealthy !== true) {
-          if (isHealthy === false) {
-            enqueueSnackbar({
-              variant: "success",
-              message: "Successfully reconnected to the backend.",
-            });
-          }
+        if (!isHealthy) {
           setIsHealthy(true);
+          reconnectSnackbar();
         }
       } catch (e) {
-        if (isHealthy !== false) {
+        if (isHealthy) {
           setIsHealthy(false);
-          enqueueSnackbar({
-            variant: "error",
-            message: "Failed to connect to the backend.",
-          });
+          disconnectSnackbar();
         }
-        return;
       }
     };
 
-    if (isHealthy === null) {
-      checkBackendHealth();
-    }
-    const intervalId = setInterval(
-      checkBackendHealth,
-      isHealthy ? 20000 : 5000
-    );
-
-    return () => {
-      clearInterval(intervalId);
-    };
+    const interval = setInterval(checkBackendHealth, 2000);
+    return () => clearInterval(interval);
   }, [isHealthy]);
 
   return (
