@@ -5,7 +5,7 @@ import { enqueueSnackbar } from "notistack";
 type HealthCheckContextType = [boolean];
 const HealthCheckContext = createContext<HealthCheckContextType>([true]);
 
-// Custom hook that returns the user info and a function to set the avatar blob
+// Custom hook that returns the health status of the backend (boolean)
 export const useHealthCheck = () => {
   const context = useContext(HealthCheckContext);
   if (context === undefined) {
