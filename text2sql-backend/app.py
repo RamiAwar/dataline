@@ -2,13 +2,13 @@ import logging
 from typing import Awaitable, Callable
 
 import fastapi
+
+# from dataline.api.connection.router import router as connection_router
+from dataline.api.settings.router import router as settings_router
+from dataline.repositories.base import NotFoundError
 from fastapi import Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
-from dataline.api.connection.router import router as connection_router
-from dataline.api.settings.router import router as settings_router
-from dataline.repositories.base import NotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class App(fastapi.FastAPI):
         )
 
         self.include_router(settings_router)
-        self.include_router(connection_router)
+        # self.include_router(connection_router)
 
         # Handle 500s separately to play well with TestClient and allow re-raising in tests
         self.add_exception_handler(Exception, handle_exception)
