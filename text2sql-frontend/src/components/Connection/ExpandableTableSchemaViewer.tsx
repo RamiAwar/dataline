@@ -1,11 +1,7 @@
-import { Transition } from "@headlessui/react";
-import {
-  ChevronDoubleDownIcon,
-  ChevronDownIcon,
-} from "@heroicons/react/24/outline";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { ITableSchema, ITableSchemaResult } from "../Library/types";
+import { ITableSchemaResult } from "../Library/types";
 import { api } from "../../api";
 import { enqueueSnackbar } from "notistack";
 
@@ -42,16 +38,13 @@ export default function ExpandableTableSchemaViewer({
   );
 
   const [expanded, setExpanded] = React.useState<boolean>(isExpanded || false);
-  const [parent, _] = useAutoAnimate(/* optional config */);
+  const [parent] = useAutoAnimate(/* optional config */);
 
   function updateTableDescription(tableId: string, description: string) {
     // Make an API call to update table description
     const updateDescription = async () => {
       try {
-        const result = await api.updateTableSchemaDescription(
-          tableId,
-          description
-        );
+        await api.updateTableSchemaDescription(tableId, description);
       } catch (exception) {
         enqueueSnackbar({
           variant: "error",
@@ -68,10 +61,7 @@ export default function ExpandableTableSchemaViewer({
     // Make an API call to update table description
     const updateDescription = async () => {
       try {
-        const result = await api.updateTableSchemaFieldDescription(
-          fieldId,
-          description
-        );
+        await api.updateTableSchemaFieldDescription(fieldId, description);
       } catch (exception) {
         enqueueSnackbar({
           variant: "error",

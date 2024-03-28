@@ -49,7 +49,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
     );
     if (result === undefined) return;
     try {
-      const data = await api.toggleSaveQuery(result_id);
+      await api.toggleSaveQuery(result_id);
       // Update is_saved in message
       const updatedMessage = {
         ...message,
@@ -77,7 +77,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
     if (result_id === undefined) return;
 
     try {
-      const data = await api.updateResult(result_id, updatedCode);
+      await api.updateResult(result_id, updatedCode);
     } catch (exception) {
       enqueueSnackbar({ variant: "error", message: "Error updating query" });
     }
@@ -87,7 +87,7 @@ export const Message = (initialMessage: IMessageWithResults) => {
     // Add query result to results
     if (message.results !== undefined && queryResult !== null) {
       // Remove data result from results if any
-      let newResults = message.results?.filter(
+      const newResults = message.results?.filter(
         (result) => result.type !== "data"
       );
 

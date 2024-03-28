@@ -44,7 +44,7 @@ export const ConversationListProvider = ({
             });
           }
         })
-        .catch((err) => {
+        .catch(() => {
           enqueueSnackbar({
             variant: "error",
             message: "Error loading conversations",

@@ -2,7 +2,6 @@ import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { api } from "../../api";
 import { Spinner } from "../Spinner/Spinner";
-import { isAxiosError } from "axios";
 import { enqueueSnackbar } from "notistack";
 
 interface NewConnectionModalFormProps {
@@ -220,7 +219,8 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
                       )}
                     >
                       {isLoading && (
-                        <Spinner className="pointer-events-none h-5 w-5"></Spinner>
+                        // <Spinner className="pointer-events-none h-5 w-5"></Spinner>
+                        <Spinner />
                       )}
                       Save
                     </button>

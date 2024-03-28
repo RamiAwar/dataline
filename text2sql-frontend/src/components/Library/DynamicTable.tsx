@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const page = 0;
+  const rowsPerPage = 25;
   const [dataSubset, setDataSubset] = useState(data.slice(0, rowsPerPage));
 
   // Create data working subset

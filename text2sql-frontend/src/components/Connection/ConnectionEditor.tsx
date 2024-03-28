@@ -15,12 +15,12 @@ function classNames(...classes: string[]) {
 }
 
 export const ConnectionEditor = () => {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
   const params = useParams<{ connectionId: string }>();
   const [connection, setConnection] = useState<IConnection | null>();
   const [unsavedChanges, setUnsavedChanges] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(false);
-  const [_, __, fetchConnections] = useConnectionList();
+  const [, , fetchConnections] = useConnectionList();
   const [, , fetchConversations] = useConversationList();
 
   // Form state
@@ -109,13 +109,10 @@ export const ConnectionEditor = () => {
 
     const updateConnection = async () => {
       try {
-        const updatedConnection = await api.updateConnection(
-          params.connectionId as string,
-          {
-            name: editFields.name,
-            dsn: editFields.dsn,
-          }
-        );
+        await api.updateConnection(params.connectionId as string, {
+          name: editFields.name,
+          dsn: editFields.dsn,
+        });
       } catch (exception) {
         enqueueSnackbar({
           variant: "error",
@@ -138,7 +135,7 @@ export const ConnectionEditor = () => {
         title="Discard Unsaved Changes?"
         message="You have unsaved changes. Discard changes?"
         okText="OK"
-        color="red"
+        // color="red"
         icon={AlertIcon.Warning}
         onSuccess={() => {
           setShowAlert(false);
