@@ -5,6 +5,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useNavigate, useParams } from "react-router-dom";
 import { AlertIcon, AlertModal } from "../Library/AlertModal";
 import { useConnectionList } from "../Providers/ConnectionListProvider";
+import { useConversationList } from "../Providers/ConversationListProvider";
 import { Routes } from "../../router";
 import SchemaEditorGrid from "./SchemaEditorGrid";
 import { enqueueSnackbar } from "notistack";
@@ -20,6 +21,7 @@ export const ConnectionEditor = () => {
   const [unsavedChanges, setUnsavedChanges] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [_, __, fetchConnections] = useConnectionList();
+  const [, , fetchConversations] = useConversationList();
 
   // Form state
   const [editFields, setEditFields] = useState<IEditConnection>({
@@ -84,6 +86,21 @@ export const ConnectionEditor = () => {
     fetchConnection();
   }, [params.connectionId]);
 
+  function handleDelete() {
+    (async () => {
+      try {
+        await api.deleteConnection(params.connectionId!);
+        fetchConnections();
+        fetchConversations();
+        navigate(Routes.Root);
+      } catch (exception) {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error deleting connection",
+        });
+      }
+    })();
+  }
   function handleSubmit() {
     if (!unsavedChanges) {
       navigate(Routes.Root); // Return to previous page
@@ -213,6 +230,14 @@ export const ConnectionEditor = () => {
               Save
             </button>
           </form>
+          <div className="sm:col-span-6 flex items-center justify-end gap-x-6">
+            <button
+              onClick={handleDelete}
+              className="rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm border bg-red-600 border-red-500 hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 transition-colors duration-150"
+            >
+              Delete
+            </button>
+          </div>
 
           <div className="sm:col-span-6">
             <label

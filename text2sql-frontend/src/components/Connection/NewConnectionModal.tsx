@@ -52,7 +52,7 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
     }
 
     // Fake loading for 2 seconds
-    await new Promise((resolve) => setTimeout(resolve, 4000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     setIsLoading(false);
     onClose();

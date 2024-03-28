@@ -18,8 +18,20 @@ from models import (
     UnsavedResult,
 )
 
+from sqlalchemy.engine import Engine
+from sqlalchemy import event
+
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
 # Old way of using database - this is a single connection, hard to manage transactions
 conn = sqlite3.connect(dataline_config.sqlite_path, check_same_thread=False)
+conn.execute("PRAGMA foreign_keys = ON")
 
 
 class DatabaseManager:
@@ -29,6 +41,7 @@ class DatabaseManager:
 
     def __enter__(self) -> SQLiteConnection:
         self.connection = sqlite3.connect(self.db_file)
+        self.connection.execute("PRAGMA foreign_keys = ON")
         return self.connection
 
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:  # type:ignore[misc]
@@ -75,6 +88,12 @@ def update_connection(connection_id: str, name: str, dsn: str, database: str, di
         "UPDATE connections SET name = ?, dsn = ?, database = ?, dialect = ? WHERE id = ?",
         (name, dsn, database, dialect, connection_id),
     )
+    conn.commit()
+    return True
+
+
+def delete_connection(conn: SQLiteConnection, connection_id: str) -> bool:
+    conn.execute("DELETE FROM connections WHERE id = ?", (connection_id,))
     conn.commit()
     return True
 
@@ -298,8 +317,7 @@ def get_conversations_with_messages_with_results() -> list[ConversationWithMessa
             """
         SELECT messages.id, content, role, created_at
         FROM messages
-        INNER JOIN conversation_messages ON messages.id = conversation_messages.message_id
-        WHERE conversation_messages.conversation_id = ?
+        WHERE messages.conversation_id = ?
         ORDER BY messages.created_at ASC""",
             (conversation_id,),
         ).fetchall()
@@ -355,19 +373,7 @@ def get_conversations_with_messages_with_results() -> list[ConversationWithMessa
 
 def delete_conversation(conversation_id: str) -> None:
     """Delete conversation, all associated messages, and all their results"""
-    conn.execute(
-        "DELETE FROM message_results WHERE message_id IN (SELECT message_id FROM conversation_messages WHERE conversation_id = ?)",
-        (conversation_id,),
-    )
-    conn.execute(
-        "DELETE FROM messages WHERE id IN (SELECT message_id FROM conversation_messages WHERE conversation_id = ?)",
-        (conversation_id,),
-    )
     conn.execute("DELETE FROM conversations WHERE id = ?", (conversation_id,))
-    conn.execute(
-        "DELETE FROM conversation_messages WHERE conversation_id = ?",
-        (conversation_id,),
-    )
     conn.commit()
 
 
@@ -424,8 +430,8 @@ def add_message_to_conversation(
     # Create message object
     created_at = datetime.now()
     message_id = conn.execute(
-        "INSERT INTO messages (content, role, created_at, selected_tables) VALUES (?, ?, ?, ?)",
-        (content, role, created_at, ",".join(selected_tables)),
+        "INSERT INTO messages (content, role, created_at, conversation_id, selected_tables) VALUES (?, ?, ?, ?, ?)",
+        (content, role, created_at, conversation_id, ",".join(selected_tables)),
     ).lastrowid
 
     if message_id is None:
@@ -445,14 +451,6 @@ def add_message_to_conversation(
             (message_id, result_id),
         )
 
-    # Insert message_id and conversation_id into conversation_messages table
-    conn.execute(
-        "INSERT INTO conversation_messages (conversation_id, message_id) VALUES (?, ?)",
-        (
-            conversation_id,
-            message_id,
-        ),
-    )
     conn.commit()
     return MessageWithResults(
         content=content,
@@ -466,11 +464,10 @@ def add_message_to_conversation(
 def get_messages_with_results(conversation_id: str) -> list[MessageWithResults]:
     # Get all message_ids for conversation
     message_ids = conn.execute(
-        """SELECT cm.message_id
-        FROM conversation_messages cm
-        JOIN messages m ON m.id=cm.message_id
-        WHERE conversation_id = ?
-        ORDER BY m.created_at ASC""",
+        """SELECT messages.id
+        FROM messages
+        WHERE messages.conversation_id = ?
+        ORDER BY messages.created_at ASC""",
         (conversation_id,),
     ).fetchall()
 
@@ -522,8 +519,7 @@ def get_message_history(conversation_id: str) -> list[dict[str, Any]]:
     messages = conn.execute(
         """SELECT content, role, created_at
         FROM messages
-        INNER JOIN conversation_messages ON messages.id = conversation_messages.message_id
-        WHERE conversation_messages.conversation_id = ?
+        WHERE messages.conversation_id = ?
         ORDER BY messages.created_at ASC
         """,
         (conversation_id,),
@@ -539,10 +535,9 @@ def get_message_history_with_selected_tables_with_sql(
     messages = conn.execute(
         """SELECT messages.content, messages.role, messages.created_at, results.content, messages.selected_tables
     FROM messages
-    INNER JOIN conversation_messages ON messages.id = conversation_messages.message_id
     INNER JOIN message_results ON messages.id = message_results.message_id
     INNER JOIN results ON message_results.result_id = results.id
-    WHERE conversation_messages.conversation_id = ?
+    WHERE messages.conversation_id = ?
     AND results.type = 'sql'
     ORDER BY messages.created_at ASC
     """,
@@ -563,10 +558,9 @@ def get_message_history_with_sql(conversation_id: str) -> list[dict[str, Any]]:
     messages_with_sql = conn.execute(
         """SELECT messages.content, messages.role, messages.created_at, results.content
     FROM messages
-    INNER JOIN conversation_messages ON messages.id = conversation_messages.message_id
     INNER JOIN message_results ON messages.id = message_results.message_id
     INNER JOIN results ON message_results.result_id = results.id
-    WHERE conversation_messages.conversation_id = ?
+    WHERE messages.conversation_id = ?
     AND results.type = 'sql'
     ORDER BY messages.created_at ASC
     """,

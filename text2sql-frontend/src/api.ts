@@ -121,6 +121,15 @@ const updateConnection = async (
   return response.data;
 };
 
+const deleteConnection = async (
+  connectionId: string
+): Promise<ApiResponse<void>> => {
+  const response = await axios.delete<ApiResponse<void>>(
+    `${baseUrl}/connection/${connectionId}`
+  );
+  return response.data;
+};
+
 export type GetTableSchemasResult = ApiResponse<{
   tables: ITableSchemaResult[];
 }>;
@@ -340,6 +349,7 @@ export const api = {
   createConnection,
   createTestConnection,
   updateConnection,
+  deleteConnection,
   listConnections,
   listConversations,
   createConversation,
