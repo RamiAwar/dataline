@@ -4,15 +4,18 @@ import { ConnectionListProvider } from "./components/Providers/ConnectionListPro
 import { ConversationListProvider } from "./components/Providers/ConversationListProvider";
 import { UserInfoProvider } from "./components/Providers/UserInfoProvider";
 import { SnackbarProvider } from "notistack";
+import { HealthCheckProvider } from "./components/Providers/HealthcheckProvider";
 
 export const App = () => (
   <SnackbarProvider autoHideDuration={10000} maxSnack={5}>
-    <UserInfoProvider>
-      <ConnectionListProvider>
-        <ConversationListProvider>
-          <RouterProvider router={router} />
-        </ConversationListProvider>
-      </ConnectionListProvider>
-    </UserInfoProvider>
+    <HealthCheckProvider>
+      <UserInfoProvider>
+        <ConnectionListProvider>
+          <ConversationListProvider>
+            <RouterProvider router={router} />
+          </ConversationListProvider>
+        </ConnectionListProvider>
+      </UserInfoProvider>
+    </HealthCheckProvider>
   </SnackbarProvider>
 );

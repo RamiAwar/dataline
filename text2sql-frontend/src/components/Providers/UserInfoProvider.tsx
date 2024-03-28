@@ -3,6 +3,7 @@ import { api } from "../../api";
 import { Buffer } from "buffer";
 import { isAxiosError } from "axios";
 import { enqueueSnackbar } from "notistack";
+import { useHealthCheck } from "./HealthcheckProvider";
 
 async function decodeBase64Data(base64Data: string) {
   const byteCharacters = Buffer.from(base64Data, "base64").toString("binary");
@@ -45,6 +46,7 @@ export const useUserInfo = () => {
 };
 
 export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
+  const [isHealthy] = useHealthCheck();
   const [userInfo, setUserInfo] = useState<UserInfo>({
     name: null,
     openaiApiKey: null,
@@ -100,8 +102,10 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
   }
 
   useEffect(() => {
-    getUserInfo();
-  }, []);
+    if (isHealthy) {
+      getUserInfo();
+    }
+  }, [isHealthy]);
 
   return (
     <UserInfoContext.Provider value={[userInfo, setUserInfo, setAvatarBlob]}>
