@@ -6,7 +6,7 @@ type HealthCheckContextType = [boolean | null];
 
 const HealthCheckContext = createContext<HealthCheckContextType>([null]);
 
-// Custom hook that returns the user info and a function to set the avatar blob
+// Custom hook that returns the health status of the backend (boolean)
 export const useHealthCheck = () => {
   const context = useContext(HealthCheckContext);
   if (context === undefined) {
@@ -21,7 +21,6 @@ export const HealthCheckProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     const checkBackendHealth = async () => {
       try {
-        console.log("Performing healthcheck");
         await api.healthcheck();
         if (isHealthy !== true) {
           if (isHealthy === false) {
@@ -47,10 +46,7 @@ export const HealthCheckProvider = ({ children }: React.PropsWithChildren) => {
     if (isHealthy === null) {
       checkBackendHealth();
     }
-    const intervalId = setInterval(
-      checkBackendHealth,
-      isHealthy ? 20000 : 5000
-    );
+    const intervalId = setInterval(checkBackendHealth, 2000);
 
     return () => {
       clearInterval(intervalId);
