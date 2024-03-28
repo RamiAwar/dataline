@@ -26,6 +26,7 @@ python-multipart = "^0.0.9"
 aiosqlite = "^0.20.0"
 alembic = "^1.13.1"
 pydantic-settings = "^2.2.1"
+asyncpg = "^0.29.0"
 
 
 [tool.poetry.group.dev.dependencies]

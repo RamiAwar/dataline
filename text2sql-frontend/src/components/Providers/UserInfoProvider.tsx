@@ -95,6 +95,10 @@ export const UserInfoProvider = ({ children }: React.PropsWithChildren) => {
       });
     } catch (exception) {
       if (isAxiosError(exception) && exception.response?.status === 404) {
+        setUserInfo((prev) => ({
+          ...prev,
+          isLoaded: true,
+        }));
         return;
       }
       enqueueSnackbar({ variant: "error", message: "Error getting user info" });
