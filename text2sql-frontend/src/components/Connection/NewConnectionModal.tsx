@@ -51,7 +51,7 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
       return;
     }
 
-    // Fake loading for 2 seconds
+    // Fake loading
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     setIsLoading(false);
@@ -80,7 +80,7 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
       return;
     }
 
-    // Fake loading for 2 seconds
+    // Fake loading
     await new Promise((resolve) => setTimeout(resolve, 4000));
 
     setIsLoading(false);

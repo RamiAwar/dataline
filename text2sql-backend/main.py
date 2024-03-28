@@ -1,19 +1,9 @@
 import json
 import logging
 import re
-from typing import Annotated, Awaitable, Callable
+from typing import Annotated
 
-from fastapi import (
-    Body,
-    Depends,
-    FastAPI,
-    HTTPException,
-    Request,
-    Response,
-    status,
-)
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi import Body, Depends, HTTPException, Response
 from pydantic import BaseModel, Field, validator
 from pydantic.json import pydantic_encoder
 from pygments import lexers
@@ -22,6 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
 import db
+from app import App
 from dataline.api.settings.router import router as settings_router
 from dataline.config import config
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
@@ -49,31 +40,7 @@ logger = logging.getLogger(__name__)
 lexer = lexers.MySqlLexer()
 lexer.add_filter(SqlFilter())
 
-app = FastAPI()
-
-
-async def catch_exceptions_middleware(
-    request: Request, call_next: Callable[[Request], Awaitable[Response]]
-) -> Response:
-    try:
-        return await call_next(request)
-    except NotFoundError as e:
-        # No need to log these, expected errors
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": e.message})
-    except Exception as e:
-        # Log for collection
-        logger.exception(e)
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"message": str(e)})
-
-
-app.middleware("http")(catch_exceptions_middleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = App()
 
 
 class ConnectRequest(BaseModel):

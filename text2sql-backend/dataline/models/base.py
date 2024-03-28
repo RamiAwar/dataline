@@ -1,7 +1,8 @@
 import uuid
 from uuid import UUID
 
-from sqlalchemy import MetaData, Uuid as DB_UUID
+from sqlalchemy import MetaData
+from sqlalchemy import Uuid as DB_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_column
 
 
@@ -18,6 +19,5 @@ class DBModel(MappedAsDataclass, DeclarativeBase, init=False, kw_only=True):
     )
 
 
-class UUIDMixin:
-    # Generate UUID in python
-    id: Mapped[UUID] = mapped_column("id", DB_UUID, primary_key=True, default=uuid.uuid4, init=False)
+class UUIDMixin(MappedAsDataclass, init=False, kw_only=True):
+    id: Mapped[UUID] = mapped_column("id", DB_UUID, primary_key=True, insert_default=uuid.uuid4, init=False)
