@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./app
+        working-directory: ./text2sql-backend
     steps:
       - uses: actions/checkout@v2
 
