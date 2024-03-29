@@ -1,9 +1,10 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Input } from "@catalyst/input";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 interface MaskedInputProps {
   value?: string;
-  onChange?: (value: string) => void;
+  onChange: (value: string) => void;
   onKeyUp?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   autoFocus?: boolean;
 }
@@ -14,40 +15,29 @@ export default function MaskedInput({
   onKeyUp,
   autoFocus = true,
 }: MaskedInputProps) {
-  const passwordInputRef = useRef<HTMLInputElement | null>(null);
-  const originalPasswordRef = useRef<HTMLInputElement | null>(null);
+  const [isMasked, setIsMasked] = useState(true);
 
-  const maskPassword = useCallback(() => {
-    const passwordValue = passwordInputRef.current?.value ?? "";
-    const maskedPassword =
-      passwordValue.slice(0, 6) +
-      "*".repeat(Math.max(0, passwordValue.length - 5));
-    passwordInputRef.current!.value = maskedPassword;
-    originalPasswordRef.current!.value = passwordValue;
-    if (onChange) {
-      onChange(passwordValue);
-    }
-  }, [onChange]);
-
-  useEffect(() => {
-    if (value) {
-      passwordInputRef.current!.value = value;
-      maskPassword();
-    }
-  }, [value, maskPassword]);
-
+  const Icon = isMasked ? EyeSlashIcon : EyeIcon;
   return (
-    <div>
-      <input type="hidden" ref={originalPasswordRef} />
+    <div className="flex items-center gap-1 sm:gap-3">
       <Input
-        type="text"
+        type={isMasked ? "password" : "text"}
         autoFocus={autoFocus}
-        ref={passwordInputRef}
-        onInput={maskPassword}
-        onKeyUp={onKeyUp}
-        defaultValue={value}
+        autoComplete="off"
+        onChange={(e) => onChange(e.target.value)}
+        onKeyUp={(e) => {
+          if (onKeyUp) onKeyUp(e);
+        }}
+        value={value}
         className="font-mono"
       />
+      <div className="rounded-full hover:bg-white hover:bg-opacity-10 p-1">
+        <Icon
+          // className="h-6 w-6 text-slate-600 cursor-pointer"
+          className="h-6 w-6 text-white opacity-25 cursor-pointer"
+          onClick={() => setIsMasked((prev) => !prev)}
+        />
+      </div>
     </div>
   );
 }
