@@ -1,4 +1,5 @@
 import logging
+import pathlib
 
 import pytest
 import pytest_asyncio
@@ -69,6 +70,9 @@ async def test_connect_db(client: TestClient) -> None:
     assert data["dialect"] == "sqlite"
     assert data["database"]
     assert data["is_sample"] is False
+
+    # Delete database after tests
+    pathlib.Path("test.db").unlink(missing_ok=True)
 
 
 @pytest.mark.asyncio
@@ -162,3 +166,6 @@ async def test_update_connection(client: TestClient, sample_db: Connection) -> N
     data = response.json()["data"]
     assert data["connection"]["dsn"] == update_in["dsn"]
     assert data["connection"]["name"] == update_in["name"]
+
+    # Delete database after tests
+    pathlib.Path("new.db").unlink(missing_ok=True)

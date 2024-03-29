@@ -1,3 +1,4 @@
+files: ^text2sql-backend/
 exclude: 'docs|scripts|node_modules|\.git|\.tox|\.idea|min\.css|.*\.js|.*\.csv|.*\.svg|^frontend/packages/old|pnpm-lock\.yaml'
 default_stages: [commit]
 fail_fast: false
@@ -38,7 +39,7 @@ repos:
     hooks:
       - id: pytest
         name: pytest
-        entry: PYTHONPATH=. poetry run pytest
+        entry: sh -c 'cd text2sql-backend && PYTHONPATH=. poetry run pytest .'
         language: system
         types: [python]
         pass_filenames: false
