@@ -57,7 +57,7 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
         )}
         style={{ height: "auto" }}
         rows={1}
-        placeholder="you@example.com"
+        placeholder="Enter your message here..."
         value={inputValue}
         onChange={handleChange}
         onKeyDown={handleKeyPress}

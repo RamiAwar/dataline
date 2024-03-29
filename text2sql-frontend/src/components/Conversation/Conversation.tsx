@@ -11,6 +11,12 @@ import { enqueueSnackbar } from "notistack";
 import { useConnectionList } from "../Providers/ConnectionListProvider";
 import { isAxiosError } from "axios";
 import { Routes } from "@/router";
+import StarterMessage from "./StarterMessage";
+
+const templateMessages = [
+  "What can you tell me about this database?",
+  "Show me some rows from one of the tables.",
+];
 
 export const Conversation = () => {
   const params = useParams<{ conversationId: string }>();
@@ -124,8 +130,18 @@ export const Conversation = () => {
         </div>
       </Transition>
 
-      <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex justify-center bg-gradient-to-t from-gray-900 from-30% to-transparent pt-2">
-        <div className="w-full md:max-w-3xl flex justify-center pt-6 pb-4 m-2">
+      <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center bg-gradient-to-t from-gray-900 from-30% to-transparent pt-2">
+        {messages.length === 0 && (
+          <div className="w-full md:max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-2 justify-between px-2 sm:px-3">
+            {templateMessages.map((message) => (
+              <StarterMessage
+                text={message}
+                onClick={() => submitQuery(message)}
+              />
+            ))}
+          </div>
+        )}
+        <div className="w-full md:max-w-3xl flex justify-center pt-4 pb-4 m-2 p-2">
           <ExpandingInput
             onSubmit={submitQuery}
             disabled={false}
