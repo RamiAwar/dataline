@@ -15,6 +15,7 @@ from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.settings import SettingsService
 from models import (
     ConversationWithMessagesWithResults,
+    Conversation,
     DataResult,
     MessageWithResults,
     Result,
@@ -86,6 +87,11 @@ async def update_conversation(conversation_id: str, req: UpdateConversationReque
 async def delete_conversation(conversation_id: str) -> dict[str, str]:
     db.delete_conversation(conversation_id=conversation_id)
     return {"status": "ok"}
+
+
+@app.get("/conversation/{conversation_id}")
+async def get_conversation(conversation_id: str) -> SuccessResponse[Conversation]:
+    return SuccessResponse(status=StatusType.ok, data=db.get_conversation(conversation_id))
 
 
 class ListMessageOut(BaseModel):

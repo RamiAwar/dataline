@@ -88,6 +88,30 @@ def get_connection(conn: SQLiteConnection, connection_id: UUID) -> ConnectionOut
     )
 
 
+def get_connection_from_conversation(conn: SQLiteConnection, conversation_id: str) -> ConnectionOut:
+    connection = conn.execute(
+        """
+        SELECT conn.id, conn.name, conn.dsn, conn.database, conn.dialect, conn.is_sample
+        FROM connections conn
+        JOIN conversations conv
+        ON conn.id = conv.connection_id
+        WHERE conv.id = ?
+        """,
+        (conversation_id,),
+    ).fetchone()
+    if not connection:
+        raise NotFoundError("Connection not found")
+
+    return ConnectionOut(
+        id=connection[0],
+        name=connection[1],
+        dsn=connection[2],
+        database=connection[3],
+        dialect=connection[4],
+        is_sample=connection[5],
+    )
+
+
 def update_connection(connection_id: UUID, name: str, dsn: str, database: str, dialect: str) -> bool:
     conn.execute(
         "UPDATE connections SET name = ?, dsn = ?, database = ?, dialect = ? WHERE id = ?",

@@ -57,6 +57,7 @@ export type ConnectionResult = {
   database: string;
   name: string;
   dialect: string;
+  is_sample: boolean;
 };
 type ConnectResult = ApiResponse<ConnectionResult>;
 const createConnection = async (
@@ -93,6 +94,13 @@ const getConnection = async (
 ): Promise<GetConnectionResult> => {
   const response = await axios.get<GetConnectionResult>(
     `${baseUrl}/connection/${connectionId}`
+  );
+  return response.data;
+};
+
+const getConnectionFromConversation = async (conversationId: string) => {
+  const response = await axios.get<GetConnectionResult>(
+    `${baseUrl}/connection/from-conversation/${conversationId}`
   );
   return response.data;
 };
@@ -333,6 +341,7 @@ const getUserInfo = async () => {
 export const api = {
   healthcheck,
   getConnection,
+  getConnectionFromConversation,
   getTableSchemas,
   updateTableSchemaDescription,
   updateTableSchemaFieldDescription,

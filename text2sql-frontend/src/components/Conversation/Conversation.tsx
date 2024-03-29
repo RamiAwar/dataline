@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { api } from "../../api";
+import { ConnectionResult, api } from "../../api";
 import { Message } from "./Message";
 import { IMessageWithResults } from "../Library/types";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
@@ -26,6 +26,9 @@ export const Conversation = () => {
   const [messages, setMessages] = useState<IMessageWithResults[]>([]);
   const [connections] = useConnectionList();
   const messageListRef = useRef<HTMLDivElement | null>(null);
+  const [currConnection, setCurrConnection] = useState<ConnectionResult | null>(
+    null
+  );
 
   function submitQuery(value: string) {
     // Add message to messages
@@ -73,10 +76,14 @@ export const Conversation = () => {
   }
 
   useEffect(() => {
-    const loadMessages = async () => {
+    const loadConnectionAndMessages = async () => {
       try {
-        const messages = await api.getMessages(params.conversationId as string);
+        const messages = await api.getMessages(params.conversationId!);
         setMessages(messages.data.messages);
+        const connection = await api.getConnectionFromConversation(
+          params.conversationId!
+        );
+        setCurrConnection(connection.data.connection);
       } catch (exception) {
         if (isAxiosError(exception) && exception.response?.status === 404) {
           navigate(Routes.Root);
@@ -88,8 +95,8 @@ export const Conversation = () => {
         });
       }
     };
-    loadMessages();
-  }, [params]);
+    loadConnectionAndMessages();
+  }, [params, navigate]);
 
   useEffect(() => {
     if (messageListRef.current !== null) {
@@ -131,7 +138,7 @@ export const Conversation = () => {
       </Transition>
 
       <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center bg-gradient-to-t from-gray-900 from-30% to-transparent pt-2">
-        {messages.length === 0 && (
+        {messages.length === 0 && currConnection?.is_sample && (
           <div className="w-full md:max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-2 justify-between px-2 sm:px-3">
             {templateMessages.map((message) => (
               <StarterMessage
