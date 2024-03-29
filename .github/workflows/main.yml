@@ -10,56 +10,23 @@ jobs:
       run:
         working-directory: ./text2sql-backend
     steps:
-      - uses: actions/checkout@v2
-
-      # If you wanted to use multiple Python versions, you'd have specify a matrix in the job and
-      # reference the matrixe python version here.
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - name: Install Python
+        uses: actions/setup-python@v4
         with:
           python-version: 3.11.6
-
-      # Cache the installation of Poetry itself, e.g. the next step. This prevents the workflow
-      # from installing Poetry every time, which can be slow. Note the use of the Poetry version
-      # number in the cache key, and the "-0" suffix: this allows you to invalidate the cache
-      # manually if/when you want to upgrade Poetry, or if something goes wrong. This could be
-      # mildly cleaner by using an environment variable, but I don't really care.
-      - name: cache poetry install
-        uses: actions/cache@v2
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Setup a local virtual environment (if no poetry.toml file)
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+      - uses: actions/cache@v3
+        name: Define a cache for the virtual environment based on the dependencies lock file
         with:
-          path: ~/.local
-          key: poetry-1.7.1
-
-      # Install Poetry. You could do this manually, or there are several actions that do this.
-      # `snok/install-poetry` seems to be minimal yet complete, and really just calls out to
-      # Poetry's default install script, which feels correct. I pin the Poetry version here
-      # because Poetry does occasionally change APIs between versions and I don't want my
-      # actions to break if it does.
-      #
-      # The key configuration value here is `virtualenvs-in-project: true`: this creates the
-      # venv as a `.venv` in your testing directory, which allows the next step to easily
-      # cache it.
-      - uses: snok/install-poetry@v1
-        with:
-          version: 1.7.1
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      # Cache your dependencies (i.e. all the stuff in your `pyproject.toml`). Note the cache
-      # key: if you're using multiple Python versions, or multiple OSes, you'd need to include
-      # them in the cache key. I'm not, so it can be simple and just depend on the poetry.lock.
-      - name: cache deps
-        id: cache-deps
-        uses: actions/cache@v2
-        with:
-          path: .venv
-          key: pydeps-${{ hashFiles('**/poetry.lock') }}
-
-      # Install dependencies. `--no-root` means "install all dependencies but not the project
-      # itself", which is what you want to avoid caching _your_ code. The `if` statement
-      # ensures this only runs on a cache miss.
-      - run: poetry install --with dev --no-interaction --no-root
-        if: steps.cache-deps.outputs.cache-hit != 'true'
-
-      # And finally run tests. I'm using pytest and all my pytest config is in my `pyproject.toml`
-      # so this line is super-simple. But it could be as complex as you need.
-      - run: PYTHONPATH=. poetry run pytest
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+      - name: Install the project dependencies
+        run: poetry install
+      - name: Run the automated tests (for example)
+        run: PYTHONPATH=. poetry run pytest .
