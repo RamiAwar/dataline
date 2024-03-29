@@ -30,7 +30,7 @@ pre-commit install
 Make sure you have an OpenAI key in your environment variables.
 `export OPENAI_API_KEY=...`
 
-You can then uvicorn to start the backend:
+You can then run uvicorn to start the backend:
 ```
 uvicorn main:app --reload --port=7377
 ```
