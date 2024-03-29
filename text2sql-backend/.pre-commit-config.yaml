@@ -32,3 +32,15 @@ repos:
       - id: ruff
         args: [--config=./text2sql-backend/pyproject.toml, "--fix"]
         exclude: ".*pb2(_grpc)?.py(i)?$|__init__.py"
+
+  # Run tests
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: PYTHONPATH=. poetry run pytest
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [commit]
+        exclude: ".*pb2(_grpc)?.py(i)?$|__init__.py"
