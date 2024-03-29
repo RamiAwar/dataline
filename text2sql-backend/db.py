@@ -3,27 +3,29 @@ from datetime import datetime
 from sqlite3 import Cursor
 from sqlite3.dbapi2 import Connection as SQLiteConnection
 from typing import Any, List, Literal, Optional
-from uuid import uuid4
+from uuid import UUID, uuid4
+
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 
 from dataline.config import config as dataline_config
+from dataline.models.connection.schema import (
+    ConnectionOut,
+    TableSchema,
+    TableSchemaField,
+)
 from dataline.repositories.base import NotFoundError, NotUniqueError
 from models import (
-    Connection,
     Conversation,
     ConversationWithMessagesWithResults,
     MessageWithResults,
     Result,
-    TableSchema,
-    TableSchemaField,
     UnsavedResult,
 )
 
-from sqlalchemy.engine import Engine
-from sqlalchemy import event
-
 
 @event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
+def set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:  # type: ignore[misc]
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
@@ -55,38 +57,41 @@ def create_connection(
     database: str,
     name: str = "",
     dialect: str = "",
-) -> str:
+    is_sample: bool = False,
+) -> UUID:
     # Check if connection_id or dsn already exist
-    connection_id = str(uuid4())
+    # TODO: Doesn't this conflict with SQLAlchemy?
+    connection_id = uuid4()
 
     conn.execute(
-        "INSERT INTO connections (id, dsn, database, name, dialect) VALUES (?, ?, ?, ?, ?)",
-        (connection_id, dsn, database, name, dialect),
+        "INSERT INTO connections (id, dsn, database, name, dialect, is_sample) VALUES (?, ?, ?, ?, ?, ?)",
+        (str(connection_id), dsn, database, name, dialect, is_sample),
     )
     return connection_id
 
 
-def get_connection(conn: SQLiteConnection, connection_id: str) -> Connection:
+def get_connection(conn: SQLiteConnection, connection_id: UUID) -> ConnectionOut:
     connection = conn.execute(
-        "SELECT id, name, dsn, database, dialect FROM connections WHERE id = ?",
-        (connection_id,),
+        "SELECT id, name, dsn, database, dialect, is_sample FROM connections WHERE id = ?",
+        (str(connection_id),),
     ).fetchone()
     if not connection:
         raise NotFoundError("Connection not found")
 
-    return Connection(
+    return ConnectionOut(
         id=connection[0],
         name=connection[1],
         dsn=connection[2],
         database=connection[3],
         dialect=connection[4],
+        is_sample=connection[5],
     )
 
 
-def update_connection(connection_id: str, name: str, dsn: str, database: str, dialect: str) -> bool:
+def update_connection(connection_id: UUID, name: str, dsn: str, database: str, dialect: str) -> bool:
     conn.execute(
         "UPDATE connections SET name = ?, dsn = ?, database = ?, dialect = ? WHERE id = ?",
-        (name, dsn, database, dialect, connection_id),
+        (name, dsn, database, dialect, str(connection_id)),
     )
     conn.commit()
     return True
@@ -98,24 +103,27 @@ def delete_connection(conn: SQLiteConnection, connection_id: str) -> bool:
     return True
 
 
-def get_connection_from_dsn(dsn: str) -> Connection:
-    data = conn.execute("SELECT id, name, dsn, database, dialect FROM connections WHERE dsn = ?", (dsn,)).fetchone()
+def get_connection_from_dsn(dsn: str) -> ConnectionOut:
+    data = conn.execute(
+        "SELECT id, name, dsn, database, dialect, is_sample FROM connections WHERE dsn = ?", (dsn,)
+    ).fetchone()
     if not data:
         raise NotFoundError("Connection not found")
 
-    return Connection(
-        id=data[0],
+    return ConnectionOut(
+        id=UUID(data[0]),
         name=data[1],
         dsn=data[2],
         database=data[3],
         dialect=data[4],
+        is_sample=data[5],
     )
 
 
-def get_connections() -> List[Connection]:
+def get_connections() -> List[ConnectionOut]:
     return [
-        Connection(id=x[0], name=x[1], dsn=x[2], database=x[3], dialect=x[4])
-        for x in conn.execute("SELECT id, name, dsn, database, dialect FROM connections").fetchall()
+        ConnectionOut(id=x[0], name=x[1], dsn=x[2], database=x[3], dialect=x[4], is_sample=x[5])
+        for x in conn.execute("SELECT id, name, dsn, database, dialect, is_sample FROM connections").fetchall()
     ]
 
 
@@ -193,7 +201,7 @@ def create_schema_field(
     return field_id
 
 
-def get_table_schemas_with_descriptions(connection_id: str) -> List[TableSchema]:
+def get_table_schemas_with_descriptions(connection_id: UUID) -> List[TableSchema]:
     # Select all table schemas for a connection and then join with schema_descriptions to get the field descriptions
     descriptions = conn.execute(
         """
@@ -212,7 +220,7 @@ def get_table_schemas_with_descriptions(connection_id: str) -> List[TableSchema]
     FROM schema_tables
     INNER JOIN schema_fields ON schema_tables.id = schema_fields.table_id
     WHERE schema_tables.connection_id = ?""",
-        (connection_id,),
+        (str(connection_id),),
     ).fetchall()
 
     # Join all the field descriptions for each table into a list of table schemas
@@ -225,7 +233,7 @@ def get_table_schemas_with_descriptions(connection_id: str) -> List[TableSchema]
     # Return a list of TableSchema objects
     return [
         TableSchema(
-            connection_id=connection_id,
+            connection_id=str(connection_id),
             id=table[0][0],
             name=table[0][2],
             description=table[0][3],
@@ -389,6 +397,7 @@ def create_conversation(connection_id: str, name: str) -> int:
     if conversation_id is None:
         raise ValueError("Conversation could not be created")
 
+    conn.commit()
     return conversation_id
 
 
@@ -514,7 +523,7 @@ def get_messages_with_results(conversation_id: str) -> list[MessageWithResults]:
     return messages
 
 
-def get_message_history(conversation_id: str) -> list[dict[str, Any]]:
+def get_message_history(conversation_id: str) -> list[dict[str, Any]]:  # type: ignore[misc]
     """Returns the message history of a conversation in OpenAI API format"""
     messages = conn.execute(
         """SELECT content, role, created_at
@@ -528,7 +537,7 @@ def get_message_history(conversation_id: str) -> list[dict[str, Any]]:
     return [{"role": message[1], "content": message[0]} for message in messages]
 
 
-def get_message_history_with_selected_tables_with_sql(
+def get_message_history_with_selected_tables_with_sql(  # type: ignore[misc]
     conversation_id: str,
 ) -> list[dict[str, Any]]:
     """Returns the message history of a conversation with selected tables as a list"""
@@ -553,7 +562,7 @@ def get_message_history_with_selected_tables_with_sql(
     ]
 
 
-def get_message_history_with_sql(conversation_id: str) -> list[dict[str, Any]]:
+def get_message_history_with_sql(conversation_id: str) -> list[dict[str, Any]]:  # type: ignore[misc]
     """Returns the message history of a conversation with the SQL result encoded inside content in OpenAI API format"""
     messages_with_sql = conn.execute(
         """SELECT messages.content, messages.role, messages.created_at, results.content

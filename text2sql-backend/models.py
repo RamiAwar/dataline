@@ -72,28 +72,6 @@ class Conversation:
     created_at: datetime
 
 
-class Connection(BaseModel):
-    id: str
-    name: str
-    database: str
-    dsn: str
-    dialect: str
-
-    class Config:
-        table_name = "connections"
-
-
-class TableSchemaField(BaseModel):
-    id: str
-    schema_id: str
-    name: str
-    type: str
-    description: str
-    is_primary_key: Optional[bool]
-    is_foreign_key: Optional[bool]
-    linked_table: Optional[str]
-
-
 class TableField(BaseModel):
     name: str
     type: str
@@ -110,14 +88,6 @@ class TableFieldCreate(BaseModel):
     is_primary_key: bool = False
     is_foreign_key: bool = False
     foreign_table: str = ""
-
-
-class TableSchema(BaseModel):
-    id: str
-    connection_id: str
-    name: str
-    description: str
-    field_descriptions: list[TableSchemaField]
 
 
 @dataclass

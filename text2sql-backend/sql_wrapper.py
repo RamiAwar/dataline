@@ -10,7 +10,7 @@ from rapidfuzz import fuzz
 from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 
-from models import TableSchema
+from dataline.models.connection.schema import TableSchema
 
 logger = logging.getLogger(__name__)
 
@@ -89,9 +89,7 @@ class CustomSQLDatabase(SQLDatabase):
 
         return schema
 
-    def get_schema_with_user_descriptions(
-        self, descriptions: list[TableSchema]
-    ) -> dict[str, dict[str, str]]:
+    def get_schema_with_user_descriptions(self, descriptions: list[TableSchema]) -> dict[str, dict[str, str]]:
         # Create dict of descriptions
         descriptions_dict: dict[str, TableSchema] = {}
         for description in descriptions:
@@ -119,11 +117,7 @@ class CustomSQLDatabase(SQLDatabase):
         # Create a nicely formatted schema for each table
         for table, columns in schema.items():
             formatted_schema = []
-            table_description = (
-                descriptions_dict[table].description
-                if table in descriptions_dict
-                else ""
-            )
+            table_description = descriptions_dict[table].description if table in descriptions_dict else ""
             formatted_schema.append(f"Table: {table} : {table_description}\n")
             for column, column_info in columns.items():
                 formatted_schema.append(f"Column: {column}")
@@ -174,9 +168,7 @@ class CustomSQLDatabase(SQLDatabase):
                     return result, {"result": result, "columns": list(cursor.keys())}
         return {}, {}
 
-    def validate_sql(
-        self, sql_query
-    ) -> tuple[Literal[True], None] | tuple[Literal[False], str]:
+    def validate_sql(self, sql_query) -> tuple[Literal[True], None] | tuple[Literal[False], str]:
         try:
             # Execute the EXPLAIN statement (without fetching results)
             conn = self._engine.raw_connection()
