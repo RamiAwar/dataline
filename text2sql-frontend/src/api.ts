@@ -51,12 +51,14 @@ const healthcheck = async (): Promise<HealthcheckResult> => {
   return response.data;
 };
 
-type Connection = {
-  connection_id: string;
-  database?: string;
-  dialect?: string;
+export type ConnectionResult = {
+  id: string;
+  dsn: string;
+  database: string;
+  name: string;
+  dialect: string;
 };
-type ConnectResult = ApiResponse<Connection>;
+type ConnectResult = ApiResponse<ConnectionResult>;
 const createConnection = async (
   connectionString: string,
   name: string
@@ -75,13 +77,6 @@ const createTestConnection = async (): Promise<ConnectResult> => {
   return response.data;
 };
 
-export type ConnectionResult = {
-  id: string;
-  dsn: string;
-  database: string;
-  name: string;
-  dialect: string;
-};
 export type ListConnectionsResult = ApiResponse<{
   connections: ConnectionResult[];
 }>;

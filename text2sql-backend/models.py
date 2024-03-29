@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Generic, Literal, Optional, TypeVar, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from pydantic.dataclasses import dataclass
 
 ResultType = Union[
@@ -72,28 +72,6 @@ class Conversation:
     created_at: datetime
 
 
-class Connection(BaseModel):
-    id: str
-    name: str
-    database: str
-    dsn: str
-    dialect: str
-
-    class Config:
-        table_name = "connections"
-
-
-class TableSchemaField(BaseModel):
-    id: str
-    schema_id: str
-    name: str
-    type: str
-    description: str
-    is_primary_key: Optional[bool]
-    is_foreign_key: Optional[bool]
-    linked_table: Optional[str]
-
-
 class TableField(BaseModel):
     name: str
     type: str
@@ -110,14 +88,6 @@ class TableFieldCreate(BaseModel):
     is_primary_key: bool = False
     is_foreign_key: bool = False
     foreign_table: str = ""
-
-
-class TableSchema(BaseModel):
-    id: str
-    connection_id: str
-    name: str
-    description: str
-    field_descriptions: list[TableSchemaField]
 
 
 @dataclass
@@ -147,7 +117,7 @@ class ConnectRequest(BaseModel):
     dsn: str = Field(min_length=3)
     name: str
 
-    @validator("dsn")
+    @field_validator("dsn")
     def validate_dsn_format(cls, value: str) -> str:
         # Define a regular expression to match the DSN format
         dsn_regex = r"^[\w\+]+:\/\/[\w-]+:\w+@[\w.-]+[:\d]*\/\w+$"

@@ -1,46 +1,29 @@
 import json
 import logging
-import re
-from typing import Annotated, Awaitable, Callable
+from typing import Annotated
+from uuid import UUID
 
-from fastapi import (
-    Body,
-    Depends,
-    FastAPI,
-    HTTPException,
-    Request,
-    Response,
-    status,
-)
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
+from fastapi import Body, Depends, HTTPException, Response
+from pydantic import BaseModel
 from pydantic.json import pydantic_encoder
 from pygments import lexers
 from pygments_pprint_sql import SqlFilter
-from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError
 
 import db
-from dataline.api.settings.router import router as settings_router
-from dataline.config import config
+from app import App
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.settings import SettingsService
-from dataline.utils import get_sqlite_dsn
 from models import (
-    Connection,
     ConversationWithMessagesWithResults,
     DataResult,
     MessageWithResults,
     Result,
     StatusType,
     SuccessResponse,
-    TableSchema,
     UnsavedResult,
-    UpdateConnectionRequest,
     UpdateConversationRequest,
 )
-from services import QueryService, SchemaService, results_from_query_response
+from services import QueryService, results_from_query_response
 from sql_wrapper import request_execute, request_limit
 
 logging.basicConfig(level=logging.DEBUG)
@@ -49,246 +32,12 @@ logger = logging.getLogger(__name__)
 lexer = lexers.MySqlLexer()
 lexer.add_filter(SqlFilter())
 
-app = FastAPI()
-
-
-async def catch_exceptions_middleware(
-    request: Request, call_next: Callable[[Request], Awaitable[Response]]
-) -> Response:
-    try:
-        return await call_next(request)
-    except NotFoundError as e:
-        # No need to log these, expected errors
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": e.message})
-    except Exception as e:
-        # Log for collection
-        logger.exception(e)
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"message": str(e)})
-
-
-app.middleware("http")(catch_exceptions_middleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-class ConnectRequest(BaseModel):
-    dsn: str = Field(min_length=3)
-    name: str
-
-    @validator("dsn")
-    def validate_dsn_format(cls, value: str) -> str:
-        # Define a regular expression to match the DSN format
-        dsn_regex = r"^[\w\+]+:\/\/[\w-]+:\w+@[\w.-]+[:\d]*\/\w+$"
-
-        if not re.match(dsn_regex, value):
-            raise ValueError(
-                'Invalid DSN format. The expected format is "driver://username:password@host:port/database".'
-            )
-
-        return value
-
-
-app.include_router(settings_router)
+app = App()
 
 
 @app.get("/healthcheck", response_model_exclude_none=True)
 async def healthcheck() -> SuccessResponse[None]:
     return SuccessResponse(status=StatusType.ok)
-
-
-def create_db_connection(dsn: str, name: str) -> SuccessResponse[dict[str, str]]:
-    try:
-        engine = create_engine(dsn)
-        with engine.connect():
-            pass
-    except OperationalError as exc:
-        # Try again replacing localhost with host.docker.internal to connect with DBs running in docker
-        if "localhost" in dsn:
-            dsn = dsn.replace("localhost", "host.docker.internal")
-            try:
-                engine = create_engine(dsn)
-                with engine.connect():
-                    pass
-            except OperationalError as e:
-                logger.error(e)
-                raise HTTPException(status_code=404, detail="Failed to connect to database")
-        else:
-            logger.error(exc)
-            raise HTTPException(status_code=404, detail="Failed to connect to database")
-
-    # Check if connection with DSN already exists, then return connection_id
-    try:
-        existing_connection = db.get_connection_from_dsn(dsn)
-        if existing_connection:
-            return SuccessResponse(
-                status=StatusType.ok,
-                data={
-                    "connection_id": existing_connection.id,
-                },
-            )
-
-    except NotFoundError:
-        pass
-
-    # Insert connection only if success
-    dialect = engine.url.get_dialect().name
-    database = engine.url.database
-
-    if not database:
-        raise Exception("Invalid DSN. Database name is required.")
-
-    with db.DatabaseManager() as conn:
-        connection_id = db.create_connection(
-            conn,
-            dsn,
-            database=database,
-            name=name,
-            dialect=dialect,
-        )
-
-        SchemaService.create_or_update_tables(conn, connection_id)
-        conn.commit()  # only commit if all step were successful
-
-    return SuccessResponse(
-        status=StatusType.ok,
-        data={
-            "connection_id": connection_id,
-            "database": database,
-            "dialect": dialect,
-        },
-    )
-
-
-@app.post("/create-sample-db")
-async def create_sample_db() -> SuccessResponse[dict[str, str]]:
-    name = "DVD Rental (Sample)"
-    dsn = get_sqlite_dsn(config.sample_postgres_path)
-    return create_db_connection(dsn, name)
-
-
-@app.post("/connect", response_model_exclude_none=True)
-async def connect_db(req: ConnectRequest) -> SuccessResponse[dict[str, str]]:
-    return create_db_connection(req.dsn, req.name)
-
-
-class ConnectionsOut(BaseModel):
-    connections: list[Connection]
-
-
-@app.get("/connections")
-async def get_connections() -> SuccessResponse[ConnectionsOut]:
-    return SuccessResponse(
-        status=StatusType.ok,
-        data=ConnectionsOut(
-            connections=db.get_connections(),
-        ),
-    )
-
-
-class TableSchemasOut(BaseModel):
-    tables: list[TableSchema]
-
-
-@app.get("/connection/{connection_id}/schemas")
-async def get_table_schemas(connection_id: str) -> SuccessResponse[TableSchemasOut]:
-    # Check for connection existence
-    with db.DatabaseManager() as conn:
-        connection = db.get_connection(conn, connection_id)
-        if not connection:
-            raise HTTPException(status_code=404, detail="Invalid connection_id")
-
-        return SuccessResponse(
-            status=StatusType.ok,
-            data=TableSchemasOut(
-                tables=db.get_table_schemas_with_descriptions(connection_id),
-            ),
-        )
-
-
-@app.patch("/schemas/table/{table_id}")
-async def update_table_schema_description(
-    table_id: str, description: Annotated[str, Body(embed=True)]
-) -> dict[str, str]:
-    with db.DatabaseManager() as conn:
-        db.update_schema_table_description(conn, table_id=table_id, description=description)
-        conn.commit()
-
-    return {"status": "ok"}
-
-
-@app.patch("/schemas/field/{field_id}")
-async def update_table_schema_field_description(
-    field_id: str, description: Annotated[str, Body(embed=True)]
-) -> dict[str, str]:
-    with db.DatabaseManager() as conn:
-        db.update_schema_table_field_description(conn, field_id=field_id, description=description)
-        conn.commit()
-
-    return {"status": "ok"}
-
-
-class ConnectionOut(BaseModel):
-    connection: Connection
-
-
-@app.get("/connection/{connection_id}")
-async def get_connection(connection_id: str) -> SuccessResponse[ConnectionOut]:
-    with db.DatabaseManager() as conn:
-        return SuccessResponse(
-            status=StatusType.ok,
-            data=ConnectionOut(
-                connection=db.get_connection(conn, connection_id),
-            ),
-        )
-
-
-@app.delete("/connection/{connection_id}")
-async def delete_connection(connection_id: str) -> SuccessResponse[None]:
-    with db.DatabaseManager() as conn:
-        db.delete_connection(conn, connection_id)
-    return SuccessResponse(status=StatusType.ok)
-
-
-@app.patch("/connection/{connection_id}")
-async def update_connection(connection_id: str, req: UpdateConnectionRequest) -> SuccessResponse[ConnectionOut]:
-    # Try to connect to provided dsn
-    try:
-        engine = create_engine(req.dsn)
-        with engine.connect():
-            pass
-    except OperationalError as e:
-        logger.error(e)
-        raise HTTPException(status_code=400, detail="Failed to connect to database")
-
-    # Update connection only if success
-    dialect = engine.url.get_dialect().name
-    database = str(engine.url.database)
-
-    db.update_connection(
-        connection_id=connection_id,
-        dsn=req.dsn,
-        database=database,
-        name=req.name,
-        dialect=dialect,
-    )
-
-    return SuccessResponse(
-        status=StatusType.ok,
-        data=ConnectionOut(
-            connection=Connection(
-                id=connection_id,
-                dsn=req.dsn,
-                database=database,
-                name=req.name,
-                dialect=dialect,
-            ),
-        ),
-    )
 
 
 class ConversationsOut(BaseModel):
@@ -373,8 +122,9 @@ async def execute_sql(
         # Will raise error that's auto captured by middleware if not exists
         conversation = db.get_conversation(conversation_id)
         connection_id = conversation.connection_id
-        connection = db.get_connection(conn, connection_id)
-        if not connection:
+        try:
+            connection = db.get_connection(conn, UUID(connection_id))
+        except NotFoundError:
             raise HTTPException(status_code=404, detail="Invalid connection_id")
 
         openai_key = await settings_service.get_openai_api_key(session)
@@ -438,8 +188,9 @@ async def query(
 
         # Create query service and generate response
         connection_id = conversation.connection_id
-        connection = db.get_connection(conn, connection_id)
-        if not connection:
+        try:
+            connection = db.get_connection(conn, UUID(connection_id))
+        except NotFoundError:
             raise HTTPException(status_code=404, detail="Invalid connection_id")
 
         openai_key = await settings_service.get_openai_api_key(session)

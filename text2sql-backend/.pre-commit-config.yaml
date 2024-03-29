@@ -1,3 +1,4 @@
+files: ^text2sql-backend/
 exclude: 'docs|scripts|node_modules|\.git|\.tox|\.idea|min\.css|.*\.js|.*\.csv|.*\.svg|^frontend/packages/old|pnpm-lock\.yaml'
 default_stages: [commit]
 fail_fast: false
@@ -31,4 +32,16 @@ repos:
     hooks:
       - id: ruff
         args: [--config=./text2sql-backend/pyproject.toml, "--fix"]
+        exclude: ".*pb2(_grpc)?.py(i)?$|__init__.py"
+
+  # Run tests
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: sh -c 'cd text2sql-backend && PYTHONPATH=. poetry run pytest .'
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [commit]
         exclude: ".*pb2(_grpc)?.py(i)?$|__init__.py"

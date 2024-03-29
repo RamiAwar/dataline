@@ -7,8 +7,8 @@ from llama_index.indices.query.schema import QueryBundle
 from llama_index.indices.struct_store import SQLContextContainerBuilder
 
 import db
+from dataline.models.connection.schema import Connection
 from llm import ChatLLM
-from models import Connection
 from sql_wrapper import CustomSQLDatabase
 from tokenizer import num_tokens_from_string
 
@@ -49,7 +49,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         context_str: Optional[str] = None,
         model: Optional[str] = "gpt-4",
         embedding_model: Optional[str] = "text-embedding-ada-002",
-        temperature: Optional[int] = 0.0,
+        temperature: Optional[float] = 0.0,
     ):
         """Initialize params."""
         self.connection: Connection = connection

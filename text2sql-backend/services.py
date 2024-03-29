@@ -2,13 +2,15 @@ import json
 import logging
 from sqlite3 import Connection as SQLiteConnection
 from typing import Any, TypedDict
+from uuid import UUID
 
 from sqlalchemy import MetaData, create_engine, inspect
 
 import db
 from context_builder import CustomSQLContextContainerBuilder
+from dataline.models.connection.schema import Connection
 from errors import GenerationError, RelatedTablesNotFoundError
-from models import Connection, SQLQueryResult, TableField, UnsavedResult
+from models import SQLQueryResult, TableField, UnsavedResult
 from query_manager import SQLQueryManager
 from sql_wrapper import CustomSQLDatabase
 
@@ -22,7 +24,7 @@ class SQLResults(TypedDict):
 
 class SchemaService:
     @classmethod
-    def extract_tables(cls, conn: SQLiteConnection, connection_id: str) -> dict[str, list[TableField]]:
+    def extract_tables(cls, conn: SQLiteConnection, connection_id: UUID) -> dict[str, list[TableField]]:
         # Get DSN from connection
         connection = db.get_connection(conn, connection_id)
         engine = create_engine(connection.dsn)
@@ -57,14 +59,16 @@ class SchemaService:
         return tables
 
     @classmethod
-    def create_or_update_tables(cls, conn: SQLiteConnection, connection_id: str) -> None:
-        exists = db.exists_schema_table(connection_id)
+    def create_or_update_tables(cls, conn: SQLiteConnection, connection_id: UUID) -> None:
+        # TODO: Change later - use UUIDs normally
+        conn_id = str(connection_id)
+        exists = db.exists_schema_table(conn_id)
         if exists:
             raise Exception("Update not implemented yet")
 
         tables = cls.extract_tables(conn, connection_id)
         for table_name, fields in tables.items():
-            cls._create_or_update_table_schema(conn, connection_id, table_name, fields)
+            cls._create_or_update_table_schema(conn, conn_id, table_name, fields)
 
     @classmethod
     def _create_or_update_table_schema(
@@ -103,7 +107,7 @@ class QueryService:
         connection: Connection,
         openai_api_key: str,
         model_name: str = "gpt-4",
-        temperature: int = 0.0,
+        temperature: float = 0.0,
     ) -> None:
         self.session = connection
         self.engine = create_engine(connection.dsn)

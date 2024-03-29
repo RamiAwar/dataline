@@ -7,7 +7,11 @@ import { SnackbarProvider } from "notistack";
 import { HealthCheckProvider } from "./components/Providers/HealthcheckProvider";
 
 export const App = () => (
-  <SnackbarProvider autoHideDuration={10000} maxSnack={5}>
+  <SnackbarProvider
+    autoHideDuration={5000}
+    maxSnack={5}
+    anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+  >
     <HealthCheckProvider>
       <UserInfoProvider>
         <ConnectionListProvider>
