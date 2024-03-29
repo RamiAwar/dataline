@@ -1,15 +1,12 @@
 import { Fragment, useEffect, useState } from "react";
-import { Dialog, Menu, Transition } from "@headlessui/react";
+import { Dialog, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
-  BookmarkIcon,
-  ChartBarSquareIcon,
   PlusIcon,
   ChatBubbleOvalLeftIcon,
   XMarkIcon,
   TrashIcon,
   CheckIcon,
-  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import logo from "../../assets/images/logo_md.png";
 import { IConversation } from "../Library/types";
@@ -20,7 +17,6 @@ import { Link, useParams } from "react-router-dom";
 import { ProfileDropdown } from "./ProfileDropdown";
 import { enqueueSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
-import { n } from "@tauri-apps/api/fs-4bb77382";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -30,7 +26,7 @@ export const Sidebar = () => {
   const params = useParams<{ conversationId: string }>();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [conversations, _, fetchConversations] = useConversationList();
+  const [conversations, , fetchConversations] = useConversationList();
   const [currentConversation, setCurrentConversation] =
     useState<IConversation | null>();
   const [isEditing, setIsEditing] = useState(false);
@@ -78,10 +74,7 @@ export const Sidebar = () => {
     // Update conversation in backend
     (async () => {
       try {
-        const res = await api.updateConversation(
-          currentConversation.id,
-          editedName
-        );
+        await api.updateConversation(currentConversation.id, editedName);
         setCurrentConversation({
           ...currentConversation,
           name: editedName,
@@ -399,7 +392,7 @@ export const Sidebar = () => {
               </ul> */}
               <li className="-mx-6 mt-auto">
                 <div className="flex items-center gap-x-4 px-4 py-4 text-md font-medium leading-6 text-white cursor-pointer">
-                  <ProfileDropdown topRight={true}></ProfileDropdown>
+                  <ProfileDropdown />
                 </div>
               </li>
             </ul>
@@ -449,7 +442,7 @@ export const Sidebar = () => {
           )
         )}
 
-        <ProfileDropdown topRight={false}></ProfileDropdown>
+        <ProfileDropdown />
       </div>
     </div>
   );

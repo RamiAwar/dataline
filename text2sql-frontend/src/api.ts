@@ -14,11 +14,6 @@ type SuccessResponse<T> = {
   data: T;
 };
 
-type ErrorResponse = {
-  status: "error";
-  data: string;
-};
-
 type ApiResponse<T> = SuccessResponse<T>;
 
 // interface AuthTokens {

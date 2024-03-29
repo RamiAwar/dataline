@@ -45,17 +45,17 @@ function HealthCheckReducer(
 ) {
   const { nextHealthy } = action;
   const { isLoaded, healthy } = state;
-  if (nextHealthy) {
-    if (isLoaded && !healthy) {
-      reconnectSnackbar();
-    }
-    return { isLoaded: true, healthy: true };
-  } else {
-    if (!isLoaded || healthy) {
-      disconnectSnackbar();
-    }
-    return { isLoaded: true, healthy: false };
+
+  if (isLoaded && !healthy && nextHealthy) {
+    reconnectSnackbar();
+  } else if (healthy && !nextHealthy) {
+    disconnectSnackbar();
   }
+  // important to return the original state object to avoid re-rendering
+  // see https://react.dev/reference/react/useReducer#setstate-caveats and Object.is
+  return !isLoaded || healthy !== nextHealthy
+    ? { isLoaded: true, healthy: nextHealthy }
+    : state;
 }
 
 export const HealthCheckProvider = ({ children }: React.PropsWithChildren) => {

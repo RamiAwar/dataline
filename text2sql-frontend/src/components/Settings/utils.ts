@@ -6,7 +6,7 @@ export async function updateName(name: string | null) {
     return false;
   }
   try {
-    const response = await api.updateUserInfo({ name });
+    await api.updateUserInfo({ name });
     return true;
   } catch {
     enqueueSnackbar({ variant: "error", message: "Error updating name" });
@@ -24,7 +24,7 @@ export async function updateApiKey(apiKey: string | null): Promise<boolean> {
     return false;
   }
   try {
-    const response = await api.updateUserInfo({ openai_api_key: apiKey });
+    await api.updateUserInfo({ openai_api_key: apiKey });
     return true;
   } catch {
     enqueueSnackbar({ variant: "error", message: "Error updating API key" });

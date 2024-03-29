@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useLayoutEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api } from "../../api";
 import { Message } from "./Message";
 import { IMessageWithResults } from "../Library/types";

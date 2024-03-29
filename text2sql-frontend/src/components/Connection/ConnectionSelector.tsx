@@ -6,16 +6,14 @@ import { useState } from "react";
 import { IConnection, IConversation } from "../Library/types";
 import { useConversationList } from "../Providers/ConversationListProvider";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
 
 export const ConnectionSelector = () => {
-  let navigate = useNavigate();
-  const params = useParams<{ conversationId: string }>();
-  const [conversation, setConversation] = useState<IConversation | null>();
-  const [connections, setConnections, fetchConnections] = useConnectionList();
-  const [conversations, setConversations, fetchConversations] =
-    useConversationList();
+  const navigate = useNavigate();
+  const [, setConversation] = useState<IConversation | null>();
+  const [connections, , fetchConnections] = useConnectionList();
+  const [, , fetchConversations] = useConversationList();
   const [isNewConnectionModalOpen, setIsNewConnectionModalOpen] =
     useState(false);
   const openNewConnectionModal = () => {
