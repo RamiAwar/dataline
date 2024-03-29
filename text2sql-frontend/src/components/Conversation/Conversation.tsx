@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { ConnectionResult, api } from "../../api";
+import { api } from "../../api";
 import { Message } from "./Message";
 import { IMessageWithResults } from "../Library/types";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
@@ -9,6 +9,7 @@ import { Transition } from "@headlessui/react";
 import { generateUUID } from "../Library/utils";
 import { enqueueSnackbar } from "notistack";
 import { useConnectionList } from "../Providers/ConnectionListProvider";
+import { useConversationList } from "../Providers/ConversationListProvider";
 import { isAxiosError } from "axios";
 import { Routes } from "@/router";
 import StarterMessage from "./StarterMessage";
@@ -25,9 +26,13 @@ export const Conversation = () => {
   // Load messages from conversation via API on load
   const [messages, setMessages] = useState<IMessageWithResults[]>([]);
   const [connections] = useConnectionList();
+  const [conversations] = useConversationList();
   const messageListRef = useRef<HTMLDivElement | null>(null);
-  const [currConnection, setCurrConnection] = useState<ConnectionResult | null>(
-    null
+  const currConversation = conversations.find(
+    (conv) => conv.conversation_id === params.conversationId
+  );
+  const currConnection = connections?.find(
+    (conn) => conn.id === currConversation?.connection_id
   );
 
   function submitQuery(value: string) {
@@ -76,14 +81,10 @@ export const Conversation = () => {
   }
 
   useEffect(() => {
-    const loadConnectionAndMessages = async () => {
+    const loadMessages = async () => {
       try {
         const messages = await api.getMessages(params.conversationId!);
         setMessages(messages.data.messages);
-        const connection = await api.getConnectionFromConversation(
-          params.conversationId!
-        );
-        setCurrConnection(connection.data.connection);
       } catch (exception) {
         if (isAxiosError(exception) && exception.response?.status === 404) {
           navigate(Routes.Root);
@@ -95,7 +96,7 @@ export const Conversation = () => {
         });
       }
     };
-    loadConnectionAndMessages();
+    loadMessages();
   }, [params, navigate]);
 
   useEffect(() => {

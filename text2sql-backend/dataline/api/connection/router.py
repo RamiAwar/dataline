@@ -122,17 +122,6 @@ async def get_connection(connection_id: UUID) -> SuccessResponse[GetConnectionOu
         )
 
 
-@router.get("/connection/from-conversation/{conversation_id}")
-async def get_connection_from_conversation(conversation_id: str) -> SuccessResponse[GetConnectionOut]:
-    with db.DatabaseManager() as conn:
-        return SuccessResponse(
-            status=StatusType.ok,
-            data=GetConnectionOut(
-                connection=db.get_connection_from_conversation(conn, conversation_id),
-            ),
-        )
-
-
 class ConnectionsOut(BaseModel):
     connections: list[ConnectionOut]
 

@@ -47,6 +47,7 @@ export interface IConnection {
   name: string;
   dsn: string;
   dialect: string;
+  is_sample: boolean;
 }
 
 export interface IEditConnection {

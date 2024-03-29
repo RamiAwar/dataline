@@ -98,13 +98,6 @@ const getConnection = async (
   return response.data;
 };
 
-const getConnectionFromConversation = async (conversationId: string) => {
-  const response = await axios.get<GetConnectionResult>(
-    `${baseUrl}/connection/from-conversation/${conversationId}`
-  );
-  return response.data;
-};
-
 export type UpdateConnectionResult = ApiResponse<{
   connection: ConnectionResult;
 }>;
@@ -341,7 +334,6 @@ const getUserInfo = async () => {
 export const api = {
   healthcheck,
   getConnection,
-  getConnectionFromConversation,
   getTableSchemas,
   updateTableSchemaDescription,
   updateTableSchemaFieldDescription,
