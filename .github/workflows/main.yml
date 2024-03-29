@@ -27,6 +27,6 @@ jobs:
           path: ./.venv
           key: venv-${{ hashFiles('poetry.lock') }}
       - name: Install the project dependencies
-        run: poetry install
+        run: poetry install --with dev --no-interaction --no-root
       - name: Run the automated tests (for example)
         run: PYTHONPATH=. poetry run pytest .
