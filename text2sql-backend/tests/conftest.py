@@ -32,7 +32,7 @@ async def engine() -> AsyncGenerator[AsyncEngine, None]:
     pathlib.Path("test.sqlite3").unlink(missing_ok=True)
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="function")
 async def session(engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch) -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSession(engine) as session, session.begin():
         # prevent test from committing anything, only flush

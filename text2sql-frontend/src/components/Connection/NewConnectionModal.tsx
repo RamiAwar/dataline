@@ -3,6 +3,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { api } from "../../api";
 import { Spinner } from "../Spinner/Spinner";
 import { enqueueSnackbar } from "notistack";
+import { isAxiosError } from "axios";
 
 interface NewConnectionModalFormProps {
   isOpen: boolean;
@@ -27,6 +28,11 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
   const [connectionName, setConnectionName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const clearInputs = () => {
+    setUnmaskedDsn("");
+    setConnectionName("");
+  }
+
   const handleDSNChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
     setUnmaskedDsn(value);
@@ -41,19 +47,37 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
     if (isLoading) return;
     setIsLoading(true);
 
-    const res = await api.createTestConnection();
-    if (res.status !== "ok") {
-      enqueueSnackbar({
-        variant: "error",
-        message: "Error creating connection",
-      });
-      return;
+    try {
+      const res = await api.createTestConnection();
+      if (res.status !== "ok") {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error creating connection",
+        });
+        setIsLoading(false);
+        return;
+      }
+    } catch (exception) {
+      if (isAxiosError(exception) && exception.response?.status === 409) {
+        // Connection already exists, skip creation but don't close or clear modal
+        enqueueSnackbar({
+          variant: "info",
+          message: "Connection already exists, skipping creation",
+        });
+        setIsLoading(false);
+        return;
+      } else {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error creating connection",
+        });
+        setIsLoading(false);
+        return;
+      }
     }
 
-    // Fake loading
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     setIsLoading(false);
+    clearInputs();
     onClose();
   };
 
@@ -69,20 +93,30 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
           variant: "error",
           message: "Error creating connection",
         });
+        setIsLoading(false);
         return;
       }
-    } catch (error) {
-      enqueueSnackbar({
-        variant: "error",
-        message: "Error creating connection",
-      });
-      return;
+    } catch (exception) {
+      if (isAxiosError(exception) && exception.response?.status === 409) {
+        // Connection already exists, skip creation but don't close or clear modal
+        enqueueSnackbar({
+          variant: "info",
+          message: "Connection already exists, skipping creation",
+        });
+        setIsLoading(false);
+        return;
+      } else {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error creating connection",
+        });
+        setIsLoading(false);
+        return;
+      }
     }
 
-    // Fake loading
-    await new Promise((resolve) => setTimeout(resolve, 4000));
-
     setIsLoading(false);
+    clearInputs();
     onClose();
   };
 

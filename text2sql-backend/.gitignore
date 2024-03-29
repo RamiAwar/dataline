@@ -64,9 +64,9 @@ cover/
 local_settings.py
 
 # Test dbs
-*.sqlite3
-*.sqlite3-journal
-*.db
+db.sqlite3
+db.sqlite3-journal
+test.sqlite3
 
 # Flask stuff:
 instance/
