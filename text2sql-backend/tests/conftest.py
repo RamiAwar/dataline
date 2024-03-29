@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 
 @pytest_asyncio.fixture(scope="session")
 async def engine() -> AsyncGenerator[AsyncEngine, None]:
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    engine = create_async_engine("sqlite+aiosqlite:///test.sqlite3")
 
     async with engine.begin() as connection:
         await connection.run_sync(DBModel.metadata.drop_all)
@@ -42,7 +42,7 @@ async def session(engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch) -> Async
 @pytest.fixture(scope="session", autouse=True)
 def apply_migrations() -> None:
     config = Config((pathlib.Path(__file__).parent.parent / "alembic.ini").resolve())
-    config.set_main_option("sqlalchemy.url", "sqlite+aiosqlite:///:memory:")
+    config.set_main_option("sqlalchemy.url", "sqlite+aiosqlite:///test.sqlite3")
     upgrade(config, "head")
 
 
@@ -50,7 +50,7 @@ app = App()
 
 
 @pytest_asyncio.fixture
-async def client(session: AsyncSession, monkeypatch: pytest.MonkeyPatch) -> AsyncGenerator[TestClient, None]:
+async def client(session: AsyncSession) -> AsyncGenerator[TestClient, None]:
     def override_get_session() -> Generator[AsyncSession, None, None]:
         yield session
 

@@ -3,7 +3,19 @@
 ## Getting started
 
 To run DataLine, you can use our official docker image and get started in one command:
-```docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:v0.1.0```
+```bash
+docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:v0.1.0
+```
+
+You can manage this as you would any other container. `docker start dataline`, `docker stop dataline`
+
+For updating to a new version:
+```bash
+docker rm dataline
+docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:<whatevernewversion>
+```
+
+We'll make this stuff easier later on!
 
 To connect to the frontend, you can then visit:
 [http://localhost:2222](http://localhost:2222)

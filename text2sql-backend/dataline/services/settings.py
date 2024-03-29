@@ -77,8 +77,9 @@ class SettingsService:
 
         return UserOut.model_validate(user_info)
 
-    async def get_openai_api_key(self, session: AsyncSession) -> Optional[str]:
+    async def get_openai_api_key(self, session: AsyncSession) -> str:
         user_info = await self.user_repo.get_one_or_none(session)
-        if user_info is None:
-            raise Exception("User does not exist. Please setup your application.")
+        if user_info is None or not user_info.openai_api_key:
+            raise Exception("User or OpenAI key not setup. Please setup your application.")
+
         return user_info.openai_api_key
