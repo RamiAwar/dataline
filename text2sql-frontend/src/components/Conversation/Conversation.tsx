@@ -15,8 +15,21 @@ import { Routes } from "@/router";
 import MessageTemplate from "./MessageTemplate";
 
 const templateMessages = [
-  "What can you tell me about this database?",
-  "Show me some rows from one of the tables.",
+  {
+    title: "What questions can I ask",
+    text: "about this dataset?",
+    message: "What questions can I ask about this dataset?",
+  },
+  {
+    title: "Show me some rows",
+    text: "from one of the tables.",
+    message: "Show me some rows from one of the tables.",
+  },
+  {
+    title: "What can you tell me",
+    text: "about this database?",
+    message: "What can you tell me about this database?",
+  },
 ];
 
 export const Conversation = () => {
@@ -141,10 +154,12 @@ export const Conversation = () => {
       <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center backdrop-blur-md pt-0">
         {messages.length === 0 && currConnection?.is_sample && (
           <div className="w-full md:max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-2 justify-between px-2 sm:px-3 my-4">
-            {templateMessages.map((message) => (
+            {templateMessages.map((template) => (
               <MessageTemplate
-                text={message}
-                onClick={() => submitQuery(message)}
+                key={template.title}
+                title={template.title}
+                text={template.text}
+                onClick={() => submitQuery(template.message)}
               />
             ))}
           </div>

@@ -23,6 +23,7 @@ type Story = StoryObj<typeof MessageTemplate>;
  */
 export const Primary: Story = {
   args: {
-    text: "What are the most rented movies?",
+    title: "Give me a list",
+    text: "of the most rented movies",
   },
 };
