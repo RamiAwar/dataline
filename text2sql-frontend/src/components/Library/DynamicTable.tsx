@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@catalyst/table";
 
+// TODO: Remove after defining this better on backend
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
   const page = 0;
   const rowsPerPage = 25;
@@ -12,46 +22,36 @@ export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
     );
   }, [page, rowsPerPage, data]);
   return (
-    <div className="max-w-7xl border-2 border-gray-500 rounded-md bg-gray-900 flex flex-col overflow-auto scrollbar-hide">
-      <div className="flow-root">
-        <div className="">
-          <div className="inline-block min-w-full py-2 align-middle">
-            <table className="min-w-full divide-y divide-gray-400">
-              <thead>
-                <tr className="divide-x divide-gray-400">
-                  {dataSubset[0].map((item: any, index: number) => (
-                    <th
-                      key={index}
-                      scope="col"
-                      className="py-3.5 pl-4 pr-4 text-left text-sm font-semibold"
-                    >
+    <div className="max-w-7xl border border-gray-500 overflow-hidden rounded-xl">
+      <Table
+        grid
+        bleed
+        striped
+        dense
+        className="ml-0 mr-0 [--gutter:theme(spacing.6)] sm:[--gutter:theme(spacing.8)]"
+      >
+        <TableHead>
+          <TableRow>
+            {dataSubset[0].map((header: string, index: number) => (
+              <TableHeader key={index}>{header}</TableHeader>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {dataSubset.map((row: string[] | number[], index: number) => {
+            if (index > 0)
+              return (
+                <TableRow key={index}>
+                  {row.map((item: string | number, cellIndex: number) => (
+                    <TableCell key={cellIndex} className="font-medium pl-8">
                       {item}
-                    </th>
+                    </TableCell>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-400">
-                {dataSubset.map((row: Array<any>, index: number) => {
-                  if (index > 0)
-                    return (
-                      <tr key={index} className="divide-x divide-gray-400">
-                        {row.map((item: any, cellIndex: number) => (
-                          <td
-                            key={cellIndex}
-                            className="whitespace-nowrap py-4 pl-4 pr-4 text-sm"
-                          >
-                            {item}
-                          </td>
-                        ))}
-                      </tr>
-                    );
-                  return null;
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+                </TableRow>
+              );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 };

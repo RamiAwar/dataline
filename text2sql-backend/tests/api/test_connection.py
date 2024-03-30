@@ -1,5 +1,6 @@
 import logging
 import pathlib
+from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
@@ -22,11 +23,35 @@ async def test_create_sample_db_connection(client: TestClient) -> None:
     assert data["is_sample"] is True
     assert data["id"]
 
+    # TODO: Remove after sqlalchemy migration
+    # Manual rollback
+    client.delete(f"/connection/{data['id']}")
+
 
 @pytest_asyncio.fixture
-async def sample_db(client: TestClient) -> Connection:
+async def sample_db(client: TestClient) -> AsyncGenerator[Connection, None]:
     response = client.post("/create-sample-db")
-    return Connection(**response.json()["data"])
+    assert response.status_code == 200
+    connection = Connection(**response.json()["data"])
+
+    # TODO: Remove after sqlalchemy migration
+    # Manual rollback
+    yield connection
+    client.delete(f"/connection/{str(connection.id)}")
+
+
+@pytest.mark.asyncio
+async def test_create_sample_db_connection_twice_409(client: TestClient) -> None:
+    response = client.post("/create-sample-db")
+    assert response.status_code == 200
+    connection = Connection(**response.json()["data"])
+
+    response = client.post("/create-sample-db")
+    assert response.status_code == 409
+
+    # TODO: Remove after sqlalchemy migration
+    # Manual rollback
+    client.delete(f"/connection/{str(connection.id)}")
 
 
 @pytest.mark.asyncio
@@ -73,6 +98,10 @@ async def test_connect_db(client: TestClient) -> None:
 
     # Delete database after tests
     pathlib.Path("test.db").unlink(missing_ok=True)
+
+    # TODO: Remove after sqlalchemy migration
+    # Manual rollback
+    client.delete(f"/connection/{data['id']}")
 
 
 @pytest.mark.asyncio
@@ -141,19 +170,6 @@ async def test_update_table_schema_field_description(client: TestClient, example
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Do not want to deal with this now")
-async def test_delete_connection(client: TestClient, sample_db: Connection) -> None:
-    response = client.delete(f"/connection/{str(sample_db.id)}")
-
-    assert response.status_code == 200
-
-    # Check if the connection was deleted
-    response = client.get("/connections")
-    data = response.json()["data"]
-    assert len(data["connections"]) == 0
-
-
-@pytest.mark.asyncio
 async def test_update_connection(client: TestClient, sample_db: Connection) -> None:
     update_in = {
         "dsn": "sqlite:///new.db",
@@ -169,3 +185,15 @@ async def test_update_connection(client: TestClient, sample_db: Connection) -> N
 
     # Delete database after tests
     pathlib.Path("new.db").unlink(missing_ok=True)
+
+
+@pytest.mark.asyncio
+async def test_delete_connection(client: TestClient, sample_db: Connection) -> None:
+    response = client.delete(f"/connection/{str(sample_db.id)}")
+
+    assert response.status_code == 200
+
+    # Check if the connection was deleted
+    response = client.get("/connections")
+    data = response.json()["data"]
+    assert len(data["connections"]) == 0

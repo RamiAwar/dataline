@@ -6,7 +6,6 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 
-from dataline.repositories.base import NotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -97,9 +96,8 @@ async def test_get_info(client: TestClient, user_info: dict[str, str]) -> None:
 
 @pytest.mark.asyncio
 async def test_get_info_not_found(client: TestClient) -> None:
-    with pytest.raises(NotFoundError):
-        response = client.get("/settings/info")
-        assert response.status_code == 404
+    response = client.get("/settings/info")
+    assert response.status_code == 404
 
 
 FileTuple = tuple[str, tuple[str, BytesIO, str]]

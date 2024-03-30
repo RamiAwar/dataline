@@ -109,7 +109,9 @@ export const Message = (initialMessage: IMessageWithResults) => {
   return (
     <div
       className={classNames(
-        message.role === "assistant" ? "dark:bg-gray-800" : "dark:bg-gray-900",
+        message.role === "assistant"
+          ? "dark:bg-gray-800/40"
+          : "dark:bg-gray-900",
         "w-full text-gray-800 dark:text-gray-100 bg-gray-50"
       )}
     >

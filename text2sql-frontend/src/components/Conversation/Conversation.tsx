@@ -9,8 +9,15 @@ import { Transition } from "@headlessui/react";
 import { generateUUID } from "../Library/utils";
 import { enqueueSnackbar } from "notistack";
 import { useConnectionList } from "../Providers/ConnectionListProvider";
+import { useConversationList } from "../Providers/ConversationListProvider";
 import { isAxiosError } from "axios";
 import { Routes } from "@/router";
+import MessageTemplate from "./MessageTemplate";
+
+const templateMessages = [
+  "What can you tell me about this database?",
+  "Show me some rows from one of the tables.",
+];
 
 export const Conversation = () => {
   const params = useParams<{ conversationId: string }>();
@@ -19,7 +26,14 @@ export const Conversation = () => {
   // Load messages from conversation via API on load
   const [messages, setMessages] = useState<IMessageWithResults[]>([]);
   const [connections] = useConnectionList();
+  const [conversations] = useConversationList();
   const messageListRef = useRef<HTMLDivElement | null>(null);
+  const currConversation = conversations.find(
+    (conv) => conv.conversation_id === params.conversationId
+  );
+  const currConnection = connections?.find(
+    (conn) => conn.id === currConversation?.connection_id
+  );
 
   function submitQuery(value: string) {
     // Add message to messages
@@ -69,7 +83,7 @@ export const Conversation = () => {
   useEffect(() => {
     const loadMessages = async () => {
       try {
-        const messages = await api.getMessages(params.conversationId as string);
+        const messages = await api.getMessages(params.conversationId!);
         setMessages(messages.data.messages);
       } catch (exception) {
         if (isAxiosError(exception) && exception.response?.status === 404) {
@@ -83,7 +97,7 @@ export const Conversation = () => {
       }
     };
     loadMessages();
-  }, [params]);
+  }, [params, navigate]);
 
   useEffect(() => {
     if (messageListRef.current !== null) {
@@ -124,8 +138,18 @@ export const Conversation = () => {
         </div>
       </Transition>
 
-      <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex justify-center bg-gradient-to-t from-gray-900 from-30% to-transparent pt-2">
-        <div className="w-full md:max-w-3xl flex justify-center pt-6 pb-4 m-2">
+      <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center backdrop-blur-md pt-0">
+        {messages.length === 0 && currConnection?.is_sample && (
+          <div className="w-full md:max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-2 justify-between px-2 sm:px-3 my-4">
+            {templateMessages.map((message) => (
+              <MessageTemplate
+                text={message}
+                onClick={() => submitQuery(message)}
+              />
+            ))}
+          </div>
+        )}
+        <div className="w-full md:max-w-3xl flex justify-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
           <ExpandingInput
             onSubmit={submitQuery}
             disabled={false}

@@ -15,7 +15,7 @@ from dataline.models.connection.schema import (
     GetConnectionOut,
     TableSchemasOut,
 )
-from dataline.repositories.base import NotFoundError
+from dataline.repositories.base import NotFoundError, NotUniqueError
 from dataline.utils import get_sqlite_dsn
 from models import StatusType, SuccessResponse, UpdateConnectionRequest
 from services import SchemaService
@@ -49,7 +49,7 @@ def create_db_connection(dsn: str, name: str, is_sample: bool = False) -> Succes
     try:
         existing_connection = db.get_connection_from_dsn(dsn)
         if existing_connection:
-            return SuccessResponse(status=StatusType.ok, data=existing_connection)
+            raise NotUniqueError("Connection already exists.")
     except NotFoundError:
         pass
 
@@ -92,9 +92,12 @@ class ConnectRequest(BaseModel):
         dsn_regex = r"^[\w\+]+:\/\/[\/\w-]+.*$"
 
         if not re.match(dsn_regex, value):
-            raise ValueError(
-                'Invalid DSN format. The expected format is "driver://username:password@host:port/database".'
-            )
+            raise ValueError("Invalid DSN format.")
+
+        # Simpler way to connect to postgres even though officially deprecated
+        # This mirrors psql which is a very common way to connect to postgres
+        if "postgres://" in value:
+            value = value.replace("postgres://", "postgresql://")
 
         return value
 
@@ -102,7 +105,7 @@ class ConnectRequest(BaseModel):
 @router.post("/create-sample-db")
 async def create_sample_db() -> SuccessResponse[ConnectionOut]:
     name = "DVD Rental (Sample)"
-    dsn = get_sqlite_dsn(config.sample_postgres_path)
+    dsn = get_sqlite_dsn(config.sample_dvdrental_path)
     return create_db_connection(dsn, name, is_sample=True)
 
 

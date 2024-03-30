@@ -57,6 +57,7 @@ export type ConnectionResult = {
   database: string;
   name: string;
   dialect: string;
+  is_sample: boolean;
 };
 type ConnectResult = ApiResponse<ConnectionResult>;
 const createConnection = async (

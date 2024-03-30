@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from sqlalchemy import ForeignKey, Integer, String
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import Mapped, mapped_column
 
 from dataline.models.base import DBModel
 from dataline.models.connection import ConnectionModel
