@@ -66,7 +66,7 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
         onClick={handleSubmit}
         className={classNames(
           inputValue.length > 0
-            ? "dark:text-gray-800 dark:bg-gray-300 dark:hover:cursor-pointer"
+            ? "dark:text-gray-700 dark:bg-gray-300 dark:hover:cursor-pointer"
             : "",
           "group absolute right-0 mr-4 -rotate-90 dark:text-gray-400 p-1 rounded-md transition-all duration-150"
         )}
