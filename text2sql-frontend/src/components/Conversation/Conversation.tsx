@@ -12,7 +12,7 @@ import { useConnectionList } from "../Providers/ConnectionListProvider";
 import { useConversationList } from "../Providers/ConversationListProvider";
 import { isAxiosError } from "axios";
 import { Routes } from "@/router";
-import StarterMessage from "./StarterMessage";
+import MessageTemplate from "./MessageTemplate";
 
 const templateMessages = [
   "What can you tell me about this database?",
@@ -138,18 +138,18 @@ export const Conversation = () => {
         </div>
       </Transition>
 
-      <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center bg-gradient-to-t from-gray-900 from-30% to-transparent pt-2">
+      <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center backdrop-blur-md pt-0">
         {messages.length === 0 && currConnection?.is_sample && (
-          <div className="w-full md:max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-2 justify-between px-2 sm:px-3">
+          <div className="w-full md:max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-2 justify-between px-2 sm:px-3 my-4">
             {templateMessages.map((message) => (
-              <StarterMessage
+              <MessageTemplate
                 text={message}
                 onClick={() => submitQuery(message)}
               />
             ))}
           </div>
         )}
-        <div className="w-full md:max-w-3xl flex justify-center pt-4 pb-4 m-2 p-2">
+        <div className="w-full md:max-w-3xl flex justify-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
           <ExpandingInput
             onSubmit={submitQuery}
             disabled={false}

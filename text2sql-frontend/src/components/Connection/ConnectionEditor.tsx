@@ -129,7 +129,7 @@ export const ConnectionEditor = () => {
   }
 
   return (
-    <div className="bg-gray-800 w-full h-full relative flex flex-col -mt-16 lg:mt-0">
+    <div className="dark:bg-gray-900 w-full h-full relative flex flex-col -mt-16 lg:mt-0">
       <AlertModal
         isOpen={showAlert}
         title="Discard Unsaved Changes?"
@@ -214,27 +214,25 @@ export const ConnectionEditor = () => {
 
           <form className="sm:col-span-6 flex items-center justify-end gap-x-6">
             <button
+              onClick={handleDelete}
+              className="rounded-md bg-gray-700 hover:bg-red-700 px-3 py-2 text-sm font-medium text-red-500 hover:text-white border border-gray-600 hover:border-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
+            >
+              Delete this connection
+            </button>
+            <button
               type="button"
-              className="rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white border border-gray-500 hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
+              className="rounded-md bg-gray-600 px-3 py-2 text-sm font-medium text-white border border-gray-500 hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
             >
               Cancel
             </button>
             <button
               type="submit"
               onClick={handleSubmit}
-              className="rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm border bg-green-600 border-green-500 hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-colors duration-150"
+              className="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm border bg-green-600 border-green-500 hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-colors duration-150"
             >
               Save
             </button>
           </form>
-          <div className="sm:col-span-6 flex items-center justify-end gap-x-6">
-            <button
-              onClick={handleDelete}
-              className="rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm border bg-red-600 border-red-500 hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 transition-colors duration-150"
-            >
-              Delete
-            </button>
-          </div>
 
           <div className="sm:col-span-6">
             <label
@@ -249,25 +247,24 @@ export const ConnectionEditor = () => {
               <br></br>
               <br></br>
               For example, consider a table called{" "}
-              <span className="font-mono text-lime-300 bg-slate-600 rounded-md px-2 py-1">
+              <span className="font-mono text-lime-300 bg-gray-600 rounded-md px-2">
                 users
               </span>{" "}
               with a vague column called{" "}
-              <span className="font-mono text-lime-300 bg-slate-600 rounded-md px-2 py-1">
+              <span className="font-mono text-lime-300 bg-gray-600 rounded-md px-2">
                 type
               </span>{" "}
               that contains one of{" "}
-              <span className="font-mono text-white bg-slate-600 rounded-md px-2 py-1">
+              <span className="font-mono text-white bg-gray-600 rounded-md px-2">
                 admin, basic, beta
               </span>
               . You could add a description to the{" "}
-              <span className="font-mono text-lime-300 bg-slate-600 rounded-md px-2 py-1">
+              <span className="font-mono text-lime-300 bg-gray-600 rounded-md px-2">
                 type
               </span>{" "}
-              column that says <br></br>
-              <br></br>
-              <span className="font-mono text-gray-300 rounded-md bg-slate-600 px-2 py-1">
-                Contains one of 'admin', 'basic', 'beta'.
+              column that says{" "}
+              <span className="font-semibold text-white">
+                "Contains one of 'admin', 'basic', 'beta'."
               </span>
               <br></br>
               <br></br>

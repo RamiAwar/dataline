@@ -46,14 +46,14 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
   };
 
   return (
-    <div className="flex flex-col justify-center w-full relative">
+    <div className="flex flex-col justify-center w-full relative mb-7">
       <textarea
         disabled={disabled}
         name="email"
         id="email"
         className={classNames(
           disabled ? "placeholder:text-gray-600" : "placeholder:text-gray-400",
-          "block rounded-md border-2 p-3 text-gray-900 shadow-sm sm:text-md sm:leading-6 resize-none dark:text-gray-200 dark:bg-gray-700 dark:border-gray-800 pr-12 overflow-y-hidden"
+          "block rounded-xl border p-4 text-gray-900 shadow-sm sm:text-md sm:leading-6 resize-none dark:text-gray-200 dark:bg-gray-900 dark:border-gray-600 pr-12 overflow-y-hidden mr-1"
         )}
         style={{ height: "auto" }}
         rows={1}
@@ -66,15 +66,15 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
         onClick={handleSubmit}
         className={classNames(
           inputValue.length > 0
-            ? "dark:text-gray-200 dark:hover:bg-gray-800"
+            ? "dark:text-gray-800 dark:bg-gray-300 dark:hover:cursor-pointer"
             : "",
-          "group absolute right-0 mr-4 [&>path]:stroke-[2] dark:text-gray-500 p-1 rounded-md transition-all duration-150"
+          "group absolute right-0 mr-4 -rotate-90 dark:text-gray-400 p-1 rounded-md transition-all duration-150"
         )}
       >
         <PaperAirplaneIcon
           className={classNames(
             inputValue.length > 0 ? "group-hover:-rotate-6" : "",
-            "h-6 w-6"
+            "h-6 w-6 [&>path]:stroke-[2]"
           )}
         ></PaperAirplaneIcon>
       </div>

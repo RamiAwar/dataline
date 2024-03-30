@@ -41,5 +41,5 @@
 }
 
 :root {
-  scrollbar-color: rgba(255,255,255,0.1) rgb(31,41,55);
+  scrollbar-color: rgba(255,255,255,0.1) rgba(31,41,55, 0.0);
 }

@@ -46,7 +46,7 @@ export function AlertModal({
         return <InformationCircleIcon className="h-6 w-6 text-blue-600" />;
       case AlertIcon.Error:
       default:
-        return <XCircleIcon className="h-6 w-6 text-slate-600" />;
+        return <XCircleIcon className="h-6 w-6 text-gray-600" />;
     }
   };
 

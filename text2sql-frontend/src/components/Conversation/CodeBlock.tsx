@@ -77,12 +77,13 @@ export const CodeBlock = ({
   const [lastChar, setLastChar] = useState<string>("");
   // let BookmarkIcon = isSaved ? BookmarkIconSolid : BookmarkIconOutline;
   const BookmarkIcon = BookmarkIconOutline;
+  const extraSpace = ""; // "\n\n\n";
 
   useEffect(() => {
     try {
       // Do not format if whitespace characters are being typed
       if (SPACES.includes(lastChar)) {
-        setFormattedCode(savedCode);
+        setFormattedCode(savedCode + extraSpace);
         return;
       }
 
@@ -97,7 +98,7 @@ export const CodeBlock = ({
       }
 
       const formatted = format(savedCode, { language: Dialect.Postgres });
-      setFormattedCode(formatted);
+      setFormattedCode(formatted + extraSpace);
 
       if (textareaRef.current !== null) {
         // Calculate old cursor position without considering spaces
@@ -154,7 +155,7 @@ export const CodeBlock = ({
     <div
       role="button"
       tabIndex={0}
-      className="max-w-7xl border-2 border-gray-500 rounded-md bg-gray-900 flex flex-col relative"
+      className="max-w-7xl border border-gray-500 rounded-xl bg-gray-900 flex flex-col relative"
       onKeyDown={() => textareaRef.current?.focus()}
       onClick={() => textareaRef.current?.focus()}
     >
@@ -162,7 +163,7 @@ export const CodeBlock = ({
       <textarea
         spellCheck={false}
         ref={textareaRef}
-        className="absolute h-full w-full inset-0 resize-none bg-transparent overflow-hidden text-transparent p-2 font-mono caret-white outline-none appearance-none focus:outline-none"
+        className="absolute h-full w-full border-0 inset-0 resize-none bg-transparent overflow-hidden text-transparent p-2 font-mono caret-white outline-none focus:outline-none focus:rounded-xl"
         onChange={handleTextUpdate}
         onKeyDown={handleKeyboardInput}
       />

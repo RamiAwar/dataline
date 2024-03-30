@@ -31,7 +31,7 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
   const clearInputs = () => {
     setUnmaskedDsn("");
     setConnectionName("");
-  }
+  };
 
   const handleDSNChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;

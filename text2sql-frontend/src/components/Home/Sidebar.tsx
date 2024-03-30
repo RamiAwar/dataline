@@ -184,7 +184,7 @@ export const Sidebar = () => {
                         <ul role="list" className="-mx-2 space-y-1">
                           <Link
                             to="/"
-                            className="py-3 px-2 rounded-md flex justify-start items-center border-2 border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
+                            className="py-3 px-2 rounded-md flex justify-start items-center border border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
                           >
                             <PlusIcon className="h-5 w-5 shrink-0 mr-2 [&>path]:stroke-[1]"></PlusIcon>
                             <div>New chat</div>
@@ -253,7 +253,7 @@ export const Sidebar = () => {
       </Transition.Root>
 
       {/* Static sidebar for large screens */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col border-r-2 border-gray-600">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col border-r border-gray-600">
         {/* Sidebar component, swap this element with another sidebar if you like */}
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6">
           <Link to="/" className="flex h-16 shrink-0 items-center">
@@ -263,7 +263,7 @@ export const Sidebar = () => {
             <ul role="list" className="flex flex-1 flex-col gap-y-4">
               <Link
                 to="/"
-                className="-mx-4 py-3 px-2 rounded-md flex justify-start items-center border-2 border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
+                className="-mx-4 py-3 px-2 rounded-md flex justify-start items-center border border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
               >
                 <PlusIcon className="h-5 w-5 shrink-0 mr-2 [&>path]:stroke-[1]"></PlusIcon>
                 <div>New chat</div>
@@ -338,7 +338,7 @@ export const Sidebar = () => {
                               onKeyDown={handleKeyPress}
                               onBlur={handleSaveClick}
                               autoFocus
-                              className="flex-none max-w-[70%] h-6 text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-slate-300 pl-1"
+                              className="flex-none max-w-[70%] h-6 text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-gray-300 pl-1"
                             />
                           ) : (
                             <span className="text-ellipsis overflow-hidden whitespace-nowrap">
