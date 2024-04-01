@@ -186,6 +186,7 @@ export const ConnectionEditor = () => {
 
           <form className="sm:col-span-6 flex items-center justify-end gap-x-6">
             <button
+              type="button"
               onClick={handleDelete}
               className="rounded-md bg-gray-700 hover:bg-red-700 px-3 py-2 text-sm font-medium text-red-500 hover:text-white border border-gray-600 hover:border-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
             >
@@ -193,6 +194,7 @@ export const ConnectionEditor = () => {
             </button>
             <button
               type="button"
+              onClick={handleBack}
               className="rounded-md bg-gray-600 px-3 py-2 text-sm font-medium text-white border border-gray-500 hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
             >
               Cancel
