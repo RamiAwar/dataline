@@ -45,9 +45,9 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         connection: Connection,
         sql_database: CustomSQLDatabase,
         openai_api_key: str,
+        model: str,
         context_dict: Optional[dict[str, str]] = None,
         context_str: Optional[str] = None,
-        model: Optional[str] = "gpt-4",
         embedding_model: Optional[str] = "text-embedding-ada-002",
         temperature: Optional[float] = 0.0,
     ):

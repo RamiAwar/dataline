@@ -1,6 +1,6 @@
 import functools
 import logging
-from typing import Literal, Optional
+from typing import Optional
 
 import openai
 from openai.types.chat import ChatCompletionChunk
@@ -17,8 +17,8 @@ class SQLQueryManager:
         self,
         dsn: str,
         openai_api_key: str,
+        model: str,
         examples: Optional[dict] = None,
-        model: Literal["gpt-4"] = "gpt-4",
         embedding_model: Optional[str] = "text-embedding-ada-002",
         temperature: float = 0.0,
     ):

@@ -106,7 +106,7 @@ class QueryService:
         self,
         connection: Connection,
         openai_api_key: str,
-        model_name: str = "gpt-4",
+        model_name: str,
         temperature: float = 0.0,
     ) -> None:
         self.session = connection
@@ -114,7 +114,9 @@ class QueryService:
         self.insp = inspect(self.engine)
         self.table_names = self.insp.get_table_names()
         self.sql_db = CustomSQLDatabase(self.engine, include_tables=self.table_names)
-        self.context_builder = CustomSQLContextContainerBuilder(connection, self.sql_db, openai_api_key=openai_api_key)
+        self.context_builder = CustomSQLContextContainerBuilder(
+            connection, self.sql_db, openai_api_key=openai_api_key, model=model_name
+        )
         self.query_manager = SQLQueryManager(
             dsn=connection.dsn, openai_api_key=openai_api_key, model=model_name, temperature=temperature
         )

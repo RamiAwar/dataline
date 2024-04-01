@@ -3,12 +3,19 @@ from typing import Optional
 from uuid import uuid4
 
 from fastapi import Depends, UploadFile
+import openai
 
+from dataline.config import config
 from dataline.models.media.model import MediaModel
 from dataline.models.user.schema import UserOut, UserUpdateIn
 from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.media import MediaCreate, MediaRepository
 from dataline.repositories.user import UserCreate, UserRepository, UserUpdate
+
+
+def model_exists(openai_api_key: str, model: str):
+    models = openai.OpenAI(api_key=openai_api_key).models.list()
+    return model in {model.id for model in models}
 
 
 class SettingsService:
@@ -62,10 +69,28 @@ class SettingsService:
         if user_info is None:
             # Create user with data
             user_create = UserCreate.model_construct(**data.model_dump(exclude_none=True))
+            if user_create.openai_api_key and user_create.preferred_openai_model is None:
+                user_create.preferred_openai_model = (
+                    config.default_model
+                    if model_exists(user_create.openai_api_key, config.default_model)
+                    else "gpt-3.5-turbo"
+                )
             user = await self.user_repo.create(session, user_create)
         else:
             # Update user with data
             user_update = UserUpdate.model_construct(**data.model_dump(exclude_none=True))
+            if user_update.openai_api_key:
+                key_to_check = user_update.openai_api_key
+                model_to_check = (
+                    user_update.preferred_openai_model or user_info.preferred_openai_model or config.default_model
+                )
+                assert model_exists(
+                    key_to_check, model_to_check
+                ), f"model {model_to_check} not accessible with current key"
+            elif user_update.preferred_openai_model and user_info.openai_api_key:
+                assert model_exists(
+                    user_info.openai_api_key, user_update.preferred_openai_model
+                ), f"model {user_update.preferred_openai_model} not accessible with current key"
             user = await self.user_repo.update_by_id(session, record_id=user_info.id, data=user_update)
 
         return UserOut.model_validate(user)
@@ -83,3 +108,10 @@ class SettingsService:
             raise Exception("User or OpenAI key not setup. Please setup your application.")
 
         return user_info.openai_api_key
+
+    async def get_preferred_model(self, session: AsyncSession) -> str:
+        user_info = await self.user_repo.get_one_or_none(session)
+        if user_info is None or not user_info.openai_api_key:
+            raise Exception("User or OpenAI key not setup. Please setup your application.")
+
+        return user_info.preferred_openai_model or config.default_model
