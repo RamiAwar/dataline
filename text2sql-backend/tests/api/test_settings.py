@@ -5,6 +5,8 @@ from io import BytesIO
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
+from openai.resources.models import Models as OpenAIModels
+from unittest.mock import MagicMock, patch
 
 
 logger = logging.getLogger(__name__)
@@ -55,24 +57,29 @@ async def test_update_user_info_invalid_openai_key(client: TestClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_update_user_info_valid_openai_key(client: TestClient) -> None:
+@patch.object(OpenAIModels, "list")
+async def test_update_user_info_valid_openai_key(mock_openai_model_list: MagicMock, client: TestClient) -> None:
     openai_key = "sk-Mioanowida"
     user_in = {"openai_api_key": openai_key}
     response = client.patch("/settings/info", json=user_in)
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
     assert response.json()["data"]["openai_api_key"] == openai_key
+    mock_openai_model_list.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_update_user_info_extra_fields_ignored(client: TestClient) -> None:
-    user_in = {"name": "John", "openai_api_key": "key", "extra": "extra"}
+@patch.object(OpenAIModels, "list")
+async def test_update_user_info_extra_fields_ignored(mock_openai_model_list: MagicMock, client: TestClient) -> None:
+    user_in = {"name": "John", "openai_api_key": "sk-1234", "extra": "extra"}
     response = client.patch("/settings/info", json=user_in)
     assert response.status_code == 200
     assert "extra" not in response.json()["data"]
+    mock_openai_model_list.assert_called_once()
 
 
 @pytest_asyncio.fixture
-async def user_info(client: TestClient) -> dict[str, str]:
+@patch.object(OpenAIModels, "list")
+async def user_info(mock_openai_model_list: MagicMock, client: TestClient) -> dict[str, str]:
     user_in = {
         "name": "John",
         "openai_api_key": "sk-asoiasdfl",
