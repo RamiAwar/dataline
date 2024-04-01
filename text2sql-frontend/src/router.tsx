@@ -27,7 +27,7 @@ let routes: RouteObject[] = [
   },
 ];
 
-let private_routes: RouteObject[] = [
+const private_routes: RouteObject[] = [
   {
     path: Routes.Root,
     element: <Home />,
@@ -52,7 +52,7 @@ let private_routes: RouteObject[] = [
   },
 ];
 
-if (process.env.NODE_ENV === "local") {
+if (process.env.NODE_ENV === "development") {
   // Replace public with private
   routes = private_routes;
 }

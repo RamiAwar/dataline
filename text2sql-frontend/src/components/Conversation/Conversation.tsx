@@ -1,18 +1,18 @@
-import { useEffect, useState, useRef } from "react";
-import { api } from "../../api";
+import { useEffect, useRef, useState } from "react";
 import { Message } from "./Message";
-import { IMessageWithResults } from "../Library/types";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import ExpandingInput from "./ExpandingInput";
 
 import { Transition } from "@headlessui/react";
 import { generateUUID } from "../Library/utils";
-import { enqueueSnackbar } from "notistack";
-import { useConnectionList } from "../Providers/ConnectionListProvider";
-import { useConversationList } from "../Providers/ConversationListProvider";
-import { isAxiosError } from "axios";
 import { Routes } from "@/router";
 import MessageTemplate from "./MessageTemplate";
+import {
+  useGetConnections,
+  useGetConversations,
+  useGetMessages,
+  useGetNewMessage,
+} from "@/hooks";
 
 const templateMessages = [
   {
@@ -34,83 +34,38 @@ const templateMessages = [
 
 export const Conversation = () => {
   const params = useParams<{ conversationId: string }>();
-  const navigate = useNavigate();
+  const [value, setValue] = useState("");
 
   // Load messages from conversation via API on load
-  const [messages, setMessages] = useState<IMessageWithResults[]>([]);
-  const [connections] = useConnectionList();
-  const [conversations] = useConversationList();
+  const { data } = useGetConnections();
+  const { data: conversationResp } = useGetConversations();
+
+  const { data: newMessage, isLoading } = useGetNewMessage({
+    id: params.conversationId ?? "",
+    value,
+  });
+
+  const { refetch, ...messagesResp } = useGetMessages(
+    params.conversationId ?? ""
+  );
+
   const messageListRef = useRef<HTMLDivElement | null>(null);
-  const currConversation = conversations.find(
+  const currConversation = conversationResp?.conversations.find(
     (conv) => conv.conversation_id === params.conversationId
   );
-  const currConnection = connections?.find(
+
+  const currConnection = data?.connections?.find(
     (conn) => conn.id === currConversation?.connection_id
   );
 
-  function submitQuery(value: string) {
-    // Add message to messages
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        content: value,
-        role: "user",
-        message_id: generateUUID(),
-      },
-    ]);
-
-    // Add message to messages
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        content: "Loading...",
-        role: "assistant",
-        message_id: generateUUID(),
-      },
-    ]);
-
-    // Get API response
-    (async () => {
-      try {
-        const res = await api.query(
-          params.conversationId as string,
-          value,
-          true
-        );
-        const message = res.data.message;
-
-        // Clear loading message and add response
-        setMessages((prevMessages) => [...prevMessages.slice(0, -1), message]);
-      } catch (exception) {
-        // Clear loading message
-        setMessages((prevMessages) => prevMessages.slice(0, -1));
-
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error querying assistant",
-        });
-      }
-    })();
-  }
-
   useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        const messages = await api.getMessages(params.conversationId!);
-        setMessages(messages.data.messages);
-      } catch (exception) {
-        if (isAxiosError(exception) && exception.response?.status === 404) {
-          navigate(Routes.Root);
-          return;
-        }
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error fetching messages",
-        });
-      }
-    };
-    loadMessages();
-  }, [params, navigate]);
+    if (newMessage && value) {
+      setValue("");
+      // This possibly introduces a bug.
+      // refetch all messages
+      refetch();
+    }
+  }, [value, newMessage, refetch]);
 
   useEffect(() => {
     if (messageListRef.current !== null) {
@@ -120,12 +75,15 @@ export const Conversation = () => {
         });
       }, 10);
     }
-  }, [messages]);
+    // }, [messagesResp?.data?.messages]);
+  }, []);
 
-  if (connections === null || connections?.length === 0) {
-    // Redirect to connection selector route
+  // @ts-expect-error, status is not known
+  if (messagesResp?.error?.status === 404 || !data?.connections?.length) {
     return <Navigate to={Routes.Root} />;
   }
+
+  const { messages = [] } = messagesResp?.data ?? {};
 
   return (
     <div className="bg-gray-900 w-full h-[calc(100%-4rem)] relative flex flex-col">
@@ -141,13 +99,27 @@ export const Conversation = () => {
           {messages.map((message) => (
             <Message
               key={(params.conversationId as string) + message.message_id}
-              message_id={message.message_id}
-              content={message.content}
-              role={message.role}
-              results={message.results}
-              conversation_id={params.conversationId}
-            ></Message>
+              initialMessage={message}
+            />
           ))}
+          {value && (
+            <Message
+              initialMessage={{
+                content: value,
+                role: "user",
+                message_id: generateUUID(),
+              }}
+            />
+          )}
+          {isLoading && (
+            <Message
+              initialMessage={{
+                content: "Loading...",
+                role: "assistant",
+                message_id: generateUUID(),
+              }}
+            />
+          )}
         </div>
       </Transition>
 
@@ -159,16 +131,13 @@ export const Conversation = () => {
                 key={template.title}
                 title={template.title}
                 text={template.text}
-                onClick={() => submitQuery(template.message)}
+                onClick={() => setValue(template.message)}
               />
             ))}
           </div>
         )}
         <div className="w-full md:max-w-3xl flex justify-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
-          <ExpandingInput
-            onSubmit={submitQuery}
-            disabled={false}
-          ></ExpandingInput>
+          <ExpandingInput onSubmit={setValue} disabled={false} />
         </div>
       </div>
     </div>

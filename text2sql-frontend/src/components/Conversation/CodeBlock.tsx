@@ -10,6 +10,8 @@ import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { format } from "prettier-sql";
 import { Dialect } from "../Library/types";
 import { useEffect, useRef, useState } from "react";
+import { useRunSql, useUpdateSqlQuery } from "@/hooks";
+import { useParams } from "react-router-dom";
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
@@ -57,20 +59,17 @@ function getNewCursorPosition(
 export const CodeBlock = ({
   code,
   language,
-  runQuery,
-  // toggleSaveQuery,
-  updateQuery,
-  runnable,
-}: // isSaved,
-{
+  resultId,
+  updateMessage,
+}: {
   code: string;
+  resultId?: string;
   language: IResultType;
-  runQuery: (code: string) => void;
-  toggleSaveQuery: () => void;
-  updateQuery: (code: string) => void;
-  runnable: boolean;
-  isSaved?: boolean;
+  updateMessage: (arg: string) => void;
 }) => {
+  const { conversationId } = useParams<{ conversationId: string }>();
+
+  const [enabled, setEnabled] = useState<boolean>(false);
   const [savedCode, setSavedCode] = useState<string>(code);
   const [formattedCode, setFormattedCode] = useState<string>(code);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -78,6 +77,26 @@ export const CodeBlock = ({
   // let BookmarkIcon = isSaved ? BookmarkIconSolid : BookmarkIconOutline;
   const BookmarkIcon = BookmarkIconOutline;
   const extraSpace = ""; // "\n\n\n";
+
+  const { mutate } = useUpdateSqlQuery();
+
+  const { isLoading, data } = useRunSql({
+    id: conversationId,
+    sql: savedCode,
+    enabled,
+  });
+
+  function updateQuery() {
+    if (!resultId) return;
+    mutate({ id: resultId, code: savedCode });
+  }
+
+  useEffect(() => {
+    if (data && enabled) {
+      setEnabled(false);
+      data?.content && updateMessage(data.content);
+    }
+  }, [enabled, data, updateMessage]);
 
   useEffect(() => {
     try {
@@ -182,7 +201,7 @@ export const CodeBlock = ({
         <CustomTooltip content="Save" trigger="hover">
           <button
             tabIndex={-1}
-            onClick={() => updateQuery(savedCode)}
+            onClick={updateQuery}
             className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out"
           >
             <BookmarkIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
@@ -205,17 +224,17 @@ export const CodeBlock = ({
           <button
             tabIndex={-1}
             className={classNames(
-              runnable
+              !isLoading
                 ? "hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100"
                 : "",
               "group flex ml-auto gap-2 rounded-md p-1 dark:text-gray-400 bg-gray-700 transition-all duration-150 ease-in-out"
             )}
-            onClick={() => runQuery(savedCode)}
-            disabled={!runnable}
+            onClick={() => setEnabled(true)}
+            disabled={isLoading}
           >
             <PlayIcon
               className={classNames(
-                runnable ? "group-hover:-rotate-12" : "animate-spin",
+                isLoading ? "animate-spin" : "group-hover:-rotate-12",
                 "w-6 h-6 [&>path]:stroke-[2]"
               )}
             />

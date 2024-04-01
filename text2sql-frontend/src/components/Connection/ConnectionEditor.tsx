@@ -1,14 +1,16 @@
-import { api } from "../../api";
-import { useEffect, useState } from "react";
-import { IConnection, IEditConnection } from "../Library/types";
+import { useCallback, useEffect, useState } from "react";
+import { IEditConnection } from "../Library/types";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useNavigate, useParams } from "react-router-dom";
 import { AlertIcon, AlertModal } from "../Library/AlertModal";
-import { useConnectionList } from "../Providers/ConnectionListProvider";
-import { useConversationList } from "../Providers/ConversationListProvider";
 import { Routes } from "../../router";
 import SchemaEditorGrid from "./SchemaEditorGrid";
 import { enqueueSnackbar } from "notistack";
+import {
+  useDeleteConnection,
+  useGetConnection,
+  useUpdateConnection,
+} from "@/hooks";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -16,12 +18,24 @@ function classNames(...classes: string[]) {
 
 export const ConnectionEditor = () => {
   const navigate = useNavigate();
-  const params = useParams<{ connectionId: string }>();
-  const [connection, setConnection] = useState<IConnection | null>();
+  const { connectionId } = useParams<{ connectionId: string }>();
   const [unsavedChanges, setUnsavedChanges] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(false);
-  const [, , fetchConnections] = useConnectionList();
-  const [, , fetchConversations] = useConversationList();
+
+  const { data, isLoading } = useGetConnection(connectionId);
+  const { connection } = data ?? {};
+
+  const { mutate: deleteConnection } = useDeleteConnection({
+    onSuccess() {
+      navigate(Routes.Root);
+    },
+  });
+
+  const { mutate: updateConnection } = useUpdateConnection({
+    onSuccess() {
+      navigate(Routes.Root);
+    },
+  });
 
   // Form state
   const [editFields, setEditFields] = useState<IEditConnection>({
@@ -29,16 +43,21 @@ export const ConnectionEditor = () => {
     dsn: "",
   });
 
-  const isLoading = false;
+  if (!connectionId) {
+    enqueueSnackbar({
+      variant: "error",
+      message: "No connection id provided - something went wrong",
+    });
+  }
 
   // Handle navigating back only if there are no unsaved changes
-  function handleBack() {
+  const handleBack = useCallback(() => {
     if (unsavedChanges) {
       setShowAlert(true);
     } else {
       navigate(Routes.Root);
     }
-  }
+  }, [navigate, unsavedChanges]);
 
   // Handle navigating back when escape is pressed
   useEffect(() => {
@@ -55,77 +74,28 @@ export const ConnectionEditor = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyPress);
     };
-  }, [history, unsavedChanges]);
-
-  // Fetch connection details on load
-  useEffect(() => {
-    const fetchConnection = async () => {
-      if (!params.connectionId) {
-        enqueueSnackbar({
-          variant: "error",
-          message: "No connection id provided - something went wrong",
-        });
-      }
-      try {
-        const fetchedConnection = await api.getConnection(
-          params.connectionId as string
-        );
-        setConnection(fetchedConnection.data.connection);
-        setEditFields({
-          name: fetchedConnection.data.connection.name,
-          dsn: fetchedConnection.data.connection.dsn,
-        });
-      } catch (exception) {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error fetching connection",
-        });
-        return;
-      }
-    };
-    fetchConnection();
-  }, [params.connectionId]);
+  }, [handleBack, unsavedChanges]);
 
   function handleDelete() {
-    (async () => {
-      try {
-        await api.deleteConnection(params.connectionId!);
-        fetchConnections();
-        fetchConversations();
-        navigate(Routes.Root);
-      } catch (exception) {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error deleting connection",
-        });
-      }
-    })();
+    if (!connectionId) return;
+    deleteConnection(connectionId);
   }
+
   function handleSubmit() {
     if (!unsavedChanges) {
       navigate(Routes.Root); // Return to previous page
       return;
     }
 
-    const updateConnection = async () => {
-      try {
-        await api.updateConnection(params.connectionId as string, {
-          name: editFields.name,
-          dsn: editFields.dsn,
-        });
-      } catch (exception) {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error updating connection",
-        });
-        return;
-      }
-      // Refresh connections
-      fetchConnections();
-      navigate(Routes.Root);
-    };
+    if (!connectionId) return;
 
-    updateConnection();
+    updateConnection({
+      id: connectionId,
+      payload: {
+        name: editFields.name,
+        dsn: editFields.dsn,
+      },
+    });
   }
 
   return (
@@ -170,6 +140,7 @@ export const ConnectionEditor = () => {
                 id="name"
                 disabled={false}
                 value={editFields.name}
+                defaultValue={connection?.name}
                 onChange={(e) => {
                   setEditFields({ ...editFields, name: e.target.value });
                   setUnsavedChanges(true);
@@ -198,6 +169,7 @@ export const ConnectionEditor = () => {
                 id="name"
                 disabled={false}
                 value={editFields.dsn}
+                defaultValue={connection?.dsn}
                 onChange={(e) => {
                   setEditFields({ ...editFields, dsn: e.target.value });
                   setUnsavedChanges(true);

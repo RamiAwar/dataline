@@ -2,11 +2,11 @@ import { Menu } from "@headlessui/react";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 import { Routes } from "../../router";
-import { useUserInfo } from "../Providers/UserInfoProvider";
+import { useGetAvatar } from "@/hooks";
 
 // Create component with prop topRight boolean
 export const ProfileDropdown = () => {
-  const [userInfo] = useUserInfo();
+  const { data: avatarUrl } = useGetAvatar();
 
   return (
     <>
@@ -17,10 +17,10 @@ export const ProfileDropdown = () => {
             to={Routes.UserProfile}
             className="block px-3 py-2 m-1 rounded-md text-sm leading-6 text-white overflow-hidden transition-colors duration-100"
           >
-            {userInfo?.avatarUrl ? (
+            {avatarUrl ? (
               <img
                 className="h-10 w-10 rounded-full bg-gray-600 object-cover"
-                src={userInfo.avatarUrl}
+                src={avatarUrl}
                 alt=""
               />
             ) : (

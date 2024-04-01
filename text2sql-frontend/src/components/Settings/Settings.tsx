@@ -1,13 +1,18 @@
 import { useState, useRef, useEffect } from "react";
 import { UserCircleIcon } from "@heroicons/react/20/solid";
-import { useUserInfo } from "../Providers/UserInfoProvider";
-import { api } from "@/api";
 import MaskedInput from "./MaskedInput";
-import { updateApiKey, updateName } from "./utils";
-import { enqueueSnackbar } from "notistack";
+import {
+  useGetAvatar,
+  useGetUserProfile,
+  useUpdateUserInfo,
+  useUpdateUserAvatar,
+} from "@/hooks";
 
 export default function Account() {
-  const [userInfo, setUserInfo, setAvatarBlob] = useUserInfo();
+  const { data: profile } = useGetUserProfile();
+  const { data: avatarUrl } = useGetAvatar();
+  const { mutate: updateUserInfo } = useUpdateUserInfo();
+  const { mutate: updateAvatar, isPending } = useUpdateUserAvatar();
 
   const avatarUploadRef = useRef<HTMLInputElement>(null);
 
@@ -16,52 +21,30 @@ export default function Account() {
   const [apiKey, setApiKey] = useState<string | null>(null);
 
   // Update name and api key when user info changes
+  // TODO - use a form manager, this is not necessary
   useEffect(() => {
-    setName(userInfo?.name || null);
-    setApiKey(userInfo?.openaiApiKey || null);
-  }, [userInfo]);
+    setName(profile?.name || null);
+    setApiKey(profile?.openai_api_key || null);
+  }, [profile]);
 
-  // Manage avatar uploading state
-  const [uploading, setUploading] = useState<boolean>(false);
-
-  async function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
-    try {
-      setUploading(true);
-
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error("You must select an image to upload.");
-      }
-
-      const file = event.target.files[0];
-      try {
-        // Update profile avatar URL
-        const response = await api.updateAvatar(file);
-        if (response.status === "ok") {
-          setAvatarBlob(response.data.blob);
-        }
-      } catch (exception) {
-        enqueueSnackbar({
-          variant: "error",
-          message: "There was a problem updating your avatar",
-        });
-      }
-    } finally {
-      setUploading(false);
+  function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
+    if (!event.target.files || event.target.files.length === 0) {
+      throw new Error("You must select an image to upload.");
     }
+    // Update profile avatar URL
+    updateAvatar(event.target.files[0]);
   }
 
-  async function _updateName() {
-    const successful = await updateName(name);
-    if (successful) {
-      setUserInfo((prev) => ({ ...prev, name: name }));
-    }
+  // TODO - debounce this
+  function _updateName() {
+    if (!name) return;
+    updateUserInfo({ name });
   }
 
-  async function _updateApiKey() {
-    const successful = await updateApiKey(apiKey);
-    if (successful) {
-      setUserInfo((prev) => ({ ...prev, openaiApiKey: apiKey }));
-    }
+  // TODO - debounce this
+  function _updateApiKey() {
+    if (!apiKey) return;
+    updateUserInfo({ openai_api_key: apiKey });
   }
 
   return (
@@ -86,10 +69,10 @@ export default function Account() {
                 <div className="md:col-span-2">
                   <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
                     <div className="col-span-full flex items-center gap-x-8">
-                      {userInfo?.avatarUrl ? (
+                      {avatarUrl ? (
                         <img
                           className="h-24 w-24 flex-none rounded-lg bg-gray-800 object-cover"
-                          src={userInfo.avatarUrl}
+                          src={avatarUrl}
                           alt=""
                         />
                       ) : (
@@ -117,7 +100,7 @@ export default function Account() {
                           onChange={(
                             event: React.ChangeEvent<HTMLInputElement>
                           ) => uploadAvatar(event)}
-                          disabled={uploading}
+                          disabled={isPending}
                           ref={avatarUploadRef}
                         />
                       </div>

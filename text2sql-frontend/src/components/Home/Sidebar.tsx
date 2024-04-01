@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
@@ -8,15 +8,17 @@ import {
   TrashIcon,
   CheckIcon,
 } from "@heroicons/react/24/outline";
-import logo from "../../assets/images/logo_md.png";
-import { IConversation } from "../Library/types";
-import { useConversationList } from "../Providers/ConversationListProvider";
-import { api } from "../../api";
+import logo from "@/assets/images/logo_md.png";
 import { PencilSquareIcon } from "@heroicons/react/20/solid";
 import { Link, useParams } from "react-router-dom";
 import { ProfileDropdown } from "./ProfileDropdown";
-import { enqueueSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
+import {
+  useDeleteConversation,
+  useGetConversations,
+  useUpdateConversation,
+} from "@/hooks";
+import { IConversation } from "../Library/types";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -26,26 +28,32 @@ export const Sidebar = () => {
   const params = useParams<{ conversationId: string }>();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [conversations, , fetchConversations] = useConversationList();
+  const { data } = useGetConversations();
+  const { mutate: deleteConversation } = useDeleteConversation({
+    onSuccess() {
+      navigate("/");
+    },
+  });
+
+  const conversations = useMemo(
+    () => data?.conversations ?? [],
+    [data?.conversations]
+  );
+
   const [currentConversation, setCurrentConversation] =
-    useState<IConversation | null>();
+    useState<IConversation | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(currentConversation?.name || "");
   const navigate = useNavigate();
-
-  async function deleteConversation(conversationId: string) {
-    try {
-      await api.deleteConversation(conversationId);
-      navigate("/");
-    } catch (exception) {
-      enqueueSnackbar({
-        variant: "error",
-        message: "Error deleting conversation",
+  const { mutate: updateConversation } = useUpdateConversation({
+    onSuccess() {
+      // @ts-expect-error, this is not typed
+      setCurrentConversation({
+        ...(currentConversation ?? {}),
+        name: editedName,
       });
-    }
-
-    fetchConversations();
-  }
+    },
+  });
 
   const handleEditClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -68,31 +76,12 @@ export const Sidebar = () => {
 
   const handleSaveClick = () => {
     // Should never be null, only editable if not null
-    if (currentConversation === null || currentConversation === undefined)
-      return;
-
-    // Update conversation in backend
-    (async () => {
-      try {
-        await api.updateConversation(currentConversation.id, editedName);
-        setCurrentConversation({
-          ...currentConversation,
-          name: editedName,
-        });
-      } catch (exception) {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error updating conversation",
-        });
-      }
-
-      fetchConversations();
-    })();
-    // TODO: Snackbar yum: saving editedName
-    setIsEditing(false);
+    if (!currentConversation?.id) return;
+    updateConversation({ id: currentConversation.id, name: editedName });
   };
 
   useEffect(() => {
+    // TODO - revist this logic
     // Update current conversation when we get the list of conversations
     if (conversations.length > 0) {
       if (params.conversationId) {

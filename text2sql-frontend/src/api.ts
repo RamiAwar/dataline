@@ -6,6 +6,8 @@ import {
   ITableSchemaResult,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
+import { client } from "./services/api-client";
+import { decodeBase64Data } from "./utils";
 
 const baseUrl = "http://localhost:7377";
 
@@ -45,10 +47,9 @@ type ApiResponse<T> = SuccessResponse<T>;
 //   return response.data;
 // };
 
-type HealthcheckResult = ApiResponse<void>;
-const healthcheck = async (): Promise<HealthcheckResult> => {
-  const response = await axios.get<HealthcheckResult>(`${baseUrl}/healthcheck`);
-  return response.data;
+type HealthcheckResult = void;
+const healthcheck = (): Promise<HealthcheckResult> => {
+  return client(`healthcheck`);
 };
 
 export type ConnectionResult = {
@@ -78,24 +79,18 @@ const createTestConnection = async (): Promise<ConnectResult> => {
   return response.data;
 };
 
-export type ListConnectionsResult = ApiResponse<{
+export type ListConnectionsResult = {
   connections: ConnectionResult[];
-}>;
+};
 const listConnections = async (): Promise<ListConnectionsResult> => {
-  const response = await axios.get<ListConnectionsResult>(
-    `${baseUrl}/connections`
-  );
-  return response.data;
+  return client("connections").then(({ data }) => data);
 };
 
-export type GetConnectionResult = ApiResponse<{ connection: ConnectionResult }>;
+export type GetConnectionResult = { connection: ConnectionResult };
 const getConnection = async (
   connectionId: string
 ): Promise<GetConnectionResult> => {
-  const response = await axios.get<GetConnectionResult>(
-    `${baseUrl}/connection/${connectionId}`
-  );
-  return response.data;
+  return client(`connection/${connectionId}`).then(({ data }) => data);
 };
 
 export type UpdateConnectionResult = ApiResponse<{
@@ -121,16 +116,13 @@ const deleteConnection = async (
   return response.data;
 };
 
-export type GetTableSchemasResult = ApiResponse<{
+export type GetTableSchemasResult = {
   tables: ITableSchemaResult[];
-}>;
+};
 const getTableSchemas = async (
   connectionId: string
 ): Promise<GetTableSchemasResult> => {
-  const response = await axios.get<GetTableSchemasResult>(
-    `${baseUrl}/connection/${connectionId}/schemas`
-  );
-  return response.data;
+  return client(`connection/${connectionId}/schemas`).then(({ data }) => data);
 };
 
 export type UpdateTableSchemaDescriptionResult = ApiResponse<void>;
@@ -197,24 +189,18 @@ const deleteConversation = async (conversationId: string) => {
   return response.data;
 };
 
-export type ListConversations = ApiResponse<{
+export type ListConversations = {
   conversations: IConversationResult[];
-}>;
-const listConversations = async (): Promise<ListConversations> => {
-  const response = await axios.get<ListConversations>(
-    `${baseUrl}/conversations`
-  );
-  return response.data;
+};
+const listConversations = (): Promise<ListConversations> => {
+  return client("conversations").then(({ data }) => data);
 };
 
-export type MessagesResult = ApiResponse<{ messages: IMessageWithResults[] }>;
-const getMessages = async (conversationId: string): Promise<MessagesResult> => {
-  const response = await axios.get<MessagesResult>(`${baseUrl}/messages`, {
-    params: {
-      conversation_id: conversationId,
-    },
-  });
-  return response.data;
+export type MessagesResult = { messages: IMessageWithResults[] };
+const getMessages = (conversationId: string): Promise<MessagesResult> => {
+  return client(`messages?conversation_id=${conversationId}`).then(
+    ({ data }) => data
+  );
 };
 
 export type MessageCreationResult = ApiResponse<void>;
@@ -229,33 +215,18 @@ const createMessage = async (conversationId: string, content: string) => {
   return response.data;
 };
 
-export type QueryResult = ApiResponse<{ message: IMessageWithResults }>;
-const query = async (
-  conversationId: string,
-  query: string,
-  execute: boolean
-) => {
-  const response = await axios.get<QueryResult>(`${baseUrl}/query`, {
-    params: {
-      conversation_id: conversationId,
-      query,
-      execute,
-    },
-  });
-
-  return response.data;
+export type QueryResult = { message: IMessageWithResults };
+const query = (conversationId: string, query: string, execute: boolean) => {
+  return client(
+    `query?conversation_id=${conversationId}&query=${query}&execute=${execute}`
+  ).then(({ data }) => data);
 };
 
-export type RunSQLResult = ApiResponse<IResult>;
-const runSQL = async (conversationId: string, code: string) => {
-  const response = await axios.get<RunSQLResult>(`${baseUrl}/execute-sql`, {
-    params: {
-      conversation_id: conversationId,
-      sql: code,
-    },
-  });
-
-  return response.data;
+export type RunSQLResult = IResult;
+const runSQL = (conversationId: string, code: string) => {
+  return client(
+    `execute-sql?conversation_id=${conversationId}&sql=${code}`
+  ).then(({ data }) => data);
 };
 
 export type SaveQueryResult = ApiResponse<void>;
@@ -277,12 +248,11 @@ const updateResult = async (resultId: string, code: string) => {
   return response.data;
 };
 
-export type GetAvatarResult = ApiResponse<{ blob: string }>;
+export type GetAvatarResult = { blob: string };
 const getAvatar = async () => {
-  const response = await axios.get<GetAvatarResult>(
-    `${baseUrl}/settings/avatar`
-  );
-  return response.data;
+  return client(`settings/avatar`).then(({ data }) => {
+    return decodeBase64Data(data.blob);
+  });
 };
 
 export type UpdateAvatarResult = ApiResponse<{ blob: string }>;
@@ -320,15 +290,12 @@ const updateUserInfo = async (options: {
   return response.data;
 };
 
-export type GetUserInfoResult = ApiResponse<{
+export type GetUserInfoResult = {
   name: string;
   openai_api_key: string;
-}>;
-const getUserInfo = async () => {
-  const response = await axios.get<GetUserInfoResult>(
-    `${baseUrl}/settings/info`
-  );
-  return response.data;
+};
+const getUserInfo = () => {
+  return client(`settings/info`).then(({ data }) => data as GetUserInfoResult);
 };
 
 export const api = {

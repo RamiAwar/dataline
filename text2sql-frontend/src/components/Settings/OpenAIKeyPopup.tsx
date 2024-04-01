@@ -8,18 +8,21 @@ import {
 import { Button } from "@components/Catalyst/button";
 import { useState } from "react";
 import MaskedInput from "@components/Settings/MaskedInput";
-import { updateApiKey } from "./utils";
-import { useUserInfo } from "../Providers/UserInfoProvider";
 import { enqueueSnackbar } from "notistack";
+import { useUpdateUserInfo } from "@/hooks";
 
 export function OpenAIKeyPopup() {
   const [isOpen, setIsOpen] = useState(true);
   const [apiKey, setApiKey] = useState("");
-  const [, setUserInfo] = useUserInfo();
+  const { mutate } = useUpdateUserInfo({
+    onSuccess() {
+      setIsOpen(false);
+    },
+  });
 
-  async function saveApiKey() {
+  function saveApiKey() {
     // Check that not empty
-    if (apiKey === "") {
+    if (apiKey === null || apiKey === "") {
       enqueueSnackbar({
         variant: "error",
         message: "Cannot store empty key",
@@ -27,13 +30,16 @@ export function OpenAIKeyPopup() {
       return;
     }
 
-    const sucessful = await updateApiKey(apiKey);
-    if (!sucessful) {
+    if (!apiKey.startsWith("sk-")) {
+      // TODO: Show error banner: Invalid OpenAI API key
+      enqueueSnackbar({
+        variant: "error",
+        message: "Invalid OpenAI API key.",
+      });
       return;
     }
 
-    setUserInfo((prev) => ({ ...prev, openaiApiKey: apiKey }));
-    setIsOpen(false);
+    mutate({ openai_api_key: apiKey });
   }
 
   function handleKeyPress(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -57,7 +63,7 @@ export function OpenAIKeyPopup() {
         />
       </AlertBody>
       <AlertActions>
-        <Button onClick={() => saveApiKey()}>Continue</Button>
+        <Button onClick={saveApiKey}>Continue</Button>
       </AlertActions>
     </Alert>
   );
