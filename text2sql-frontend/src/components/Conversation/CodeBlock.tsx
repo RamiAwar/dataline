@@ -82,7 +82,7 @@ export const CodeBlock = ({
 
   const { isLoading, data } = useRunSql({
     id: conversationId,
-    sql: savedCode,
+    sql: savedCode.replace(/\s+/g, " "),
     enabled,
   });
 

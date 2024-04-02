@@ -63,6 +63,7 @@ export function useGetAvatar(options = {}) {
   const result = useQuery({
     queryKey: AVATAR_QUERY_KEY,
     queryFn: api.getAvatar,
+    retry: false,
     ...options,
   });
 
