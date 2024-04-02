@@ -1,9 +1,79 @@
 import { api } from "@/api";
-import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  infiniteQueryOptions,
+  skipToken,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
 const QUERIES_QUERY_KEY = ["SQL_QUERIES"];
+
+export function infiniteMessagesQuery({
+  id,
+  offset = 0,
+}: {
+  id: string;
+  offset?: number;
+}) {
+  return infiniteQueryOptions({
+    queryKey: [...MESSAGES_QUERY_KEY, id],
+    queryFn: async ({ pageParam }) => await api.getMessages(id, pageParam),
+    initialPageParam: offset,
+    getPreviousPageParam: (lastPage, _allPages, lastPageParam) => {
+      if (!lastPage.hasNext) {
+        return undefined;
+      }
+      return lastPageParam + lastPage.limit;
+    },
+    getNextPageParam: (firstPage, _allPages, firstPageParam) => {
+      if (firstPageParam === 0) {
+        return undefined;
+      }
+      return Math.max(firstPageParam - firstPage.limit, 0);
+    },
+  });
+}
+
+export function useSendMessage({
+  id,
+  execute = true,
+}: {
+  id: string;
+  execute?: boolean;
+}) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    retry: false,
+    mutationFn: async (message: string) =>
+      await api.query(id, message, execute),
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(
+        infiniteMessagesQuery({ id }).queryKey,
+        (oldData) => {
+          const flattenedMessages = oldData!.pages
+            .map((page) => page.messages)
+            .flat();
+          flattenedMessages.push({ content: variables, role: "user" });
+          flattenedMessages.push({ ...data.message });
+          const pages = [
+            {
+              hasNext: oldData!.pages[0].hasNext,
+              messages: flattenedMessages,
+              offset: 0,
+              limit: flattenedMessages.length,
+            },
+          ];
+          const pageParams = [0];
+          console.log({ pages, pageParams });
+          return { pages, pageParams };
+        }
+      );
+    },
+  });
+}
 
 export function useGetNewMessage({
   id,

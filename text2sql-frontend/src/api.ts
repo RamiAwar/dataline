@@ -196,11 +196,19 @@ const listConversations = (): Promise<ListConversations> => {
   return client("conversations").then(({ data }) => data);
 };
 
-export type MessagesResult = { messages: IMessageWithResults[] };
-const getMessages = (conversationId: string): Promise<MessagesResult> => {
-  return client(`messages?conversation_id=${conversationId}`).then(
-    ({ data }) => data
-  );
+export type MessagesResult = {
+  messages: IMessageWithResults[];
+  hasNext: boolean;
+  offset: number;
+  limit: number;
+};
+const getMessages = (
+  conversationId: string,
+  offset: number = 0
+): Promise<MessagesResult> => {
+  return client(
+    `messages?conversation_id=${conversationId}&offset=${offset}`
+  ).then(({ data }) => data);
 };
 
 export type MessageCreationResult = ApiResponse<void>;

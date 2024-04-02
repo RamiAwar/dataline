@@ -13,8 +13,10 @@ function classNames(...classes: string[]) {
 
 export const Message = ({
   initialMessage,
+  className = "",
 }: {
   initialMessage: IMessageWithResults;
+  className?: string;
 }) => {
   const [message, setMessage] = useState(initialMessage);
   const { data: avatarUrl } = useGetAvatar();
@@ -48,7 +50,8 @@ export const Message = ({
         message.role === "assistant"
           ? "dark:bg-gray-800/40"
           : "dark:bg-gray-900",
-        "w-full text-gray-800 dark:text-gray-100 bg-gray-50"
+        "w-full text-gray-800 dark:text-gray-100 bg-gray-50",
+        className
       )}
     >
       <div className="flex p-4 gap-4 text-base md:gap-6 md:max-w-2xl lg:max-w-xl xl:max-w-3xl md:py-6 lg:px-0 m-auto">
