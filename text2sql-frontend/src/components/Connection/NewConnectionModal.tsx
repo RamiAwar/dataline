@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Spinner } from "../Spinner/Spinner";
-import { useCreateConnection, useTestConnection } from "@/hooks";
+import { useCreateConnection, useCreateTestConnection } from "@/hooks";
 
 interface NewConnectionModalFormProps {
   isOpen: boolean;
@@ -36,7 +36,7 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
   }
 
   const creationMutation = useCreateConnection({ onSuccess });
-  const { mutate: testConnection, isPending } = useTestConnection({
+  const { mutate: testConnection, isPending } = useCreateTestConnection({
     onSuccess,
   });
 

@@ -9,6 +9,7 @@ import { enqueueSnackbar } from "notistack";
 import {
   useDeleteConnection,
   useGetConnection,
+  useGetConversations,
   useUpdateConnection,
 } from "@/hooks";
 
@@ -20,9 +21,15 @@ export const ConnectionEditor = () => {
   const navigate = useNavigate();
   const { connectionId } = useParams<{ connectionId: string }>();
   const [unsavedChanges, setUnsavedChanges] = useState<boolean>(false);
-  const [showAlert, setShowAlert] = useState<boolean>(false);
+  const [showCancelAlert, setShowCancelAlert] = useState<boolean>(false);
+  const [showDeleteAlert, setShowDeleteAlert] = useState<boolean>(false);
 
   const { data, isLoading } = useGetConnection(connectionId);
+  const { data: conversationsData } = useGetConversations();
+  const relatedConversations =
+    conversationsData?.conversations.filter(
+      (conversation) => conversation.connection_id === connectionId
+    ) ?? [];
   const { connection } = data ?? {};
 
   const { mutate: deleteConnection } = useDeleteConnection({
@@ -53,7 +60,7 @@ export const ConnectionEditor = () => {
   // Handle navigating back only if there are no unsaved changes
   const handleBack = useCallback(() => {
     if (unsavedChanges) {
-      setShowAlert(true);
+      setShowCancelAlert(true);
     } else {
       navigate(Routes.Root);
     }
@@ -101,18 +108,32 @@ export const ConnectionEditor = () => {
   return (
     <div className="dark:bg-gray-900 w-full h-full relative flex flex-col -mt-16 lg:mt-0">
       <AlertModal
-        isOpen={showAlert}
+        isOpen={showCancelAlert}
         title="Discard Unsaved Changes?"
         message="You have unsaved changes. Discard changes?"
         okText="OK"
         // color="red"
         icon={AlertIcon.Warning}
         onSuccess={() => {
-          setShowAlert(false);
+          setShowCancelAlert(false);
           history.back();
         }}
         onCancel={() => {
-          setShowAlert(false);
+          setShowCancelAlert(false);
+        }}
+      />
+      <AlertModal
+        isOpen={showDeleteAlert}
+        title="Delete Connection?"
+        message={`This will delete ${relatedConversations.length} related conversation(s)!`}
+        okText="Delete"
+        icon={AlertIcon.Warning}
+        onSuccess={() => {
+          setShowDeleteAlert(false);
+          handleDelete();
+        }}
+        onCancel={() => {
+          setShowDeleteAlert(false);
         }}
       />
       <div className="flex flex-col lg:mt-0 p-4 lg:p-24">
@@ -184,29 +205,26 @@ export const ConnectionEditor = () => {
             </div>
           </div>
 
-          <form className="sm:col-span-6 flex items-center justify-end gap-x-6">
+          <div className="sm:col-span-6 flex items-center justify-end gap-x-6">
             <button
-              type="button"
-              onClick={handleDelete}
+              onClick={() => setShowDeleteAlert(true)}
               className="rounded-md bg-gray-700 hover:bg-red-700 px-3 py-2 text-sm font-medium text-red-500 hover:text-white border border-gray-600 hover:border-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
             >
               Delete this connection
             </button>
             <button
-              type="button"
               onClick={handleBack}
               className="rounded-md bg-gray-600 px-3 py-2 text-sm font-medium text-white border border-gray-500 hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
             >
               Cancel
             </button>
             <button
-              type="submit"
               onClick={handleSubmit}
               className="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm border bg-green-600 border-green-500 hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-colors duration-150"
             >
               Save
             </button>
-          </form>
+          </div>
 
           <div className="sm:col-span-6">
             <label

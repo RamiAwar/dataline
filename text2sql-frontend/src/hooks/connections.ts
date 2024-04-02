@@ -3,6 +3,7 @@ import { api } from "@/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { IEditConnection } from "@/components/Library/types";
+import { CONVERSATIONS_QUERY_KEY } from "./conversations";
 
 const CONNECTIONS_QUERY_KEY = ["CONNECTIONS"];
 
@@ -64,7 +65,8 @@ export function useCreateConnection(options = {}) {
   });
 }
 
-export function useTestConnection(options = {}) {
+export function useCreateTestConnection(options = {}) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => api.createTestConnection(),
     onError(err) {
@@ -80,6 +82,9 @@ export function useTestConnection(options = {}) {
           message: "Error creating connection",
         });
       }
+    },
+    onSettled() {
+      queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY });
     },
     ...options,
   });
@@ -97,7 +102,9 @@ export function useDeleteConnection(options = {}) {
     },
     onSettled() {
       // previous implementation, Rami refetched connections and conversations.. WHY????
+      // => because related conversations get deleted as well
       queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY });
     },
     ...options,
   });
