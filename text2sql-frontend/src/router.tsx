@@ -52,7 +52,7 @@ const private_routes: RouteObject[] = [
   },
 ];
 
-if (process.env.NODE_ENV === "development") {
+if (process.env.NODE_ENV === "local") {
   // Replace public with private
   routes = private_routes;
 }
