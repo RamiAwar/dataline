@@ -1,6 +1,7 @@
 import { api } from "@/api";
 import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 
 const HEALTH_CHECK_QUERY_KEY = ["HEALTH_CHECK"];
 const USER_INFO_QUERY_KEY = ["USER_INFO"];
@@ -11,23 +12,32 @@ export function useGetBackendStatus() {
     queryKey: HEALTH_CHECK_QUERY_KEY,
     queryFn: api.healthcheck,
     refetchInterval: 2000,
+    // don't retry on fail, fail immediately. We're already refetching every 2 seconds
+    retry: false,
   });
 
-  if (result.isError) {
-    enqueueSnackbar({
-      variant: "error",
-      message: "Failed to connect to the backend.",
-      preventDuplicate: true,
-    });
-  }
+  const [previousHealthState, setPreviousHealthState] = useState(true);
 
-  if (result.isLoadingError && result.isSuccess) {
-    enqueueSnackbar({
-      variant: "success",
-      message: "Successfully reconnected to the backend.",
-      preventDuplicate: true,
-    });
-  }
+  useEffect(() => {
+    if (result.isPending) return;
+    const isHealthy = result.isSuccess;
+    if (previousHealthState !== isHealthy) {
+      if (isHealthy) {
+        enqueueSnackbar({
+          variant: "success",
+          message: "Successfully reconnected to the backend.",
+          preventDuplicate: true,
+        });
+      } else {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Failed to connect to the backend.",
+          preventDuplicate: true,
+        });
+      }
+      setPreviousHealthState(isHealthy);
+    }
+  }, [previousHealthState, result]);
 
   return result;
 }

@@ -12,7 +12,7 @@ export const Home = () => {
     enabled: Boolean(data),
   });
 
-  return isLoading ? (
+  return isLoading || profile === undefined ? (
     <Alert open={true} onClose={() => {}} size="sm">
       <AlertTitle className="flex">
         <Spinner />
