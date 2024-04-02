@@ -18,6 +18,7 @@ export function useGetNewMessage({
     queryKey: [...MESSAGES_QUERY_KEY, { id, value, execute }],
     queryFn: () => api.query(id, value, execute),
     enabled: Boolean(value),
+    retry: false,
   });
 
   if (result.isError) {

@@ -13,6 +13,7 @@ import {
   useGetMessages,
   useGetNewMessage,
 } from "@/hooks";
+import { Spinner } from "../Spinner/Spinner";
 
 const templateMessages = [
   {
@@ -78,6 +79,14 @@ export const Conversation = () => {
     // }, [messagesResp?.data?.messages]);
   }, []);
 
+  if (messagesResp.isPending) {
+    return (
+      <div className="w-full h-screen flex justify-center items-center text-white">
+        <Spinner />
+        Loading...
+      </div>
+    );
+  }
   // @ts-expect-error, status is not known
   if (messagesResp?.error?.status === 404 || !data?.connections?.length) {
     return <Navigate to={Routes.Root} />;

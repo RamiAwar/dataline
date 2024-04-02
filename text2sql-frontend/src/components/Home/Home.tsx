@@ -3,7 +3,12 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { OpenAIKeyPopup } from "../Settings/OpenAIKeyPopup";
 import { Spinner } from "../Spinner/Spinner";
-import { useGetBackendStatus, useGetUserProfile } from "@/hooks";
+import {
+  useGetBackendStatus,
+  useGetConnections,
+  useGetConversations,
+  useGetUserProfile,
+} from "@/hooks";
 
 export const Home = () => {
   const { data } = useGetBackendStatus();
@@ -11,8 +16,13 @@ export const Home = () => {
   const { data: profile, isLoading } = useGetUserProfile({
     enabled: Boolean(data),
   });
+  const { isPending: isPendingConnections } = useGetConnections();
+  const { isPending: isPendingConversations } = useGetConversations();
 
-  return isLoading || profile === undefined ? (
+  return isLoading ||
+    isPendingConnections ||
+    isPendingConversations ||
+    profile === undefined ? (
     <Alert open={true} onClose={() => {}} size="sm">
       <AlertTitle className="flex">
         <Spinner />
