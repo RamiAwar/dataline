@@ -471,16 +471,13 @@ def add_message_to_conversation(
     )
 
 
-def get_messages_with_results(conversation_id: str, offset: int = 0, limit: int = 15) -> list[MessageWithResults]:
-    assert offset >= 0
+def get_messages_with_results(conversation_id: str) -> list[MessageWithResults]:
     # Get all message_ids for conversation
     message_ids = conn.execute(
-        f"""SELECT messages.id
+        """SELECT messages.id
         FROM messages
         WHERE messages.conversation_id = ?
-        ORDER BY messages.created_at DESC
-        LIMIT {limit}
-        OFFSET {offset}""",
+        ORDER BY messages.created_at ASC""",
         (conversation_id,),
     ).fetchall()
 

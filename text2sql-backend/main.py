@@ -3,8 +3,8 @@ import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Body, Depends, HTTPException, Query, Response
-from pydantic import BaseModel, Field
+from fastapi import Body, Depends, HTTPException, Response
+from pydantic import BaseModel
 from pydantic.json import pydantic_encoder
 from pygments import lexers
 from pygments_pprint_sql import SqlFilter
@@ -96,26 +96,14 @@ async def get_conversation(conversation_id: str) -> SuccessResponse[Conversation
 
 class ListMessageOut(BaseModel):
     messages: list[MessageWithResults]
-    has_next: Annotated[bool, Field(serialization_alias="hasNext")]
-    offset: Annotated[int, Field(ge=0)]
-    limit: Annotated[int, Field(gt=0, default=50)]
 
 
 @app.get("/messages")
-async def get_messages(
-    conversation_id: str, offset: Annotated[int, Query(ge=0)] = 0
-) -> SuccessResponse[ListMessageOut]:
+async def get_messages(conversation_id: str) -> SuccessResponse[ListMessageOut]:
     # Will raise error that's auto captured by middleware if not exists
     db.get_conversation(conversation_id)
-    limit = 20
-    messages = db.get_messages_with_results(conversation_id, offset=offset, limit=limit + 1)
-
-    return SuccessResponse(
-        status=StatusType.ok,
-        data=ListMessageOut(
-            messages=list(reversed(messages[:limit])), has_next=len(messages) == limit + 1, limit=limit, offset=offset
-        ),
-    )
+    messages = db.get_messages_with_results(conversation_id)
+    return SuccessResponse(status=StatusType.ok, data=ListMessageOut(messages=messages))
 
 
 @app.get("/execute-sql", response_model=UnsavedResult)

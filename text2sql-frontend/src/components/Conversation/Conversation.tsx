@@ -8,14 +8,13 @@ import { generateUUID } from "../Library/utils";
 import { Routes } from "@/router";
 import MessageTemplate from "./MessageTemplate";
 import {
-  infiniteMessagesQuery,
+  getMessagesQuery,
   useGetConnections,
   useGetConversations,
   useSendMessage,
 } from "@/hooks";
 import { Spinner } from "../Spinner/Spinner";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import ReverseInfiniteScroll from "../Library/ReverseInfiniteScroll";
+import { useQuery } from "@tanstack/react-query";
 
 const templateMessages = [
   {
@@ -49,15 +48,10 @@ export const Conversation = () => {
 
   const {
     data: messages,
-    fetchPreviousPage,
-    hasPreviousPage,
-    isFetchingPreviousPage,
     isSuccess: isSuccessMessages,
     isPending: isPendingMessages,
     error: messagesError,
-  } = useInfiniteQuery(
-    infiniteMessagesQuery({ id: params.conversationId ?? "" })
-  );
+  } = useQuery(getMessagesQuery({ id: params.conversationId ?? "" }));
 
   const messageListRef = useRef<HTMLDivElement | null>(null);
   const currConversation = conversationResp?.conversations.find(
@@ -103,46 +97,38 @@ export const Conversation = () => {
         show={true}
         appear={true}
       >
-        <ReverseInfiniteScroll
-          hasNextPage={hasPreviousPage}
-          fetchNextPage={fetchPreviousPage}
-          isFetching={isFetchingPreviousPage}
-        >
-          <div className="overflow-y-auto pb-36 bg-gray-900">
-            {messages.pages
-              .flatMap((page) => page.messages)
-              .map((message) => (
-                <Message
-                  key={(params.conversationId as string) + message.message_id}
-                  initialMessage={message}
-                />
-              ))}
-            {isPendingSendMessage && (
-              <>
-                <Message
-                  initialMessage={{
-                    content: newMessageVariable,
-                    role: "user",
-                    message_id: generateUUID(),
-                  }}
-                  className="dark:text-gray-400"
-                />
-                <Message
-                  initialMessage={{
-                    content: "Loading...",
-                    role: "assistant",
-                    message_id: generateUUID(),
-                  }}
-                />
-              </>
-            )}
-          </div>
-          <div ref={messageListRef}></div>
-        </ReverseInfiniteScroll>
+        <div className="overflow-y-auto pb-36 bg-gray-900">
+          {messages.messages.map((message) => (
+            <Message
+              key={(params.conversationId as string) + message.message_id}
+              initialMessage={message}
+            />
+          ))}
+          {isPendingSendMessage && (
+            <>
+              <Message
+                initialMessage={{
+                  content: newMessageVariable,
+                  role: "user",
+                  message_id: generateUUID(),
+                }}
+                className="dark:text-gray-400"
+              />
+              <Message
+                initialMessage={{
+                  content: "Loading...",
+                  role: "assistant",
+                  message_id: generateUUID(),
+                }}
+              />
+            </>
+          )}
+        </div>
+        <div ref={messageListRef}></div>
       </Transition>
 
       <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center backdrop-blur-md pt-0">
-        {messages.pages.length === 0 && currConnection?.is_sample && (
+        {messages.messages.length === 0 && currConnection?.is_sample && (
           <div className="w-full md:max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-2 justify-between px-2 sm:px-3 my-4">
             {templateMessages.map((template) => (
               <MessageTemplate

@@ -16,33 +16,35 @@ type Story = StoryObj<typeof Message>;
  */
 export const Primary: Story = {
   args: {
-    content: "The number of movies returned on time is:",
-    role: "assistant",
-    results: [
-      {
-        type: "text",
-        content: "The number of movies returned on time is:",
-      },
-      {
-        type: "sql",
-        content:
-          "SELECT COUNT(*) FROM rental WHERE return_date::date = rental_date::date",
-      },
-      {
-        type: "selected_tables",
-        content: "rental,payment",
-      },
-      {
-        type: "data",
-        content: [
-          ["count", "rental", "payment", "one more", "and another"],
-          ["1", "2", "3", "4", "5"],
-          ["6", "7", "8", "9", "10"],
-          ["11", "12", "13", "14", "15"],
-          ["16", "17", "18", "19", "20"],
-          ["21", "22", "23", "24", "25"],
-        ],
-      },
-    ],
+    initialMessage: {
+      content: "The number of movies returned on time is:",
+      role: "assistant",
+      results: [
+        {
+          type: "text",
+          content: "The number of movies returned on time is:",
+        },
+        {
+          type: "sql",
+          content:
+            "SELECT COUNT(*) FROM rental WHERE return_date::date = rental_date::date",
+        },
+        {
+          type: "selected_tables",
+          content: "rental,payment",
+        },
+        {
+          type: "data",
+          content: [
+            ["count", "rental", "payment", "one more", "and another"],
+            ["1", "2", "3", "4", "5"],
+            ["6", "7", "8", "9", "10"],
+            ["11", "12", "13", "14", "15"],
+            ["16", "17", "18", "19", "20"],
+            ["21", "22", "23", "24", "25"],
+          ],
+        },
+      ],
+    },
   },
 };

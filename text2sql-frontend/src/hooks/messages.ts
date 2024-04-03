@@ -1,6 +1,8 @@
 import { api } from "@/api";
+import { IMessageWithResults } from "@/components/Library/types";
 import {
   infiniteQueryOptions,
+  queryOptions,
   skipToken,
   useMutation,
   useQuery,
@@ -11,6 +13,7 @@ import { enqueueSnackbar } from "notistack";
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
 const QUERIES_QUERY_KEY = ["SQL_QUERIES"];
 
+// Retired
 export function infiniteMessagesQuery({
   id,
   offset = 0,
@@ -19,8 +22,9 @@ export function infiniteMessagesQuery({
   offset?: number;
 }) {
   return infiniteQueryOptions({
-    queryKey: [...MESSAGES_QUERY_KEY, id],
-    queryFn: async ({ pageParam }) => await api.getMessages(id, pageParam),
+    queryKey: [...MESSAGES_QUERY_KEY, id, "infinite"],
+    queryFn: async ({ pageParam }) =>
+      await api.getMessagesInfinite(id, pageParam),
     initialPageParam: offset,
     getPreviousPageParam: (lastPage, _allPages, lastPageParam) => {
       if (!lastPage.hasNext) {
@@ -37,7 +41,8 @@ export function infiniteMessagesQuery({
   });
 }
 
-export function useSendMessage({
+// Retired
+export function useSendMessageInfinite({
   id,
   execute = true,
 }: {
@@ -71,6 +76,41 @@ export function useSendMessage({
           return { pages, pageParams };
         }
       );
+    },
+  });
+}
+
+// Not infinite scroll, load everything
+export function getMessagesQuery({ id }: { id: string }) {
+  return queryOptions({
+    queryKey: [...MESSAGES_QUERY_KEY, id],
+    queryFn: async () => await api.getMessages(id),
+  });
+}
+
+export function useSendMessage({
+  id,
+  execute = true,
+}: {
+  id: string;
+  execute?: boolean;
+}) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    retry: false,
+    mutationFn: async (message: string) =>
+      await api.query(id, message, execute),
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(getMessagesQuery({ id }).queryKey, (oldData) => {
+        const newMessages: IMessageWithResults[] = [
+          { content: variables, role: "user" },
+          data.message,
+        ];
+        if (oldData == null) {
+          return { messages: newMessages };
+        }
+        return { messages: [...oldData.messages, ...newMessages] };
+      });
     },
   });
 }

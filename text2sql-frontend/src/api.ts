@@ -196,16 +196,24 @@ const listConversations = (): Promise<ListConversations> => {
   return client("conversations").then(({ data }) => data);
 };
 
-export type MessagesResult = {
+export type MessagesResult = { messages: IMessageWithResults[] };
+const getMessages = (conversationId: string): Promise<MessagesResult> => {
+  return client(`messages?conversation_id=${conversationId}`).then(
+    ({ data }) => data
+  );
+};
+
+export type MessagesResultInfinite = {
   messages: IMessageWithResults[];
   hasNext: boolean;
   offset: number;
   limit: number;
 };
-const getMessages = (
+const getMessagesInfinite = (
   conversationId: string,
   offset: number = 0
-): Promise<MessagesResult> => {
+): Promise<MessagesResultInfinite> => {
+  // WARN: this is not implemented yet (or rather, un-implemented. See commit 1b54c33a8a9)
   return client(
     `messages?conversation_id=${conversationId}&offset=${offset}`
   ).then(({ data }) => data);
@@ -224,7 +232,11 @@ const createMessage = async (conversationId: string, content: string) => {
 };
 
 export type QueryResult = { message: IMessageWithResults };
-const query = (conversationId: string, query: string, execute: boolean) => {
+const query = (
+  conversationId: string,
+  query: string,
+  execute: boolean
+): Promise<QueryResult> => {
   return client(
     `query?conversation_id=${conversationId}&query=${query}&execute=${execute}`
   ).then(({ data }) => data);
@@ -322,6 +334,7 @@ export const api = {
   updateConversation,
   deleteConversation,
   getMessages,
+  getMessagesInfinite,
   createMessage,
   query,
   runSQL,
