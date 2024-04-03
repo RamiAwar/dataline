@@ -12,6 +12,7 @@ import { Dialect } from "../Library/types";
 import { useEffect, useRef, useState } from "react";
 import { useRunSql, useUpdateSqlQuery } from "@/hooks";
 import { useParams } from "react-router-dom";
+import { enqueueSnackbar } from "notistack";
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
@@ -61,11 +62,13 @@ export const CodeBlock = ({
   language,
   resultId,
   updateMessage,
+  updateCode,
 }: {
   code: string;
   resultId?: string;
   language: IResultType;
   updateMessage: (arg: string) => void;
+  updateCode: (arg: string) => void;
 }) => {
   const { conversationId } = useParams<{ conversationId: string }>();
 
@@ -80,7 +83,7 @@ export const CodeBlock = ({
 
   const { mutate } = useUpdateSqlQuery();
 
-  const { isLoading, data } = useRunSql({
+  const { isLoading, data, isError } = useRunSql({
     id: conversationId,
     sql: savedCode.replace(/\s+/g, " "),
     enabled,
@@ -90,6 +93,13 @@ export const CodeBlock = ({
     if (!resultId) return;
     mutate({ id: resultId, code: savedCode });
   }
+
+  useEffect(() => {
+    if (isError) {
+      enqueueSnackbar({ variant: "error", message: "Error running query" });
+      setEnabled(false);
+    }
+  }, [isError]);
 
   useEffect(() => {
     if (data && enabled) {
@@ -229,7 +239,10 @@ export const CodeBlock = ({
                 : "",
               "group flex ml-auto gap-2 rounded-md p-1 dark:text-gray-400 bg-gray-700 transition-all duration-150 ease-in-out"
             )}
-            onClick={() => setEnabled(true)}
+            onClick={() => {
+              updateCode(formattedCode);
+              setEnabled(true);
+            }}
             disabled={isLoading}
           >
             <PlayIcon

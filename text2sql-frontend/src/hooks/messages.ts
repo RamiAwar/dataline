@@ -175,11 +175,8 @@ export function useRunSql({
     queryKey: [...QUERIES_QUERY_KEY, { id, sql }],
     queryFn: () => (enabled ? api.runSQL(id ?? "", sql ?? "") : skipToken),
     enabled,
+    retry: false,
   });
-
-  if (result.isError) {
-    enqueueSnackbar({ variant: "error", message: "Error running query" });
-  }
 
   return result;
 }

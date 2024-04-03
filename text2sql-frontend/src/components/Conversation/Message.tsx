@@ -21,7 +21,7 @@ export const Message = ({
   const [message, setMessage] = useState(initialMessage);
   const { data: avatarUrl } = useGetAvatar();
 
-  function updateMessage(content: string) {
+  function updateData(content: string) {
     // != null, rules out both null and undefined
     if (message.results != null && content != null) {
       // Remove data result from results if any
@@ -43,6 +43,16 @@ export const Message = ({
       setMessage(updatedMessage);
     }
   }
+
+  const updateCode = (code: string) => {
+    setMessage({
+      ...message,
+      results: message.results?.map((result) => {
+        if (result.type !== "sql") return result;
+        return { ...result, content: code };
+      }),
+    });
+  };
 
   return (
     <div
@@ -115,7 +125,8 @@ export const Message = ({
                     language="sql"
                     code={result.content as string}
                     resultId={result.result_id}
-                    updateMessage={updateMessage}
+                    updateMessage={updateData}
+                    updateCode={updateCode}
                   />
                 ))
             )}
