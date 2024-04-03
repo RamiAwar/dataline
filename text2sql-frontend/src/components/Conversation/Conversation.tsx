@@ -37,8 +37,8 @@ const templateMessages = [
 export const Conversation = () => {
   const params = useParams<{ conversationId: string }>();
   // Load messages from conversation via API on load
-  const { data } = useGetConnections();
-  const { data: conversationResp } = useGetConversations();
+  const { data: connectionsData } = useGetConnections();
+  const { data: conversationsData } = useGetConversations();
 
   const {
     mutate: sendMessageMutation,
@@ -48,17 +48,17 @@ export const Conversation = () => {
 
   const {
     data: messages,
-    isSuccess: isSuccessMessages,
-    isPending: isPendingMessages,
-    error: messagesError,
+    isSuccess: isSuccessGetMessages,
+    isPending: isPendingGetMessages,
+    error: getMessagesError,
   } = useQuery(getMessagesQuery({ id: params.conversationId ?? "" }));
 
   const messageListRef = useRef<HTMLDivElement | null>(null);
-  const currConversation = conversationResp?.conversations.find(
+  const currConversation = conversationsData?.conversations.find(
     (conv) => conv.conversation_id === params.conversationId
   );
 
-  const currConnection = data?.connections?.find(
+  const currConnection = connectionsData?.connections?.find(
     (conn) => conn.id === currConversation?.connection_id
   );
 
@@ -69,9 +69,9 @@ export const Conversation = () => {
         window.scrollTo({ top: messageListRef.current?.offsetTop });
       }, 10);
     }
-  }, [isPendingMessages, messageListRef, params]);
+  }, [isPendingGetMessages, messageListRef, params]);
 
-  if (isPendingMessages) {
+  if (isPendingGetMessages) {
     return (
       <div className="w-full h-screen flex justify-center items-center text-white">
         <Spinner />
@@ -79,11 +79,14 @@ export const Conversation = () => {
       </div>
     );
   }
-  if (!isSuccessMessages) {
+  if (!isSuccessGetMessages) {
     return <div>Something went wrong</div>;
   }
-  // @ts-expect-error, status is not known
-  if (messagesError?.status === 404 || !data?.connections?.length) {
+  if (
+    // @ts-expect-error, status is not known
+    getMessagesError?.status === 404 ||
+    !connectionsData?.connections?.length
+  ) {
     return <Navigate to={Routes.Root} />;
   }
 

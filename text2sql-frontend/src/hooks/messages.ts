@@ -112,6 +112,11 @@ export function useSendMessage({
         return { messages: [...oldData.messages, ...newMessages] };
       });
     },
+    onError: () =>
+      enqueueSnackbar({
+        variant: "error",
+        message: "Error querying assistant",
+      }),
   });
 }
 
