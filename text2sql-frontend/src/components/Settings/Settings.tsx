@@ -182,7 +182,7 @@ export default function Account() {
                         />
                       </div>
                       <p className="text-xs text-gray-400 pt-2">
-                        * Your API key must have{" "}
+                        * Please update your API key with{" "}
                         <a
                           className="underline"
                           target="_blank"
@@ -190,7 +190,7 @@ export default function Account() {
                         >
                           full permissions{" "}
                         </a>
-                        for Dataline to work properly.
+                        to use DataLine.
                       </p>
                     </div>
                   </div>

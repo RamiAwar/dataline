@@ -84,13 +84,11 @@ class SettingsService:
                 model_to_check = (
                     user_update.preferred_openai_model or user_info.preferred_openai_model or config.default_model
                 )
-                assert model_exists(
-                    key_to_check, model_to_check
-                ), f"model {model_to_check} not accessible with current key"
+                if not model_exists(key_to_check, model_to_check):
+                    raise Exception(f"model {model_to_check} not accessible with current key")
             elif user_update.preferred_openai_model and user_info.openai_api_key:
-                assert model_exists(
-                    user_info.openai_api_key, user_update.preferred_openai_model
-                ), f"model {user_update.preferred_openai_model} not accessible with current key"
+                if not model_exists(user_info.openai_api_key, user_update.preferred_openai_model):
+                    raise Exception(f"model {user_update.preferred_openai_model} not accessible with current key")
             user = await self.user_repo.update_by_id(session, record_id=user_info.id, data=user_update)
 
         return UserOut.model_validate(user)

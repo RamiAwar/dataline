@@ -18,9 +18,8 @@ class UserUpdateIn(BaseModel):
         try:
             required_models = [config.default_model, "gpt-3.5-turbo"]
             models = client.models.list()
-            assert any(
-                model.id == required_model for model in models for required_model in required_models
-            ), f"Must have access to at least one of {required_models}"
+            if not any(model.id == required_model for model in models for required_model in required_models):
+                raise ValueError(f"Must have access to at least one of {required_models}")
         except openai.AuthenticationError as e:
             raise ValueError("Invalid OpenAI Key") from e
         return openai_key

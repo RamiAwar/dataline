@@ -58,7 +58,7 @@ export function OpenAIKeyPopup() {
       </AlertBody>
       <AlertDescription>
         <p className="text-xs">
-          * Your API key must have{" "}
+          * Please update your API key with{" "}
           <a
             className="underline"
             target="_blank"
@@ -66,7 +66,7 @@ export function OpenAIKeyPopup() {
           >
             full permissions{" "}
           </a>
-          for Dataline to work properly.
+          to use DataLine.
         </p>
       </AlertDescription>
       <AlertActions>
