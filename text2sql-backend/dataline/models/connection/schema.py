@@ -74,3 +74,9 @@ class TableSchema(BaseModel):
 
 class TableSchemasOut(BaseModel):
     tables: list[TableSchema]
+
+
+class SampleOut(BaseModel):
+    title: str
+    file: str
+    link: str

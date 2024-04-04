@@ -36,9 +36,7 @@ export default function Account() {
       try {
         // Update profile avatar URL
         const response = await api.updateAvatar(file);
-        if (response.status === "ok") {
-          setAvatarBlob(response.data.blob);
-        }
+        setAvatarBlob(response.data.blob);
       } catch (exception) {
         enqueueSnackbar({
           variant: "error",

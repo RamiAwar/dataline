@@ -14,12 +14,11 @@ from app import App
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.settings import SettingsService
 from models import (
-    ConversationWithMessagesWithResults,
     Conversation,
+    ConversationWithMessagesWithResults,
     DataResult,
     MessageWithResults,
     Result,
-    StatusType,
     SuccessResponse,
     UnsavedResult,
     UpdateConversationRequest,
@@ -38,7 +37,7 @@ app = App()
 
 @app.get("/healthcheck", response_model_exclude_none=True)
 async def healthcheck() -> SuccessResponse[None]:
-    return SuccessResponse(status=StatusType.ok)
+    return SuccessResponse()
 
 
 class ConversationsOut(BaseModel):
@@ -48,7 +47,6 @@ class ConversationsOut(BaseModel):
 @app.get("/conversations")
 async def conversations() -> SuccessResponse[ConversationsOut]:
     return SuccessResponse(
-        status=StatusType.ok,
         data=ConversationsOut(
             conversations=db.get_conversations_with_messages_with_results(),
         ),
@@ -70,7 +68,6 @@ async def create_conversation(
 ) -> SuccessResponse[CreateConversationOut]:
     conversation_id = db.create_conversation(connection_id=conversation.connection_id, name=conversation.name)
     return SuccessResponse(
-        status=StatusType.ok,
         data=CreateConversationOut(
             conversation_id=conversation_id,
         ),
@@ -91,7 +88,7 @@ async def delete_conversation(conversation_id: str) -> dict[str, str]:
 
 @app.get("/conversation/{conversation_id}")
 async def get_conversation(conversation_id: str) -> SuccessResponse[Conversation]:
-    return SuccessResponse(status=StatusType.ok, data=db.get_conversation(conversation_id))
+    return SuccessResponse(data=db.get_conversation(conversation_id))
 
 
 class ListMessageOut(BaseModel):
@@ -104,7 +101,6 @@ async def messages(conversation_id: str) -> SuccessResponse[ListMessageOut]:
     db.get_conversation(conversation_id)
 
     return SuccessResponse(
-        status=StatusType.ok,
         data=ListMessageOut(
             messages=db.get_messages_with_results(conversation_id),
         ),

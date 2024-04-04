@@ -1,7 +1,7 @@
-import { BackgroundLayout } from "../Layouts/BackgroundLayout";
-import { Footer } from "../Layouts/Footer";
-import logo from "../../assets/images/logo_xl.png";
-import { BetaSignupForm } from "./BetaSignupForm";
+import { BackgroundLayout } from "@components/Layouts/BackgroundLayout";
+import { Footer } from "@components/Layouts/Footer";
+import logo from "@/assets/images/logo_xl.png";
+import { BetaSignupForm } from "@components/BetaSignup/BetaSignupForm";
 
 export const BetaSignup = () => {
   return (

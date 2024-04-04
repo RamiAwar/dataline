@@ -1,5 +1,5 @@
 import { router } from "./router";
-import { RouterProvider } from "react-router";
+import { RouterProvider } from "react-router-dom";
 import { ConnectionListProvider } from "./components/Providers/ConnectionListProvider";
 import { ConversationListProvider } from "./components/Providers/ConversationListProvider";
 import { UserInfoProvider } from "./components/Providers/UserInfoProvider";

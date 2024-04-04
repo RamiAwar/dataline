@@ -11,8 +11,8 @@ type ConversationListContextType = [
 
 const ConversationListContext = createContext<ConversationListContextType>([
   [],
-  () => {},
-  () => {},
+  () => { },
+  () => { },
 ]);
 
 export const useConversationList = () => {
@@ -35,14 +35,7 @@ export const ConversationListProvider = ({
       await api
         .listConversations()
         .then((response) => {
-          if (response.status === "ok") {
-            setConversations(response.data.conversations);
-          } else {
-            enqueueSnackbar({
-              variant: "error",
-              message: "Error loading Conversations",
-            });
-          }
+          setConversations(response.data.conversations);
         })
         .catch(() => {
           enqueueSnackbar({

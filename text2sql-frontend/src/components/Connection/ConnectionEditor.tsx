@@ -86,21 +86,20 @@ export const ConnectionEditor = () => {
     fetchConnection();
   }, [params.connectionId]);
 
-  function handleDelete() {
-    (async () => {
-      try {
-        await api.deleteConnection(params.connectionId!);
-        fetchConnections();
-        fetchConversations();
-        navigate(Routes.Root);
-      } catch (exception) {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error deleting connection",
-        });
-      }
-    })();
+  async function handleDelete() {
+    try {
+      await api.deleteConnection(params.connectionId!);
+      fetchConnections();
+      fetchConversations();
+      navigate(Routes.Root);
+    } catch (exception) {
+      enqueueSnackbar({
+        variant: "error",
+        message: "Error deleting connection",
+      });
+    }
   }
+
   function handleSubmit() {
     if (!unsavedChanges) {
       navigate(Routes.Root); // Return to previous page
@@ -129,7 +128,7 @@ export const ConnectionEditor = () => {
   }
 
   return (
-    <div className="dark:bg-gray-900 w-full h-full relative flex flex-col -mt-16 lg:mt-0">
+    <div className="dark:bg-gray-900 w-full h-full relative flex flex-col mt-16 lg:mt-0">
       <AlertModal
         isOpen={showAlert}
         title="Discard Unsaved Changes?"
@@ -212,27 +211,26 @@ export const ConnectionEditor = () => {
             </div>
           </div>
 
-          <form className="sm:col-span-6 flex items-center justify-end gap-x-6">
-            <button
+          <div className="sm:col-span-6 flex items-center justify-end gap-x-6">
+            <div
               onClick={handleDelete}
               className="rounded-md bg-gray-700 hover:bg-red-700 px-3 py-2 text-sm font-medium text-red-500 hover:text-white border border-gray-600 hover:border-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
             >
               Delete this connection
-            </button>
-            <button
-              type="button"
+            </div>
+            <div
+              onClick={handleBack}
               className="rounded-md bg-gray-600 px-3 py-2 text-sm font-medium text-white border border-gray-500 hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
             >
               Cancel
-            </button>
-            <button
-              type="submit"
+            </div>
+            <div
               onClick={handleSubmit}
               className="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm border bg-green-600 border-green-500 hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-colors duration-150"
             >
               Save
-            </button>
-          </form>
+            </div>
+          </div>
 
           <div className="sm:col-span-6">
             <label

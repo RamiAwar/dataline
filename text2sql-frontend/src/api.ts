@@ -10,7 +10,6 @@ import { IEditConnection } from "./components/Library/types";
 const baseUrl = "http://localhost:7377";
 
 type SuccessResponse<T> = {
-  status: "ok";
   data: T;
 };
 
@@ -62,18 +61,21 @@ export type ConnectionResult = {
 type ConnectResult = ApiResponse<ConnectionResult>;
 const createConnection = async (
   connectionString: string,
-  name: string
+  name: string,
+  isSample: boolean,
 ): Promise<ConnectResult> => {
   const response = await axios.post<ConnectResult>(`${baseUrl}/connect`, {
     dsn: connectionString,
     name: name,
+    is_sample: isSample,
   });
   return response.data;
 };
 
-const createTestConnection = async (): Promise<ConnectResult> => {
+const createTestConnection = async (dsn: string): Promise<ConnectResult> => {
   const response = await axios.post<ConnectResult>(
-    `${baseUrl}/create-sample-db`
+    `${baseUrl}/create-sample-db`,
+    { dsn }
   );
   return response.data;
 };
@@ -95,6 +97,17 @@ const getConnection = async (
   const response = await axios.get<GetConnectionResult>(
     `${baseUrl}/connection/${connectionId}`
   );
+  return response.data;
+};
+
+export type SampleResult = {
+  title: string;
+  file: string;
+  link: string;
+};
+export type GetSamplesResult = ApiResponse<SampleResult[]>;
+const getSamples = async (): Promise<GetSamplesResult> => {
+  const response = await axios.get<GetSamplesResult>(`${baseUrl}/samples`);
   return response.data;
 };
 
@@ -335,6 +348,7 @@ export const api = {
   healthcheck,
   getConnection,
   getTableSchemas,
+  getSamples,
   updateTableSchemaDescription,
   updateTableSchemaFieldDescription,
   createConnection,
