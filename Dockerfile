@@ -49,28 +49,14 @@ COPY text2sql-backend/pyproject.toml text2sql-backend/poetry.lock ./
 RUN poetry config virtualenvs.in-project true && poetry install --only main --no-root
 
 # -------------------------------
-# PROD BUILD WITH MINIMAL DEPS
+# BASE BUILD
 # -------------------------------
-# FROM python:3.11.8-alpine as prod
-FROM python:3.11.6-slim-bookworm as prod
+FROM python:3.11.6-slim-bookworm as base
 
-# Setup supervisor and caddy
 WORKDIR /home/dataline
-
-# Install supervisor to manage be/fe processes
-RUN pip install --no-cache-dir supervisor
-
-# Install Caddy server
-# RUN apk update && apk add caddy
-RUN apt update && apt install caddy -y
 
 # Install postgres connector dependencies
 RUN apt update && apt install --no-install-recommends libpq5 -y
-
-# Copy in supervisor config, frontend build, backend source
-COPY supervisord.conf .
-COPY --from=temp-frontend /home/dataline/frontend/dist /home/dataline/frontend/dist
-COPY text2sql-frontend/Caddyfile /home/dataline/frontend/Caddyfile
 
 # Move it to venv not .venv so supervisord does not cry
 COPY --from=temp-backend /home/dataline/backend/.venv /home/dataline/backend/venv
@@ -89,5 +75,39 @@ RUN mkdir -p /home/.dataline
 
 # Supervisord will forward the env vars to the subprocess envs
 ENV SQLITE_PATH="/home/.dataline/db.sqlite3"
+
+# -------------------------------
+# DEV BUILD WITH MINIMAL DEPS
+# -------------------------------
+FROM base as dev
+
+WORKDIR /home/dataline/backend
+
+# Running alembic and uvicorn without combining them in a bash -c command won't work
+CMD ["bash", "-c", "python -m alembic upgrade head && python -m uvicorn main:app --port=7377 --host=0.0.0.0 --reload"]
+
+
+# -------------------------------
+# PROD BUILD WITH MINIMAL DEPS
+# -------------------------------
+# FROM python:3.11.8-alpine as prod
+FROM base as prod
+
+# Setup supervisor and caddy
+WORKDIR /home/dataline
+
+# Install supervisor to manage be/fe processes
+RUN pip install --no-cache-dir supervisor
+
+# Install Caddy server
+# RUN apk update && apk add caddy
+RUN apt update && apt install caddy -y
+
+
+# Copy in supervisor config, frontend build, backend source
+COPY supervisord.conf .
+COPY --from=temp-frontend /home/dataline/frontend/dist /home/dataline/frontend/dist
+COPY text2sql-frontend/Caddyfile /home/dataline/frontend/Caddyfile
+
 
 CMD ["supervisord", "-n"]

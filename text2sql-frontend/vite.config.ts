@@ -9,6 +9,7 @@ export default defineConfig({
   // Tauri expects a fixed port, fail if that port is not available
   server: {
     strictPort: true,
+    host: true,
   },
   // to make use of `TAURI_PLATFORM`, `TAURI_ARCH`, `TAURI_FAMILY`,
   // `TAURI_PLATFORM_VERSION`, `TAURI_PLATFORM_TYPE` and `TAURI_DEBUG`
@@ -19,7 +20,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
       "@components": path.resolve(__dirname, "src/components"),
       "@catalyst": path.resolve(__dirname, "src/components/Catalyst"),
-    }
+    },
   },
   build: {
     // Tauri uses Chromium on Windows and WebKit on macOS and Linux
