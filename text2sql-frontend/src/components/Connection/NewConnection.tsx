@@ -40,32 +40,30 @@ export const NewConnection = () => {
             Add a new database connection
           </p>
 
-          <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-            <div className="sm:col-span-3">
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium leading-6 text-white"
-              >
-                Name
-              </label>
-              <div className="mt-2">
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  disabled={isLoading}
-                  autoComplete="one-time-code"
-                  value={connectionName}
-                  onChange={handleNameChange}
-                  placeholder="Postgres Prod"
-                  className={classNames(
-                    isLoading
-                      ? "animate-pulse bg-gray-900 text-gray-400"
-                      : "bg-white/5 text-white",
-                    "block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
-                  )}
-                />
-              </div>
+          <div className="mt-5 max-w-2xl">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium leading-6 text-white"
+            >
+              Name
+            </label>
+            <div className="mt-2">
+              <input
+                type="text"
+                name="name"
+                id="name"
+                disabled={isLoading}
+                autoComplete="one-time-code"
+                value={connectionName}
+                onChange={handleNameChange}
+                placeholder="Postgres Prod"
+                className={classNames(
+                  isLoading
+                    ? "animate-pulse bg-gray-900 text-gray-400"
+                    : "bg-white/5 text-white",
+                  "block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                )}
+              />
             </div>
           </div>
 

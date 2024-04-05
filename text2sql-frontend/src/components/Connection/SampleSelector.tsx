@@ -23,8 +23,15 @@ export const SampleSelector = ({ name = null }: { name: string | null }) => {
                 const res = await api.getSamples()
                 setSamples(res.data);
             } catch (exception) {
-                if (isAxiosError(exception)) {
-                    // Connection already exists, skip creation but don't close or clear modal
+                // If connection already exists, skip creation
+                if (isAxiosError(exception) && exception.response?.status === 409) {
+                    enqueueSnackbar({
+                        variant: "info",
+                        message: "Connection already exists, skipping creation",
+                    });
+                    return;
+                }
+                else if (isAxiosError(exception)) {
                     enqueueSnackbar({
                         variant: "error",
                         message: "Error fetching samples",

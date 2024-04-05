@@ -72,13 +72,16 @@ const createConnection = async (
   return response.data;
 };
 
-const createTestConnection = async (dsn: string): Promise<ConnectResult> => {
-  const response = await axios.post<ConnectResult>(
-    `${baseUrl}/create-sample-db`,
-    { dsn }
-  );
+const createFileConnection = async (
+  file: File,
+  name: string
+): Promise<ConnectResult> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("name", name);
+  const response = await axios.post<ConnectResult>(`${baseUrl}/connect/file`, formData);
   return response.data;
-};
+}
 
 export type ListConnectionsResult = ApiResponse<{
   connections: ConnectionResult[];
@@ -352,7 +355,7 @@ export const api = {
   updateTableSchemaDescription,
   updateTableSchemaFieldDescription,
   createConnection,
-  createTestConnection,
+  createFileConnection,
   updateConnection,
   deleteConnection,
   listConnections,
