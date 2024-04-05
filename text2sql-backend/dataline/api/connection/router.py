@@ -42,10 +42,10 @@ def create_db_connection(dsn: str, name: str, is_sample: bool = False) -> Succes
                     pass
             except OperationalError as e:
                 logger.error(e)
-                raise HTTPException(status_code=404, detail="Failed to connect to database")
+                raise HTTPException(status_code=500, detail="Failed to connect to database, please check your DSN.")
         else:
             logger.error(exc)
-            raise HTTPException(status_code=404, detail="Failed to connect to database")
+            raise HTTPException(status_code=500, detail="Failed to connect to database, please check your DSN.")
 
     # Check if connection with DSN already exists, then return connection_id
     try:
@@ -60,7 +60,7 @@ def create_db_connection(dsn: str, name: str, is_sample: bool = False) -> Succes
     database = engine.url.database
 
     if not database:
-        raise Exception("Invalid DSN. Database name is required.")
+        raise HTTPException(status_code=400, detail="Invalid DSN. Database name is missing, append '/DBNAME'.")
 
     with db.DatabaseManager() as conn:
         connection_id = db.create_connection(
@@ -89,17 +89,41 @@ class ConnectRequest(BaseModel):
 
     @field_validator("dsn")
     def validate_dsn_format(cls, value: str) -> str:
-        # Define a regular expression to match the DSN format
-        # Relaxed to allow for many kinds of DSNs
-        dsn_regex = r"^[\w\+]+:\/\/[\/\w-]+.*$"
+        # Regular expression pattern for matching DSNs
+        # Try sqlite first
+        sqlite_pattern = r"^sqlite://(/.+?)(:(.+))?$"
+        if re.match(sqlite_pattern, value):
+            return value
 
-        if not re.match(dsn_regex, value):
-            raise ValueError("Invalid DSN format.")
+        dsn_pattern = (
+            r"^(?P<driver>[\w+]+):\/\/(?:(?P<username>\w+):(?P<password>\w+)@)?(?P<host>[\w\.-]+)"
+            r"(?::(?P<port>\d+))?(?:\/(?P<database>[\w\.-]+))?$"
+        )
+        match = re.match(dsn_pattern, value)
+        if match:
+            # Extracting components from the DSN
+            driver = match.group("driver")
+            host = match.group("host")
+            database = match.group("database")
+
+            # Validating components (You can customize the validation rules as per your requirements)
+            if not driver:
+                raise ValueError("Missing driver in DSN")
+
+            if not host:
+                raise ValueError("Host missing from DSN")
+
+            if not database:
+                raise ValueError("DSN must specify a database name")
+        else:
+            # DSN doesn't match the expected pattern
+            raise ValueError("Invalid DSN format")
 
         # Simpler way to connect to postgres even though officially deprecated
         # This mirrors psql which is a very common way to connect to postgres
-        if "postgres://" in value:
-            value = value.replace("postgres://", "postgresql://")
+        if value.startswith("postgres") and not value.startswith("postgresql"):
+            # Only replace first occurrence
+            value = value.replace("postgres", "postgresql", 1)
 
         return value
 
