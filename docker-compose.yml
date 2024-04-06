@@ -16,9 +16,8 @@ services:
       - "7377:7377"
     volumes:
       - dataline_dev:/home/.dataline # persist local sqlite db
-      # map local to remote folder, exclude venv
-      - ./text2sql-backend:/home/dataline/backend
-      - /home/dataline/backend/venv
+      - ./text2sql-backend/dataline:/home/dataline/backend/dataline
+      - ./text2sql-backend/alembic:/home/dataline/backend/alembic
     networks:
       - dataline
 
@@ -30,8 +29,6 @@ services:
     ports:
       - "5173:5173"
     volumes:
-      # map local to remote folder, exclude node_modules
-      - ./text2sql-frontend:/app
-      - /app/node_modules
+      - ./text2sql-frontend/src:/app/src
     networks:
       - dataline
