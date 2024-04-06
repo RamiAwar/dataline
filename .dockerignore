@@ -22,7 +22,6 @@ text2sql-backend/coverage.xml
 text2sql-backend/*.cover
 text2sql-backend/*.log
 text2sql-backend/.git
-text2sql-backend/dataline/db.sqlite3
 
 # Don't need tests or hooks
 */tests
@@ -32,8 +31,9 @@ images
 # Exclude bruno
 */bruno
 
-# Ignore testing SQLite DB
-*/*.sqlite3
+# Ignore all SQLite DBs, except for sample DBs
+**/*.sqlite3
+!**/samples/*.sqlite3
 
 */.storybook
 */node_modules/
