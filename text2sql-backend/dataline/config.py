@@ -14,5 +14,7 @@ class Config(BaseSettings):
     sample_netflix_path: str = str(Path(__file__).parent / "samples" / "netflix.sqlite3")
     sample_titanic_path: str = str(Path(__file__).parent / "samples" / "titanic.sqlite3")
 
+    default_model: str = "gpt-4"
+
 
 config = Config()

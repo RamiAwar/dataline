@@ -5,6 +5,8 @@ from io import BytesIO
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
+from openai.resources.models import Models as OpenAIModels
+from unittest.mock import MagicMock, patch
 
 
 logger = logging.getLogger(__name__)
@@ -21,6 +23,7 @@ async def test_update_user_info_name(client: TestClient) -> None:
         "data": {
             "name": "John",
             "openai_api_key": None,
+            "preferred_openai_model": None,
         },
     }
 
@@ -55,24 +58,38 @@ async def test_update_user_info_invalid_openai_key(client: TestClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_update_user_info_valid_openai_key(client: TestClient) -> None:
+@patch.object(OpenAIModels, "list")
+async def test_update_user_info_valid_openai_key(mock_openai_model_list: MagicMock, client: TestClient) -> None:
+    mock_model = MagicMock()
+    mock_model.id = "gpt-4"
+    mock_openai_model_list.return_value = [mock_model]
     openai_key = "sk-Mioanowida"
     user_in = {"openai_api_key": openai_key}
     response = client.patch("/settings/info", json=user_in)
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
     assert response.json()["data"]["openai_api_key"] == openai_key
+    mock_openai_model_list.assert_called()
 
 
 @pytest.mark.asyncio
-async def test_update_user_info_extra_fields_ignored(client: TestClient) -> None:
-    user_in = {"name": "John", "openai_api_key": "key", "extra": "extra"}
+@patch.object(OpenAIModels, "list")
+async def test_update_user_info_extra_fields_ignored(mock_openai_model_list: MagicMock, client: TestClient) -> None:
+    mock_model = MagicMock()
+    mock_model.id = "gpt-4"
+    mock_openai_model_list.return_value = [mock_model]
+    user_in = {"name": "John", "openai_api_key": "sk-1234", "extra": "extra"}
     response = client.patch("/settings/info", json=user_in)
     assert response.status_code == 200
     assert "extra" not in response.json()["data"]
+    mock_openai_model_list.assert_called()
 
 
 @pytest_asyncio.fixture
-async def user_info(client: TestClient) -> dict[str, str]:
+@patch.object(OpenAIModels, "list")
+async def user_info(mock_openai_model_list: MagicMock, client: TestClient) -> dict[str, str]:
+    mock_model = MagicMock()
+    mock_model.id = "gpt-4"
+    mock_openai_model_list.return_value = [mock_model]
     user_in = {
         "name": "John",
         "openai_api_key": "sk-asoiasdfl",
@@ -91,7 +108,7 @@ async def test_get_info(client: TestClient, user_info: dict[str, str]) -> None:
 
     # Check that the response body contains the expected data
     # Replace this with your actual assertions based on your application's logic
-    assert response.json()["data"] == user_info
+    assert response.json()["data"] == {**user_info, "preferred_openai_model": "gpt-4"}
 
 
 @pytest.mark.asyncio
