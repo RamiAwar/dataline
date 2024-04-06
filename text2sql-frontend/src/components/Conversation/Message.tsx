@@ -2,90 +2,28 @@ import logo from "../../assets/images/logo_md.png";
 import { CodeBlock } from "./CodeBlock";
 import { IMessageWithResults } from "../Library/types";
 import { DynamicTable } from "../Library/DynamicTable";
-import { useEffect, useState } from "react";
-import { api } from "../../api";
 import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
-import { useUserInfo } from "../Providers/UserInfoProvider";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
-import { enqueueSnackbar } from "notistack";
+import { useState } from "react";
+import { useGetAvatar } from "@/hooks";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-export const Message = (initialMessage: IMessageWithResults) => {
-  const [loadingQuery, setLoadingQuery] = useState<boolean>(false);
-  const [queryResult, setQueryResult] = useState<any | null>(null);
-  const [message, setMessage] = useState<IMessageWithResults>(initialMessage);
-  const [userInfo, _] = useUserInfo();
+export const Message = ({
+  initialMessage,
+  className = "",
+}: {
+  initialMessage: IMessageWithResults;
+  className?: string;
+}) => {
+  const [message, setMessage] = useState(initialMessage);
+  const { data: avatarUrl } = useGetAvatar();
 
-  function runQuery(code: string) {
-    try {
-      // Display loading result instead of PlayIcon and disable button
-      setLoadingQuery(true);
-      setQueryResult(null);
-
-      // Fetch result from API
-      const executeSQL = async () => {
-        if (initialMessage.conversation_id === undefined) return;
-        const data = await api.runSQL(initialMessage.conversation_id, code);
-        setQueryResult(data.data.content);
-      };
-      executeSQL();
-    } catch (error) {
-      // Handle any errors that occurred during the backend communication
-      enqueueSnackbar({ variant: "error", message: "Error running query" });
-    } finally {
-      // Re-enable the button
-      setLoadingQuery(false);
-    }
-  }
-
-  async function toggleSaveQuery(result_id: string | undefined) {
-    if (result_id === undefined) return;
-    // Find result in message
-    const result = message.results?.find(
-      (result) => result.result_id === result_id
-    );
-    if (result === undefined) return;
-    try {
-      await api.toggleSaveQuery(result_id);
-      // Update is_saved in message
-      const updatedMessage = {
-        ...message,
-        results: message.results?.map((result) => {
-          if (result.result_id === result_id) {
-            return {
-              ...result,
-              is_saved: !result.is_saved,
-            };
-          }
-          return result;
-        }),
-      } as IMessageWithResults;
-      setMessage(updatedMessage);
-    } catch (exception) {
-      enqueueSnackbar({ variant: "error", message: "Error saving query" });
-    }
-  }
-
-  // Update SQL in result
-  async function updateQuerySQLResult(
-    result_id: string | undefined,
-    updatedCode: string
-  ) {
-    if (result_id === undefined) return;
-
-    try {
-      await api.updateResult(result_id, updatedCode);
-    } catch (exception) {
-      enqueueSnackbar({ variant: "error", message: "Error updating query" });
-    }
-  }
-
-  useEffect(() => {
-    // Add query result to results
-    if (message.results !== undefined && queryResult !== null) {
+  function updateData(content: string) {
+    // != null, rules out both null and undefined
+    if (message.results != null && content != null) {
       // Remove data result from results if any
       const newResults = message.results?.filter(
         (result) => result.type !== "data"
@@ -97,14 +35,24 @@ export const Message = (initialMessage: IMessageWithResults) => {
           ...newResults,
           {
             type: "data",
-            content: queryResult,
+            content,
             result_id: "1",
           },
         ],
       } as IMessageWithResults;
       setMessage(updatedMessage);
     }
-  }, [queryResult]);
+  }
+
+  const updateCode = (code: string) => {
+    setMessage({
+      ...message,
+      results: message.results?.map((result) => {
+        if (result.type !== "sql") return result;
+        return { ...result, content: code };
+      }),
+    });
+  };
 
   return (
     <div
@@ -112,7 +60,8 @@ export const Message = (initialMessage: IMessageWithResults) => {
         message.role === "assistant"
           ? "dark:bg-gray-800/40"
           : "dark:bg-gray-900",
-        "w-full text-gray-800 dark:text-gray-100 bg-gray-50"
+        "w-full text-gray-800 dark:text-gray-100 bg-gray-50",
+        className
       )}
     >
       <div className="flex p-4 gap-4 text-base md:gap-6 md:max-w-2xl lg:max-w-xl xl:max-w-3xl md:py-6 lg:px-0 m-auto">
@@ -121,10 +70,10 @@ export const Message = (initialMessage: IMessageWithResults) => {
             <div className="relative p-1 rounded-sm text-white flex items-center justify-center">
               {message.role === "assistant" ? (
                 <img src={logo} className="h-7 w-7" />
-              ) : userInfo?.avatarUrl ? (
+              ) : avatarUrl ? (
                 <img
                   className="h-7 w-7 rounded-sm bg-gray-800"
-                  src={userInfo.avatarUrl}
+                  src={avatarUrl}
                   alt=""
                 />
               ) : (
@@ -175,13 +124,9 @@ export const Message = (initialMessage: IMessageWithResults) => {
                     key={`message-${message.message_id}-code-${index}`}
                     language="sql"
                     code={result.content as string}
-                    runQuery={runQuery}
-                    toggleSaveQuery={() => toggleSaveQuery(result.result_id)}
-                    updateQuery={(code: string) =>
-                      updateQuerySQLResult(result.result_id, code)
-                    }
-                    runnable={!loadingQuery}
-                    isSaved={result.is_saved}
+                    resultId={result.result_id}
+                    updateMessage={updateData}
+                    updateCode={updateCode}
                   />
                 ))
             )}

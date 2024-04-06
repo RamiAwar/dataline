@@ -1,18 +1,20 @@
-import { useEffect, useState, useRef } from "react";
-import { api } from "../../api";
+import { useEffect, useRef } from "react";
 import { Message } from "./Message";
-import { IMessageWithResults } from "../Library/types";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import ExpandingInput from "./ExpandingInput";
 
 import { Transition } from "@headlessui/react";
 import { generateUUID } from "../Library/utils";
-import { enqueueSnackbar } from "notistack";
-import { useConnectionList } from "../Providers/ConnectionListProvider";
-import { useConversationList } from "../Providers/ConversationListProvider";
-import { isAxiosError } from "axios";
 import { Routes } from "@/router";
 import MessageTemplate from "./MessageTemplate";
+import {
+  getMessagesQuery,
+  useGetConnections,
+  useGetConversations,
+  useSendMessage,
+} from "@/hooks";
+import { Spinner } from "../Spinner/Spinner";
+import { useQuery } from "@tanstack/react-query";
 
 const templateMessages = [
   {
@@ -34,96 +36,57 @@ const templateMessages = [
 
 export const Conversation = () => {
   const params = useParams<{ conversationId: string }>();
-  const navigate = useNavigate();
-
   // Load messages from conversation via API on load
-  const [messages, setMessages] = useState<IMessageWithResults[]>([]);
-  const [connections] = useConnectionList();
-  const [conversations] = useConversationList();
+  const { data: connectionsData } = useGetConnections();
+  const { data: conversationsData } = useGetConversations();
+
+  const {
+    mutate: sendMessageMutation,
+    isPending: isPendingSendMessage,
+    variables: newMessageVariable,
+  } = useSendMessage({ id: params.conversationId ?? "" });
+
+  const {
+    data: messages,
+    isSuccess: isSuccessGetMessages,
+    isPending: isPendingGetMessages,
+    error: getMessagesError,
+  } = useQuery(getMessagesQuery({ id: params.conversationId ?? "" }));
+
   const messageListRef = useRef<HTMLDivElement | null>(null);
-  const currConversation = conversations.find(
+  const currConversation = conversationsData?.conversations.find(
     (conv) => conv.conversation_id === params.conversationId
   );
-  const currConnection = connections?.find(
+
+  const currConnection = connectionsData?.connections?.find(
     (conn) => conn.id === currConversation?.connection_id
   );
 
-  function submitQuery(value: string) {
-    // Add message to messages
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        content: value,
-        role: "user",
-        message_id: generateUUID(),
-      },
-    ]);
-
-    // Add message to messages
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        content: "Loading...",
-        role: "assistant",
-        message_id: generateUUID(),
-      },
-    ]);
-
-    // Get API response
-    (async () => {
-      try {
-        const res = await api.query(
-          params.conversationId as string,
-          value,
-          true
-        );
-        const message = res.data.message;
-
-        // Clear loading message and add response
-        setMessages((prevMessages) => [...prevMessages.slice(0, -1), message]);
-      } catch (exception) {
-        // Clear loading message
-        setMessages((prevMessages) => prevMessages.slice(0, -1));
-
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error querying assistant",
-        });
-      }
-    })();
-  }
-
-  useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        const messages = await api.getMessages(params.conversationId!);
-        setMessages(messages.data.messages);
-      } catch (exception) {
-        if (isAxiosError(exception) && exception.response?.status === 404) {
-          navigate(Routes.Root);
-          return;
-        }
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error fetching messages",
-        });
-      }
-    };
-    loadMessages();
-  }, [params, navigate]);
-
   useEffect(() => {
     if (messageListRef.current !== null) {
+      // Timeout needed because the SQL code in the messages get formatted and take more space
       setTimeout(() => {
-        messageListRef.current?.lastElementChild?.scrollIntoView({
-          behavior: "auto",
-        });
+        window.scrollTo({ top: messageListRef.current?.offsetTop });
       }, 10);
     }
-  }, [messages]);
+  }, [isPendingGetMessages, messageListRef, params]);
 
-  if (connections === null || connections?.length === 0) {
-    // Redirect to connection selector route
+  if (isPendingGetMessages) {
+    return (
+      <div className="w-full h-screen flex justify-center items-center text-white">
+        <Spinner />
+        Loading...
+      </div>
+    );
+  }
+  if (!isSuccessGetMessages) {
+    return <div>Something went wrong</div>;
+  }
+  if (
+    // @ts-expect-error, status is not known
+    getMessagesError?.status === 404 ||
+    !connectionsData?.connections?.length
+  ) {
     return <Navigate to={Routes.Root} />;
   }
 
@@ -137,38 +100,56 @@ export const Conversation = () => {
         show={true}
         appear={true}
       >
-        <div className="overflow-y-auto pb-36 bg-gray-900" ref={messageListRef}>
-          {messages.map((message) => (
+        <div className="overflow-y-auto pb-36 bg-gray-900">
+          {messages.messages.map((message) => (
             <Message
               key={(params.conversationId as string) + message.message_id}
-              message_id={message.message_id}
-              content={message.content}
-              role={message.role}
-              results={message.results}
-              conversation_id={params.conversationId}
-            ></Message>
+              initialMessage={message}
+            />
           ))}
+          {isPendingSendMessage && (
+            <>
+              <Message
+                initialMessage={{
+                  content: newMessageVariable.message,
+                  role: "user",
+                  message_id: generateUUID(),
+                }}
+                className="dark:text-gray-400"
+              />
+              <Message
+                initialMessage={{
+                  content: "Loading...",
+                  role: "assistant",
+                  message_id: generateUUID(),
+                }}
+              />
+            </>
+          )}
         </div>
+        <div ref={messageListRef}></div>
       </Transition>
 
       <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center backdrop-blur-md pt-0">
-        {messages.length === 0 && currConnection?.is_sample && (
+        {messages.messages.length === 0 && currConnection?.is_sample && (
           <div className="w-full md:max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-2 justify-between px-2 sm:px-3 my-4">
             {templateMessages.map((template) => (
               <MessageTemplate
                 key={template.title}
                 title={template.title}
                 text={template.text}
-                onClick={() => submitQuery(template.message)}
+                onClick={() =>
+                  sendMessageMutation({ message: template.message })
+                }
               />
             ))}
           </div>
         )}
         <div className="w-full md:max-w-3xl flex justify-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
           <ExpandingInput
-            onSubmit={submitQuery}
+            onSubmit={(message: string) => sendMessageMutation({ message })}
             disabled={false}
-          ></ExpandingInput>
+          />
         </div>
       </div>
     </div>

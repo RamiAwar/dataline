@@ -1,9 +1,7 @@
 import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { api } from "../../api";
 import { Spinner } from "../Spinner/Spinner";
-import { enqueueSnackbar } from "notistack";
-import { isAxiosError } from "axios";
+import { useCreateConnection, useCreateTestConnection } from "@/hooks";
 
 interface NewConnectionModalFormProps {
   isOpen: boolean;
@@ -26,13 +24,23 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
 
   const [unmaskedDsn, setUnmaskedDsn] = useState("");
   const [connectionName, setConnectionName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   const clearInputs = () => {
     setUnmaskedDsn("");
     setConnectionName("");
   };
 
+  function onSuccess() {
+    clearInputs();
+    onClose();
+  }
+
+  const creationMutation = useCreateConnection({ onSuccess });
+  const { mutate: testConnection, isPending } = useCreateTestConnection({
+    onSuccess,
+  });
+
+  const isLoading = creationMutation.isPending || isPending;
   const handleDSNChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
     setUnmaskedDsn(value);
@@ -45,79 +53,12 @@ function NewConnectionModal({ isOpen, onClose }: NewConnectionModalFormProps) {
 
   const handleCreateTestConnection = async () => {
     if (isLoading) return;
-    setIsLoading(true);
-
-    try {
-      const res = await api.createTestConnection();
-      if (res.status !== "ok") {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error creating connection",
-        });
-        setIsLoading(false);
-        return;
-      }
-    } catch (exception) {
-      if (isAxiosError(exception) && exception.response?.status === 409) {
-        // Connection already exists, skip creation but don't close or clear modal
-        enqueueSnackbar({
-          variant: "info",
-          message: "Connection already exists, skipping creation",
-        });
-        setIsLoading(false);
-        return;
-      } else {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error creating connection",
-        });
-        setIsLoading(false);
-        return;
-      }
-    }
-
-    setIsLoading(false);
-    clearInputs();
-    onClose();
+    testConnection();
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    // Enable loading state
-    setIsLoading(true);
-    try {
-      const res = await api.createConnection(unmaskedDsn, connectionName);
-      if (res.status !== "ok") {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error creating connection",
-        });
-        setIsLoading(false);
-        return;
-      }
-    } catch (exception) {
-      if (isAxiosError(exception) && exception.response?.status === 409) {
-        // Connection already exists, skip creation but don't close or clear modal
-        enqueueSnackbar({
-          variant: "info",
-          message: "Connection already exists, skipping creation",
-        });
-        setIsLoading(false);
-        return;
-      } else {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error creating connection",
-        });
-        setIsLoading(false);
-        return;
-      }
-    }
-
-    setIsLoading(false);
-    clearInputs();
-    onClose();
+    creationMutation.mutate({ dsn: unmaskedDsn, name: connectionName });
   };
 
   return (
