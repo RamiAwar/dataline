@@ -179,6 +179,17 @@ export default function Account() {
                           onChange={setApiKey}
                         />
                       </div>
+                      <p className="text-xs text-gray-400 pt-2">
+                        * Please update your API key with{" "}
+                        <a
+                          className="underline"
+                          target="_blank"
+                          href="https://help.openai.com/en/articles/8867743-assign-api-key-permissions"
+                        >
+                          full permissions{" "}
+                        </a>
+                        to use DataLine.
+                      </p>
                     </div>
                   </div>
                   <div className="mt-8 flex">

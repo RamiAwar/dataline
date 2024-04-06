@@ -1,5 +1,5 @@
 import functools
-from typing import AsyncIterator, Awaitable, Callable, Literal
+from typing import AsyncIterator
 
 import openai
 
@@ -10,7 +10,7 @@ class ChatLLM:
     def __init__(
         self,
         openai_api_key: str,
-        model: Literal["gpt-4"] = "gpt-4",
+        model: str,
         temperature: float = 0.0,
     ):
         self.model = model
