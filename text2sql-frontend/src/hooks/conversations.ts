@@ -7,7 +7,7 @@ export const CONVERSATIONS_QUERY_KEY = ["CONVERSATIONS"];
 export function useGetConversations() {
   const result = useQuery({
     queryKey: CONVERSATIONS_QUERY_KEY,
-    queryFn: api.listConversations,
+    queryFn: async () => (await api.listConversations()).data,
   });
 
   if (result.isError) {

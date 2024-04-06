@@ -111,7 +111,7 @@ export const Conversation = () => {
             <>
               <Message
                 initialMessage={{
-                  content: newMessageVariable,
+                  content: newMessageVariable.message,
                   role: "user",
                   message_id: generateUUID(),
                 }}
@@ -138,13 +138,18 @@ export const Conversation = () => {
                 key={template.title}
                 title={template.title}
                 text={template.text}
-                onClick={() => sendMessageMutation(template.message)}
+                onClick={() =>
+                  sendMessageMutation({ message: template.message })
+                }
               />
             ))}
           </div>
         )}
         <div className="w-full md:max-w-3xl flex justify-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
-          <ExpandingInput onSubmit={sendMessageMutation} disabled={false} />
+          <ExpandingInput
+            onSubmit={(message: string) => sendMessageMutation({ message })}
+            disabled={false}
+          />
         </div>
       </div>
     </div>

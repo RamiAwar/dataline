@@ -7,7 +7,7 @@ const TABLE_SCHEMA_QUERY_KEY = ["TABLE_SCHEMA"];
 export function useGetTableSchemas(id: string) {
   const result = useQuery({
     queryKey: TABLE_SCHEMA_QUERY_KEY,
-    queryFn: () => api.getTableSchemas(id ?? ""),
+    queryFn: async () => (await api.getTableSchemas(id ?? "")).data,
   });
   if (result.isError) {
     enqueueSnackbar({

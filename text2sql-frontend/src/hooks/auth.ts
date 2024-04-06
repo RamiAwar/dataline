@@ -1,5 +1,5 @@
 import { api } from "@/api";
-import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 
@@ -45,7 +45,7 @@ export function useGetBackendStatus() {
 export function useGetUserProfile(options = {}) {
   const result = useQuery({
     queryKey: USER_INFO_QUERY_KEY,
-    queryFn: api.getUserInfo,
+    queryFn: async () => (await api.getUserInfo()).data,
     ...options,
   });
 
@@ -84,7 +84,7 @@ export function useGetAvatar(options = {}) {
 }
 
 export function useUpdateUserAvatar(options = {}) {
-  const queryClient = new QueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (file: File) => api.updateAvatar(file),
     onError() {
@@ -101,7 +101,7 @@ export function useUpdateUserAvatar(options = {}) {
 }
 
 export function useUpdateUserInfo(options = {}) {
-  const queryClient = new QueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: { openai_api_key: string } | { name: string }) =>
       api.updateUserInfo(payload),

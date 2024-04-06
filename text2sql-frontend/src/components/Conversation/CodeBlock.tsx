@@ -104,7 +104,7 @@ export const CodeBlock = ({
   useEffect(() => {
     if (data && enabled) {
       setEnabled(false);
-      data?.content && updateMessage(data.content);
+      data?.content && updateMessage(data.content as string);
     }
   }, [enabled, data, updateMessage]);
 

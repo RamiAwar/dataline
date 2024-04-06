@@ -10,7 +10,7 @@ const CONNECTIONS_QUERY_KEY = ["CONNECTIONS"];
 export function useGetConnections() {
   const result = useQuery({
     queryKey: CONNECTIONS_QUERY_KEY,
-    queryFn: api.listConnections,
+    queryFn: async () => (await api.listConnections()).data,
   });
 
   if (result.isError) {
@@ -26,7 +26,7 @@ export function useGetConnections() {
 export function useGetConnection(id?: string) {
   const result = useQuery({
     queryKey: [...CONNECTIONS_QUERY_KEY, { id }],
-    queryFn: () => api.getConnection(id ?? ""),
+    queryFn: async () => (await api.getConnection(id ?? "")).data,
     enabled: Boolean(id),
   });
 

@@ -1,7 +1,6 @@
 import { api } from "@/api";
 import { IMessageWithResults } from "@/components/Library/types";
 import {
-  infiniteQueryOptions,
   queryOptions,
   skipToken,
   useMutation,
@@ -13,78 +12,11 @@ import { enqueueSnackbar } from "notistack";
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
 const QUERIES_QUERY_KEY = ["SQL_QUERIES"];
 
-// Retired
-export function infiniteMessagesQuery({
-  id,
-  offset = 0,
-}: {
-  id: string;
-  offset?: number;
-}) {
-  return infiniteQueryOptions({
-    queryKey: [...MESSAGES_QUERY_KEY, id, "infinite"],
-    queryFn: async ({ pageParam }) =>
-      await api.getMessagesInfinite(id, pageParam),
-    initialPageParam: offset,
-    getPreviousPageParam: (lastPage, _allPages, lastPageParam) => {
-      if (!lastPage.hasNext) {
-        return undefined;
-      }
-      return lastPageParam + lastPage.limit;
-    },
-    getNextPageParam: (firstPage, _allPages, firstPageParam) => {
-      if (firstPageParam === 0) {
-        return undefined;
-      }
-      return Math.max(firstPageParam - firstPage.limit, 0);
-    },
-  });
-}
-
-// Retired
-export function useSendMessageInfinite({
-  id,
-  execute = true,
-}: {
-  id: string;
-  execute?: boolean;
-}) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    retry: false,
-    mutationFn: async (message: string) =>
-      await api.query(id, message, execute),
-    onSuccess: (data, variables) => {
-      queryClient.setQueryData(
-        infiniteMessagesQuery({ id }).queryKey,
-        (oldData) => {
-          const flattenedMessages = oldData!.pages
-            .map((page) => page.messages)
-            .flat();
-          flattenedMessages.push({ content: variables, role: "user" });
-          flattenedMessages.push({ ...data.message });
-          const pages = [
-            {
-              hasNext: oldData!.pages[0].hasNext,
-              messages: flattenedMessages,
-              offset: 0,
-              limit: flattenedMessages.length,
-            },
-          ];
-          const pageParams = [0];
-          console.log({ pages, pageParams });
-          return { pages, pageParams };
-        }
-      );
-    },
-  });
-}
-
-// Not infinite scroll, load everything
+// Load everything
 export function getMessagesQuery({ id }: { id: string }) {
   return queryOptions({
     queryKey: [...MESSAGES_QUERY_KEY, id],
-    queryFn: async () => await api.getMessages(id),
+    queryFn: async () => (await api.getMessages(id)).data,
   });
 }
 
@@ -98,12 +30,12 @@ export function useSendMessage({
   const queryClient = useQueryClient();
   return useMutation({
     retry: false,
-    mutationFn: async (message: string) =>
-      await api.query(id, message, execute),
+    mutationFn: async ({ message }: { message: string }) =>
+      (await api.query(id, message, execute)).data,
     onSuccess: (data, variables) => {
       queryClient.setQueryData(getMessagesQuery({ id }).queryKey, (oldData) => {
         const newMessages: IMessageWithResults[] = [
-          { content: variables, role: "user" },
+          { content: variables.message, role: "user" },
           data.message,
         ];
         if (oldData == null) {
@@ -173,7 +105,9 @@ export function useRunSql({
 }) {
   const result = useQuery({
     queryKey: [...QUERIES_QUERY_KEY, { id, sql }],
-    queryFn: () => (enabled ? api.runSQL(id ?? "", sql ?? "") : skipToken),
+    queryFn: enabled
+      ? async () => (await api.runSQL(id ?? "", sql ?? "")).data
+      : skipToken,
     enabled,
     retry: false,
   });
