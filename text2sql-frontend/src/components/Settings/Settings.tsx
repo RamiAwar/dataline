@@ -180,7 +180,7 @@ export default function Account() {
                         />
                       </div>
                       <p className="text-xs text-gray-400 pt-2">
-                        * Please update your API key with{" "}
+                        Please setup your API key with{" "}
                         <a
                           className="underline"
                           target="_blank"

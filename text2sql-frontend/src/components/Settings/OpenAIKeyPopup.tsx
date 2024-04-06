@@ -43,7 +43,7 @@ export function OpenAIKeyPopup() {
   }
 
   return (
-    <Alert open={isOpen} onClose={() => setIsOpen(true)} size="sm">
+    <Alert open={isOpen} onClose={() => setIsOpen(true)} size="xl">
       <AlertTitle>Configure OpenAI</AlertTitle>
       <AlertDescription>
         To continue, please enter your OpenAI api key.
@@ -58,7 +58,7 @@ export function OpenAIKeyPopup() {
       </AlertBody>
       <AlertDescription>
         <p className="text-xs">
-          * Please update your API key with{" "}
+          Please setup your API key with{" "}
           <a
             className="underline"
             target="_blank"
@@ -66,7 +66,7 @@ export function OpenAIKeyPopup() {
           >
             full permissions{" "}
           </a>
-          to use DataLine.
+          to use DataLine. You can create one on the <a className="underline" target="_blank" href="https://platform.openai.com/api-keys">OpenAI platform</a>.
         </p>
       </AlertDescription>
       <AlertActions>
