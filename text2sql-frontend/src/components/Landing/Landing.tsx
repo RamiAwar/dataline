@@ -5,6 +5,8 @@ import { BackgroundLayout } from "../Layouts/BackgroundLayout";
 import logo from "../../assets/images/logo_xl.png";
 import logomd from "../../assets/images/logo_md.png";
 import demo from "../../assets/images/demo.png";
+import ReactGA from "react-ga4";
+
 
 import "./Landing.css";
 import { Footer } from "../Layouts/Footer";
@@ -16,6 +18,10 @@ const navigation: any[] = [
   // { name: "Marketplace", href: "#" },
   // { name: "Company", href: "#" },
 ];
+
+if (process.env.NODE_ENV !== "local") {
+  ReactGA.initialize("G-9LG8MD1T1B");
+}
 
 export const Landing = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -166,8 +172,8 @@ export const Landing = () => {
           <defs>
             <pattern
               id="1d4240dd-898f-445f-932d-e2872fd12de3"
-              width={200}
-              height={200}
+              width={100}
+              height={100}
               x="50%"
               y={0}
               patternUnits="userSpaceOnUse"
