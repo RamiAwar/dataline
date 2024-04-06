@@ -62,6 +62,19 @@ export function OpenAIKeyPopup() {
           onKeyUp={handleKeyPress}
         />
       </AlertBody>
+      <AlertDescription>
+        <p className="text-xs">
+          * Please update your API key with{" "}
+          <a
+            className="underline"
+            target="_blank"
+            href="https://help.openai.com/en/articles/8867743-assign-api-key-permissions"
+          >
+            full permissions{" "}
+          </a>
+          to use DataLine.
+        </p>
+      </AlertDescription>
       <AlertActions>
         <Button onClick={saveApiKey}>Continue</Button>
       </AlertActions>

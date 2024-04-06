@@ -38,7 +38,7 @@ export const Home = () => {
     </div>
   ) : (
     <div>
-      <OpenAIKeyPopup></OpenAIKeyPopup>
+      <OpenAIKeyPopup />
     </div>
   );
 };

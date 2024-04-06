@@ -129,7 +129,8 @@ async def execute_sql(
             raise HTTPException(status_code=404, detail="Invalid connection_id")
 
         openai_key = await settings_service.get_openai_api_key(session)
-        query_service = QueryService(connection, openai_api_key=openai_key)
+        preferred_model = await settings_service.get_preferred_model(session)
+        query_service = QueryService(connection, openai_api_key=openai_key, model_name=preferred_model)
 
         # Execute query
         data = query_service.run_sql(sql)
@@ -195,7 +196,8 @@ async def query(
             raise HTTPException(status_code=404, detail="Invalid connection_id")
 
         openai_key = await settings_service.get_openai_api_key(session)
-        query_service = QueryService(connection=connection, openai_api_key=openai_key, model_name="gpt-3.5-turbo")
+        preferred_model = await settings_service.get_preferred_model(session)
+        query_service = QueryService(connection=connection, openai_api_key=openai_key, model_name=preferred_model)
         response = await query_service.query(query, conversation_id=conversation_id)
         unsaved_results = results_from_query_response(response)
 
