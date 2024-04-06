@@ -1,6 +1,6 @@
 import { Field, Fieldset, Label, Legend } from '@catalyst/fieldset'
 import { Radio, RadioField, RadioGroup } from '@catalyst/radio'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { api } from "@/api"
 import { Input } from '@catalyst/input'
 import { Button } from '@catalyst/button'
@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import { useConnectionList } from '@components/Providers/ConnectionListProvider'
 import { isAxiosError } from 'axios'
 import { CloudArrowUpIcon, DocumentCheckIcon } from '@heroicons/react/24/solid'
-import { XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 
 
 function classNames(...classes: string[]) {
@@ -201,7 +201,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
                 </div>
                 <div className={classNames(file ? "hidden" : "", "text-center")}>
                   <CloudArrowUpIcon onClick={handleFileClick} className="cursor-pointer mx-auto h-12 w-12 text-gray-300" aria-hidden="true" />
-                  <div className="mt-4 flex text-sm leading-6 text-gray-400">
+                  <div className="mt-4 flex text-sm leading-6 text-gray-400 justify-center">
                     <label
                       htmlFor="file-upload"
                       className="px-1 relative cursor-pointer rounded-md bg-gray-900 font-semibold text-white focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 focus-within:ring-offset-gray-900 hover:text-indigo-500"
@@ -212,7 +212,10 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
                     </label>
                     <p>or drag and drop</p>
                   </div>
-                  <p className="text-xs leading-5 text-gray-400">SQLite file</p>
+                  <p className="text-xs leading-5 text-gray-400 px-12 mt-4">
+                    Creates a copy of your SQLite file in DataLine.
+                    Changes you make to the file will not be accessible
+                    to DataLine as it will work on the copy you upload.</p>
                 </div>
               </div>
             </Field>
