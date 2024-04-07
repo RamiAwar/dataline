@@ -11,14 +11,14 @@ import {
 import logo from "@/assets/images/logo_md.png";
 import { PencilSquareIcon } from "@heroicons/react/20/solid";
 import { Link, useParams } from "react-router-dom";
-import { ProfileDropdown } from "./ProfileDropdown";
+import { ProfileDropdown } from "@components/Home/ProfileDropdown";
 import { useNavigate } from "react-router-dom";
 import {
   useDeleteConversation,
   useGetConversations,
   useUpdateConversation,
 } from "@/hooks";
-import { IConversation } from "../Library/types";
+import { IConversation, IConversationResult } from "@components/Library/types";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -35,7 +35,8 @@ export const Sidebar = () => {
     },
   });
 
-  const conversations = useMemo(
+  // 
+  const conversations = useMemo<IConversationResult[]>(
     () => data?.conversations ?? [],
     [data?.conversations]
   );

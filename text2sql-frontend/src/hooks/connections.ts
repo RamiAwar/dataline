@@ -23,7 +23,7 @@ export function useGetConnections() {
   if (result.isError) {
     enqueueSnackbar({
       variant: "error",
-      message: "Error loading conversations",
+      message: "Error loading connections",
     });
   }
 

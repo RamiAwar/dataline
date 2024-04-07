@@ -1,5 +1,6 @@
 import { api } from "@/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 
@@ -49,7 +50,9 @@ export function useGetUserProfile(options = {}) {
     ...options,
   });
 
-  if (result.isError) {
+  if (result.isError && isAxiosError(result.error) && result.error.response?.status === 404) {
+    return { ...result, data: null };
+  } else if (result.isError) {
     enqueueSnackbar({
       variant: "error",
       message: "Error getting user info",
