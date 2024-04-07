@@ -1,17 +1,24 @@
 import { enqueueSnackbar } from "notistack";
 import { api } from "@/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  queryOptions,
+} from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { IEditConnection } from "@/components/Library/types";
 import { CONVERSATIONS_QUERY_KEY } from "./conversations";
 
-const CONNECTIONS_QUERY_KEY = ["CONNECTIONS"];
-
-export function useGetConnections() {
-  const result = useQuery({
-    queryKey: CONNECTIONS_QUERY_KEY,
+function getConnectionsQuery() {
+  return queryOptions({
+    queryKey: ["CONNECTIONS"],
     queryFn: async () => (await api.listConnections()).data,
   });
+}
+
+export function useGetConnections() {
+  const result = useQuery(getConnectionsQuery());
 
   if (result.isError) {
     enqueueSnackbar({
@@ -25,7 +32,7 @@ export function useGetConnections() {
 
 export function useGetConnection(id?: string) {
   const result = useQuery({
-    queryKey: [...CONNECTIONS_QUERY_KEY, { id }],
+    queryKey: ["CONNECTIONS", { id }],
     queryFn: async () => (await api.getConnection(id ?? "")).data,
     enabled: Boolean(id),
   });
@@ -39,53 +46,76 @@ export function useGetConnection(id?: string) {
   return result;
 }
 
+const defaultCreateErrorHandler = (err: Error) => {
+  if (!isAxiosError(err)) {
+    enqueueSnackbar({
+      variant: "error",
+      message: "Error creating connection.",
+    });
+    return;
+  }
+
+  if (err.response?.status === 409) {
+    enqueueSnackbar({
+      variant: "info",
+      message: "Connection already exists, skipping creation",
+    });
+  } else if (err.response?.status === 422) {
+    enqueueSnackbar({
+      variant: "error",
+      message: err.response?.data.detail[0].msg,
+    });
+  } else if (err.response?.status === 400) {
+    enqueueSnackbar({
+      variant: "error",
+      message: err.response?.data.detail,
+    });
+  } else if (err.response?.data?.detail) {
+    enqueueSnackbar({
+      variant: "error",
+      message: err.response?.data?.detail,
+    });
+  } else {
+    enqueueSnackbar({
+      variant: "error",
+      message: "Error creating connection.",
+    });
+  }
+};
+
 export function useCreateConnection(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ dsn, name }: { dsn: string; name: string }) =>
-      api.createConnection(dsn, name),
+    mutationFn: ({
+      dsn,
+      name,
+      isSample,
+    }: {
+      dsn: string;
+      name: string;
+      isSample: boolean;
+    }) => api.createConnection(dsn, name, isSample),
     onSettled() {
-      queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: getConnectionsQuery().queryKey,
+      });
     },
-    onError(err) {
-      if (isAxiosError(err) && err.response?.status === 409) {
-        // Connection already exists, skip creation but don't close or clear modal
-        enqueueSnackbar({
-          variant: "info",
-          message: "Connection already exists, skipping creation",
-        });
-      } else {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error creating connection",
-        });
-      }
-    },
+    onError: defaultCreateErrorHandler,
     ...options,
   });
 }
 
-export function useCreateTestConnection(options = {}) {
+export function useCreateFileConnection(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => api.createTestConnection(),
-    onError(err) {
-      if (isAxiosError(err) && err.response?.status === 409) {
-        // Connection already exists, skip creation but don't close or clear modal
-        enqueueSnackbar({
-          variant: "info",
-          message: "Connection already exists, skipping creation",
-        });
-      } else {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error creating connection",
-        });
-      }
-    },
+    mutationFn: ({ file, name }: { file: File; name: string }) =>
+      api.createFileConnection(file, name),
     onSettled() {
-      queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: getConnectionsQuery().queryKey,
+      });
     },
+    onError: defaultCreateErrorHandler,
     ...options,
   });
 }
@@ -103,7 +133,9 @@ export function useDeleteConnection(options = {}) {
     onSettled() {
       // previous implementation, Rami refetched connections and conversations.. WHY????
       // => because related conversations get deleted as well
-      queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: getConnectionsQuery().queryKey,
+      });
       queryClient.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY });
     },
     ...options,
@@ -122,8 +154,17 @@ export function useUpdateConnection(options = {}) {
       });
     },
     onSettled() {
-      queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: getConnectionsQuery().queryKey,
+      });
     },
     ...options,
+  });
+}
+
+export function useGetSamples() {
+  return useQuery({
+    queryKey: ["DB_SAMPLES"],
+    queryFn: async () => (await api.getSamples()).data,
   });
 }
