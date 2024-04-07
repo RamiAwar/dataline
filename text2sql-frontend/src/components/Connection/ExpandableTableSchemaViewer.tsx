@@ -2,8 +2,7 @@ import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { ITableSchemaResult } from "../Library/types";
-import { api } from "../../api";
-import { enqueueSnackbar } from "notistack";
+import { useUpdateTableFieldSchema, useUpdateTableSchema } from "@/hooks";
 
 interface ExpandableTableSchemaViewerProps {
   tableSchema: ITableSchemaResult;
@@ -40,38 +39,8 @@ export default function ExpandableTableSchemaViewer({
   const [expanded, setExpanded] = React.useState<boolean>(isExpanded || false);
   const [parent] = useAutoAnimate(/* optional config */);
 
-  function updateTableDescription(tableId: string, description: string) {
-    // Make an API call to update table description
-    const updateDescription = async () => {
-      try {
-        await api.updateTableSchemaDescription(tableId, description);
-      } catch (exception) {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error updating table description",
-        });
-        return;
-      }
-    };
-
-    updateDescription();
-  }
-
-  function updateFieldDescription(fieldId: string, description: string) {
-    // Make an API call to update table description
-    const updateDescription = async () => {
-      try {
-        await api.updateTableSchemaFieldDescription(fieldId, description);
-      } catch (exception) {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error updating table description",
-        });
-      }
-    };
-
-    updateDescription();
-  }
+  const { mutate } = useUpdateTableSchema();
+  const { mutate: updateDescription } = useUpdateTableFieldSchema();
 
   return (
     <div className="flow-root">
@@ -122,10 +91,11 @@ export default function ExpandableTableSchemaViewer({
                         disabled={false}
                         value={tableDescription}
                         onChange={(e) => {
-                          updateTableDescription(
-                            tableSchema.id,
-                            e.target.value
-                          );
+                          // TODO - debounce these calls
+                          mutate({
+                            id: tableSchema.id,
+                            description: e.target.value,
+                          });
                           setTableDescription(e.target.value);
                         }}
                         className="bg-gray-500 text-white block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
@@ -148,7 +118,11 @@ export default function ExpandableTableSchemaViewer({
                           disabled={false}
                           value={fieldDescriptions[field.name]}
                           onChange={(e) => {
-                            updateFieldDescription(field.id, e.target.value);
+                            // TODO - debounce these calls
+                            updateDescription({
+                              id: field.id,
+                              description: e.target.value,
+                            });
                             setFieldDescriptions({
                               ...fieldDescriptions,
                               [field.name]: e.target.value,

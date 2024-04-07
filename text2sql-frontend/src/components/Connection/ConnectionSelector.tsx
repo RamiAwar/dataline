@@ -1,49 +1,32 @@
-import { useConnectionList } from "../Providers/ConnectionListProvider";
-import { api } from "../../api";
 import DatabaseDialectImage from "./DatabaseDialectImage";
 import { useState } from "react";
 import { IConnection, IConversation } from "../Library/types";
-import { useConversationList } from "../Providers/ConversationListProvider";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { Link, useNavigate } from "react-router-dom";
-import { enqueueSnackbar } from "notistack";
 import { Routes } from "@/router";
+import { useCreateConversation, useGetConnections } from "@/hooks";
 
 export const ConnectionSelector = () => {
   const navigate = useNavigate();
   const [, setConversation] = useState<IConversation | null>();
-  const [connections, ,] = useConnectionList();
-  const [, , fetchConversations] = useConversationList();
+  const { data } = useGetConnections();
   const createConnection = () => {
-    navigate(Routes.NewConnection)
+    navigate(Routes.NewConnection);
   };
 
+  const { mutate } = useCreateConversation({
+    // @ts-expect-error, this is not typed
+    onSuccess(resp) {
+      setConversation({
+        id: resp.data.conversation_id,
+        name: "Untitled chat",
+      });
+      navigate(`/chat/${resp.data.conversation_id}`);
+    },
+  });
+
   function selectConnection(connection: IConnection) {
-    // Create a new conversation with the selected connection
-    const createConversation = async () => {
-      try {
-        const createdConversation = await api.createConversation(
-          connection.id,
-          "Untitled chat"
-        );
-        // and set it as the current conversation
-        setConversation({
-          id: createdConversation.data.conversation_id,
-          name: "Untitled chat",
-        });
-
-        // fetch conversations and navigate to new conversation
-        fetchConversations();
-        navigate(`/chat/${createdConversation.data.conversation_id}`);
-      } catch (exception) {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error creating conversation",
-        });
-      }
-    };
-
-    createConversation();
+    mutate({ id: connection.id, name: "Untitled chat" });
   }
 
   return (
@@ -54,7 +37,7 @@ export const ConnectionSelector = () => {
             Select a connection
           </div>
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 mt-4">
-            {connections?.map((connection) => (
+            {data?.connections?.map((connection) => (
               <div
                 key={connection.id}
                 className="hover:cursor-pointer mx-auto md:hover:ring-2 ring-gray-600 border border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-2/3 sm:w-auto sm:max-w-xs"

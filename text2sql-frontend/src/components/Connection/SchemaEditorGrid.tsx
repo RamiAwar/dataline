@@ -1,13 +1,7 @@
-import { useEffect, useState } from "react";
 import ExpandableTableSchemaViewer from "./ExpandableTableSchemaViewer";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import {
-  IConnection,
-  // ITableSchema,
-  ITableSchemaResult,
-} from "../Library/types";
-import { api } from "../../api";
-import { enqueueSnackbar } from "notistack";
+import { IConnection } from "../Library/types";
+import { useGetTableSchemas } from "@/hooks";
 
 interface SchemaEditorGridProps {
   connection: IConnection;
@@ -16,26 +10,8 @@ interface SchemaEditorGridProps {
 export default function SchemaEditorGrid({
   connection,
 }: SchemaEditorGridProps) {
-  const [tableSchemas, setTableSchemas] = useState<ITableSchemaResult[]>([]);
   const [parent] = useAutoAnimate(/* optional config */);
-
-  useEffect(() => {
-    // Load the initial table schemas from API
-
-    const fetchTableSchemas = async () => {
-      try {
-        const fetchedSchemas = await api.getTableSchemas(connection.id);
-        setTableSchemas(fetchedSchemas.data.tables);
-      } catch (exception) {
-        enqueueSnackbar({
-          variant: "error",
-          message: "Error fetching connection",
-        });
-        return;
-      }
-    };
-    fetchTableSchemas();
-  }, [connection.id]);
+  const { data } = useGetTableSchemas(connection.id);
 
   // const updateTableSchema = (updatedSchema: ITableSchema) => {
   // Find the index of the schema with the matching table name
@@ -56,7 +32,7 @@ export default function SchemaEditorGrid({
 
   return (
     <ul ref={parent} role="list" className="grid grid-cols-1 gap-6">
-      {tableSchemas.map((schema) => (
+      {data?.tables.map((schema) => (
         <li
           key={schema.id}
           className="col-span-1 divide-y divide-gray-200 rounded-lg shadow"

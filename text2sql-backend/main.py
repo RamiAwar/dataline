@@ -96,15 +96,11 @@ class ListMessageOut(BaseModel):
 
 
 @app.get("/messages")
-async def messages(conversation_id: str) -> SuccessResponse[ListMessageOut]:
+async def get_messages(conversation_id: str) -> SuccessResponse[ListMessageOut]:
     # Will raise error that's auto captured by middleware if not exists
     db.get_conversation(conversation_id)
-
-    return SuccessResponse(
-        data=ListMessageOut(
-            messages=db.get_messages_with_results(conversation_id),
-        ),
-    )
+    messages = db.get_messages_with_results(conversation_id)
+    return SuccessResponse(data=ListMessageOut(messages=messages))
 
 
 @app.get("/execute-sql", response_model=UnsavedResult)

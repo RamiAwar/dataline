@@ -29,7 +29,7 @@ let routes: RouteObject[] = [
   },
 ];
 
-let private_routes: RouteObject[] = [
+const private_routes: RouteObject[] = [
   {
     path: Routes.Root,
     element: <Home />,
