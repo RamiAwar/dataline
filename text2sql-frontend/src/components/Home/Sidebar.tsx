@@ -78,6 +78,7 @@ export const Sidebar = () => {
     // Should never be null, only editable if not null
     if (!currentConversation?.id) return;
     updateConversation({ id: currentConversation.id, name: editedName });
+    setIsEditing(false);
   };
 
   useEffect(() => {
