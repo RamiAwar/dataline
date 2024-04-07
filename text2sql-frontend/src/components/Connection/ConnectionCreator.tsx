@@ -105,7 +105,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
   };
 
   return (
-    <div>
+    <>
       <Fieldset>
         <Legend>Create a custom connection</Legend>
         <RadioGroup
@@ -211,7 +211,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 

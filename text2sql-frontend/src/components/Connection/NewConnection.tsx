@@ -1,24 +1,21 @@
-
 import { useState } from "react";
 import { Radio, RadioField, RadioGroup } from "@catalyst/radio";
 import { Description, Label } from "@catalyst/fieldset";
 import { SampleSelector } from "./SampleSelector";
 import ConnectionCreator from "./ConnectionCreator";
 
-
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
 export const NewConnection = () => {
-
   // Flow in this component:
   // A. Enter name of connection
   // B. Select radio deciding if SAMPLE or CUSTOM connection
   // C. If SAMPLE, show SampleSelector component
   // D. If CUSTOM, show ConnectionCreator component
   const [connectionName, setConnectionName] = useState("");
-  const [isLoading,] = useState(false);
+  const [isLoading] = useState(false);
 
   type RadioValue = "sample" | "custom" | null;
   const [selectedRadio, setSelectedRadio] = useState<RadioValue>(null);
@@ -31,7 +28,6 @@ export const NewConnection = () => {
   return (
     <div className="dark:bg-gray-900 w-full h-full relative flex flex-col mt-16 lg:mt-0">
       <div className="flex flex-col lg:mt-0 p-4 lg:p-24">
-
         <div className="">
           <h2 className="text-base font-semibold leading-7 text-white">
             New Connection
@@ -75,27 +71,41 @@ export const NewConnection = () => {
               Data Source Type
             </label>
 
-            <RadioGroup defaultValue="" onChange={(event) => setSelectedRadio(event as RadioValue)}>
+            <RadioGroup
+              defaultValue=""
+              onChange={(event) => setSelectedRadio(event as RadioValue)}
+            >
               <RadioField>
                 <Radio value="sample" color="white" />
-                <Label className="cursor-pointer">Choose a sample dataset</Label>
-                <Description>Samples allow you to get started quickly</Description>
+                <Label className="cursor-pointer">
+                  Choose a sample dataset
+                </Label>
+                <Description>
+                  Samples allow you to get started quickly
+                </Description>
               </RadioField>
               <RadioField>
                 <Radio value="custom" color="white" />
-                <Label className="cursor-pointer">Setup a custom connection</Label>
-                <Description>Connect to your local databases or files</Description>
+                <Label className="cursor-pointer">
+                  Setup a custom connection
+                </Label>
+                <Description>
+                  Connect to your local databases or files
+                </Description>
               </RadioField>
             </RadioGroup>
           </div>
         </div>
 
         <div className="mt-8">
-          {(selectedRadio === "sample") && <SampleSelector name={connectionName} />}
-          {selectedRadio === "custom" && <ConnectionCreator name={connectionName} />}
+          {selectedRadio === "sample" && (
+            <SampleSelector name={connectionName} />
+          )}
+          {selectedRadio === "custom" && (
+            <ConnectionCreator name={connectionName} />
+          )}
         </div>
       </div>
     </div>
   );
-
 };
