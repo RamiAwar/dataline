@@ -50,6 +50,13 @@ export const ConnectionEditor = () => {
     dsn: "",
   });
 
+  useEffect(() => {
+    setEditFields((prev) => ({
+      name: connection?.name || prev.name,
+      dsn: connection?.dsn || prev.dsn,
+    }));
+  }, [connection]);
+
   if (!connectionId) {
     enqueueSnackbar({
       variant: "error",
@@ -161,7 +168,6 @@ export const ConnectionEditor = () => {
                 id="name"
                 disabled={false}
                 value={editFields.name}
-                defaultValue={connection?.name}
                 onChange={(e) => {
                   setEditFields({ ...editFields, name: e.target.value });
                   setUnsavedChanges(true);
@@ -190,7 +196,6 @@ export const ConnectionEditor = () => {
                 id="name"
                 disabled={false}
                 value={editFields.dsn}
-                defaultValue={connection?.dsn}
                 onChange={(e) => {
                   setEditFields({ ...editFields, dsn: e.target.value });
                   setUnsavedChanges(true);
