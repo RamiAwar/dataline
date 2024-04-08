@@ -146,11 +146,14 @@ export const Conversation = () => {
             ))}
           </div>
         )}
-        <div className="w-full md:max-w-3xl flex justify-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
+        <div className="w-full md:max-w-3xl flex flex-col justify-center items-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
           <ExpandingInput
             onSubmit={(message: string) => sendMessageMutation({ message })}
             disabled={false}
           />
+          <p className="text-gray-400 text-sm">
+            Current Connection: {currConnection?.name}
+          </p>
         </div>
       </div>
     </div>
