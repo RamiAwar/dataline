@@ -1,5 +1,10 @@
 import { api } from "@/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
@@ -8,14 +13,21 @@ const HEALTH_CHECK_QUERY_KEY = ["HEALTH_CHECK"];
 const USER_INFO_QUERY_KEY = ["USER_INFO"];
 const AVATAR_QUERY_KEY = ["AVATAR"];
 
-export function useGetBackendStatus() {
-  const result = useQuery({
+export function getBackendStatusQuery(options = {}) {
+  return queryOptions({
     queryKey: HEALTH_CHECK_QUERY_KEY,
     queryFn: api.healthcheck,
-    refetchInterval: 2000,
-    // don't retry on fail, fail immediately. We're already refetching every 2 seconds
     retry: false,
+    ...options,
   });
+}
+
+export function useGetBackendStatus() {
+  const result = useQuery(
+    getBackendStatusQuery({
+      refetchInterval: 2000,
+    })
+  );
 
   const [previousHealthState, setPreviousHealthState] = useState(true);
 
@@ -43,14 +55,19 @@ export function useGetBackendStatus() {
   return result;
 }
 
-export function useGetUserProfile(options = {}) {
+export function useGetUserProfile() {
+  const { isSuccess } = useQuery(getBackendStatusQuery());
   const result = useQuery({
     queryKey: USER_INFO_QUERY_KEY,
     queryFn: async () => (await api.getUserInfo()).data,
-    ...options,
+    enabled: isSuccess,
   });
 
-  if (result.isError && isAxiosError(result.error) && result.error.response?.status === 404) {
+  if (
+    result.isError &&
+    isAxiosError(result.error) &&
+    result.error.response?.status === 404
+  ) {
     return { ...result, data: null };
   } else if (result.isError) {
     enqueueSnackbar({

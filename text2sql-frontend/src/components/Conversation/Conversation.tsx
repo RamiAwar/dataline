@@ -80,7 +80,11 @@ export const Conversation = () => {
     );
   }
   if (!isSuccessGetMessages) {
-    return <div>Something went wrong</div>;
+    return (
+      <div className="w-full h-screen flex justify-center items-center text-white">
+        Something went wrong!
+      </div>
+    );
   }
   if (
     // @ts-expect-error, status is not known

@@ -9,16 +9,19 @@ import {
 import { isAxiosError } from "axios";
 import { IEditConnection } from "@/components/Library/types";
 import { CONVERSATIONS_QUERY_KEY } from "./conversations";
+import { getBackendStatusQuery } from "@/hooks/auth";
 
-function getConnectionsQuery() {
+function getConnectionsQuery(options = {}) {
   return queryOptions({
     queryKey: ["CONNECTIONS"],
     queryFn: async () => (await api.listConnections()).data,
+    ...options,
   });
 }
 
 export function useGetConnections() {
-  const result = useQuery(getConnectionsQuery());
+  const { isSuccess } = useQuery(getBackendStatusQuery());
+  const result = useQuery(getConnectionsQuery({ enabled: isSuccess }));
 
   if (result.isError) {
     enqueueSnackbar({
@@ -31,10 +34,11 @@ export function useGetConnections() {
 }
 
 export function useGetConnection(id?: string) {
+  const { isSuccess } = useQuery(getBackendStatusQuery());
   const result = useQuery({
     queryKey: ["CONNECTIONS", { id }],
     queryFn: async () => (await api.getConnection(id ?? "")).data,
-    enabled: Boolean(id),
+    enabled: isSuccess && Boolean(id),
   });
 
   if (result.isError) {
@@ -163,8 +167,10 @@ export function useUpdateConnection(options = {}) {
 }
 
 export function useGetSamples() {
+  const { isSuccess } = useQuery(getBackendStatusQuery());
   return useQuery({
     queryKey: ["DB_SAMPLES"],
     queryFn: async () => (await api.getSamples()).data,
+    enabled: isSuccess,
   });
 }
