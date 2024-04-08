@@ -64,10 +64,7 @@ export const Conversation = () => {
 
   useEffect(() => {
     if (messageListRef.current !== null) {
-      // Timeout needed because the SQL code in the messages get formatted and take more space
-      setTimeout(() => {
-        window.scrollTo({ top: messageListRef.current?.offsetTop });
-      }, 10);
+      window.scrollTo({ top: messageListRef.current?.offsetTop });
     }
   }, [isPendingGetMessages, messageListRef, params]);
 
