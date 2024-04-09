@@ -1,7 +1,7 @@
 
 import features from "@components/Landing/features.json"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@catalyst/table"
-import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
 
 const FeatureComparisonTable = () => {
     return (
@@ -20,14 +20,14 @@ const FeatureComparisonTable = () => {
                             <TableRow key={feature}>
                                 <TableCell className="text-zinc-400">{feature}</TableCell>
                                 <TableCell className="text-zinc-400">{
-                                    dataline ?
-                                        <CheckCircleIcon className="text-green-500 w-8 h-8 mx-auto"></CheckCircleIcon>
-                                        : <XCircleIcon className="text-red-800 w-8 h-8 mx-auto"></XCircleIcon>
+                                    dataline &&
+                                    <CheckCircleIcon className="text-emerald-500 w-8 h-8 mx-auto"></CheckCircleIcon>
+
                                 }</TableCell>
-                                <TableCell className="text-zinc-500">{
-                                    chatgpt ?
-                                        <CheckCircleIcon className="text-green-500 w-8 h-8 mx-auto"></CheckCircleIcon>
-                                        : <XCircleIcon className="text-red-800 w-8 h-8 mx-auto"></XCircleIcon>
+                                <TableCell className="text-zinc-400">{
+                                    chatgpt &&
+                                    <CheckCircleIcon className="text-emerald-500 w-8 h-8 mx-auto"></CheckCircleIcon>
+
                                 }</TableCell>
                             </TableRow>
                         ))}
