@@ -298,7 +298,11 @@ export const Landing = () => {
 
                 </div>
               </div>
-              <iframe className="rounded-xl shadow-xl ring-1 ring-white/10 md:-ml-4 lg:-ml-0 w-full h-[20rem] s:w-[" src="https://www.youtube.com/embed/3sKIoVp8QRw?si=e4CJ4X3xdLAMBRke" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+              <iframe className="rounded-xl shadow-xl ring-1 ring-white/10 md:-ml-4 lg:-ml-0 w-full h-[20rem] s:w-["
+                src="https://www.youtube.com/embed/3sKIoVp8QRw?si=e4CJ4X3xdLAMBRke"
+                title="YouTube video player"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen>
+              </iframe>
             </div>
           </div>
         </div >
