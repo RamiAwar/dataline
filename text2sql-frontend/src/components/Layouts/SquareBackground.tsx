@@ -1,6 +1,6 @@
 const SquareBackground = ({ children }: { children: React.ReactNode }) => {
     return (
-        <div className="relative isolate px-6 sm:mt-40 lg:px-8">
+        <div className="relative isolate sm:mt-40">
             <svg
                 className="absolute inset-0 -z-10 h-full w-full stroke-white/5 [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]"
                 aria-hidden="true"
