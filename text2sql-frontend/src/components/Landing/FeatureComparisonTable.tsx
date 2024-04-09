@@ -6,8 +6,8 @@ import { CheckCircleIcon } from "@heroicons/react/24/solid";
 const FeatureComparisonTable = () => {
     return (
         <div className="flex justify-center">
-            <div className="bg-gray-800 w-fit rounded-xl border border-gray-700 px-4 overflow-scroll">
-                <Table dense bleed grid striped className=" [--gutter:theme(spacing.4)] sm:[--gutter:theme(spacing.4)] w-fit">
+            <div className="bg-gray-800 w-fit rounded-xl border border-gray-700 overflow-x-scroll sm:overflow-hidden">
+                <Table dense bleed grid striped className="[--gutter:theme(spacing.4)] w-fit pl-4 sm:px-4">
                     <TableHead>
                         <TableRow>
                             <TableHeader>Feature</TableHeader>
