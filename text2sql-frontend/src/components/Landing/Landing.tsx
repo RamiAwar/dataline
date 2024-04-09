@@ -55,7 +55,7 @@ const selectedCohort = "ab-test-1-landing";
 const CohortData = {
   "ab-test-1-landing": {
     headline: "Chat with your data. Securely.",
-    description: "Connect your data <strong>locally</strong> and as your question. No data leaves your machine. <strong>Open source</strong>.",
+    description: "Plug into your data <strong>locally</strong> to ask questions, edit answers, and save results. No data leaves your machine. Open source.",
     feature_group_1: {
       title: "Plugs into your data, locally.",
       description: "You don't have to worry about data security if none of it leaves your machine.",
@@ -64,16 +64,16 @@ const CohortData = {
       title: "Ask, Explore, Edit, Iterate.",
       description: "Focus on the questions, we'll do the rest.<br>Your time is too valuable to be looking up schemas.",
     },
-    // feature_group_3: {
-    //   title: "Sharing, graphing, and more",
-    //   description: "Results made you happy? We know it's better experienced shared, so that's coming soon."
-    // },
     comparison: {
       title: "How do we compare?",
       description: "This is probably the 10th AI tool you see today, so let's cut to the chase.",
     },
     cta_title: "Stay up to date.",
-    cta_description: "Promise we won't annoy you, ever."
+    cta_description: "Promise we won't annoy you, ever.",
+    demo: {
+      title: "Still here?",
+      description: "Here's a 3 minute demo showcasing the core features.",
+    }
   }
 }
 
@@ -285,13 +285,32 @@ export const Landing = () => {
         </div>
       </BackgroundHighlight>
 
-      {/* CALL TO ACTION */}
+
       <SquareBackgroundInverted>
+        <div className="overflow-hidden pt-20">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2">
+              <div className="lg:pr-8 lg:pt-4">
+                <div className="lg:max-w-lg">
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">{CohortData[selectedCohort].demo.title}</p>
+                  <p className="mt-6 text-lg leading-8 text-gray-300" dangerouslySetInnerHTML={{ __html: CohortData[selectedCohort].demo.description }}>
+                  </p>
+
+                </div>
+              </div>
+              <iframe className="rounded-xl shadow-xl ring-1 ring-white/10 md:-ml-4 lg:-ml-0 w-full h-[20rem] s:w-[" src="https://www.youtube.com/embed/3sKIoVp8QRw?si=e4CJ4X3xdLAMBRke" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+          </div>
+        </div >
+
         <div className="pt-36 pb-36">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl sm:text-center">
               <BetaSignupForm title={CohortData[selectedCohort].cta_title} description={CohortData[selectedCohort].cta_description}></BetaSignupForm>
-            </div></div></div>
+            </div>
+          </div>
+        </div>
+
         <footer aria-labelledby="footer-heading" className="relative">
           <h2 id="footer-heading" className="sr-only">
             Footer
@@ -317,6 +336,8 @@ export const Landing = () => {
           </div>
         </footer>
       </SquareBackgroundInverted>
+
+
     </div >
   );
 };
