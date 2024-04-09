@@ -1,7 +1,6 @@
 import { RouteObject, createBrowserRouter } from "react-router-dom";
 import { Home } from "./components/Home/Home";
 import { Landing } from "./components/Landing/Landing";
-import { BetaSignup } from "./components/BetaSignup/BetaSignup";
 import { Conversation } from "./components/Conversation/Conversation";
 import { ConnectionSelector } from "./components/Connection/ConnectionSelector";
 import { ConnectionEditor } from "./components/Connection/ConnectionEditor";
@@ -9,7 +8,6 @@ import Account from "./components/Settings/Settings";
 
 export enum Routes {
   Root = "/",
-  BetaSignup = "/beta-signup",
   SignIn = "/login",
   UserProfile = "/user",
   Connection = "/connection/:connectionId",
@@ -17,10 +15,6 @@ export enum Routes {
 }
 
 let routes: RouteObject[] = [
-  {
-    path: Routes.BetaSignup,
-    element: <BetaSignup />,
-  },
   {
     path: Routes.Root,
     element: <Landing />,
