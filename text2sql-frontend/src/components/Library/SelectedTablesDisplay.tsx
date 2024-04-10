@@ -1,12 +1,5 @@
-import { useEffect, useState } from "react";
-
 export const SelectedTablesDisplay = ({ tables }: { tables: string }) => {
-  const [parsedTables, setParsedTables] = useState<string[]>([]);
-  useEffect(() => {
-    if (tables.length > 0) {
-      setParsedTables(tables.toString().split(","));
-    }
-  }, [tables]);
+  const parsedTables = tables.length > 0 ? tables.toString().split(",") : [];
 
   return (
     <div className="flex space-x-2 items-center overflow-x-scroll">

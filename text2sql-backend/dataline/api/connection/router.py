@@ -1,9 +1,10 @@
 import logging
 import re
+from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, HTTPException, UploadFile
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
@@ -13,11 +14,12 @@ from dataline.config import config
 from dataline.models.connection.schema import (
     ConnectionOut,
     GetConnectionOut,
+    SampleOut,
     TableSchemasOut,
 )
 from dataline.repositories.base import NotFoundError, NotUniqueError
-from dataline.utils import get_sqlite_dsn
-from models import StatusType, SuccessResponse, UpdateConnectionRequest
+from dataline.utils import generate_short_uuid, get_sqlite_dsn, is_valid_sqlite_file
+from models import SuccessListResponse, SuccessResponse, UpdateConnectionRequest
 from services import SchemaService
 
 logger = logging.getLogger(__name__)
@@ -40,10 +42,10 @@ def create_db_connection(dsn: str, name: str, is_sample: bool = False) -> Succes
                     pass
             except OperationalError as e:
                 logger.error(e)
-                raise HTTPException(status_code=404, detail="Failed to connect to database")
+                raise HTTPException(status_code=500, detail="Failed to connect to database, please check your DSN.")
         else:
             logger.error(exc)
-            raise HTTPException(status_code=404, detail="Failed to connect to database")
+            raise HTTPException(status_code=500, detail="Failed to connect to database, please check your DSN.")
 
     # Check if connection with DSN already exists, then return connection_id
     try:
@@ -58,7 +60,7 @@ def create_db_connection(dsn: str, name: str, is_sample: bool = False) -> Succes
     database = engine.url.database
 
     if not database:
-        raise Exception("Invalid DSN. Database name is required.")
+        raise HTTPException(status_code=400, detail="Invalid DSN. Database name is missing, append '/DBNAME'.")
 
     with db.DatabaseManager() as conn:
         connection_id = db.create_connection(
@@ -74,7 +76,6 @@ def create_db_connection(dsn: str, name: str, is_sample: bool = False) -> Succes
         conn.commit()  # only commit if all step were successful
 
     return SuccessResponse(
-        status=StatusType.ok,
         data=ConnectionOut(
             id=connection_id, dsn=dsn, database=database, dialect=dialect, name=name, is_sample=is_sample
         ),
@@ -84,41 +85,78 @@ def create_db_connection(dsn: str, name: str, is_sample: bool = False) -> Succes
 class ConnectRequest(BaseModel):
     dsn: str = Field(min_length=3)
     name: str
+    is_sample: bool = False
 
     @field_validator("dsn")
     def validate_dsn_format(cls, value: str) -> str:
-        # Define a regular expression to match the DSN format
-        # Relaxed to allow for many kinds of DSNs
-        dsn_regex = r"^[\w\+]+:\/\/[\/\w-]+.*$"
+        # Regular expression pattern for matching DSNs
+        # Try sqlite first
+        sqlite_pattern = r"^sqlite://(/.+?)(:(.+))?$"
+        if re.match(sqlite_pattern, value):
+            return value
 
-        if not re.match(dsn_regex, value):
-            raise ValueError("Invalid DSN format.")
+        dsn_pattern = (
+            r"^(?P<driver>[\w+]+):\/\/(?:(?P<username>\w+):(?P<password>\w+)@)?(?P<host>[\w\.-]+)"
+            r"(?::(?P<port>\d+))?(?:\/(?P<database>[\w\.-]+))?$"
+        )
+        match = re.match(dsn_pattern, value)
+        if match:
+            # Extracting components from the DSN
+            driver = match.group("driver")
+            host = match.group("host")
+            database = match.group("database")
+
+            # Validating components (You can customize the validation rules as per your requirements)
+            if not driver:
+                raise ValueError("Missing driver in DSN")
+
+            if not host:
+                raise ValueError("Host missing from DSN")
+
+            if not database:
+                raise ValueError("DSN must specify a database name")
+        else:
+            # DSN doesn't match the expected pattern
+            raise ValueError("Invalid DSN format")
 
         # Simpler way to connect to postgres even though officially deprecated
         # This mirrors psql which is a very common way to connect to postgres
-        if "postgres://" in value:
-            value = value.replace("postgres://", "postgresql://")
+        if value.startswith("postgres") and not value.startswith("postgresql"):
+            # Only replace first occurrence
+            value = value.replace("postgres", "postgresql", 1)
 
         return value
 
 
-@router.post("/create-sample-db")
-async def create_sample_db() -> SuccessResponse[ConnectionOut]:
-    name = "DVD Rental (Sample)"
-    dsn = get_sqlite_dsn(config.sample_dvdrental_path)
-    return create_db_connection(dsn, name, is_sample=True)
-
-
 @router.post("/connect", response_model_exclude_none=True)
 async def connect_db(req: ConnectRequest) -> SuccessResponse[ConnectionOut]:
-    return create_db_connection(req.dsn, req.name)
+    return create_db_connection(req.dsn, req.name, is_sample=req.is_sample)
+
+
+@router.post("/connect/file")
+async def connect_db_from_file(file: UploadFile, name: str = Body(...)) -> SuccessResponse[ConnectionOut]:
+    # Validate file type - currently only sqlite supported
+    if not is_valid_sqlite_file(file):
+        raise HTTPException(status_code=400, detail="File provided must be a valid SQLite file.")
+
+    # Create data directory if not exists
+    Path(config.data_directory).mkdir(parents=True, exist_ok=True)
+
+    # Store file in data directory
+    generated_name = generate_short_uuid() + ".sqlite"
+    file_path = Path(config.data_directory) / generated_name
+    with file_path.open("wb") as f:
+        f.write(file.file.read())
+
+    # Create connection with the locally copied file
+    dsn = get_sqlite_dsn(str(file_path.absolute()))
+    return create_db_connection(dsn, name, is_sample=False)
 
 
 @router.get("/connection/{connection_id}")
 async def get_connection(connection_id: UUID) -> SuccessResponse[GetConnectionOut]:
     with db.DatabaseManager() as conn:
         return SuccessResponse(
-            status=StatusType.ok,
             data=GetConnectionOut(
                 connection=db.get_connection(conn, connection_id),
             ),
@@ -132,7 +170,6 @@ class ConnectionsOut(BaseModel):
 @router.get("/connections")
 async def get_connections() -> SuccessResponse[ConnectionsOut]:
     return SuccessResponse(
-        status=StatusType.ok,
         data=ConnectionsOut(
             connections=db.get_connections(),
         ),
@@ -143,7 +180,7 @@ async def get_connections() -> SuccessResponse[ConnectionsOut]:
 async def delete_connection(connection_id: str) -> SuccessResponse[None]:
     with db.DatabaseManager() as conn:
         db.delete_connection(conn, connection_id)
-    return SuccessResponse(status=StatusType.ok)
+    return SuccessResponse()
 
 
 @router.patch("/connection/{connection_id}")
@@ -170,7 +207,6 @@ async def update_connection(connection_id: UUID, req: UpdateConnectionRequest) -
     )
 
     return SuccessResponse(
-        status=StatusType.ok,
         data=GetConnectionOut(
             connection=ConnectionOut(
                 id=connection_id,
@@ -194,7 +230,6 @@ async def get_table_schemas(connection_id: UUID) -> SuccessResponse[TableSchemas
             raise HTTPException(status_code=404, detail="Invalid connection_id")
 
         return SuccessResponse(
-            status=StatusType.ok,
             data=TableSchemasOut(
                 tables=db.get_table_schemas_with_descriptions(connection_id),
             ),
@@ -221,6 +256,22 @@ async def update_table_schema_field_description(
         conn.commit()
 
     return {"status": "ok"}
+
+
+@router.get("/samples")
+async def get_sample_connections() -> SuccessListResponse[SampleOut]:
+    samples = [
+        (
+            "Dvd Rental",
+            config.sample_dvdrental_path,
+            "https://www.postgresqltutorial.com/postgresql-getting-started/postgresql-sample-database/",
+        ),
+        ("Netflix Shows", config.sample_netflix_path, "https://www.kaggle.com/datasets/shivamb/netflix-shows"),
+        ("Titanic", config.sample_titanic_path, "https://www.kaggle.com/datasets/ibrahimelsayed182/titanic-dataset"),
+    ]
+    return SuccessListResponse(
+        data=[SampleOut(title=sample[0], file=get_sqlite_dsn(sample[1]), link=sample[2]) for sample in samples]
+    )
 
 
 # TODO: Convert to using services and session
@@ -253,7 +304,6 @@ async def update_table_schema_field_description(
 # ) -> SuccessResponse[GetConnectionOut]:
 #     connection = await connection_service.get_connection(session, connection_id)
 #     return SuccessResponse(
-#         status=StatusType.ok,
 #         data=GetConnectionOut(
 #             connection=connection,
 #         ),
@@ -267,6 +317,5 @@ async def update_table_schema_field_description(
 # ) -> SuccessResponse[GetConnectionListOut]:
 #     connections = await connection_service.get_connections(session)
 #     return SuccessResponse(
-#         status=StatusType.ok,
 #         data=GetConnectionListOut(connections=connections),
 #     )

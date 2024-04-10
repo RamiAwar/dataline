@@ -46,7 +46,7 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
   };
 
   return (
-    <div className="flex flex-col justify-center w-full relative mb-7">
+    <div className="flex flex-col justify-center w-full relative mb-4">
       <textarea
         disabled={disabled}
         name="email"

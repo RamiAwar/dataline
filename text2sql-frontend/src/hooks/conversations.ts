@@ -1,13 +1,16 @@
 import { enqueueSnackbar } from "notistack";
 import { api } from "@/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getBackendStatusQuery } from "@/hooks/settings";
 
 export const CONVERSATIONS_QUERY_KEY = ["CONVERSATIONS"];
 
 export function useGetConversations() {
+  const { isSuccess } = useQuery(getBackendStatusQuery());
   const result = useQuery({
     queryKey: CONVERSATIONS_QUERY_KEY,
     queryFn: async () => (await api.listConversations()).data,
+    enabled: isSuccess,
   });
 
   if (result.isError) {

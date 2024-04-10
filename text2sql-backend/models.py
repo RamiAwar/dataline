@@ -24,15 +24,12 @@ class StatusType(Enum):
 T = TypeVar("T")
 
 
-class ApiResponse(BaseModel, Generic[T]):
-    status: Literal[StatusType.ok, StatusType.error]
-    data: Union[Optional[T], str]
-
-
-class SuccessResponse(ApiResponse[T], Generic[T]):
-    status: Literal[StatusType.ok] = StatusType.ok
+class SuccessResponse(BaseModel, Generic[T]):
     data: Optional[T] = None
 
+
+class SuccessListResponse(BaseModel, Generic[T]):
+    data: Optional[list[T]] = None
 
 @dataclass
 class Result:

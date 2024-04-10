@@ -8,6 +8,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
+import { getBackendStatusQuery } from "@/hooks/settings";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
 const QUERIES_QUERY_KEY = ["SQL_QUERIES"];
@@ -79,9 +80,11 @@ export function useGetNewMessage({
 }
 
 export function useGetMessages(id: string) {
+  const { isSuccess } = useQuery(getBackendStatusQuery());
   const result = useQuery({
     queryKey: [...MESSAGES_QUERY_KEY, { id }],
     queryFn: () => api.getMessages(id),
+    enabled: isSuccess,
   });
 
   if (result.isError) {

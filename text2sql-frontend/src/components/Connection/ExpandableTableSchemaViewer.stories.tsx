@@ -2,7 +2,6 @@ import ExpandableTableSchemaViewer from "./ExpandableTableSchemaViewer";
 
 export default {
   component: ExpandableTableSchemaViewer,
-  title: "Expandable Table Schema Viewer",
   tags: ["autodocs"],
   decorators: [
     (Story: any) => (

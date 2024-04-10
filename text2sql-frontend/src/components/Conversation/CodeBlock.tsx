@@ -57,6 +57,15 @@ function getNewCursorPosition(
 
   return i;
 }
+
+const formattedCodeOrInitial = (code: string) => {
+  try {
+    return format(code, { language: Dialect.Postgres });
+  } catch {
+    return code;
+  }
+};
+
 export const CodeBlock = ({
   code,
   language,
@@ -73,8 +82,12 @@ export const CodeBlock = ({
   const { conversationId } = useParams<{ conversationId: string }>();
 
   const [enabled, setEnabled] = useState<boolean>(false);
-  const [savedCode, setSavedCode] = useState<string>(code);
-  const [formattedCode, setFormattedCode] = useState<string>(code);
+  const [savedCode, setSavedCode] = useState<string>(() =>
+    formattedCodeOrInitial(code)
+  );
+  const [formattedCode, setFormattedCode] = useState<string>(() =>
+    formattedCodeOrInitial(code)
+  );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [lastChar, setLastChar] = useState<string>("");
   // let BookmarkIcon = isSaved ? BookmarkIconSolid : BookmarkIconOutline;

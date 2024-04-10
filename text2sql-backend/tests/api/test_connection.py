@@ -6,22 +6,60 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 
+from dataline.config import config
 from dataline.models.connection.schema import Connection, TableSchema
+from dataline.utils import get_sqlite_dsn
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.mark.asyncio
-async def test_create_sample_db_connection(client: TestClient) -> None:
-    response = client.post("/create-sample-db")
+async def test_connect_db(client: TestClient) -> None:
+    connection_in = {
+        "dsn": "sqlite:///test.db",
+        "name": "Test",
+    }
+    response = client.post("/connect", json=connection_in)
 
     assert response.status_code == 200
 
     data = response.json()["data"]
-    assert data["database"]
-    assert data["dialect"] == "sqlite"
-    assert data["is_sample"] is True
     assert data["id"]
+    assert data["dsn"] == connection_in["dsn"]
+    assert data["name"] == connection_in["name"]
+    assert data["dialect"] == "sqlite"
+    assert data["database"]
+    assert data["is_sample"] is False
+
+    # Delete database after tests
+    pathlib.Path("test.db").unlink(missing_ok=True)
+
+    # TODO: Remove after sqlalchemy migration
+    # Manual rollback
+    client.delete(f"/connection/{data['id']}")
+
+
+@pytest.mark.asyncio
+async def test_connect_sample_db(client: TestClient) -> None:
+    connection_in = {
+        "dsn": "sqlite:///test.db",
+        "name": "Test",
+        "is_sample": True,
+    }
+    response = client.post("/connect", json=connection_in)
+
+    assert response.status_code == 200
+
+    data = response.json()["data"]
+    assert data["id"]
+    assert data["dsn"] == connection_in["dsn"]
+    assert data["name"] == connection_in["name"]
+    assert data["dialect"] == "sqlite"
+    assert data["database"]
+    assert data["is_sample"] is True
+
+    # Delete database after tests
+    pathlib.Path("test.db").unlink(missing_ok=True)
 
     # TODO: Remove after sqlalchemy migration
     # Manual rollback
@@ -30,7 +68,13 @@ async def test_create_sample_db_connection(client: TestClient) -> None:
 
 @pytest_asyncio.fixture
 async def sample_db(client: TestClient) -> AsyncGenerator[Connection, None]:
-    response = client.post("/create-sample-db")
+    connection_in = {
+        "dsn": get_sqlite_dsn(config.sample_dvdrental_path),
+        "name": "Test",
+        "is_sample": True,
+    }
+    response = client.post("/connect", json=connection_in)
+
     assert response.status_code == 200
     connection = Connection(**response.json()["data"])
 
@@ -42,11 +86,16 @@ async def sample_db(client: TestClient) -> AsyncGenerator[Connection, None]:
 
 @pytest.mark.asyncio
 async def test_create_sample_db_connection_twice_409(client: TestClient) -> None:
-    response = client.post("/create-sample-db")
+    connection_in = {
+        "dsn": get_sqlite_dsn(config.sample_dvdrental_path),
+        "name": "Test",
+        "is_sample": True,
+    }
+    response = client.post("/connect", json=connection_in)
     assert response.status_code == 200
     connection = Connection(**response.json()["data"])
 
-    response = client.post("/create-sample-db")
+    response = client.post("/connect", json=connection_in)
     assert response.status_code == 409
 
     # TODO: Remove after sqlalchemy migration
@@ -76,32 +125,6 @@ async def test_get_connection(client: TestClient, sample_db: Connection) -> None
 
     data = response.json()["data"]
     assert data["connection"] == sample_db.model_dump(mode="json")
-
-
-@pytest.mark.asyncio
-async def test_connect_db(client: TestClient) -> None:
-    connection_in = {
-        "dsn": "sqlite:///test.db",
-        "name": "Test",
-    }
-    response = client.post("/connect", json=connection_in)
-
-    assert response.status_code == 200
-
-    data = response.json()["data"]
-    assert data["id"]
-    assert data["dsn"] == connection_in["dsn"]
-    assert data["name"] == connection_in["name"]
-    assert data["dialect"] == "sqlite"
-    assert data["database"]
-    assert data["is_sample"] is False
-
-    # Delete database after tests
-    pathlib.Path("test.db").unlink(missing_ok=True)
-
-    # TODO: Remove after sqlalchemy migration
-    # Manual rollback
-    client.delete(f"/connection/{data['id']}")
 
 
 @pytest.mark.asyncio
