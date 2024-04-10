@@ -1,7 +1,7 @@
 import { enqueueSnackbar } from "notistack";
 import { api } from "@/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getBackendStatusQuery } from "@/hooks/auth";
+import { getBackendStatusQuery } from "@/hooks/settings";
 
 export const CONVERSATIONS_QUERY_KEY = ["CONVERSATIONS"];
 

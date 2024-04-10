@@ -107,6 +107,12 @@ export function useUpdateUserAvatar(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (file: File) => api.updateAvatar(file),
+    onSuccess() {
+      enqueueSnackbar({
+        variant: "success",
+        message: "Avatar updated",
+      });
+    },
     onError() {
       enqueueSnackbar({
         variant: "error",
@@ -125,6 +131,12 @@ export function useUpdateUserInfo(options = {}) {
   return useMutation({
     mutationFn: (payload: { openai_api_key: string } | { name: string }) =>
       api.updateUserInfo(payload),
+    onSuccess() {
+      enqueueSnackbar({
+        variant: "success",
+        message: "User info updated",
+      });
+    },
     onError(_, args) {
       enqueueSnackbar({
         variant: "error",

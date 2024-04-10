@@ -9,7 +9,7 @@ import {
 import { isAxiosError } from "axios";
 import { IEditConnection } from "@/components/Library/types";
 import { CONVERSATIONS_QUERY_KEY } from "./conversations";
-import { getBackendStatusQuery } from "@/hooks/auth";
+import { getBackendStatusQuery } from "@/hooks/settings";
 
 function getConnectionsQuery(options = {}) {
   return queryOptions({

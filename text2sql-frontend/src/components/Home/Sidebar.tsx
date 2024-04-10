@@ -229,7 +229,12 @@ export const Sidebar = () => {
                                     {conversation.name}
                                   </span>
                                   {conversation.connection && (
-                                    <div className="pl-1 flex flex-row items-center gap-1 text-gray-500">
+                                    <div className={classNames(
+                                      conversation.conversation_id ==
+                                        currentConversation?.id
+                                        ? "text-gray-400"
+                                        : "text-gray-500",
+                                      "pl-1 flex flex-row items-center gap-1")}>
                                       <div className="pb-px">{LShapedChar}</div>
                                       <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
                                         {conversation.connection.name}
@@ -323,7 +328,12 @@ export const Sidebar = () => {
                               {chat.name}
                             </span>
                             {chat.connection && (
-                              <div className="pl-1 flex flex-row items-center gap-1 text-gray-500">
+                              <div className={classNames(
+                                chat.conversation_id ==
+                                  params.conversationId
+                                  ? "text-gray-400"
+                                  : "text-gray-500",
+                                "pl-1 flex flex-row items-center gap-1")}>
                                 <div className="pb-px">{LShapedChar}</div>
                                 <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
                                   {chat.connection.name}
