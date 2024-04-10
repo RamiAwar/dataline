@@ -13,7 +13,7 @@
         {
             "feature": "Allows query edits, re-runs",
             "dataline": true,
-            "chatgpt": true
+            "chatgpt": false
         },
         {
             "feature": "Data never leaves your machine",
@@ -26,8 +26,8 @@
             "chatgpt": false
         },
         {
-            "feature": "Data visualization (coming soon)",
-            "dataline": false,
+            "feature": "Data visualization",
+            "dataline": "Coming soon.",
             "chatgpt": true
         },
         {
