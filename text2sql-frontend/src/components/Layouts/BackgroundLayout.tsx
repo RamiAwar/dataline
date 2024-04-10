@@ -61,8 +61,8 @@ export const BackgroundLayout = () => {
         <defs>
           <pattern
             id="983e3e4c-de6d-4c3f-8d64-b9761d1534cc"
-            width={200}
-            height={200}
+            width={100}
+            height={100}
             x="50%"
             y={-1}
             patternUnits="userSpaceOnUse"
