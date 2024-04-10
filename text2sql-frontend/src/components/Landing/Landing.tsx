@@ -46,8 +46,7 @@ const socials = [
       </svg>
     ),
   },
-]
-
+];
 
 // Randomly select cohort
 const selectedCohort = "ab-test-1-landing";
@@ -55,34 +54,35 @@ const selectedCohort = "ab-test-1-landing";
 const CohortData = {
   "ab-test-1-landing": {
     headline: "Chat with your data. Securely.",
-    description: "Plug into your data <strong>locally</strong> to ask questions, edit answers, and save results. No data leaves your machine. Open source.",
+    description:
+      "Plug into your data <strong>locally</strong> to ask questions, edit answers, and save results. No data leaves your machine. Open source.",
     feature_group_1: {
       title: "Plugs into your data, locally.",
-      description: "You don't have to worry about data security if none of it leaves your machine.",
+      description:
+        "You don't have to worry about data security if none of it leaves your machine.",
     },
     feature_group_2: {
       title: "Ask, Explore, Edit, Iterate.",
-      description: "Focus on the questions, we'll do the rest.<br>Your time is too valuable to be looking up schemas.",
+      description:
+        "Focus on the questions, we'll do the rest.<br>Your time is too valuable to be looking up schemas.",
     },
     comparison: {
       title: "How do we compare?",
-      description: "This is probably the 10th AI tool you see today, so let's cut to the chase.",
+      description:
+        "This is probably the 10th AI tool you see today, so let's cut to the chase.",
     },
     cta_title: "Stay up to date.",
     cta_description: "Promise we won't annoy you, ever.",
     demo: {
       title: "Still here?",
       description: "Here's a 3 minute demo showcasing the core features.",
-    }
-  }
-}
-
-
+    },
+  },
+};
 
 if (process.env.NODE_ENV !== "local") {
   ReactGA.initialize("G-9LG8MD1T1B");
   // Send cohort data to GA
-
 }
 
 export const Landing = () => {
@@ -200,8 +200,12 @@ export const Landing = () => {
               <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
                 {CohortData[selectedCohort].headline}
               </h1>
-              <p className="mt-10 text-lg leading-8 text-gray-300" dangerouslySetInnerHTML={{ __html: CohortData[selectedCohort].description }}>
-              </p>
+              <p
+                className="mt-10 text-lg leading-8 text-gray-300"
+                dangerouslySetInnerHTML={{
+                  __html: CohortData[selectedCohort].description,
+                }}
+              ></p>
             </div>
             <img
               src={headline_image}
@@ -210,11 +214,9 @@ export const Landing = () => {
               height={1442}
               className="mt-4 bg-white/5 ring-1 ring-white/10 rounded-xl shadow-2xl"
             />
-
           </div>
         </div>
       </div>
-
 
       <BackgroundHighlight>
         <div className="overflow-hidden pt-32">
@@ -222,34 +224,45 @@ export const Landing = () => {
             <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2">
               <div className="lg:pr-8 lg:pt-4">
                 <div className="lg:max-w-lg">
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">{CohortData[selectedCohort].feature_group_1.title}</p>
-                  <p className="mt-6 text-lg leading-8 text-gray-300" dangerouslySetInnerHTML={{ __html: CohortData[selectedCohort].feature_group_1.description }}>
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                    {CohortData[selectedCohort].feature_group_1.title}
                   </p>
-
+                  <p
+                    className="mt-6 text-lg leading-8 text-gray-300"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        CohortData[selectedCohort].feature_group_1.description,
+                    }}
+                  ></p>
                 </div>
               </div>
               <img
                 src={connection_creator_image}
                 alt="Product screenshot"
-                className="w-[48rem] max-w-none rounded-xl shadow-xl ring-1 ring-white/10 sm:w-[57rem] md:-ml-4 lg:-ml-0"
+                className="w-[40rem] max-w-none rounded-xl shadow-xl ring-1 ring-white/10 sm:w-[57rem] md:-ml-4 lg:-ml-0"
                 width={2432}
                 height={1442}
               />
             </div>
           </div>
-        </div >
+        </div>
       </BackgroundHighlight>
-
 
       <SquareBackground>
         <div className="pt-32">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl sm:text-center">
               {/* <h2 className="text-base font-semibold leading-7 text-indigo-400">Everything you need</h2> */}
-              <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">{CohortData[selectedCohort].feature_group_2.title}</p>
-              <p className="mt-6 text-lg leading-8 text-gray-300" dangerouslySetInnerHTML={{ __html: CohortData[selectedCohort].feature_group_2.description }}>
-
+              <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                {CohortData[selectedCohort].feature_group_2.title}
               </p>
+              <p
+                className="mt-6 text-lg leading-8 text-gray-300"
+                dangerouslySetInnerHTML={{
+                  __html:
+                    CohortData[selectedCohort].feature_group_2.description,
+                }}
+              ></p>
             </div>
           </div>
           <div className="relative pt-16">
@@ -261,7 +274,6 @@ export const Landing = () => {
                 width={2432}
                 height={1442}
               />
-
             </div>
           </div>
         </div>
@@ -273,10 +285,15 @@ export const Landing = () => {
             <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2">
               <div className="lg:pr-8 lg:pt-4">
                 <div className="lg:max-w-md">
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">{CohortData[selectedCohort].comparison.title}</p>
-                  <p className="mt-6 text-lg leading-8 text-gray-300" dangerouslySetInnerHTML={{ __html: CohortData[selectedCohort].comparison.description }}>
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                    {CohortData[selectedCohort].comparison.title}
                   </p>
-
+                  <p
+                    className="mt-6 text-lg leading-8 text-gray-300"
+                    dangerouslySetInnerHTML={{
+                      __html: CohortData[selectedCohort].comparison.description,
+                    }}
+                  ></p>
                 </div>
               </div>
               <FeatureComparisonTable></FeatureComparisonTable>
@@ -285,32 +302,41 @@ export const Landing = () => {
         </div>
       </BackgroundHighlight>
 
-
       <SquareBackgroundInverted>
         <div className="overflow-hidden pt-20">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2">
               <div className="lg:pr-8 lg:pt-4">
                 <div className="lg:max-w-lg">
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">{CohortData[selectedCohort].demo.title}</p>
-                  <p className="mt-6 text-lg leading-8 text-gray-300" dangerouslySetInnerHTML={{ __html: CohortData[selectedCohort].demo.description }}>
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                    {CohortData[selectedCohort].demo.title}
                   </p>
-
+                  <p
+                    className="mt-6 text-lg leading-8 text-gray-300"
+                    dangerouslySetInnerHTML={{
+                      __html: CohortData[selectedCohort].demo.description,
+                    }}
+                  ></p>
                 </div>
               </div>
-              <iframe className="rounded-xl shadow-xl ring-1 ring-white/10 md:-ml-4 lg:-ml-0 w-full h-[20rem] s:w-["
+              <iframe
+                className="rounded-xl shadow-xl ring-1 ring-white/10 md:-ml-4 lg:-ml-0 w-full h-[20rem] s:w-["
                 src="https://www.youtube.com/embed/3sKIoVp8QRw?si=e4CJ4X3xdLAMBRke"
                 title="YouTube video player"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen>
-              </iframe>
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                allowFullScreen
+              ></iframe>
             </div>
           </div>
-        </div >
+        </div>
 
         <div className="pt-36 pb-36">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl sm:text-center">
-              <BetaSignupForm title={CohortData[selectedCohort].cta_title} description={CohortData[selectedCohort].cta_description}></BetaSignupForm>
+              <BetaSignupForm
+                title={CohortData[selectedCohort].cta_title}
+                description={CohortData[selectedCohort].cta_description}
+              ></BetaSignupForm>
             </div>
           </div>
         </div>
@@ -329,7 +355,10 @@ export const Landing = () => {
                     className="text-gray-500 hover:text-gray-400"
                   >
                     <span className="sr-only">{item.name}</span>
-                    <item.icon className="h-6 w-6 lg:h-10 lg:w-10" aria-hidden="true" />
+                    <item.icon
+                      className="h-6 w-6 lg:h-10 lg:w-10"
+                      aria-hidden="true"
+                    />
                   </a>
                 ))}
               </div>
@@ -340,8 +369,6 @@ export const Landing = () => {
           </div>
         </footer>
       </SquareBackgroundInverted>
-
-
-    </div >
+    </div>
   );
 };

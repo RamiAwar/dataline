@@ -26,8 +26,8 @@
             "chatgpt": false
         },
         {
-            "feature": "Data visualization (coming soon)",
-            "dataline": false,
+            "feature": "Data visualization",
+            "dataline": "coming soon",
             "chatgpt": true
         },
         {
