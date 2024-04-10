@@ -11,11 +11,8 @@ import {
 } from "@/hooks";
 
 export const Home = () => {
-  const { data } = useGetBackendStatus();
-
-  const { data: profile, isLoading } = useGetUserProfile({
-    enabled: Boolean(data),
-  });
+  useGetBackendStatus();
+  const { data: profile, isLoading } = useGetUserProfile();
   const { isPending: isPendingConnections } = useGetConnections();
   const { isPending: isPendingConversations } = useGetConversations();
 

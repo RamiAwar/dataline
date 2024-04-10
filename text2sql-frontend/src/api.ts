@@ -10,7 +10,6 @@ import { backendApi } from "./services/api_client";
 import { decodeBase64Data } from "./utils";
 
 type SuccessResponse<T> = {
-  status: "ok";
   data: T;
 };
 
@@ -61,7 +60,8 @@ export type ConnectionResult = {
 type ConnectResult = ApiResponse<ConnectionResult>;
 const createConnection = async (
   connectionString: string,
-  name: string
+  name: string,
+  isSample: boolean
 ): Promise<ConnectResult> => {
   const response = await backendApi<ConnectResult>({
     url: "/connect",
@@ -69,15 +69,23 @@ const createConnection = async (
     data: {
       dsn: connectionString,
       name: name,
+      is_sample: isSample,
     },
   });
   return response.data;
 };
 
-const createTestConnection = async (): Promise<ConnectResult> => {
+const createFileConnection = async (
+  file: File,
+  name: string
+): Promise<ConnectResult> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("name", name);
   const response = await backendApi<ConnectResult>({
-    url: "/create-sample-db",
+    url: "/connect/file",
     method: "post",
+    data: formData,
   });
   return response.data;
 };
@@ -99,6 +107,17 @@ const getConnection = async (
       url: `/connection/${connectionId}`,
     })
   ).data;
+};
+
+export type SampleResult = {
+  title: string;
+  file: string;
+  link: string;
+};
+export type GetSamplesResult = ApiResponse<SampleResult[]>;
+const getSamples = async (): Promise<GetSamplesResult> => {
+  const response = await backendApi<GetSamplesResult>({ url: "/samples" });
+  return response.data;
 };
 
 export type UpdateConnectionResult = ApiResponse<{
@@ -334,10 +353,11 @@ export const api = {
   healthcheck,
   getConnection,
   getTableSchemas,
+  getSamples,
   updateTableSchemaDescription,
   updateTableSchemaFieldDescription,
   createConnection,
-  createTestConnection,
+  createFileConnection,
   updateConnection,
   deleteConnection,
   listConnections,

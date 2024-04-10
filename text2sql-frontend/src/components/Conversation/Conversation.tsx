@@ -64,10 +64,7 @@ export const Conversation = () => {
 
   useEffect(() => {
     if (messageListRef.current !== null) {
-      // Timeout needed because the SQL code in the messages get formatted and take more space
-      setTimeout(() => {
-        window.scrollTo({ top: messageListRef.current?.offsetTop });
-      }, 10);
+      window.scrollTo({ top: messageListRef.current?.offsetTop });
     }
   }, [isPendingGetMessages, messageListRef, params]);
 
@@ -80,7 +77,11 @@ export const Conversation = () => {
     );
   }
   if (!isSuccessGetMessages) {
-    return <div>Something went wrong</div>;
+    return (
+      <div className="w-full h-screen flex justify-center items-center text-white">
+        Something went wrong!
+      </div>
+    );
   }
   if (
     // @ts-expect-error, status is not known
@@ -145,11 +146,14 @@ export const Conversation = () => {
             ))}
           </div>
         )}
-        <div className="w-full md:max-w-3xl flex justify-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
+        <div className="w-full md:max-w-3xl flex flex-col justify-center items-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
           <ExpandingInput
             onSubmit={(message: string) => sendMessageMutation({ message })}
             disabled={false}
           />
+          <p className="text-gray-400 text-sm">
+            Current Connection: {currConnection?.name}
+          </p>
         </div>
       </div>
     </div>

@@ -11,14 +11,32 @@ import {
 import logo from "@/assets/images/logo_md.png";
 import { PencilSquareIcon } from "@heroicons/react/20/solid";
 import { Link, useParams } from "react-router-dom";
-import { ProfileDropdown } from "./ProfileDropdown";
+import { ProfileDropdown } from "@components/Home/ProfileDropdown";
 import { useNavigate } from "react-router-dom";
 import {
   useDeleteConversation,
+  useGetConnections,
   useGetConversations,
   useUpdateConversation,
 } from "@/hooks";
-import { IConversation } from "../Library/types";
+import { IConversation, IConversationResult } from "@components/Library/types";
+import { ConnectionResult } from "@/api";
+
+const LShapedChar = (
+  <svg
+    width="9"
+    height="8"
+    viewBox="0 0 9 8"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M1 0V4C1 5.65685 2.34315 7 4 7H9"
+      stroke="currentColor"
+      stroke-width="1.5"
+    />
+  </svg>
+);
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -28,17 +46,27 @@ export const Sidebar = () => {
   const params = useParams<{ conversationId: string }>();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { data } = useGetConversations();
+  const { data: conversationsData } = useGetConversations();
+  const { data: connectionsData } = useGetConnections();
   const { mutate: deleteConversation } = useDeleteConversation({
     onSuccess() {
       navigate("/");
     },
   });
 
-  const conversations = useMemo(
-    () => data?.conversations ?? [],
-    [data?.conversations]
-  );
+  const conversations = useMemo<
+    (IConversationResult & { connection?: ConnectionResult })[]
+  >(() => {
+    if (conversationsData?.conversations && connectionsData?.connections) {
+      return conversationsData.conversations.map((convo) => ({
+        ...convo,
+        connection: connectionsData.connections.find(
+          (conn) => conn.id === convo.connection_id
+        ),
+      }));
+    }
+    return [];
+  }, [conversationsData?.conversations, connectionsData?.connections]);
 
   const [currentConversation, setCurrentConversation] =
     useState<IConversation | null>(null);
@@ -78,6 +106,7 @@ export const Sidebar = () => {
     // Should never be null, only editable if not null
     if (!currentConversation?.id) return;
     updateConversation({ id: currentConversation.id, name: editedName });
+    setIsEditing(false);
   };
 
   useEffect(() => {
@@ -188,16 +217,31 @@ export const Sidebar = () => {
                                     currentConversation?.id
                                     ? "bg-gray-700 text-white"
                                     : "text-gray-400 hover:text-white hover:bg-gray-800",
-                                  "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer mt-2"
+                                  "group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer mt-2"
                                 )}
                               >
                                 <ChatBubbleOvalLeftIcon
                                   className="h-5 w-5 shrink-0"
                                   aria-hidden="true"
                                 />
-                                <span className="flex-1">
-                                  {conversation.name}
-                                </span>
+                                <div className="flex-1 flex flex-col overflow-hidden">
+                                  <span className="text-ellipsis overflow-hidden whitespace-nowrap">
+                                    {conversation.name}
+                                  </span>
+                                  {conversation.connection && (
+                                    <div className={classNames(
+                                      conversation.conversation_id ==
+                                        currentConversation?.id
+                                        ? "text-gray-400"
+                                        : "text-gray-500",
+                                      "pl-1 flex flex-row items-center gap-1")}>
+                                      <div className="pb-px">{LShapedChar}</div>
+                                      <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
+                                        {conversation.connection.name}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
                                 <TrashIcon
                                   className="h-5 w-5 shrink-0 cursor-pointer"
                                   onClick={() =>
@@ -272,16 +316,31 @@ export const Sidebar = () => {
                             chat.conversation_id == params.conversationId
                               ? "bg-gray-700 text-white"
                               : "text-gray-400 hover:text-white hover:bg-gray-800",
-                            "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
+                            "group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
                           )}
                         >
                           <ChatBubbleOvalLeftIcon
                             className="h-5 w-5 shrink-0"
                             aria-hidden="true"
                           />
-                          <span className="text-ellipsis overflow-hidden whitespace-nowrap">
-                            {chat.name}
-                          </span>
+                          <div className="flex flex-col overflow-hidden">
+                            <span className="text-ellipsis overflow-hidden whitespace-nowrap">
+                              {chat.name}
+                            </span>
+                            {chat.connection && (
+                              <div className={classNames(
+                                chat.conversation_id ==
+                                  params.conversationId
+                                  ? "text-gray-400"
+                                  : "text-gray-500",
+                                "pl-1 flex flex-row items-center gap-1")}>
+                                <div className="pb-px">{LShapedChar}</div>
+                                <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
+                                  {chat.connection.name}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                           {/* Show edit button when not editing and chat selected */}
                           {chat.conversation_id == params.conversationId && (
                             <div
@@ -310,7 +369,7 @@ export const Sidebar = () => {
                             chat.conversation_id == params.conversationId
                               ? "bg-gray-700 text-white"
                               : "text-gray-400 hover:text-white hover:bg-gray-800",
-                            "group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
+                            "group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
                           )}
                         >
                           <ChatBubbleOvalLeftIcon
@@ -330,9 +389,19 @@ export const Sidebar = () => {
                               className="flex-none max-w-[70%] h-6 text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-gray-300 pl-1"
                             />
                           ) : (
-                            <span className="text-ellipsis overflow-hidden whitespace-nowrap">
-                              {chat.name}
-                            </span>
+                            <div className="flex flex-col overflow-hidden">
+                              <span className="text-ellipsis overflow-hidden whitespace-nowrap">
+                                {chat.name}
+                              </span>
+                              {chat.connection && (
+                                <div className="pl-1 flex flex-row items-center gap-1 text-gray-500">
+                                  <div className="pb-px">{LShapedChar}</div>
+                                  <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
+                                    {chat.connection.name}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           )}
 
                           {/* Show check icon when editing to save */}

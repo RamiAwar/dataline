@@ -1,23 +1,17 @@
-import NewConnectionModal from "../Connection/NewConnectionModal";
 import DatabaseDialectImage from "./DatabaseDialectImage";
 import { useState } from "react";
 import { IConnection, IConversation } from "../Library/types";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { Link, useNavigate } from "react-router-dom";
+import { Routes } from "@/router";
 import { useCreateConversation, useGetConnections } from "@/hooks";
 
 export const ConnectionSelector = () => {
   const navigate = useNavigate();
   const [, setConversation] = useState<IConversation | null>();
   const { data } = useGetConnections();
-  const [isNewConnectionModalOpen, setIsNewConnectionModalOpen] =
-    useState(false);
-  const openNewConnectionModal = () => {
-    setIsNewConnectionModalOpen(true);
-  };
-
-  const closeNewConnectionModal = () => {
-    setIsNewConnectionModalOpen(false);
+  const createConnection = () => {
+    navigate(Routes.NewConnection);
   };
 
   const { mutate } = useCreateConversation({
@@ -76,13 +70,10 @@ export const ConnectionSelector = () => {
                 </div>
               </div>
             ))}
-            <NewConnectionModal
-              isOpen={isNewConnectionModalOpen}
-              onClose={closeNewConnectionModal}
-            />
+
             <div
               className="hover:cursor-pointer mx-auto md:hover:ring-2 ring-gray-600 border border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-2/3 sm:w-auto sm:max-w-xs"
-              onClick={openNewConnectionModal}
+              onClick={createConnection}
             >
               {/* Item to add new connection */}
               <div className="hidden md:flex overflow-hidden w-full justify-center items-center md:mt-4">

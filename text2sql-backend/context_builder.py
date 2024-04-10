@@ -158,7 +158,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
                 logger.debug("\n\n------------------\n\n")
                 response = await self.llm.query(query=context_query_str, message_history=message_history)
 
-                table_names = [s.strip() for s in str(response).strip().split(",")]
+                table_names = [s.strip().replace("'", "").replace('"', "") for s in str(response).strip().split(",")]
                 if any(table_name not in self.sql_database.get_table_names() for table_name in table_names):
                     logger.info("Invalid table names: Reasking failed - continuing anyway")
 

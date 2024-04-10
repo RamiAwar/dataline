@@ -8,7 +8,6 @@ from fastapi.testclient import TestClient
 from openai.resources.models import Models as OpenAIModels
 from unittest.mock import MagicMock, patch
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -19,7 +18,6 @@ async def test_update_user_info_name(client: TestClient) -> None:
 
     assert response.status_code == 200
     assert response.json() == {
-        "status": "ok",
         "data": {
             "name": "John",
             "openai_api_key": None,
@@ -136,7 +134,6 @@ async def test_upload_avatar(client: TestClient, avatar_file: tuple[FileTuple, b
     response = client.post("/settings/avatar", files=[file])
     assert response.status_code == 200
     assert response.json() == {
-        "status": "ok",
         "data": {
             "blob": base64_encoded,
         },
@@ -161,7 +158,6 @@ async def test_get_avatar(client: TestClient, avatar: str) -> None:
 
     # Check that the response body contains the expected data
     assert response.json() == {
-        "status": "ok",
         "data": {
             "blob": avatar,
         },

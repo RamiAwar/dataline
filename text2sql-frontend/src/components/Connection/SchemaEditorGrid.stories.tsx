@@ -2,7 +2,6 @@ import SchemaEditorGrid from "./SchemaEditorGrid";
 
 export default {
   component: SchemaEditorGrid,
-  title: "Schema Editor Grid",
   tags: ["autodocs"],
   parameters: {
     layout: "centered",
