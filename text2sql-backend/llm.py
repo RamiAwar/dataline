@@ -6,6 +6,14 @@ import openai
 from dataline.openai_utils.types import LLMApiProtocol, TMessage
 
 
+class OpenAIError(Exception):
+    message: str
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+        super().__init__(message)
+
+
 class ChatLLM:
     def __init__(
         self,
@@ -34,11 +42,17 @@ class ChatLLM:
         """
         response = ""
         messages = message_history + [{"role": "user", "content": query}]
-        stream = await self.llm_api(messages=messages)
-        async for i in stream:
-            if i.choices[0].finish_reason == "stop":
-                break
-            response += i.choices[0].delta.content or ""
+        try:
+            stream = await self.llm_api(messages=messages)
+            async for i in stream:
+                if i.choices[0].finish_reason == "stop":
+                    break
+                response += i.choices[0].delta.content or ""
+        except openai.RateLimitError as e:
+            if e.type == "insufficient_quota":
+                raise OpenAIError(
+                    message="You exceeded your current OpenAI quota. Please check your plan and billing details."
+                )
 
         return response
 
@@ -54,4 +68,5 @@ class ChatLLM:
         async for i in stream:
             if i.choices[0].finish_reason == "stop":
                 raise StopIteration
+            yield i.choices[0].delta.content
             yield i.choices[0].delta.content
