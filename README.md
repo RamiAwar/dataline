@@ -4,15 +4,15 @@
 
 To run DataLine, you can use our official docker image and get started in one command:
 ```bash
-docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:v0.1.0
+docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:v0.1.1
 ```
 
 You can manage this as you would any other container. `docker start dataline`, `docker stop dataline`
 
-For updating to a new version:
+For updating to a new version, just remove the container and rerun the command. This way the volume is persisted across updates.
 ```bash
 docker rm dataline
-docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:<whatevernewversion>
+docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:v0.1.1
 ```
 
 We'll make this stuff easier later on!
