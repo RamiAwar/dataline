@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 import { getBackendStatusQuery } from "@/hooks/settings";
+import { isAxiosError } from "axios";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
 const QUERIES_QUERY_KEY = ["SQL_QUERIES"];
@@ -45,11 +46,20 @@ export function useSendMessage({
         return { messages: [...oldData.messages, ...newMessages] };
       });
     },
-    onError: () =>
-      enqueueSnackbar({
-        variant: "error",
-        message: "Error querying assistant",
-      }),
+    onError: (error) => {
+      if (isAxiosError(error) && error.response?.status === 406) {
+        enqueueSnackbar({
+          variant: "error",
+          message: error.response.data.message,
+          persist: true,
+        });
+      } else {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error querying assistant",
+        });
+      }
+    },
   });
 }
 
