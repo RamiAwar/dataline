@@ -26,13 +26,14 @@ text2sql-backend/.git
 # Don't need tests or hooks
 */tests
 hooks
-images
+./images
 
 # Exclude bruno
 */bruno
 
-# Ignore testing SQLite DB
-*/*.sqlite3
+# Ignore all SQLite DBs, except for sample DBs
+**/*.sqlite3
+!**/samples/*.sqlite3
 
 */.storybook
 */node_modules/
