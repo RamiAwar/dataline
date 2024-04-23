@@ -16,19 +16,23 @@ cp dist/manifest.json ../text2sql-backend/assets/manifest.json
 
 ```bash
 cd text2sql-backend
-pyinstaller --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+pyinstaller --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
     --add-data alembic:alembic --add-data alembic.ini:. --add-data dataline/samples:dataline/samples --add-data templates:templates --add-data assets:assets \
     --collect-data llama_index --distpath ../linux_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
 ```
+
+You can find the executable under `linux_dist/main/main`. Once run, go to localhost:7377
 
 ## MacOS
 
 ```bash
 cd text2sql-backend
-pyinstaller --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+pyinstaller --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
     --add-data alembic:alembic --add-data alembic.ini:. --add-data dataline/samples:dataline/samples --add-data templates:templates --add-data assets:assets \
     --collect-data llama_index --distpath ../macos_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
 ```
+
+You can find the executable under `macos_dist/main/main`. Once run, go to localhost:7377
 
 ## Windows (using Wine-in-Docker):
 
@@ -37,6 +41,8 @@ pyinstaller --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidde
 docker build . -f Dockerfile.wine -t 'wine'
 docker run -d -v ./win64_dist/:/win64_dist --name wine wine
 ```
+
+You can find the executable under `win64_dist/main/main`. Once run, go to localhost:7377
 
 <!-- To interact/inspect:
 docker run -d -v ./win64_dist/:/win64_dist --name wine wine "sleep infinity"
