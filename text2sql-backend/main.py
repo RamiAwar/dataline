@@ -1,9 +1,16 @@
 import json
 import logging
+from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Body, Depends, HTTPException, Response
+import uvicorn
+from alembic import command
+from alembic.config import Config
+from contextlib import asynccontextmanager
+from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pydantic.json import pydantic_encoder
 from pygments import lexers
@@ -11,6 +18,7 @@ from pygments_pprint_sql import SqlFilter
 
 import db
 from app import App
+from dataline.config import config, IS_BUNDLED
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.settings import SettingsService
 from models import (
@@ -32,7 +40,27 @@ logger = logging.getLogger(__name__)
 lexer = lexers.MySqlLexer()
 lexer.add_filter(SqlFilter())
 
-app = App()
+
+def run_migrations():
+    pth = Path(__file__).parent / "alembic.ini"
+    logger.warning(pth)
+    alembic_cfg = Config(pth)
+    loc = alembic_cfg.get_main_option("script_location").removeprefix("./")
+    alembic_cfg.set_main_option("script_location", f"{Path(__file__).parent}/{loc}")
+    alembic_cfg.config_file_name = None  # to prevent alembic from overriding the logs
+    command.upgrade(alembic_cfg, "head", sql=False)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # On startup
+    if IS_BUNDLED:
+        run_migrations()
+    yield
+    # On shutdown
+
+
+app = App(lifespan=lifespan)
 
 
 @app.get("/healthcheck", response_model_exclude_none=True)
@@ -240,3 +268,25 @@ async def query(
             ),
             media_type="application/json",
         )
+
+
+if IS_BUNDLED:
+    # running in a PyInstaller bundle
+    templates = Jinja2Templates(directory=config.templates_path)
+    app.mount("/assets", StaticFiles(directory=config.assets_path), name="static")
+
+    @app.get("/{rest_of_path:path}", include_in_schema=False)
+    def index(request: Request, rest_of_path: str):
+        context = {"request": request}
+        vite_config_path = config.assets_path / "manifest.json"
+        if not vite_config_path.is_file():
+            raise HTTPException(status_code=404, detail="Could not find frontend manifest")
+        with vite_config_path.open("r") as f:
+            vite_config = json.load(f)
+            context["VITE_MANIFEST_JS"] = vite_config["index.html"]["file"]
+            context["VITE_MANIFEST_CSS"] = vite_config["index.html"]["css"][0]
+        return templates.TemplateResponse("index.html.jinja2", context=context)
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="localhost", port=7377)

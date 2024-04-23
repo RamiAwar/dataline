@@ -26,8 +26,8 @@ def handle_exceptions(request: Request, e: Exception) -> JSONResponse:
 
 
 class App(fastapi.FastAPI):
-    def __init__(self) -> None:
-        super().__init__(title="Dataline API")
+    def __init__(self, lifespan=None) -> None:
+        super().__init__(title="Dataline API", lifespan=lifespan)
         self.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],

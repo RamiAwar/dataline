@@ -1,0 +1,74 @@
+# Bundling
+
+## Build the frontend:
+
+We currently do this manually, will be refactored when we have scripts for bundling
+
+```bash
+cd text2sql-frontend
+npm install && NODE_ENV=local npm run build
+cp -r dist/assets/ ../text2sql-backend/assets
+cp dist/favicon.ico ../text2sql-backend/assets/favicon.ico
+cp dist/manifest.json ../text2sql-backend/assets/manifest.json
+```
+
+## Linux
+
+```bash
+cd text2sql-backend
+pyinstaller --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+    --add-data alembic:alembic --add-data alembic.ini:. --add-data dataline/samples:dataline/samples --add-data templates:templates --add-data assets:assets \
+    --collect-data llama_index --distpath ../linux_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
+```
+
+## MacOS
+
+```bash
+cd text2sql-backend
+pyinstaller --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+    --add-data alembic:alembic --add-data alembic.ini:. --add-data dataline/samples:dataline/samples --add-data templates:templates --add-data assets:assets \
+    --collect-data llama_index --distpath ../macos_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
+```
+
+## Windows (using Wine-in-Docker):
+
+```bash
+# from the repo root dir
+docker build . -f Dockerfile.wine -t 'wine'
+docker run -d -v ./win64_dist/:/win64_dist --name wine wine
+```
+
+<!-- To interact/inspect:
+docker run -d -v ./win64_dist/:/win64_dist --name wine wine "sleep infinity"
+docker exec -it wine /bin/bash -->
+
+<!-- ##### OLDER ##### -->
+
+<!--
+```bash
+wine C:/Python311/python.exe -m pip install -r requirements.txt
+
+pyinstaller --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+    --add-data "alembic;alembic" --add-data "alembic.ini;." --add-data "dataline/samples;dataline/samples" --add-data "templates;templates" --add-data "assets;assets" \
+    --collect-data llama_index --distpath ../win64_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
+```
+
+docker build . -f Dockerfile.wine -t 'wine'
+wget https://www.python.org/ftp/python/3.11.6/python-3.11.6.exe
+wine python-3.11.6.exe /passive InstallAllUsers=1 PrependPath=1 Include_test=0
+docker run -d --name wine wine sleep infinity
+docker exec -it wine /bin/bash
+
+https://www.makeworld.space/2021/10/linux-wine-pyinstaller.html
+wine python-3.11.6.exe
+wine C:/Python311/python.exe
+ls ~/.wine -a
+wine cmd.exe
+wine C:/users/anthony/pipx/venvs/poetry/Scripts/poetry.exe
+wine C:/users/anthony/pipx/venvs/poetry/Scripts/poetry.exe env use C:/Python311/python.exe
+wine C:/users/anthony/pipx/venvs/poetry/Scripts/poetry.exe install --only main --no-root
+
+wget https://aka.ms/vs/17/release/vs_BuildTools.exe
+https://stackoverflow.com/questions/64261546/how-to-solve-error-microsoft-visual-c-14-0-or-greater-is-required-when-inst
+sudo apt install winbind
+wine vs_BuildTools.exe --norestart --passive --downloadThenInstall --includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Workload.MSBuildTools -->

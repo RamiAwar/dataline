@@ -1,6 +1,12 @@
+import sys
+
 from pathlib import Path
 
 from pydantic_settings import BaseSettings
+
+
+# https://pyinstaller.org/en/v6.6.0/runtime-information.html
+IS_BUNDLED = bool(getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"))
 
 
 class Config(BaseSettings):
@@ -18,6 +24,8 @@ class Config(BaseSettings):
     sample_titanic_path: str = str(Path(__file__).parent / "samples" / "titanic.sqlite3")
 
     default_model: str = "gpt-4"
+    templates_path: Path = Path(__file__).parent.parent / "templates"
+    assets_path: Path = Path(__file__).parent.parent / "assets"
 
 
 config = Config()

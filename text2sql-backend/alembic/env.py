@@ -9,7 +9,7 @@ from alembic import context
 from dataline.config import config as dataline_config
 from dataline.models import DBModel
 
-from dataline.utils import get_sqlite_dsn_async  # noqa: F401 isort:skip
+from dataline.utils import get_sqlite_dsn_async, get_sqlite_dsn  # noqa: F401 isort:skip
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -87,10 +87,56 @@ async def run_async_migrations() -> None:
     await engine.dispose()
 
 
-def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
+# def run_migrations_online() -> None:
+#     """Run migrations in 'online' mode."""
 
-    asyncio.run(run_async_migrations())
+#     asyncio.run(run_async_migrations())
+
+
+# async def run_migrations_online():
+#     """Run migrations in 'online' mode."""
+#     # loop = asyncio.get_event_loop()
+#     # loop.run_until_complete(run_async_migrations())
+#     # loop.close()
+#     await run_async_migrations()
+
+# def run_migrations_online() -> None:
+#     """Run migrations in 'online' mode.
+
+#     In this scenario we need to create an Engine
+#     and associate a connection with the context.
+
+#     """
+#     connectable = engine_from_config(
+#         config.get_section(config.config_ini_section, {}),
+#         prefix="sqlalchemy.",
+#         poolclass=pool.NullPool,
+#     )
+
+#     with connectable.connect() as connection:
+#         context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
+
+#         with context.begin_transaction():
+#             context.run_migrations()
+
+
+def run_migrations_online() -> None:
+    """Run migrations in 'online' mode.
+
+    In this scenario we need to create an Engine
+    and associate a connection with the context.
+
+    """
+    from sqlalchemy import create_engine
+
+    dsn = get_sqlite_dsn(dataline_config.sqlite_path)
+    engine = create_engine(dsn, echo=dataline_config.sqlite_echo)
+
+    with engine.connect() as connection:
+        context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
+
+        with context.begin_transaction():
+            context.run_migrations()
 
 
 if context.is_offline_mode():
