@@ -7,6 +7,7 @@ from uuid import UUID
 import uvicorn
 from alembic import command
 from alembic.config import Config
+import webbrowser
 from contextlib import asynccontextmanager
 from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
@@ -56,6 +57,7 @@ async def lifespan(app: FastAPI):
     # On startup
     if IS_BUNDLED:
         run_migrations()
+        webbrowser.open("http://localhost:7377", new=2)
     yield
     # On shutdown
 
