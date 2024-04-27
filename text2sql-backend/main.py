@@ -1,14 +1,12 @@
 import json
 import logging
+import webbrowser
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, AsyncGenerator
 from uuid import UUID
 
 import uvicorn
-from alembic import command
-from alembic.config import Config
-import webbrowser
-from contextlib import asynccontextmanager
 from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -18,8 +16,10 @@ from pygments import lexers
 from pygments_pprint_sql import SqlFilter
 
 import db
+from alembic import command
+from alembic.config import Config
 from app import App
-from dataline.config import config, IS_BUNDLED
+from dataline.config import IS_BUNDLED, config
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.settings import SettingsService
 from models import (
@@ -42,22 +42,27 @@ lexer = lexers.MySqlLexer()
 lexer.add_filter(SqlFilter())
 
 
-def run_migrations():
+def run_migrations() -> None:
     pth = Path(__file__).parent / "alembic.ini"
-    logger.warning(pth)
     alembic_cfg = Config(pth)
-    loc = alembic_cfg.get_main_option("script_location").removeprefix("./")
+    loc = alembic_cfg.get_main_option("script_location")
+    if loc:
+        loc = loc.removeprefix("./")
+    else:
+        raise Exception("Something went wrong - alembic config is None")
+
     alembic_cfg.set_main_option("script_location", f"{Path(__file__).parent}/{loc}")
     alembic_cfg.config_file_name = None  # to prevent alembic from overriding the logs
     command.upgrade(alembic_cfg, "head", sql=False)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # On startup
     if IS_BUNDLED:
         run_migrations()
         webbrowser.open("http://localhost:7377", new=2)
+
     yield
     # On shutdown
 
@@ -278,11 +283,12 @@ if IS_BUNDLED:
     app.mount("/assets", StaticFiles(directory=config.assets_path), name="static")
 
     @app.get("/{rest_of_path:path}", include_in_schema=False)
-    def index(request: Request, rest_of_path: str):
+    def index(request: Request, rest_of_path: str) -> Response:
         context = {"request": request}
         vite_config_path = config.assets_path / "manifest.json"
         if not vite_config_path.is_file():
             raise HTTPException(status_code=404, detail="Could not find frontend manifest")
+
         with vite_config_path.open("r") as f:
             vite_config = json.load(f)
             context["VITE_MANIFEST_JS"] = vite_config["index.html"]["file"]
@@ -291,4 +297,18 @@ if IS_BUNDLED:
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=7377)
+    webbrowser.open("http://google.com", new=2)
+
+    def is_port_in_use(port: int) -> bool:
+        import socket
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(("localhost", port)) == 0
+
+    if IS_BUNDLED:
+        if not is_port_in_use(7377):
+            uvicorn.run(app, host="localhost", port=7377, workers=1, reload=True)
+        else:
+            webbrowser.open("http://localhost:7377", new=2)
+    else:
+        uvicorn.run(app, host="localhost", port=7377, workers=1, reload=True)

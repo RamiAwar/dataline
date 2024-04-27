@@ -69,4 +69,3 @@ class ChatLLM:
             if i.choices[0].finish_reason == "stop":
                 raise StopIteration
             yield i.choices[0].delta.content
-            yield i.choices[0].delta.content

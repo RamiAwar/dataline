@@ -10,7 +10,7 @@ import connection_creator_image from "@/assets/images/connection_creator.png";
 import ReactGA from "react-ga4";
 
 import "./Landing.css";
-import { BetaSignupForm } from "@/components/Landing/EmailSignupForm";
+import { EmailSignupForm } from "@/components/Landing/EmailSignupForm";
 import SquareBackground from "@components/Layouts/SquareBackground";
 import SquareBackgroundInverted from "@components/Layouts/SquareBackgroundInverted";
 import BackgroundHighlight from "@components/Layouts/BackgroundHighlight";
@@ -333,10 +333,10 @@ export const Landing = () => {
         <div className="pt-36 pb-36">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl sm:text-center">
-              <BetaSignupForm
+              <EmailSignupForm
                 title={CohortData[selectedCohort].cta_title}
                 description={CohortData[selectedCohort].cta_description}
-              ></BetaSignupForm>
+              ></EmailSignupForm>
             </div>
           </div>
         </div>
