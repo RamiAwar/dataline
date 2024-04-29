@@ -1,3 +1,5 @@
+# Adapted from https://github.com/cdrx/docker-pyinstaller/blob/master/Dockerfile-py3-win64
+
 FROM python:3.11.6-slim-bookworm as base
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -97,6 +99,11 @@ RUN pip install --no-cache-dir poetry && \
     poetry self add poetry-plugin-export && \
     poetry export --without-hashes -f requirements.txt --output requirements.txt
 
+# Install pip packages during build instead of run
+RUN wine C:/Python311/python.exe -m pip install -r requirements.txt
+
+
+COPY images/logo.ico .
 
 COPY text2sql-backend/*.py .
 COPY text2sql-backend/dataline ./dataline

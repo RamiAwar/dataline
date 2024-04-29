@@ -1,11 +1,13 @@
 import json
 import logging
+import sys
 import webbrowser
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated, AsyncGenerator
 from uuid import UUID
 
+import socket
 import uvicorn
 from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
@@ -295,20 +297,22 @@ if IS_BUNDLED:
             context["VITE_MANIFEST_CSS"] = vite_config["index.html"]["css"][0]
         return templates.TemplateResponse("index.html.jinja2", context=context)
 
-
-if __name__ == "__main__":
-    webbrowser.open("http://google.com", new=2)
-
     def is_port_in_use(port: int) -> bool:
-        import socket
-
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             return s.connect_ex(("localhost", port)) == 0
 
-    if IS_BUNDLED:
+    if __name__ == "__main__":
         if not is_port_in_use(7377):
-            uvicorn.run(app, host="localhost", port=7377, workers=1, reload=True)
+
+            class NullOutput(object):
+                def write(self, string):
+                    pass
+
+                def isatty(self):
+                    return False
+
+            sys.stdout = NullOutput() if sys.stdout is None else sys.stdout
+            sys.stderr = NullOutput() if sys.stderr is None else sys.stderr
+            uvicorn.run(app, host="localhost", port=7377)
         else:
             webbrowser.open("http://localhost:7377", new=2)
-    else:
-        uvicorn.run(app, host="localhost", port=7377, workers=1, reload=True)

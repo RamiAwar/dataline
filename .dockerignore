@@ -27,6 +27,8 @@ text2sql-backend/.git
 */tests
 hooks
 ./images
+# For bundling the windows app
+!./images/logo.ico
 
 # Exclude bruno
 */bruno
