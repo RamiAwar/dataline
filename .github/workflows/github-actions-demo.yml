@@ -1,18 +1,111 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
+name: App Bundling
+run-name: Bundling on GitHub Actions 🚀 triggered by ${{ github.actor }}
+# run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+# https://stackoverflow.com/a/58142412/13174934
+on:
+  push:
+    branches:
+      - "S8.1-bundling-the-app"
 jobs:
-  Explore-GitHub-Actions:
+  #   Explore-GitHub-Actions:
+  #     runs-on: ubuntu-latest
+  #     steps:
+  #       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+  #       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+  #       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+  #       - name: Check out repository code
+  #         uses: actions/checkout@v4
+  #       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+  #       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+  #       - name: List files in the repository
+  #         run: |
+  #           ls ${{ github.workspace }}
+  #       - run: echo "🍏 This job's status is ${{ job.status }}."
+
+  build-frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./text2sql-frontend
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
+      - uses: actions/checkout@v4
+      - name: Install Nodejs
+        uses: actions/setup-node@v4
+        with:
+          # TODO: use newer version once this works
+          node-version: "20"
+      - name: Install npm packages
+        run: npm install
+      - name: Build the frontend
+        env:
+          NODE_ENV: local
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-artifact
+          # default workdir is only for runs, here we are using "uses" so it does not apply
+          path: text2sql-frontend/dist/
+          overwrite: true
+
+  bundle-linux:
+    runs-on: ubuntu-latest
+    needs: build-frontend
+    defaults:
+      run:
+        working-directory: ./text2sql-backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Frontend Build
+        uses: actions/download-artifact@v4
+        with:
+          path: ./text2sql-backend/dist/
+          name: frontend-artifact
+      - name: Properly copy frontend build to backend
         run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+          cp -r dist/assets/ assets
+          cp dist/favicon.ico assets/favicon.ico
+          cp dist/manifest.json assets/manifest.json
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.6
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Setup a local virtual environment (if no poetry.toml file)
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+      - uses: actions/cache@v3
+        name: Define a cache for the virtual environment based on the dependencies lock file
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+      - name: Install the project dependencies
+        run: poetry install --only main --no-root
+      - name: Install pyinstaller
+        run: pip install pyinstaller
+      - name: Run pyinstaller
+        run: |
+          pyinstaller --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+            --add-data alembic:alembic --add-data alembic.ini:. --add-data dataline/samples:dataline/samples --add-data templates:templates --add-data assets:assets \
+            --collect-data llama_index --distpath ../linux_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        # if: ${{ failure() }}
+  # bundle-windows:
+  #   runs-on: windows-latest
+  # needs: build-frontend
+  # defaults:
+  #   run:
+  #     working-directory: ./text2sql-backend
+  # steps:
+  #   - uses: actions/checkout@v4
+
+  # bundle-macos:
+  #   runs-on: macos-latest
+  # needs: build-frontend
+  # defaults:
+  #   run:
+  #     working-directory: ./text2sql-backend
+  # steps:
+  #   - uses: actions/checkout@v4
