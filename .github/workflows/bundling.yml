@@ -79,7 +79,7 @@ jobs:
       - name: Run pyinstaller
         run: |
           pyinstaller --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
-            --add-data alembic:alembic --add-data alembic.ini:. --add-data dataline/samples:dataline/samples --add-data templates:templates --add-data assets:assets \
+            --add-data alembic:alembic --add-data alembic.ini:. --add-data samples:samples --add-data templates:templates --add-data assets:assets \
             --collect-data llama_index --distpath ../linux_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
       - uses: actions/upload-artifact@v4
         with:
@@ -118,7 +118,7 @@ jobs:
       - name: Run pyinstaller
         run: |
           pyinstaller --windowed -i ../images/logo.ico --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite `
-            --add-data "alembic;alembic" --add-data "alembic.ini;." --add-data "dataline/samples;dataline/samples" --add-data "templates;templates" --add-data "assets;assets" `
+            --add-data "alembic;alembic" --add-data "alembic.ini;." --add-data "samples;samples" --add-data "templates;templates" --add-data "assets;assets" `
             --collect-data llama_index --distpath ../win64_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
       - uses: actions/upload-artifact@v4
         with:
@@ -156,8 +156,8 @@ jobs:
           pip install -r requirements.txt pyinstaller==5.13.2
       - name: Run pyinstaller
         run: |
-          pyinstaller --windowed -i ../images/logo.icns --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
-            --add-data alembic:alembic --add-data alembic.ini:. --add-data dataline/samples:dataline/samples --add-data templates:templates --add-data assets:assets \
+          pyinstaller --name DataLine --windowed -i ../images/logo.icns --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+            --add-data alembic:alembic --add-data alembic.ini:. --add-data samples:samples --add-data templates:templates --add-data assets:assets \
             --collect-data llama_index --distpath ../macos_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
       - uses: actions/upload-artifact@v4
         with:

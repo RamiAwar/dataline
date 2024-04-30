@@ -1,5 +1,6 @@
 import json
 import logging
+import socket
 import sys
 import webbrowser
 from contextlib import asynccontextmanager
@@ -7,23 +8,17 @@ from pathlib import Path
 from typing import Annotated, AsyncGenerator
 from uuid import UUID
 
-import socket
-import uvicorn
-from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
-from pydantic.json import pydantic_encoder
-from pygments import lexers
-from pygments_pprint_sql import SqlFilter
-
 import db
+import uvicorn
 from alembic import command
 from alembic.config import Config
 from app import App
 from dataline.config import IS_BUNDLED, config
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.settings import SettingsService
+from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from models import (
     Conversation,
     ConversationWithMessagesWithResults,
@@ -34,6 +29,10 @@ from models import (
     UnsavedResult,
     UpdateConversationRequest,
 )
+from pydantic import BaseModel
+from pydantic.json import pydantic_encoder
+from pygments import lexers
+from pygments_pprint_sql import SqlFilter
 from services import QueryService, results_from_query_response
 from sql_wrapper import request_execute, request_limit
 
