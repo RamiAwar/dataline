@@ -130,7 +130,7 @@ jobs:
   bundle-macos:
     strategy:
       matrix:
-        os: [macos-latest, macos-latest-large]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
     needs: build-frontend
     defaults:
