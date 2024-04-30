@@ -128,7 +128,10 @@ jobs:
           overwrite: true
 
   bundle-macos:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [macos-latest, macos-latest-large]
+    runs-on: ${{ matrix.os }}
     needs: build-frontend
     defaults:
       run:
@@ -158,7 +161,7 @@ jobs:
             --collect-data llama_index --distpath ../macos_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
       - uses: actions/upload-artifact@v4
         with:
-          name: macos-artifact
+          name: ${{ matrix.os }}-artifact
           # default workdir is only for runs, here we are using "uses" so it does not apply
           path: macos_dist/
           overwrite: true
