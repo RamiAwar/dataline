@@ -40,11 +40,16 @@ jobs:
         env:
           NODE_ENV: local
         run: npm run build
+      - name: Prepare assets for use by backend
+        run: |
+          cp -r dist/assets/ assets
+          cp dist/favicon.ico assets/favicon.ico
+          cp dist/manifest.json assets/manifest.json
       - uses: actions/upload-artifact@v4
         with:
           name: frontend-artifact
           # default workdir is only for runs, here we are using "uses" so it does not apply
-          path: text2sql-frontend/dist/
+          path: text2sql-frontend/assets/
           overwrite: true
 
   bundle-linux:
@@ -58,49 +63,63 @@ jobs:
       - name: Download Frontend Build
         uses: actions/download-artifact@v4
         with:
-          path: ./text2sql-backend/dist/
+          path: ./text2sql-backend/assets/
           name: frontend-artifact
-      - name: Properly copy frontend build to backend
-        run: |
-          cp -r dist/assets/ assets
-          cp dist/favicon.ico assets/favicon.ico
-          cp dist/manifest.json assets/manifest.json
       - name: Install Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.11.6
       - name: Install poetry
         uses: abatilo/actions-poetry@v2
-      - name: Setup a local virtual environment (if no poetry.toml file)
+      - name: Install dependencies
         run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
-      - uses: actions/cache@v3
-        name: Define a cache for the virtual environment based on the dependencies lock file
-        with:
-          path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
-      - name: Install the project dependencies
-        run: poetry install --only main --no-root
-      - name: Install pyinstaller
-        run: pip install pyinstaller
+          poetry self add poetry-plugin-export
+          poetry export --without-hashes -f requirements.txt --output requirements.txt
+          pip install -r requirements.txt pyinstaller
       - name: Run pyinstaller
         run: |
           pyinstaller --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
             --add-data alembic:alembic --add-data alembic.ini:. --add-data dataline/samples:dataline/samples --add-data templates:templates --add-data assets:assets \
             --collect-data llama_index --distpath ../linux_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
-      - name: Setup tmate session
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifact-${{ github.sha }}
+          # default workdir is only for runs, here we are using "uses" so it does not apply
+          path: linux_dist/
+          overwrite: true
+
+  bundle-windows:
+    runs-on: windows-latest
+    needs: build-frontend
+    defaults:
+      run:
+        working-directory: ./text2sql-backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Frontend Build
+        uses: actions/download-artifact@v4
+        with:
+          path: ./text2sql-backend/assets/
+          name: frontend-artifact
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.6
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Install dependencies
+        run: |
+          poetry self add poetry-plugin-export
+          poetry export --without-hashes -f requirements.txt --output requirements.txt
+          pip install -r requirements.txt pyinstaller
+      - name: Run pyinstaller
+        run: |
+          pyinstaller --windowed -i logo.ico --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+            --add-data "alembic;alembic" --add-data "alembic.ini;." --add-data "dataline/samples;dataline/samples" --add-data "templates;templates" --add-data "assets;assets" \
+            --collect-data llama_index --distpath /win64_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
+      - name: Setup tmate session (windows)
         uses: mxschmitt/action-tmate@v3
         # if: ${{ failure() }}
-  # bundle-windows:
-  #   runs-on: windows-latest
-  # needs: build-frontend
-  # defaults:
-  #   run:
-  #     working-directory: ./text2sql-backend
-  # steps:
-  #   - uses: actions/checkout@v4
-
   # bundle-macos:
   #   runs-on: macos-latest
   # needs: build-frontend
