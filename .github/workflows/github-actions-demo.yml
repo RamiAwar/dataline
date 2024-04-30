@@ -75,7 +75,7 @@ jobs:
         run: |
           poetry self add poetry-plugin-export
           poetry export --without-hashes -f requirements.txt --output requirements.txt
-          pip install -r requirements.txt pyinstaller==^5.13.2
+          pip install -r requirements.txt pyinstaller==5.13.2
       - name: Run pyinstaller
         run: |
           pyinstaller --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
@@ -111,7 +111,7 @@ jobs:
         run: |
           poetry self add poetry-plugin-export
           poetry export --without-hashes -f requirements.txt --output requirements.txt
-          pip install -r requirements.txt pyinstaller==^5.13.2
+          pip install -r requirements.txt pyinstaller==5.13.2
       # - name: Setup tmate session (windows)
       #   uses: mxschmitt/action-tmate@v3
         # if: ${{ failure() }}
@@ -150,7 +150,7 @@ jobs:
         run: |
           poetry self add poetry-plugin-export
           poetry export --without-hashes -f requirements.txt --output requirements.txt
-          pip install -r requirements.txt pyinstaller==^5.13.2
+          pip install -r requirements.txt pyinstaller==5.13.2
       - name: Run pyinstaller
         run: |
           pyinstaller --windowed -i ../images/logo.icns --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
