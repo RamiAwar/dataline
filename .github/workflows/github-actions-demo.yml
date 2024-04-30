@@ -75,7 +75,7 @@ jobs:
         run: |
           poetry self add poetry-plugin-export
           poetry export --without-hashes -f requirements.txt --output requirements.txt
-          pip install -r requirements.txt pyinstaller
+          pip install -r requirements.txt
       - name: Run pyinstaller
         run: |
           pyinstaller --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
@@ -83,7 +83,7 @@ jobs:
             --collect-data llama_index --distpath ../linux_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
       - uses: actions/upload-artifact@v4
         with:
-          name: linux-artifact-${{ github.sha }}
+          name: linux-artifact
           # default workdir is only for runs, here we are using "uses" so it does not apply
           path: linux_dist/
           overwrite: true
@@ -111,20 +111,54 @@ jobs:
         run: |
           poetry self add poetry-plugin-export
           poetry export --without-hashes -f requirements.txt --output requirements.txt
-          pip install -r requirements.txt pyinstaller
-      - name: Setup tmate session (windows)
-        uses: mxschmitt/action-tmate@v3
+          pip install -r requirements.txt
+      # - name: Setup tmate session (windows)
+      #   uses: mxschmitt/action-tmate@v3
         # if: ${{ failure() }}
       - name: Run pyinstaller
         run: |
           pyinstaller --windowed -i ../images/logo.ico --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
             --add-data "alembic;alembic" --add-data "alembic.ini;." --add-data "dataline/samples;dataline/samples" --add-data "templates;templates" --add-data "assets;assets" \
-            --collect-data llama_index --distpath /win64_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
-  # bundle-macos:
-  #   runs-on: macos-latest
-  # needs: build-frontend
-  # defaults:
-  #   run:
-  #     working-directory: ./text2sql-backend
-  # steps:
-  #   - uses: actions/checkout@v4
+            --collect-data llama_index --distpath ../win64_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifact
+          # default workdir is only for runs, here we are using "uses" so it does not apply
+          path: win64_dist/
+          overwrite: true
+
+  bundle-macos:
+    runs-on: macos-latest
+    needs: build-frontend
+    defaults:
+      run:
+        working-directory: ./text2sql-backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Frontend Build
+        uses: actions/download-artifact@v4
+        with:
+          path: ./text2sql-backend/assets/
+          name: frontend-artifact
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.6
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Install dependencies
+        run: |
+          poetry self add poetry-plugin-export
+          poetry export --without-hashes -f requirements.txt --output requirements.txt
+          pip install -r requirements.txt
+      - name: Run pyinstaller
+        run: |
+          pyinstaller --windowed -i ../images/logo.icns --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+            --add-data alembic:alembic --add-data alembic.ini:. --add-data dataline/samples:dataline/samples --add-data templates:templates --add-data assets:assets \
+            --collect-data llama_index --distpath ../macos_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifact
+          # default workdir is only for runs, here we are using "uses" so it does not apply
+          path: macos_dist/
+          overwrite: true
