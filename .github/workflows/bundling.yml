@@ -112,9 +112,6 @@ jobs:
           poetry self add poetry-plugin-export
           poetry export --without-hashes -f requirements.txt --output requirements.txt
           pip install -r requirements.txt pyinstaller==5.13.2
-      # - name: Setup tmate session (windows)
-      #   uses: mxschmitt/action-tmate@v3
-        # if: ${{ failure() }}
       - name: Run pyinstaller
         run: |
           pyinstaller --windowed -i ../images/logo.ico --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite `
@@ -156,7 +153,7 @@ jobs:
           pip install -r requirements.txt pyinstaller==5.13.2
       - name: Run pyinstaller
         run: |
-          pyinstaller --name DataLine --windowed -i ../images/logo.icns --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+          pyinstaller --name DataLine -i ../images/logo.icns --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
             --add-data alembic:alembic --add-data alembic.ini:. --add-data samples:samples --add-data templates:templates --add-data assets:assets \
             --collect-data llama_index --distpath ../macos_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
       - uses: actions/upload-artifact@v4
