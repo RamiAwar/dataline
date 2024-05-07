@@ -138,7 +138,8 @@ jobs:
       - name: Run pyinstaller
         run: |
           pyinstaller --clean --distpath macos_dist -y macos.spec
-          tar -cvf ../dataline.tar macos_dist/dataline
+          cd macos_dist
+          tar -cf ../../dataline.tar dataline
       - uses: actions/upload-artifact@v4
         with:
           name: dataline-${{ matrix.os }}.tar
