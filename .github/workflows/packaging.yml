@@ -137,7 +137,7 @@ jobs:
           pip install -r requirements.txt pyinstaller==5.13.2
       - name: Run pyinstaller
         run: |
-          pyinstaller --clean --distpath ../macos_dist -y macos.spec
+          pyinstaller --clean --distpath macos_dist -y macos.spec
           tar -cvf ../dataline.tar macos_dist/dataline
       - uses: actions/upload-artifact@v4
         with:
