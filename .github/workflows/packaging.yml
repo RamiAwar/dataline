@@ -69,7 +69,7 @@ jobs:
         with:
           name: linux-artifact
           # default workdir is only for runs, here we are using "uses" so it does not apply
-          path: ../dataline.tar
+          path: dataline.tar
           overwrite: true
 
   bundle-windows:
