@@ -1,27 +1,10 @@
-name: App Bundling
-run-name: Bundling on GitHub Actions 🚀 triggered by ${{ github.actor }}
-# run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-# https://stackoverflow.com/a/58142412/13174934
+name: Packaging
+run-name: Packaging triggered by ${{ github.actor }}
 on:
   push:
     branches:
       - "S8.1-bundling-the-app"
 jobs:
-  #   Explore-GitHub-Actions:
-  #     runs-on: ubuntu-latest
-  #     steps:
-  #       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-  #       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-  #       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-  #       - name: Check out repository code
-  #         uses: actions/checkout@v4
-  #       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-  #       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-  #       - name: List files in the repository
-  #         run: |
-  #           ls ${{ github.workspace }}
-  #       - run: echo "🍏 This job's status is ${{ job.status }}."
-
   build-frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -81,11 +64,12 @@ jobs:
           pyinstaller --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
             --add-data alembic:alembic --add-data alembic.ini:. --add-data samples:samples --add-data templates:templates --add-data assets:assets \
             --collect-data llama_index --distpath ../linux_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
+          tar -cvf ../dataline.tar ../linux_dist
       - uses: actions/upload-artifact@v4
         with:
           name: linux-artifact
           # default workdir is only for runs, here we are using "uses" so it does not apply
-          path: linux_dist/
+          path: ../dataline.tar
           overwrite: true
 
   bundle-windows:
@@ -156,9 +140,10 @@ jobs:
           pyinstaller --name DataLine -i ../images/logo.icns --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
             --add-data alembic:alembic --add-data alembic.ini:. --add-data samples:samples --add-data templates:templates --add-data assets:assets \
             --collect-data llama_index --distpath ../macos_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
+          tar -cvf ../dataline.tar ../macos_dist
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-artifact
           # default workdir is only for runs, here we are using "uses" so it does not apply
-          path: macos_dist/
+          path: dataline.tar
           overwrite: true
