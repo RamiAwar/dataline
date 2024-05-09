@@ -281,21 +281,21 @@ def update_schema_table_field_description(conn: sqlite3.Connection, field_id: st
 
 
 # Conversation logic
-def get_conversation(conversation_id: str) -> Conversation:
-    conversation = conn.execute(
-        "SELECT id, connection_id, name, created_at FROM conversations WHERE id = ?",
-        (conversation_id,),
-    ).fetchone()
+# def get_conversation(session: AsyncSession, conversation_id: str) -> Conversation:
 
-    if conversation is None:
-        raise NotFoundError("Conversation does not exist")
+#         "SELECT id, connection_id, name, created_at FROM conversations WHERE id = ?",
+#         (conversation_id,),
+#     ).fetchone()
 
-    return Conversation(
-        conversation_id=str(conversation[0]),
-        connection_id=conversation[1],
-        name=conversation[2],
-        created_at=conversation[3],
-    )
+#     if conversation is None:
+#         raise NotFoundError("Conversation does not exist")
+
+#     return Conversation(
+#         conversation_id=str(conversation[0]),
+#         connection_id=conversation[1],
+#         name=conversation[2],
+#         created_at=conversation[3],
+#     )
 
 
 def get_conversations() -> list[Conversation]:
@@ -378,12 +378,6 @@ def get_conversations_with_messages_with_results() -> list[ConversationWithMessa
             )
         )
     return conversations_with_messages_with_results
-
-
-def delete_conversation(conversation_id: str) -> None:
-    """Delete conversation, all associated messages, and all their results"""
-    conn.execute("DELETE FROM conversations WHERE id = ?", (conversation_id,))
-    conn.commit()
 
 
 # Create empty converstaion
