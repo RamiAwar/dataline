@@ -8,7 +8,7 @@ from dataline.config import config
 
 class UserUpdateIn(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=250)
-    openai_api_key: Optional[str] = Field(None, min_length=4, pattern=r"^sk-(\w|\d)+$")
+    openai_api_key: Optional[str] = Field(None, min_length=4)
     preferred_openai_model: Optional[str] = None
 
     @field_validator("openai_api_key")
