@@ -16,17 +16,11 @@ from pydantic.json import pydantic_encoder
 from pygments import lexers
 from pygments_pprint_sql import SqlFilter
 
-import db
 from alembic import command
 from alembic.config import Config
 from app import App
+from dataline import db
 from dataline.config import IS_BUNDLED, config
-from dataline.models.conversation.schema import (
-    ConversationOut,
-    ConversationsOut,
-    CreateConversationIn,
-    CreateConversationOut,
-)
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.conversation import ConversationService
 from dataline.services.settings import SettingsService
@@ -36,7 +30,6 @@ from models import (
     Result,
     SuccessResponse,
     UnsavedResult,
-    UpdateConversationRequest,
 )
 from services import QueryService, results_from_query_response
 from sql_wrapper import request_execute, request_limit
@@ -79,63 +72,6 @@ app = App(lifespan=lifespan)
 @app.get("/healthcheck", response_model_exclude_none=True)
 async def healthcheck() -> SuccessResponse[None]:
     return SuccessResponse()
-
-
-@app.get("/conversations")
-async def conversations() -> SuccessResponse[ConversationsOut]:
-    return SuccessResponse(
-        data=ConversationsOut(
-            conversations=db.get_conversations_with_messages_with_results(),
-        ),
-    )
-
-
-@app.post("/conversation")
-async def create_conversation(
-    conversation_in: CreateConversationIn,
-    session: AsyncSession = Depends(get_session),
-    conversation_service: ConversationService = Depends(ConversationService),
-) -> SuccessResponse[CreateConversationOut]:
-    conversation = await conversation_service.create_conversation(
-        session, connection_id=conversation_in.connection_id, name=conversation_in.name
-    )
-    return SuccessResponse(
-        data=CreateConversationOut(
-            conversation_id=conversation.conversation_id,
-        ),
-    )
-
-
-@app.patch("/conversation/{conversation_id}")
-async def update_conversation(
-    conversation_id: int,
-    conversation_in: UpdateConversationRequest,
-    session: AsyncSession = Depends(get_session),
-    conversation_service: ConversationService = Depends(ConversationService),
-) -> None:
-    await conversation_service.update_conversation_name(
-        session, conversation_id=conversation_id, name=conversation_in.name
-    )
-    return None
-
-
-@app.delete("/conversation/{conversation_id}")
-async def delete_conversation(
-    conversation_id: int,
-    session: AsyncSession = Depends(get_session),
-    conversation_service: ConversationService = Depends(ConversationService),
-) -> None:
-    return await conversation_service.delete_conversation(session, conversation_id)
-
-
-@app.get("/conversation/{conversation_id}")
-async def get_conversation(
-    conversation_id: int,
-    session: AsyncSession = Depends(get_session),
-    conversation_service: ConversationService = Depends(ConversationService),
-) -> SuccessResponse[ConversationOut]:
-    conversation = await conversation_service.get_conversation(session, conversation_id=conversation_id)
-    return SuccessResponse(data=conversation)
 
 
 class ListMessageOut(BaseModel):

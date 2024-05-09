@@ -6,8 +6,8 @@ from uuid import UUID
 
 from sqlalchemy import MetaData, create_engine, inspect
 
-import db
 from context_builder import CustomSQLContextContainerBuilder
+from dataline import db
 from dataline.models.connection.schema import Connection
 from errors import GenerationError, RelatedTablesNotFoundError
 from models import SQLQueryResult, TableField, UnsavedResult

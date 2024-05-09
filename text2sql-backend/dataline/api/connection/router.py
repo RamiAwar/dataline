@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
-import db
+import dataline.db as db
 from dataline.config import config
 from dataline.models.connection.schema import (
     ConnectionOut,

@@ -311,6 +311,31 @@ def get_conversations() -> list[Conversation]:
     ]
 
 
+# Create empty converstaion
+def create_conversation(connection_id: str, name: str) -> int:
+    """Creates an empty conversation and returns its id"""
+    created_at = datetime.now()
+    conversation_id = conn.execute(
+        "INSERT INTO conversations (connection_id, name, created_at) VALUES (?, ?, ?)",
+        (connection_id, name, created_at),
+    ).lastrowid
+
+    if conversation_id is None:
+        raise ValueError("Conversation could not be created")
+
+    conn.commit()
+    return conversation_id
+
+
+def update_conversation(conversation_id: str, name: str) -> Literal[True]:
+    conn.execute(
+        "UPDATE conversations SET name = ? WHERE id = ?",
+        (name, conversation_id),
+    )
+    conn.commit()
+    return True
+
+
 def get_conversations_with_messages_with_results() -> list[ConversationWithMessagesWithResults]:
     conversations = conn.execute(
         "SELECT id, connection_id, name, created_at FROM conversations ORDER BY created_at DESC"
@@ -378,31 +403,6 @@ def get_conversations_with_messages_with_results() -> list[ConversationWithMessa
             )
         )
     return conversations_with_messages_with_results
-
-
-# Create empty converstaion
-def create_conversation(connection_id: str, name: str) -> int:
-    """Creates an empty conversation and returns its id"""
-    created_at = datetime.now()
-    conversation_id = conn.execute(
-        "INSERT INTO conversations (connection_id, name, created_at) VALUES (?, ?, ?)",
-        (connection_id, name, created_at),
-    ).lastrowid
-
-    if conversation_id is None:
-        raise ValueError("Conversation could not be created")
-
-    conn.commit()
-    return conversation_id
-
-
-def update_conversation(conversation_id: str, name: str) -> Literal[True]:
-    conn.execute(
-        "UPDATE conversations SET name = ? WHERE id = ?",
-        (name, conversation_id),
-    )
-    conn.commit()
-    return True
 
 
 def toggle_save_query(result_id: str) -> bool:
