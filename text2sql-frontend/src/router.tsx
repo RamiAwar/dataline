@@ -7,8 +7,6 @@ import { ConnectionEditor } from "@components/Connection/ConnectionEditor";
 import Account from "@components/Settings/Settings";
 import { NewConnection } from "@components/Connection/NewConnection";
 
-
-
 export enum Routes {
   Root = "/",
   SignIn = "/login",

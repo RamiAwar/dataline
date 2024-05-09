@@ -1,18 +1,24 @@
 import json
 import logging
-from typing import Annotated
+import socket
+import sys
+import webbrowser
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Annotated, AsyncGenerator
 from uuid import UUID
 
-from fastapi import Body, Depends, HTTPException, Response
-from pydantic import BaseModel
-from pydantic.json import pydantic_encoder
-from pygments import lexers
-from pygments_pprint_sql import SqlFilter
-
 import db
+import uvicorn
+from alembic import command
+from alembic.config import Config
 from app import App
+from dataline.config import IS_BUNDLED, config
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.settings import SettingsService
+from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from models import (
     Conversation,
     ConversationWithMessagesWithResults,
@@ -23,6 +29,10 @@ from models import (
     UnsavedResult,
     UpdateConversationRequest,
 )
+from pydantic import BaseModel
+from pydantic.json import pydantic_encoder
+from pygments import lexers
+from pygments_pprint_sql import SqlFilter
 from services import QueryService, results_from_query_response
 from sql_wrapper import request_execute, request_limit
 
@@ -32,7 +42,33 @@ logger = logging.getLogger(__name__)
 lexer = lexers.MySqlLexer()
 lexer.add_filter(SqlFilter())
 
-app = App()
+
+def run_migrations() -> None:
+    pth = Path(__file__).parent / "alembic.ini"
+    alembic_cfg = Config(pth)
+    loc = alembic_cfg.get_main_option("script_location")
+    if loc:
+        loc = loc.removeprefix("./")
+    else:
+        raise Exception("Something went wrong - alembic config is None")
+
+    alembic_cfg.set_main_option("script_location", f"{Path(__file__).parent}/{loc}")
+    alembic_cfg.config_file_name = None  # to prevent alembic from overriding the logs
+    command.upgrade(alembic_cfg, "head", sql=False)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    # On startup
+    if IS_BUNDLED:
+        run_migrations()
+        webbrowser.open("http://localhost:7377", new=2)
+
+    yield
+    # On shutdown
+
+
+app = App(lifespan=lifespan)
 
 
 @app.get("/healthcheck", response_model_exclude_none=True)
@@ -240,3 +276,42 @@ async def query(
             ),
             media_type="application/json",
         )
+
+
+if IS_BUNDLED:
+    # running in a PyInstaller bundle
+    templates = Jinja2Templates(directory=config.templates_path)
+    app.mount("/assets", StaticFiles(directory=config.assets_path), name="static")
+
+    @app.get("/{rest_of_path:path}", include_in_schema=False)
+    def index(request: Request, rest_of_path: str) -> Response:
+        context = {"request": request}
+        vite_config_path = config.assets_path / "manifest.json"
+        if not vite_config_path.is_file():
+            raise HTTPException(status_code=404, detail="Could not find frontend manifest")
+
+        with vite_config_path.open("r") as f:
+            vite_config = json.load(f)
+            context["VITE_MANIFEST_JS"] = vite_config["index.html"]["file"]
+            context["VITE_MANIFEST_CSS"] = vite_config["index.html"]["css"][0]
+        return templates.TemplateResponse("index.html.jinja2", context=context)
+
+    def is_port_in_use(port: int) -> bool:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(("localhost", port)) == 0
+
+    if __name__ == "__main__":
+        if not is_port_in_use(7377):
+
+            class NullOutput(object):
+                def write(self, string):
+                    pass
+
+                def isatty(self):
+                    return False
+
+            sys.stdout = NullOutput() if sys.stdout is None else sys.stdout
+            sys.stderr = NullOutput() if sys.stderr is None else sys.stderr
+            uvicorn.run(app, host="localhost", port=7377)
+        else:
+            webbrowser.open("http://localhost:7377", new=2)

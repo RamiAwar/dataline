@@ -23,15 +23,10 @@ const templateMessages = [
     message: "What questions can I ask about this dataset?",
   },
   {
-    title: "Show me some rows",
-    text: "from one of the tables.",
-    message: "Show me some rows from one of the tables.",
-  },
-  {
     title: "What can you tell me",
     text: "about this database?",
     message: "What can you tell me about this database?",
-  },
+  }
 ];
 
 export const Conversation = () => {

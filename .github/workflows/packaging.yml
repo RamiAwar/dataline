@@ -1,0 +1,148 @@
+name: Packaging
+run-name: Packaging triggered by ${{ github.actor }}
+on:
+  push:
+    branches:
+      - "S8.1-bundling-the-app"
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./text2sql-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nodejs
+        uses: actions/setup-node@v4
+        with:
+          # TODO: use newer version once this works
+          node-version: "20"
+      - name: Install npm packages
+        run: npm install
+      - name: Build the frontend
+        env:
+          NODE_ENV: local
+        run: npm run build
+      - name: Prepare assets for use by backend
+        run: |
+          cp -r dist/assets/ assets
+          cp dist/favicon.ico assets/favicon.ico
+          cp dist/manifest.json assets/manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-artifact
+          # default workdir is only for runs, here we are using "uses" so it does not apply
+          path: text2sql-frontend/assets/
+          overwrite: true
+
+  bundle-linux:
+    runs-on: ubuntu-latest
+    needs: build-frontend
+    defaults:
+      run:
+        working-directory: ./text2sql-backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Frontend Build
+        uses: actions/download-artifact@v4
+        with:
+          path: ./text2sql-backend/assets/
+          name: frontend-artifact
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.6
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Install dependencies
+        run: |
+          poetry self add poetry-plugin-export
+          poetry export --without-hashes -f requirements.txt --output requirements.txt
+          pip install -r requirements.txt pyinstaller==5.13.2
+      - name: Run pyinstaller
+        run: |
+          pyinstaller --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+            --add-data alembic:alembic --add-data alembic.ini:. --add-data samples:samples --add-data templates:templates --add-data assets:assets \
+            --collect-data llama_index --distpath linux_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
+          tar -cvf ../dataline.tar linux_dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dataline-linux.tar
+          # default workdir is only for runs, here we are using "uses" so it does not apply
+          path: dataline.tar
+          overwrite: true
+
+  bundle-windows:
+    runs-on: windows-latest
+    needs: build-frontend
+    defaults:
+      run:
+        working-directory: ./text2sql-backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Frontend Build
+        uses: actions/download-artifact@v4
+        with:
+          path: ./text2sql-backend/assets/
+          name: frontend-artifact
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.6
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Install dependencies
+        run: |
+          poetry self add poetry-plugin-export
+          poetry export --without-hashes -f requirements.txt --output requirements.txt
+          pip install -r requirements.txt pyinstaller==5.13.2
+      - name: Run pyinstaller
+        run: |
+          pyinstaller --windowed -i ../images/logo.ico --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite `
+            --add-data "alembic;alembic" --add-data "alembic.ini;." --add-data "samples;samples" --add-data "templates;templates" --add-data "assets;assets" `
+            --collect-data llama_index --distpath ../win64_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 main.py -y
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifact
+          # default workdir is only for runs, here we are using "uses" so it does not apply
+          path: win64_dist/
+          overwrite: true
+
+  bundle-macos:
+    strategy:
+      matrix:
+        os: [macos-latest]
+    runs-on: ${{ matrix.os }}
+    needs: build-frontend
+    defaults:
+      run:
+        working-directory: ./text2sql-backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Frontend Build
+        uses: actions/download-artifact@v4
+        with:
+          path: ./text2sql-backend/assets/
+          name: frontend-artifact
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.6
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Install dependencies
+        run: |
+          poetry self add poetry-plugin-export
+          poetry export --without-hashes -f requirements.txt --output requirements.txt
+          pip install -r requirements.txt pyinstaller==5.13.2
+      - name: Run pyinstaller
+        run: |
+          pyinstaller --clean --distpath macos_dist -y macos.spec
+          cd macos_dist
+          tar -cf ../../dataline.tar dataline
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dataline-${{ matrix.os }}.tar
+          # default workdir is only for runs, here we are using "uses" so it does not apply
+          path: dataline.tar
+          overwrite: true
