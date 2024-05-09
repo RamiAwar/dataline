@@ -2,8 +2,8 @@ import mimetypes
 from typing import Optional
 from uuid import uuid4
 
-from fastapi import Depends, UploadFile
 import openai
+from fastapi import Depends, UploadFile
 
 from dataline.config import config
 from dataline.models.media.model import MediaModel
@@ -54,7 +54,7 @@ class SettingsService:
         # Delete old avatar
         old_avatar = await self.get_avatar(session)
         if old_avatar:
-            await self.media_repo.delete_by_id(session, old_avatar.id)
+            await self.media_repo.delete_by_uuid(session, old_avatar.id)
 
         return await self.upload_media(session, file)
 
@@ -89,7 +89,7 @@ class SettingsService:
             elif user_update.preferred_openai_model and user_info.openai_api_key:
                 if not model_exists(user_info.openai_api_key, user_update.preferred_openai_model):
                     raise Exception(f"model {user_update.preferred_openai_model} not accessible with current key")
-            user = await self.user_repo.update_by_id(session, record_id=user_info.id, data=user_update)
+            user = await self.user_repo.update_by_uuid(session, record_id=user_info.id, data=user_update)
 
         return UserOut.model_validate(user)
 
