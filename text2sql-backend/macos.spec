@@ -2,7 +2,6 @@
 from PyInstaller.utils.hooks import collect_data_files
 
 datas = [('alembic', 'alembic'), ('alembic.ini', '.'), ('samples', 'samples'), ('templates', 'templates'), ('assets', 'assets')]
-datas += collect_data_files('llama_index')
 datas += collect_data_files('jinja2')
 
 
