@@ -14,14 +14,14 @@ from dataline.models.connection.schema import (
     TableSchema,
     TableSchemaField,
 )
-from dataline.repositories.base import NotFoundError, NotUniqueError
-from models import (
+from dataline.old_models import (
     Conversation,
     ConversationWithMessagesWithResults,
     MessageWithResults,
     Result,
     UnsavedResult,
 )
+from dataline.repositories.base import NotFoundError, NotUniqueError
 
 
 @event.listens_for(Engine, "connect")

@@ -5,8 +5,8 @@ from typing import Optional
 import openai
 from openai.types.chat import ChatCompletionChunk
 
-from prompts import SQL_QUERY_PROMPT, SQL_REASK_QUERY_PROMPT
-from tokenizer import num_tokens_from_string
+from dataline.prompts import SQL_QUERY_PROMPT, SQL_REASK_QUERY_PROMPT
+from dataline.tokenizer import num_tokens_from_string
 
 logger = logging.getLogger(__name__)
 

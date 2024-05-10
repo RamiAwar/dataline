@@ -1,5 +1,5 @@
 import logging
-from typing import Any, AsyncContextManager, AsyncGenerator, Callable, Mapping, Self
+from typing import Any, AsyncContextManager, Callable, Mapping, Self
 
 import fastapi
 from fastapi import Request, status
@@ -9,8 +9,8 @@ from fastapi.responses import JSONResponse
 from dataline.api.connection.router import router as connection_router
 from dataline.api.conversation.router import router as conversation_router
 from dataline.api.settings.router import router as settings_router
+from dataline.llm import OpenAIError
 from dataline.repositories.base import NotFoundError, NotUniqueError
-from llm import OpenAIError
 
 logger = logging.getLogger(__name__)
 

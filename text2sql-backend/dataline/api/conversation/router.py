@@ -9,9 +9,9 @@ from dataline.models.conversation.schema import (
     CreateConversationIn,
     CreateConversationOut,
 )
+from dataline.old_models import SuccessResponse, UpdateConversationRequest
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.conversation import ConversationService
-from models import SuccessResponse, UpdateConversationRequest
 
 logger = logging.getLogger(__name__)
 

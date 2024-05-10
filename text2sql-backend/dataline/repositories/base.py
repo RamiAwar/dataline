@@ -14,7 +14,7 @@ from dataline.config import config
 # Load all sqlalchemy models
 from dataline.models import *  # noqa: F401, F403
 from dataline.models.base import DBModel
-from dataline.utils import get_sqlite_dsn_async
+from dataline.utils.utils import get_sqlite_dsn_async
 
 engine = create_async_engine(get_sqlite_dsn_async(config.sqlite_path))
 

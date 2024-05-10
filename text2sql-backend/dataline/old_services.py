@@ -6,13 +6,13 @@ from uuid import UUID
 
 from sqlalchemy import MetaData, create_engine, inspect
 
-from context_builder import CustomSQLContextContainerBuilder
 from dataline import db
+from dataline.context_builder import CustomSQLContextContainerBuilder
+from dataline.errors import GenerationError, RelatedTablesNotFoundError
 from dataline.models.connection.schema import Connection
-from errors import GenerationError, RelatedTablesNotFoundError
-from models import SQLQueryResult, TableField, UnsavedResult
-from query_manager import SQLQueryManager
-from sql_wrapper import CustomSQLDatabase
+from dataline.old_models import SQLQueryResult, TableField, UnsavedResult
+from dataline.query_manager import SQLQueryManager
+from dataline.sql_wrapper import CustomSQLDatabase
 
 logger = logging.getLogger(__name__)
 

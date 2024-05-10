@@ -4,10 +4,10 @@ import logging
 from typing import Any, Optional
 
 from dataline import db
+from dataline.llm import ChatLLM
 from dataline.models.connection.schema import Connection
-from llm import ChatLLM
-from sql_wrapper import CustomSQLDatabase
-from tokenizer import num_tokens_from_string
+from dataline.sql_wrapper import CustomSQLDatabase
+from dataline.tokenizer import num_tokens_from_string
 
 CONTEXT_QUERY_TEMPLATE = (
     "You are a data scientist whose job is to write SQL queries. You need to select tables for a query."
@@ -45,7 +45,7 @@ class CustomSQLContextContainerBuilder:
         model: str,
         context_dict: Optional[dict[str, str]] = None,
         context_str: Optional[str] = None,
-        temperature: Optional[float] = 0.0,
+        temperature: float = 0.0,
     ):
         """Initialize params."""
         self.connection: Connection = connection

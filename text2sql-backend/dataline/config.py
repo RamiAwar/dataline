@@ -3,6 +3,8 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings
 
+from dataline.utils.appdirs import user_data_dir
+
 # https://pyinstaller.org/en/v6.6.0/runtime-information.html
 IS_BUNDLED = bool(getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"))
 
@@ -11,7 +13,7 @@ class Config(BaseSettings):
     # SQLite database will be mounted in the configuration directory
     # This is where all DataLine data is stored
     # Current dir / db.sqlite3
-    sqlite_path: str = str(Path(__file__).parent.parent / "db.sqlite3")
+    sqlite_path: str = user_data_dir(appname="dataline")
     sqlite_echo: bool = False
 
     # This is where all uploaded files are stored (ex. uploaded sqlite DBs)

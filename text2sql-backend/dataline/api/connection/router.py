@@ -17,10 +17,18 @@ from dataline.models.connection.schema import (
     SampleOut,
     TableSchemasOut,
 )
+from dataline.old_models import (
+    SuccessListResponse,
+    SuccessResponse,
+    UpdateConnectionRequest,
+)
+from dataline.old_services import SchemaService
 from dataline.repositories.base import NotFoundError, NotUniqueError
-from dataline.utils import generate_short_uuid, get_sqlite_dsn, is_valid_sqlite_file
-from models import SuccessListResponse, SuccessResponse, UpdateConnectionRequest
-from services import SchemaService
+from dataline.utils.utils import (
+    generate_short_uuid,
+    get_sqlite_dsn,
+    is_valid_sqlite_file,
+)
 
 logger = logging.getLogger(__name__)
 
