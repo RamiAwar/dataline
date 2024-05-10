@@ -18,21 +18,21 @@ from pygments_pprint_sql import SqlFilter
 
 from alembic import command
 from alembic.config import Config
-from app import App
 from dataline import db
+from dataline.app import App
 from dataline.config import IS_BUNDLED, config
-from dataline.repositories.base import AsyncSession, NotFoundError, get_session
-from dataline.services.conversation import ConversationService
-from dataline.services.settings import SettingsService
-from models import (
+from dataline.old_models import (
     DataResult,
     MessageWithResults,
     Result,
     SuccessResponse,
     UnsavedResult,
 )
-from services import QueryService, results_from_query_response
-from sql_wrapper import request_execute, request_limit
+from dataline.old_services import QueryService, results_from_query_response
+from dataline.repositories.base import AsyncSession, NotFoundError, get_session
+from dataline.services.conversation import ConversationService
+from dataline.services.settings import SettingsService
+from dataline.sql_wrapper import request_execute, request_limit
 
 logging.basicConfig(level=logging.DEBUG)
 

@@ -91,8 +91,6 @@ class CustomSQLDatabase:
                 schema=self._schema,
             )
 
-    """Custom SQL Database wrapper"""
-
     def get_usable_table_names(self) -> Iterable[str]:
         """Get names of tables available."""
         if self._include_tables:

@@ -5,7 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 from dataline.models.conversation.model import ConversationModel
-from models import ConversationWithMessagesWithResults
+from dataline.old_models import ConversationWithMessagesWithResults
 
 
 class ConversationsOut(BaseModel):

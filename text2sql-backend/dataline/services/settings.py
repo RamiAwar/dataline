@@ -6,6 +6,7 @@ import openai
 from fastapi import Depends, UploadFile
 
 from dataline.config import config
+from dataline.errors import ValidationError
 from dataline.models.media.model import MediaModel
 from dataline.models.user.schema import UserOut, UserUpdateIn
 from dataline.repositories.base import AsyncSession, NotFoundError
@@ -29,14 +30,14 @@ class SettingsService:
     async def upload_media(self, session: AsyncSession, file: UploadFile) -> MediaModel:
         # Make sure file is an image
         if not file.content_type or not file.content_type.startswith("image/"):
-            raise ValueError("File must be a valid image")
+            raise ValidationError("File must be a valid image")
 
         # Check file size less than 5mb and non zero
         if not file.size or file.size > 5 * 1024 * 1024:
-            raise ValueError("File size must be less than 5mb")
+            raise ValidationError("File size must be less than 5mb")
 
         if not file.filename:
-            raise ValueError("File must have a name")
+            raise ValidationError("File must have a name")
 
         # Guess file extension
         file_extension = mimetypes.guess_extension(file.content_type)

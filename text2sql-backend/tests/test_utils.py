@@ -3,7 +3,7 @@ import os
 from fastapi import UploadFile
 
 from dataline.config import config
-from dataline.utils import generate_short_uuid, is_valid_sqlite_file
+from dataline.utils.utils import generate_short_uuid, is_valid_sqlite_file
 
 
 def test_valid_sqlite_file_validation() -> None:

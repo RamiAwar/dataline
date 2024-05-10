@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from alembic.command import upgrade
 from alembic.config import Config
-from app import App
+from dataline.app import App
 from dataline.models.base import DBModel
 from dataline.repositories.base import AsyncSession, get_session
 

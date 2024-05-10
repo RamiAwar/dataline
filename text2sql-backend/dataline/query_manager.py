@@ -5,8 +5,9 @@ from typing import Optional
 import openai
 from openai.types.chat import ChatCompletionChunk
 
-from prompts import SQL_QUERY_PROMPT, SQL_REASK_QUERY_PROMPT
-from tokenizer import num_tokens_from_string
+from dataline.errors import ValidationError
+from dataline.prompts import SQL_QUERY_PROMPT, SQL_REASK_QUERY_PROMPT
+from dataline.tokenizer import num_tokens_from_string
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class SQLQueryManager:
         )
 
         if num_tokens_from_string(prompt) > 8192:
-            raise ValueError("Prompt is too long. Please reduce the number of tables in your query.")
+            raise ValidationError("Prompt is too long. Please reduce the number of tables in your query.")
 
         # Stream base generator until empty
         messages = message_history[-2:] + [{"role": "user", "content": prompt}]

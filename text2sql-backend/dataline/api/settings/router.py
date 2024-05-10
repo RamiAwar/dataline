@@ -3,9 +3,9 @@ import base64
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
 from dataline.models.user.schema import AvatarOut, UserOut, UserUpdateIn
+from dataline.old_models import SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.settings import SettingsService
-from models import SuccessResponse
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 

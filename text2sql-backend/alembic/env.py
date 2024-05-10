@@ -9,7 +9,7 @@ from alembic import context
 from dataline.config import config as dataline_config
 from dataline.models import DBModel
 
-from dataline.utils import get_sqlite_dsn_async, get_sqlite_dsn  # noqa: F401 isort:skip
+from dataline.utils.utils import get_sqlite_dsn_async, get_sqlite_dsn  # noqa: F401 isort:skip
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
