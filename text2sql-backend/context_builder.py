@@ -1,12 +1,9 @@
 """SQL Container builder."""
 
 import logging
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
-from llama_index.indices.query.schema import QueryBundle
-from llama_index.indices.struct_store import SQLContextContainerBuilder
-
-import db
+from dataline import db
 from dataline.models.connection.schema import Connection
 from llm import ChatLLM
 from sql_wrapper import CustomSQLDatabase
@@ -25,14 +22,14 @@ CONTEXT_QUERY_TEMPLATE = (
 logger = logging.getLogger(__name__)
 
 
-class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
+class CustomSQLContextContainerBuilder:
     """SQLContextContainerBuilder.
 
     Build a SQLContextContainer that can be passed to the SQL index
     during index construction or during queryt-time.
 
     NOTE: if context_str is specified, that will be used as context
-    instead of context_dict
+    instead of context_dict -> ??? What is this?
 
     Args:
         sql_database (SQLDatabase): SQL database
@@ -48,7 +45,6 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
         model: str,
         context_dict: Optional[dict[str, str]] = None,
         context_str: Optional[str] = None,
-        embedding_model: Optional[str] = "text-embedding-ada-002",
         temperature: Optional[float] = 0.0,
     ):
         """Initialize params."""
@@ -65,10 +61,11 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
                     "Invalid context table names: " f"{context_keys - set(self.sql_database.get_usable_table_names())}"
                 )
 
-        self.context_dict = context_dict or {}
-
         # build full context from sql_database
-        self.full_context_dict = self._build_context_from_sql_database(current_context=self.context_dict)
+        if not context_dict:
+            self.context_dict = context_dict or {}
+            self.full_context_dict = self._build_context_from_sql_database(current_context=self.context_dict)
+
         self.context_str = context_str
 
     def _build_context_from_sql_database(
@@ -81,7 +78,7 @@ class CustomSQLContextContainerBuilder(SQLContextContainerBuilder):
 
     async def get_relevant_table_context(  # type: ignore[misc]
         self,
-        query_str: Union[str, QueryBundle],
+        query_str: str,
         message_history: Optional[list[dict]] = [],
         query_tmpl: Optional[str] = CONTEXT_QUERY_TEMPLATE,
         store_context_str: bool = True,
