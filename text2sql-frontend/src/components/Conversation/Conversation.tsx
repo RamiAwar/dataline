@@ -50,7 +50,7 @@ export const Conversation = () => {
 
   const messageListRef = useRef<HTMLDivElement | null>(null);
   const currConversation = conversationsData?.conversations.find(
-    (conv) => conv.conversation_id === parseInt(params.conversationId ?? "")
+    (conv) => conv.conversation_id == parseInt(params.conversationId ?? "")
   );
 
   const currConnection = connectionsData?.connections?.find(
