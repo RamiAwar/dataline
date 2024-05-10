@@ -3,7 +3,6 @@ import pathlib
 from typing import AsyncGenerator
 
 import pytest
-import pytest_asyncio
 from fastapi.testclient import TestClient
 
 from dataline.config import config
@@ -66,24 +65,6 @@ async def test_connect_sample_db(client: TestClient) -> None:
     client.delete(f"/connection/{data['id']}")
 
 
-@pytest_asyncio.fixture
-async def sample_db(client: TestClient) -> AsyncGenerator[Connection, None]:
-    connection_in = {
-        "dsn": get_sqlite_dsn(config.sample_dvdrental_path),
-        "name": "Test",
-        "is_sample": True,
-    }
-    response = client.post("/connect", json=connection_in)
-
-    assert response.status_code == 200
-    connection = Connection(**response.json()["data"])
-
-    # TODO: Remove after sqlalchemy migration
-    # Manual rollback
-    yield connection
-    client.delete(f"/connection/{str(connection.id)}")
-
-
 @pytest.mark.asyncio
 async def test_create_sample_db_connection_twice_409(client: TestClient) -> None:
     connection_in = {
@@ -104,7 +85,7 @@ async def test_create_sample_db_connection_twice_409(client: TestClient) -> None
 
 
 @pytest.mark.asyncio
-async def test_get_connections(client: TestClient, sample_db: Connection) -> None:
+async def test_get_connections(client: TestClient, dvdrental_connection: Connection) -> None:
     response = client.get("/connections")
 
     assert response.status_code == 200
@@ -114,22 +95,22 @@ async def test_get_connections(client: TestClient, sample_db: Connection) -> Non
     assert len(data["connections"]) == 1
 
     connections = data["connections"]
-    assert connections[0] == sample_db.model_dump(mode="json")
+    assert connections[0] == dvdrental_connection.model_dump(mode="json")
 
 
 @pytest.mark.asyncio
-async def test_get_connection(client: TestClient, sample_db: Connection) -> None:
-    response = client.get(f"/connection/{str(sample_db.id)}")
+async def test_get_connection(client: TestClient, dvdrental_connection: Connection) -> None:
+    response = client.get(f"/connection/{str(dvdrental_connection.id)}")
 
     assert response.status_code == 200
 
     data = response.json()["data"]
-    assert data["connection"] == sample_db.model_dump(mode="json")
+    assert data["connection"] == dvdrental_connection.model_dump(mode="json")
 
 
 @pytest.mark.asyncio
-async def test_get_table_schemas(client: TestClient, sample_db: Connection) -> None:
-    response = client.get(f"/connection/{str(sample_db.id)}/schemas")
+async def test_get_table_schemas(client: TestClient, dvdrental_connection: Connection) -> None:
+    response = client.get(f"/connection/{str(dvdrental_connection.id)}/schemas")
 
     assert response.status_code == 200
 
@@ -156,9 +137,9 @@ async def test_get_table_schemas(client: TestClient, sample_db: Connection) -> N
     assert field["linked_table"] is not None
 
 
-@pytest_asyncio.fixture
-async def example_table_schema(client: TestClient, sample_db: Connection) -> TableSchema:
-    response = client.get(f"/connection/{str(sample_db.id)}/schemas")
+@pytest.fixture
+async def example_table_schema(client: TestClient, dvdrental_connection: Connection) -> TableSchema:
+    response = client.get(f"/connection/{str(dvdrental_connection.id)}/schemas")
     return TableSchema.model_validate(response.json()["data"]["tables"][0])
 
 
@@ -193,12 +174,12 @@ async def test_update_table_schema_field_description(client: TestClient, example
 
 
 @pytest.mark.asyncio
-async def test_update_connection(client: TestClient, sample_db: Connection) -> None:
+async def test_update_connection(client: TestClient, dvdrental_connection: Connection) -> None:
     update_in = {
         "dsn": "sqlite:///new.db",
         "name": "New name",
     }
-    response = client.patch(f"/connection/{str(sample_db.id)}", json=update_in)
+    response = client.patch(f"/connection/{str(dvdrental_connection.id)}", json=update_in)
 
     assert response.status_code == 200
 
@@ -211,8 +192,8 @@ async def test_update_connection(client: TestClient, sample_db: Connection) -> N
 
 
 @pytest.mark.asyncio
-async def test_delete_connection(client: TestClient, sample_db: Connection) -> None:
-    response = client.delete(f"/connection/{str(sample_db.id)}")
+async def test_delete_connection(client: TestClient, dvdrental_connection: Connection) -> None:
+    response = client.delete(f"/connection/{str(dvdrental_connection.id)}")
 
     assert response.status_code == 200
 

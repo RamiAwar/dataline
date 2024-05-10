@@ -62,3 +62,6 @@ async def client(session: AsyncSession) -> AsyncGenerator[TestClient, None]:
     app.dependency_overrides[get_session] = override_get_session
     with TestClient(app=app, raise_server_exceptions=True) as client:
         yield client
+
+
+pytest_plugins = ["tests.api.connection.conftest", "tests.api.conversation.conftest"]

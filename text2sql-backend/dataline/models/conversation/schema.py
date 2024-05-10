@@ -19,14 +19,6 @@ class CreateConversationIn(BaseModel):
     name: str
 
 
-class CreateConversationOut(BaseModel):
-    conversation_id: int
-
-    @classmethod
-    def from_model(cls, conversation: ConversationModel) -> Self:
-        return cls(conversation_id=conversation.id)
-
-
 class ConversationOut(BaseModel):
     conversation_id: int
     connection_id: UUID

@@ -7,7 +7,6 @@ from dataline.models.conversation.schema import (
     ConversationOut,
     ConversationsOut,
     CreateConversationIn,
-    CreateConversationOut,
 )
 from dataline.old_models import SuccessResponse, UpdateConversationRequest
 from dataline.repositories.base import AsyncSession, get_session
@@ -32,14 +31,12 @@ async def create_conversation(
     conversation_in: CreateConversationIn,
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(ConversationService),
-) -> SuccessResponse[CreateConversationOut]:
+) -> SuccessResponse[ConversationOut]:
     conversation = await conversation_service.create_conversation(
         session, connection_id=conversation_in.connection_id, name=conversation_in.name
     )
     return SuccessResponse(
-        data=CreateConversationOut(
-            conversation_id=conversation.conversation_id,
-        ),
+        data=conversation,
     )
 
 
@@ -49,11 +46,11 @@ async def update_conversation(
     conversation_in: UpdateConversationRequest,
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(ConversationService),
-) -> None:
-    await conversation_service.update_conversation_name(
+) -> SuccessResponse[ConversationOut]:
+    conversation = await conversation_service.update_conversation_name(
         session, conversation_id=conversation_id, name=conversation_in.name
     )
-    return None
+    return SuccessResponse(data=conversation)
 
 
 @router.delete("/conversation/{conversation_id}")
