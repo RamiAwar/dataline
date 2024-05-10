@@ -102,7 +102,6 @@ export function useGetAvatar(options = {}) {
 
   return result;
 }
-
 export function useUpdateUserAvatar(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -113,11 +112,18 @@ export function useUpdateUserAvatar(options = {}) {
         message: "Avatar updated",
       });
     },
-    onError() {
-      enqueueSnackbar({
-        variant: "error",
-        message: "There was a problem updating your avatar",
-      });
+    onError(error) {
+      if (isAxiosError(error) && error.response?.status === 400) {
+        enqueueSnackbar({
+          variant: "error",
+          message: error.response.data.message,
+        });
+      } else {
+        enqueueSnackbar({
+          variant: "error",
+          message: "There was a problem updating your avatar",
+        });
+      }
     },
     onSettled() {
       queryClient.invalidateQueries({ queryKey: AVATAR_QUERY_KEY });
