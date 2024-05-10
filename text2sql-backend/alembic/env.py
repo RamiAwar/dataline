@@ -1,8 +1,8 @@
 # flake8: noqa
-import asyncio
 from logging.config import fileConfig
 from typing import Any
 
+from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from alembic import context
@@ -61,6 +61,7 @@ def do_run_migrations(connection: Connection) -> None:
     context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
 
     with context.begin_transaction():
+        context.execute(text("PRAGMA foreign_keys=ON;"))
         context.run_migrations()
 
 
@@ -87,39 +88,6 @@ async def run_async_migrations() -> None:
     await engine.dispose()
 
 
-# def run_migrations_online() -> None:
-#     """Run migrations in 'online' mode."""
-
-#     asyncio.run(run_async_migrations())
-
-
-# async def run_migrations_online():
-#     """Run migrations in 'online' mode."""
-#     # loop = asyncio.get_event_loop()
-#     # loop.run_until_complete(run_async_migrations())
-#     # loop.close()
-#     await run_async_migrations()
-
-# def run_migrations_online() -> None:
-#     """Run migrations in 'online' mode.
-
-#     In this scenario we need to create an Engine
-#     and associate a connection with the context.
-
-#     """
-#     connectable = engine_from_config(
-#         config.get_section(config.config_ini_section, {}),
-#         prefix="sqlalchemy.",
-#         poolclass=pool.NullPool,
-#     )
-
-#     with connectable.connect() as connection:
-#         context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
-
-#         with context.begin_transaction():
-#             context.run_migrations()
-
-
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
@@ -136,6 +104,7 @@ def run_migrations_online() -> None:
         context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
 
         with context.begin_transaction():
+            context.execute(text("PRAGMA foreign_keys=ON;"))
             context.run_migrations()
 
 

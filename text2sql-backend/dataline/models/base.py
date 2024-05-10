@@ -19,5 +19,31 @@ class DBModel(MappedAsDataclass, DeclarativeBase, init=False, kw_only=True):
     )
 
 
+class CustomUUIDType(DB_UUID):
+    # Do not ask. SQLite is a pain.
+    def bind_processor(self, dialect):  # type: ignore
+        character_based_uuid = not dialect.supports_native_uuid or not self.native_uuid
+
+        if character_based_uuid:
+            if self.as_uuid:
+
+                def process(value):  # type: ignore
+                    if value is not None:
+                        value = str(value)
+                    return value
+
+                return process
+            else:
+
+                def process(value):  # type: ignore
+                    if value is not None:
+                        value = value.replace("-", "")
+                    return value
+
+                return process
+        else:
+            return None
+
+
 class UUIDMixin(MappedAsDataclass, init=False, kw_only=True):
-    id: Mapped[UUID] = mapped_column("id", DB_UUID, primary_key=True, insert_default=uuid.uuid4, init=False)
+    id: Mapped[UUID] = mapped_column("id", CustomUUIDType, primary_key=True, insert_default=uuid.uuid4, init=False)

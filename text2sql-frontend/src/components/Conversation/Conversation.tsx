@@ -39,18 +39,18 @@ export const Conversation = () => {
     mutate: sendMessageMutation,
     isPending: isPendingSendMessage,
     variables: newMessageVariable,
-  } = useSendMessage({ id: params.conversationId ?? "" });
+  } = useSendMessage({ conversationId: parseInt(params.conversationId ?? "") });
 
   const {
     data: messages,
     isSuccess: isSuccessGetMessages,
     isPending: isPendingGetMessages,
     error: getMessagesError,
-  } = useQuery(getMessagesQuery({ id: params.conversationId ?? "" }));
+  } = useQuery(getMessagesQuery({ conversationId: parseInt(params.conversationId ?? "") }));
 
   const messageListRef = useRef<HTMLDivElement | null>(null);
   const currConversation = conversationsData?.conversations.find(
-    (conv) => conv.conversation_id === params.conversationId
+    (conv) => conv.conversation_id == parseInt(params.conversationId ?? "")
   );
 
   const currConnection = connectionsData?.connections?.find(

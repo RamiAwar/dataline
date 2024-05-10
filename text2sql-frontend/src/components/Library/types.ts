@@ -31,7 +31,7 @@ export interface IMessageWithResults {
 }
 
 export interface IConversationResult {
-  conversation_id: string;
+  conversation_id: number;
   connection_id: string;
   name: string;
   messages: IMessageWithResults[];

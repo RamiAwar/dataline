@@ -6,6 +6,7 @@ from unittest import mock
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from alembic.command import upgrade
@@ -22,6 +23,7 @@ async def engine() -> AsyncGenerator[AsyncEngine, None]:
     engine = create_async_engine("sqlite+aiosqlite:///test.sqlite3")
 
     async with engine.begin() as connection:
+        await connection.execute(text("PRAGMA foreign_keys=ON"))
         await connection.run_sync(DBModel.metadata.drop_all)
         await connection.run_sync(DBModel.metadata.create_all)
 

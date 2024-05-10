@@ -4,7 +4,7 @@ from uuid import UUID
 
 from asyncpg import NotNullViolationError, UniqueViolationError
 from pydantic import BaseModel
-from sqlalchemy import Delete, Select, Update, delete, insert, select, update
+from sqlalchemy import Delete, Select, Update, delete, insert, select, text, update
 from sqlalchemy.exc import IntegrityError, MultipleResultsFound, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession as _AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -28,6 +28,8 @@ AsyncSession = _AsyncSession
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency to get a db session"""
     session = SessionCreator()
+    await session.execute(text("PRAGMA foreign_keys=ON"))
+
     try:
         yield session
 
@@ -265,7 +267,7 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         # Flush changes to DB (within transaction)
         await session.flush()
 
-    async def get_by_id(self, session: AsyncSession, record_id: UUID) -> Model:
+    async def get_by_uuid(self, session: AsyncSession, record_id: UUID) -> Model:
         """
         Fetch a record by id.
         :raises: NotFoundError if record not found
@@ -273,7 +275,7 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         query = select(self.model).filter_by(id=record_id)
         return await self.get(session, query)
 
-    async def update_by_id(self, session: AsyncSession, record_id: UUID, data: TUpdate) -> Model:
+    async def update_by_uuid(self, session: AsyncSession, record_id: UUID, data: TUpdate) -> Model:
         """
         Update a record by id.
         :raises: NotFoundError if no instance or more than one instance is updated
@@ -288,7 +290,7 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         )
         return await self.update_one(session, query)
 
-    async def delete_by_id(self, session: AsyncSession, record_id: UUID) -> None:
+    async def delete_by_uuid(self, session: AsyncSession, record_id: UUID) -> None:
         """Delete element by ID."""
         query = delete(self.model).filter_by(id=record_id)
         await self.delete_one(session, query)

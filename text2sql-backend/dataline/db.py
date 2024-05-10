@@ -281,21 +281,21 @@ def update_schema_table_field_description(conn: sqlite3.Connection, field_id: st
 
 
 # Conversation logic
-def get_conversation(conversation_id: str) -> Conversation:
-    conversation = conn.execute(
-        "SELECT id, connection_id, name, created_at FROM conversations WHERE id = ?",
-        (conversation_id,),
-    ).fetchone()
+# def get_conversation(session: AsyncSession, conversation_id: str) -> Conversation:
 
-    if conversation is None:
-        raise NotFoundError("Conversation does not exist")
+#         "SELECT id, connection_id, name, created_at FROM conversations WHERE id = ?",
+#         (conversation_id,),
+#     ).fetchone()
 
-    return Conversation(
-        conversation_id=str(conversation[0]),
-        connection_id=conversation[1],
-        name=conversation[2],
-        created_at=conversation[3],
-    )
+#     if conversation is None:
+#         raise NotFoundError("Conversation does not exist")
+
+#     return Conversation(
+#         conversation_id=str(conversation[0]),
+#         connection_id=conversation[1],
+#         name=conversation[2],
+#         created_at=conversation[3],
+#     )
 
 
 def get_conversations() -> list[Conversation]:
@@ -309,6 +309,31 @@ def get_conversations() -> list[Conversation]:
         )
         for conversation in conversations
     ]
+
+
+# Create empty converstaion
+def create_conversation(connection_id: str, name: str) -> int:
+    """Creates an empty conversation and returns its id"""
+    created_at = datetime.now()
+    conversation_id = conn.execute(
+        "INSERT INTO conversations (connection_id, name, created_at) VALUES (?, ?, ?)",
+        (connection_id, name, created_at),
+    ).lastrowid
+
+    if conversation_id is None:
+        raise ValueError("Conversation could not be created")
+
+    conn.commit()
+    return conversation_id
+
+
+def update_conversation(conversation_id: str, name: str) -> Literal[True]:
+    conn.execute(
+        "UPDATE conversations SET name = ? WHERE id = ?",
+        (name, conversation_id),
+    )
+    conn.commit()
+    return True
 
 
 def get_conversations_with_messages_with_results() -> list[ConversationWithMessagesWithResults]:
@@ -378,37 +403,6 @@ def get_conversations_with_messages_with_results() -> list[ConversationWithMessa
             )
         )
     return conversations_with_messages_with_results
-
-
-def delete_conversation(conversation_id: str) -> None:
-    """Delete conversation, all associated messages, and all their results"""
-    conn.execute("DELETE FROM conversations WHERE id = ?", (conversation_id,))
-    conn.commit()
-
-
-# Create empty converstaion
-def create_conversation(connection_id: str, name: str) -> int:
-    """Creates an empty conversation and returns its id"""
-    created_at = datetime.now()
-    conversation_id = conn.execute(
-        "INSERT INTO conversations (connection_id, name, created_at) VALUES (?, ?, ?)",
-        (connection_id, name, created_at),
-    ).lastrowid
-
-    if conversation_id is None:
-        raise ValueError("Conversation could not be created")
-
-    conn.commit()
-    return conversation_id
-
-
-def update_conversation(conversation_id: str, name: str) -> Literal[True]:
-    conn.execute(
-        "UPDATE conversations SET name = ? WHERE id = ?",
-        (name, conversation_id),
-    )
-    conn.commit()
-    return True
 
 
 def toggle_save_query(result_id: str) -> bool:

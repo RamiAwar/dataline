@@ -1,4 +1,5 @@
 import logging
+from typing import Any, AsyncContextManager, AsyncGenerator, Callable, Mapping, Self
 
 import fastapi
 from fastapi import Request, status
@@ -6,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from dataline.api.connection.router import router as connection_router
+from dataline.api.conversation.router import router as conversation_router
 from dataline.api.settings.router import router as settings_router
 from dataline.repositories.base import NotFoundError, NotUniqueError
 from llm import OpenAIError
@@ -26,7 +28,10 @@ def handle_exceptions(request: Request, e: Exception) -> JSONResponse:
 
 
 class App(fastapi.FastAPI):
-    def __init__(self, lifespan=None) -> None:
+    def __init__(  # type: ignore[misc]
+        self,
+        lifespan: Callable[[Self], AsyncContextManager[Mapping[str, Any]]] | None = None,
+    ) -> None:
         super().__init__(title="Dataline API", lifespan=lifespan)
         self.add_middleware(
             CORSMiddleware,
@@ -38,6 +43,7 @@ class App(fastapi.FastAPI):
 
         self.include_router(settings_router)
         self.include_router(connection_router)
+        self.include_router(conversation_router)
 
         # Handle 500s separately to play well with TestClient and allow re-raising in tests
         self.add_exception_handler(NotFoundError, handle_exceptions)

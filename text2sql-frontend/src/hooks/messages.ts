@@ -15,27 +15,27 @@ const MESSAGES_QUERY_KEY = ["MESSAGES"];
 const QUERIES_QUERY_KEY = ["SQL_QUERIES"];
 
 // Load everything
-export function getMessagesQuery({ id }: { id: string }) {
+export function getMessagesQuery({ conversationId }: { conversationId: number }) {
   return queryOptions({
-    queryKey: [...MESSAGES_QUERY_KEY, id],
-    queryFn: async () => (await api.getMessages(id)).data,
+    queryKey: [...MESSAGES_QUERY_KEY, conversationId],
+    queryFn: async () => (await api.getMessages(conversationId)).data,
   });
 }
 
 export function useSendMessage({
-  id,
+  conversationId,
   execute = true,
 }: {
-  id: string;
+  conversationId: number;
   execute?: boolean;
 }) {
   const queryClient = useQueryClient();
   return useMutation({
     retry: false,
     mutationFn: async ({ message }: { message: string }) =>
-      (await api.query(id, message, execute)).data,
+      (await api.query(conversationId, message, execute)).data,
     onSuccess: (data, variables) => {
-      queryClient.setQueryData(getMessagesQuery({ id }).queryKey, (oldData) => {
+      queryClient.setQueryData(getMessagesQuery({ conversationId }).queryKey, (oldData) => {
         const newMessages: IMessageWithResults[] = [
           { content: variables.message, role: "user" },
           data.message,
@@ -64,17 +64,17 @@ export function useSendMessage({
 }
 
 export function useGetNewMessage({
-  id,
+  conversationId,
   value,
   execute = true,
 }: {
-  id: string;
+  conversationId: number;
   value: string;
   execute?: boolean;
 }) {
   const result = useQuery({
-    queryKey: [...MESSAGES_QUERY_KEY, { id, value, execute }],
-    queryFn: () => api.query(id, value, execute),
+    queryKey: [...MESSAGES_QUERY_KEY, { conversationId, value, execute }],
+    queryFn: () => api.query(conversationId, value, execute),
     enabled: Boolean(value),
     retry: false,
   });
@@ -89,11 +89,11 @@ export function useGetNewMessage({
   return result;
 }
 
-export function useGetMessages(id: string) {
+export function useGetMessages(conversationId: number) {
   const { isSuccess } = useQuery(getBackendStatusQuery());
   const result = useQuery({
-    queryKey: [...MESSAGES_QUERY_KEY, { id }],
-    queryFn: () => api.getMessages(id),
+    queryKey: [...MESSAGES_QUERY_KEY, { conversationId }],
+    queryFn: () => api.getMessages(conversationId),
     enabled: isSuccess,
   });
 
@@ -108,18 +108,18 @@ export function useGetMessages(id: string) {
 }
 
 export function useRunSql({
-  id,
+  conversationId,
   sql,
   enabled,
 }: {
-  id?: string;
-  sql?: string;
+  conversationId: number;
+  sql: string;
   enabled: boolean;
 }) {
   const result = useQuery({
-    queryKey: [...QUERIES_QUERY_KEY, { id, sql }],
+    queryKey: [...QUERIES_QUERY_KEY, { conversationId, sql }],
     queryFn: enabled
-      ? async () => (await api.runSQL(id ?? "", sql ?? "")).data
+      ? async () => (await api.runSQL(conversationId, sql)).data
       : skipToken,
     enabled,
     retry: false,

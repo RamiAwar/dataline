@@ -189,7 +189,7 @@ const updateTableSchemaFieldDescription = async (
 };
 
 export type ConversationCreationResult = ApiResponse<{
-  conversation_id: string;
+  conversation_id: number;
 }>;
 const createConversation = async (connectionId: string, name: string) => {
   const response = await backendApi<ConversationCreationResult>({
@@ -205,7 +205,7 @@ const createConversation = async (connectionId: string, name: string) => {
 
 export type ConversationUpdateResult = ApiResponse<void>;
 const updateConversation = async (
-  conversationId: string,
+  conversationId: number,
   name: string
 ): Promise<ConversationUpdateResult> => {
   const response = await backendApi<ConversationUpdateResult>({
@@ -219,7 +219,7 @@ const updateConversation = async (
 };
 
 export type ConversationDeletionResult = ApiResponse<void>;
-const deleteConversation = async (conversationId: string) => {
+const deleteConversation = async (conversationId: number) => {
   const response = await backendApi<ConversationDeletionResult>({
     url: `/conversation/${conversationId}`,
     method: "delete",
@@ -235,7 +235,7 @@ const listConversations = async (): Promise<ListConversations> => {
 };
 
 export type MessagesResult = ApiResponse<{ messages: IMessageWithResults[] }>;
-const getMessages = async (conversationId: string): Promise<MessagesResult> => {
+const getMessages = async (conversationId: number): Promise<MessagesResult> => {
   return (
     await backendApi<MessagesResult>({
       url: `/messages?conversation_id=${conversationId}`,
@@ -244,7 +244,7 @@ const getMessages = async (conversationId: string): Promise<MessagesResult> => {
 };
 
 export type MessageCreationResult = ApiResponse<void>;
-const createMessage = async (conversationId: string, content: string) => {
+const createMessage = async (conversationId: number, content: string) => {
   const response = await backendApi<MessageCreationResult>({
     url: "/message",
     method: "post",
@@ -258,7 +258,7 @@ const createMessage = async (conversationId: string, content: string) => {
 
 export type QueryResult = ApiResponse<{ message: IMessageWithResults }>;
 const query = async (
-  conversationId: string,
+  conversationId: number,
   query: string,
   execute: boolean
 ): Promise<QueryResult> => {
@@ -270,7 +270,7 @@ const query = async (
 };
 
 export type RunSQLResult = ApiResponse<IResult>;
-const runSQL = async (conversationId: string, code: string) => {
+const runSQL = async (conversationId: number, code: string) => {
   return (
     await backendApi<RunSQLResult>({
       url: `/execute-sql?conversation_id=${conversationId}&sql=${code}`,

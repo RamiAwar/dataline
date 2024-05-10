@@ -97,7 +97,7 @@ export const CodeBlock = ({
   const { mutate } = useUpdateSqlQuery();
 
   const { isLoading, data, isError } = useRunSql({
-    id: conversationId,
+    conversationId: parseInt(conversationId || ""),
     sql: savedCode.replace(/\s+/g, " "),
     enabled,
   });
