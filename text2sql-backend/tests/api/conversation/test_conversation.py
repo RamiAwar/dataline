@@ -55,10 +55,15 @@ async def test_get_conversation(client: TestClient, sample_conversation: Convers
     assert result["name"] == sample_conversation.name
 
 
+# TODO:
+@pytest.mark.skip
+@pytest.mark.asyncio
+async def test_delete_connection_cascades_conversations() -> None: ...
+
+
+# TODO:
 @pytest.mark.skip
 @pytest.mark.asyncio
 async def test_delete_conversation_with_messages(
     client: TestClient, sample_conversation_with_messages: ConversationOut
-) -> None:
-    # TODO: Implement after implementing messages and results repos
-    ...
+) -> None: ...

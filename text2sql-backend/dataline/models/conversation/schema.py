@@ -33,3 +33,7 @@ class ConversationOut(BaseModel):
             name=conversation.name,
             created_at=conversation.created_at,
         )
+
+
+class UpdateConversationRequest(BaseModel):
+    name: str

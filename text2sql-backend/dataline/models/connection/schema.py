@@ -5,14 +5,6 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class ConnectionUpdateIn(BaseModel):
-    name: str | None = None
-    dsn: str | None = None
-    database: str | None = None
-    dialect: str | None = None
-    is_sample: bool | None = None
-
-
 class Connection(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -80,3 +72,62 @@ class SampleOut(BaseModel):
     title: str
     file: str
     link: str
+
+
+def validate_dsn(value: str) -> str:
+    # Regular expression pattern for matching DSNs
+    # Try sqlite first
+    sqlite_pattern = r"^sqlite://(/.+?)(:(.+))?$"
+    if re.match(sqlite_pattern, value):
+        return value
+
+    dsn_pattern = (
+        r"^(?P<driver>[\w+]+):\/\/(?:(?P<username>\w+):(?P<password>\w+)@)?(?P<host>[\w\.-]+)"
+        r"(?::(?P<port>\d+))?(?:\/(?P<database>[\w\.-]+))?$"
+    )
+    match = re.match(dsn_pattern, value)
+    if match:
+        # Extracting components from the DSN
+        driver = match.group("driver")
+        host = match.group("host")
+        database = match.group("database")
+
+        # Validating components (You can customize the validation rules as per your requirements)
+        if not driver:
+            raise ValueError("Missing driver in DSN")
+
+        if not host:
+            raise ValueError("Host missing from DSN")
+
+        if not database:
+            raise ValueError("DSN must specify a database name")
+    else:
+        # DSN doesn't match the expected pattern
+        raise ValueError("Invalid DSN format")
+
+    # Simpler way to connect to postgres even though officially deprecated
+    # This mirrors psql which is a very common way to connect to postgres
+    if value.startswith("postgres") and not value.startswith("postgresql"):
+        # Only replace first occurrence
+        value = value.replace("postgres", "postgresql", 1)
+
+    return value
+
+
+class ConnectRequest(BaseModel):
+    dsn: str = Field(min_length=3)
+    name: str
+    is_sample: bool = False
+
+    @field_validator("dsn")
+    def validate_dsn_format(cls, value: str) -> str:
+        return validate_dsn(value)
+
+
+class ConnectionUpdateIn(BaseModel):
+    name: Optional[str] = None
+    dsn: Optional[str] = None
+
+    @field_validator("dsn")
+    def validate_dsn_format(cls, value: str) -> str:
+        return validate_dsn(value)

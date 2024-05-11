@@ -3,7 +3,6 @@ import {
   IConversationResult,
   IMessageWithResults,
   IResult,
-  ITableSchemaResult,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
 import { backendApi } from "./services/api_client";
@@ -14,35 +13,6 @@ type SuccessResponse<T> = {
 };
 
 type ApiResponse<T> = SuccessResponse<T>;
-
-// interface AuthTokens {
-//   accessToken: string;
-//   refreshToken: string;
-// }
-// Create wrapper around axios get/post/patch/delete to add auth tokens as headers and forward types
-// const get = async <T>(url: string, tokens: AuthTokens): Promise<T> => {
-//   const response = await axios.get<T>(url, {
-//     headers: {
-//       "X-Access-Token": tokens.accessToken,
-//       "X-Refresh-Token": tokens.refreshToken,
-//     },
-//   });
-//   return response.data;
-// };
-
-// const post = async <T>(
-//   url: string,
-//   tokens: AuthTokens,
-//   data: any
-// ): Promise<T> => {
-//   const response = await axios.post<T>(url, data, {
-//     headers: {
-//       "X-Access-Token": tokens.accessToken,
-//       "X-Refresh-Token": tokens.refreshToken,
-//     },
-//   });
-//   return response.data;
-// };
 
 type HealthcheckResult = ApiResponse<void>;
 const healthcheck = async (): Promise<HealthcheckResult> => {
@@ -98,7 +68,7 @@ const listConnections = async (): Promise<ListConnectionsResult> => {
     .data;
 };
 
-export type GetConnectionResult = ApiResponse<{ connection: ConnectionResult }>;
+export type GetConnectionResult = ApiResponse<ConnectionResult>;
 const getConnection = async (
   connectionId: string
 ): Promise<GetConnectionResult> => {
@@ -141,49 +111,6 @@ const deleteConnection = async (
   const response = await backendApi<ApiResponse<void>>({
     url: `/connection/${connectionId}`,
     method: "delete",
-  });
-  return response.data;
-};
-
-export type GetTableSchemasResult = ApiResponse<{
-  tables: ITableSchemaResult[];
-}>;
-const getTableSchemas = async (
-  connectionId: string
-): Promise<GetTableSchemasResult> => {
-  return (
-    await backendApi<GetTableSchemasResult>({
-      url: `/connection/${connectionId}/schemas`,
-    })
-  ).data;
-};
-
-export type UpdateTableSchemaDescriptionResult = ApiResponse<void>;
-const updateTableSchemaDescription = async (
-  tableId: string,
-  description: string
-): Promise<UpdateTableSchemaDescriptionResult> => {
-  const response = await backendApi<UpdateTableSchemaDescriptionResult>({
-    url: `/schemas/table/${tableId}`,
-    method: "patch",
-    data: {
-      description,
-    },
-  });
-  return response.data;
-};
-
-export type UpdateTableSchemaFieldDescriptionResult = ApiResponse<void>;
-const updateTableSchemaFieldDescription = async (
-  fieldId: string,
-  description: string
-): Promise<UpdateTableSchemaFieldDescriptionResult> => {
-  const response = await backendApi<UpdateTableSchemaFieldDescriptionResult>({
-    url: `/schemas/field/${fieldId}`,
-    method: "patch",
-    data: {
-      description,
-    },
   });
   return response.data;
 };
@@ -352,10 +279,7 @@ const getUserInfo = async () => {
 export const api = {
   healthcheck,
   getConnection,
-  getTableSchemas,
   getSamples,
-  updateTableSchemaDescription,
-  updateTableSchemaFieldDescription,
   createConnection,
   createFileConnection,
   updateConnection,

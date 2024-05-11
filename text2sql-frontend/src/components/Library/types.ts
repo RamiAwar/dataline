@@ -17,6 +17,7 @@ export type Role = "user" | "assistant";
 
 export interface IResult {
   type: IResultType;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   content: string | any[][];
   result_id?: string;
   is_saved?: boolean;
@@ -55,33 +56,3 @@ export interface IEditConnection {
   dsn: string;
 }
 
-export interface ITableSchemaResult {
-  id: string;
-  name: string;
-  connection_id: string;
-  description: string;
-  field_descriptions: Array<{
-    id: string;
-    schema_id: string;
-    name: string;
-    type: string;
-    description: string;
-    is_primary_key: boolean;
-    is_foreign_key: boolean;
-    linked_table: string;
-  }>;
-}
-
-export interface ITableSchema {
-  // Table field with description and name
-  table: {
-    name: string;
-    description?: string;
-  };
-  // List of fields with their data types
-  fields: Array<{
-    name: string;
-    type: string;
-    description?: string;
-  }>;
-}

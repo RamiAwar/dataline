@@ -4,7 +4,7 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 
 from dataline.config import config
-from dataline.models.connection.schema import Connection
+from dataline.models.connection.schema import Connection, TableSchema
 from dataline.utils.utils import get_sqlite_dsn
 
 
@@ -24,3 +24,9 @@ async def dvdrental_connection(client: TestClient) -> AsyncGenerator[Connection,
     # Manual rollback
     yield connection
     client.delete(f"/connection/{str(connection.id)}")
+
+
+@pytest_asyncio.fixture
+async def example_table_schema(client: TestClient, dvdrental_connection: Connection) -> TableSchema:
+    response = client.get(f"/connection/{str(dvdrental_connection.id)}/schemas")
+    return TableSchema.model_validate(response.json()["data"]["tables"][0])

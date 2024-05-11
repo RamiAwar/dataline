@@ -44,7 +44,7 @@ export function useCreateConversation(options = {}) {
 export function useDeleteConversation(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteConversation(id),
+    mutationFn: (id: number) => api.deleteConversation(id),
     onError() {
       enqueueSnackbar({
         variant: "error",
@@ -61,7 +61,7 @@ export function useDeleteConversation(options = {}) {
 export function useUpdateConversation(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: string; name: string }) =>
+    mutationFn: ({ id, name }: { id: number; name: string }) =>
       api.updateConversation(id, name),
     onError() {
       enqueueSnackbar({
