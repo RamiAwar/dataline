@@ -1,12 +1,11 @@
 import logging
 import pathlib
-from typing import AsyncGenerator
 
 import pytest
 from fastapi.testclient import TestClient
 
 from dataline.config import config
-from dataline.models.connection.schema import Connection, TableSchema
+from dataline.models.connection.schema import Connection
 from dataline.utils.utils import get_sqlite_dsn
 
 logger = logging.getLogger(__name__)

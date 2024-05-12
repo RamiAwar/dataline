@@ -1,6 +1,7 @@
 from typing import Optional
 
 import openai
+from langchain_core.pydantic_v1 import SecretStr
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from dataline.config import config
@@ -8,7 +9,7 @@ from dataline.config import config
 
 class UserUpdateIn(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=250)
-    openai_api_key: Optional[str] = Field(None, min_length=4)
+    openai_api_key: Optional[SecretStr] = Field(None, min_length=4)
     preferred_openai_model: Optional[str] = None
 
     @field_validator("openai_api_key")
@@ -29,8 +30,17 @@ class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: Optional[str] = None
-    openai_api_key: Optional[str] = None
+    openai_api_key: Optional[SecretStr] = None
     preferred_openai_model: Optional[str] = None
+
+
+class UserWithKey(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    name: Optional[str] = None
+
+    openai_api_key: SecretStr
+    preferred_openai_model: str
 
 
 class AvatarOut(BaseModel):

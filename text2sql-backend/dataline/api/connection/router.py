@@ -33,7 +33,7 @@ async def connect_db(
     session: AsyncSession = Depends(get_session),
     connection_service: ConnectionService = Depends(),
 ) -> SuccessResponse[ConnectionOut]:
-    connection = await connection_service.create_connection_with_schema_tables(
+    connection = await connection_service.create_connection(
         session, dsn=req.dsn, name=req.name, is_sample=req.is_sample
     )
     return SuccessResponse(data=connection)
@@ -61,9 +61,7 @@ async def connect_db_from_file(
 
     # Create connection with the locally copied file
     dsn = get_sqlite_dsn(str(file_path.absolute()))
-    connection = await connection_service.create_connection_with_schema_tables(
-        session, dsn=dsn, name=name, is_sample=False
-    )
+    connection = await connection_service.create_connection(session, dsn=dsn, name=name, is_sample=False)
     return SuccessResponse(data=connection)
 
 

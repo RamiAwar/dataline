@@ -19,7 +19,7 @@ class DBModel(MappedAsDataclass, DeclarativeBase, init=False, kw_only=True):
     )
 
 
-class CustomUUIDType(DB_UUID):
+class CustomUUIDType(DB_UUID):  # type: ignore
     # Do not ask. SQLite is a pain.
     def bind_processor(self, dialect):  # type: ignore
         character_based_uuid = not dialect.supports_native_uuid or not self.native_uuid

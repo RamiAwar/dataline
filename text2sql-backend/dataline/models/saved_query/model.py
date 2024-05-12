@@ -1,8 +1,8 @@
 from sqlalchemy import ForeignKey, String, Text
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import Mapped, mapped_column
 
 from dataline.models.base import DBModel
-from dataline.models.result import ResultModel
+from dataline.models.result.model import ResultModel
 
 
 class SavedQueryModel(DBModel):

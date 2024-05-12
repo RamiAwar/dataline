@@ -55,6 +55,13 @@ async def test_get_conversation(client: TestClient, sample_conversation: Convers
     assert result["name"] == sample_conversation.name
 
 
+@pytest.mark.asyncio
+async def test_get_conversation_with_messages_with_results(
+    client: TestClient, sample_conversation: ConversationOut
+) -> None:
+    response = client.get(f"/conversation/{sample_conversation.conversation_id}/messages")
+
+
 # TODO:
 @pytest.mark.skip
 @pytest.mark.asyncio

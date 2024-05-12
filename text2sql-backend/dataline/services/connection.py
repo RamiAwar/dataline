@@ -24,7 +24,7 @@ class ConnectionService:
     def __init__(self, connection_repo: ConnectionRepository = Depends()) -> None:
         self.connection_repo = connection_repo
 
-    async def create_connection_with_schema_tables(
+    async def create_connection(
         self,
         session: AsyncSession,
         dsn: str,

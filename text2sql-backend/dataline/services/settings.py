@@ -8,7 +8,7 @@ from fastapi import Depends, UploadFile
 from dataline.config import config
 from dataline.errors import ValidationError
 from dataline.models.media.model import MediaModel
-from dataline.models.user.schema import UserOut, UserUpdateIn
+from dataline.models.user.schema import UserOut, UserUpdateIn, UserWithKey
 from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.media import MediaCreate, MediaRepository
 from dataline.repositories.user import UserCreate, UserRepository, UserUpdate
@@ -101,16 +101,13 @@ class SettingsService:
 
         return UserOut.model_validate(user_info)
 
-    async def get_openai_api_key(self, session: AsyncSession) -> str:
+    async def get_model_details(self, session: AsyncSession) -> UserWithKey:
         user_info = await self.user_repo.get_one_or_none(session)
-        if user_info is None or not user_info.openai_api_key:
-            raise Exception("User or OpenAI key not setup. Please setup your application.")
+        if user_info is None:
+            raise NotFoundError("No user found. Please setup your application.")
 
-        return user_info.openai_api_key
+        if not user_info.openai_api_key:
+            raise Exception("OpenAI key not setup. Please setup your application.")
 
-    async def get_preferred_model(self, session: AsyncSession) -> str:
-        user_info = await self.user_repo.get_one_or_none(session)
-        if user_info is None or not user_info.openai_api_key:
-            raise Exception("User or OpenAI key not setup. Please setup your application.")
-
-        return user_info.preferred_openai_model or config.default_model
+        user_info.preferred_openai_model = user_info.preferred_openai_model or config.default_model
+        return UserWithKey.model_validate(user_info)

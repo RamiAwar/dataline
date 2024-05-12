@@ -32,7 +32,11 @@ class ConversationService:
         conversation = await self.conversation_repo.get_by_id(session, conversation_id)
         return ConversationOut.from_model(conversation)
 
-    # TODO: Implement after implementing messages and results repos
+    async def get_conversation_with_messages(self, session: AsyncSession, conversation_id: int) -> None:
+        conversation = await self.conversation_repo.get_with_messages_with_results(session, conversation_id)
+        # return ConversationWithMessagesWithResultsOut
+        return None
+
     # async def list_conversations_with_messages_with_results(self, session: AsyncSession) -> list[ConversationOut]:
     #     conversations = await self.conversation_repo.list_all(session)
 

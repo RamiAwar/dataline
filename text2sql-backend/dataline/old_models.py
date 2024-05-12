@@ -49,7 +49,7 @@ class UnsavedResult:
 @dataclass
 class DataResult:
     type: ResultType
-    content: Any
+    content: Any  # type: ignore[misc]
 
 
 @dataclass

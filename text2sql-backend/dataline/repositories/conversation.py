@@ -4,8 +4,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import delete, select, update
+from sqlalchemy.orm import selectinload
 
 from dataline.models.conversation.model import ConversationModel
+from dataline.models.message.model import MessageModel
 from dataline.repositories.base import AsyncSession, BaseRepository
 
 
@@ -45,3 +47,12 @@ class ConversationRepository(BaseRepository[ConversationModel, ConversationCreat
             .returning(self.model)
         )
         return await self.update_one(session, query)
+
+    async def get_with_messages_with_results(self, session: AsyncSession, conversation_id: int) -> ConversationModel:
+        query = (
+            select(self.model)
+            .filter_by(id=conversation_id)
+            .options(selectinload(ConversationModel.messages), selectinload(MessageModel.results))
+        )
+
+        return await self.get(session, query)

@@ -37,3 +37,11 @@ class ConversationOut(BaseModel):
 
 class UpdateConversationRequest(BaseModel):
     name: str
+
+
+class MessageWithResults:
+    content: str
+    role: str
+    results: list[QueryResult]
+    message_id: int
+    created_at: datetime
