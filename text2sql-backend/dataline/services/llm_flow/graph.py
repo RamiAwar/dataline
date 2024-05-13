@@ -1,42 +1,22 @@
-import functools
 from pprint import pprint
-from typing import Sequence, Type, cast
+from typing import Sequence, Type
 
 from langchain_community.utilities.sql_database import SQLDatabase
-from langchain_core.messages import (
-    AIMessage,
-    BaseMessage,
-    FunctionMessage,
-    HumanMessage,
-    SystemMessage,
-)
-from langchain_openai import ChatOpenAI
-from langgraph.graph import END, StateGraph
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolExecutor
 
-from dataline.models.connection.schema import Connection
 from dataline.models.llm_flow.schema import QueryGraphState, QueryOptions
-from dataline.services.llm_flow.llm_calls.query_sql_corrector import (
-    QuerySQLCorrectorCall,
-    SQLCorrectionDetails,
-)
 from dataline.services.llm_flow.nodes import (
     CallListTablesToolNode,
     CallModelNode,
     CallToolNode,
     Condition,
-    Edge,
     Node,
     ShouldCallToolCondition,
 )
 from dataline.services.llm_flow.prompt import SQL_FUNCTIONS_SUFFIX, SQL_PREFIX
-from dataline.services.llm_flow.toolkit import (
-    QuerySQLDataBaseTool,
-    SelectedTablesResult,
-    SQLDatabaseToolkit,
-    SQLQueryResult,
-    SQLToolNames,
-)
+from dataline.services.llm_flow.toolkit import SQLDatabaseToolkit
 
 
 def add_node(graph: StateGraph, node: Type[Node]) -> None:
@@ -63,13 +43,13 @@ class QueryGraphService:
         self.toolkit = SQLDatabaseToolkit(db=self.db)
 
     def query(self, query: str, options: QueryOptions, history: Sequence[BaseMessage] = []) -> None:
-        workflow = self.build_graph()
-        app = workflow.compile()
+        graph = self.build_graph()
+        app = graph.compile()
 
         tool_executor = ToolExecutor(tools=self.toolkit.get_tools(secure_data=options.secure_data))
         initial_state = {
             "messages": [
-                *self.get_prompt_messages(history),
+                *self.get_prompt_messages(query, history),
             ],
             "results": [],
             "options": options,
@@ -90,9 +70,8 @@ class QueryGraphService:
         add_node(graph, CallToolNode)
 
         add_edge(graph, CallListTablesToolNode, CallModelNode)
-        add_edge(graph, CallModelNode, CallToolNode)
         add_conditional_edge(graph, CallModelNode, ShouldCallToolCondition)
-
+        add_edge(graph, CallToolNode, CallModelNode)
         graph.set_entry_point(CallListTablesToolNode.__name__)
 
         return graph

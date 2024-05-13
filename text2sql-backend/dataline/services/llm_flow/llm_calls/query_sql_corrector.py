@@ -14,6 +14,7 @@ class SQLCorrectionDetails(BaseModel):
 class QuerySQLCorrectorCall(OpenAIExtractor[SQLCorrectionDetails]):
     extract_schema: Type[SQLCorrectionDetails] = SQLCorrectionDetails
     call_params = OpenAICallParams(model="gpt-3.5-turbo")
+    api_key: str | None
 
     prompt_template = """
     {query}

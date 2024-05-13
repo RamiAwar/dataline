@@ -18,7 +18,7 @@ cryptography = "^40.0.2"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.27"}
 rapidfuzz = "^3.0.0"
 psycopg = {extras = ["pool"], version = "^3.1.9"}
-pydantic = "2.4.2"
+pydantic = "2.7"
 openai = "^1.11.0"
 python-multipart = "^0.0.9"
 aiosqlite = "^0.20.0"
@@ -32,6 +32,7 @@ langgraph = "^0.0.48"
 langsmith = "^0.1.57"
 langchain-openai = "^0.1.6"
 mirascope = "^0.12.3"
+tenacity = "^8.3.0"
 
 
 [tool.poetry.group.dev.dependencies]

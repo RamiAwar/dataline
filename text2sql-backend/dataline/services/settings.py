@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import openai
 from fastapi import Depends, UploadFile
+from pydantic import SecretStr
 
 from dataline.config import config
 from dataline.errors import ValidationError
@@ -14,8 +15,9 @@ from dataline.repositories.media import MediaCreate, MediaRepository
 from dataline.repositories.user import UserCreate, UserRepository, UserUpdate
 
 
-def model_exists(openai_api_key: str, model: str):
-    models = openai.OpenAI(api_key=openai_api_key).models.list()
+def model_exists(openai_api_key: SecretStr | str, model: str) -> bool:
+    api_key = openai_api_key.get_secret_value() if isinstance(openai_api_key, SecretStr) else openai_api_key
+    models = openai.OpenAI(api_key=api_key).models.list()
     return model in {model.id for model in models}
 
 

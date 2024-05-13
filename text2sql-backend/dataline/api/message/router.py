@@ -6,7 +6,7 @@ from dataline.old_models import MessageWithResults, SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.conversation import ConversationService
 
-router = APIRouter()
+router = APIRouter(tags=["conversation"])
 
 
 class ListMessageOut(BaseModel):

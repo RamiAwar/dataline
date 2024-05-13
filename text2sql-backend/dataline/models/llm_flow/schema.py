@@ -3,6 +3,7 @@ from typing import Annotated, Any, Sequence, TypedDict
 
 from langchain_core.messages import BaseMessage
 from langchain_core.pydantic_v1 import BaseModel as BaseModelV1
+from langchain_core.pydantic_v1 import ConfigDict
 from langchain_core.pydantic_v1 import SecretStr as SecretStrV1
 from langgraph.prebuilt import ToolExecutor
 from pydantic import BaseModel
@@ -10,7 +11,7 @@ from pydantic import BaseModel
 from dataline.services.llm_flow.toolkit import SQLDatabaseToolkit
 
 
-class QueryOptions(BaseModel):
+class QueryOptions(BaseModelV1):
     openai_api_key: SecretStrV1
     model_name: str
     secure_data: bool = False
@@ -25,6 +26,9 @@ class QueryGraphState(BaseModelV1):
     options: QueryOptions
     sql_toolkit: SQLDatabaseToolkit
     tool_executor: ToolExecutor
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class QueryGraphStateUpdate(TypedDict):

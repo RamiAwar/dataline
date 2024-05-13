@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Self
+from typing import Any, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -20,7 +20,7 @@ class CreateConversationIn(BaseModel):
 
 
 class ConversationOut(BaseModel):
-    conversation_id: int
+    conversation_id: UUID
     connection_id: UUID
     name: str
     created_at: datetime
@@ -42,6 +42,6 @@ class UpdateConversationRequest(BaseModel):
 class MessageWithResults:
     content: str
     role: str
-    results: list[QueryResult]
+    results: Any  # list[QueryResult]
     message_id: int
     created_at: datetime

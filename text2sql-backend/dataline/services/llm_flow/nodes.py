@@ -6,12 +6,11 @@ from langchain_core.messages import FunctionMessage
 from langchain_core.utils.function_calling import convert_to_openai_function
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END
-from langgraph.prebuilt import ToolExecutor, ToolInvocation
+from langgraph.prebuilt import ToolInvocation
 
 from dataline.models.llm_flow.schema import (
     QueryGraphState,
     QueryGraphStateUpdate,
-    QueryOptions,
     state_update,
 )
 from dataline.services.llm_flow.llm_calls.query_sql_corrector import (
@@ -71,8 +70,8 @@ class CallToolNode(Node):
     __name__ = "perform_action"
 
     @classmethod
-    def correct_sql(cls, query: str, dialect: str) -> SQLCorrectionDetails:
-        return QuerySQLCorrectorCall(query=query, dialect=dialect).extract()
+    def correct_sql(cls, api_key: str, query: str, dialect: str) -> SQLCorrectionDetails:
+        return QuerySQLCorrectorCall(api_key=api_key, query=query, dialect=dialect).extract()
 
     @classmethod
     def run(cls, state: QueryGraphState) -> QueryGraphStateUpdate:
@@ -85,7 +84,8 @@ class CallToolNode(Node):
         )
 
         # Pre-processing tool invocation
-        # TODO: Move this to a method inside the tools themselves that we can call from here - add to BaseTool or something
+        # TODO: Move this to a method inside the tools themselves that we can call from here
+        # - add to BaseTool or something
         # If the tool is a SQL query tool, we check if it needs correction
         messages = []
         results = []
@@ -96,7 +96,7 @@ class CallToolNode(Node):
             query = action.tool_input.get("query", "")
             dialect = sql_query_executor_tool.db.dialect
 
-            details = cls.correct_sql(query, dialect)
+            details = cls.correct_sql(state.options.openai_api_key.get_secret_value(), query, dialect)
             if details.needs_correction and details.query:
                 action.tool_input["query"] = details.query
 
@@ -111,7 +111,8 @@ class CallToolNode(Node):
 
             # We use the response to create a FunctionMessage
             if not state.options.secure_data:
-                # TODO: Cast this to a string by including the column names in every row so it's easier for llm to understand
+                # TODO: Cast this to a string by including the column names in every row so
+                # it's easier for llm to understand
                 function_message = FunctionMessage(content=str(response), name=action.tool)
                 messages.append(function_message)
             else:
@@ -128,7 +129,9 @@ class CallToolNode(Node):
                     data_description = "No data returned"
 
                 function_message = FunctionMessage(
-                    content=f"Query executed successfully - here is the returned data description. I cannot view this data contents for security reasons.\n{data_description}",
+                    content="Query executed successfully - here is the returned data description. "
+                    "I cannot view this data for security reasons.\n"
+                    f"{data_description}",
                     name=action.tool,
                 )
                 messages.append(function_message)

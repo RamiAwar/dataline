@@ -31,24 +31,7 @@ class ConversationRepository(BaseRepository[ConversationModel, ConversationCreat
     def model(self) -> Type[ConversationModel]:
         return ConversationModel
 
-    async def get_by_id(self, session: AsyncSession, record_id: int) -> ConversationModel:
-        query = select(self.model).filter_by(id=record_id)
-        return await self.get(session, query)
-
-    async def delete_by_id(self, session: AsyncSession, record_id: int) -> None:
-        query = delete(self.model).filter_by(id=record_id)
-        await self.delete_one(session, query)
-
-    async def update_by_id(self, session: AsyncSession, record_id: int, data: ConversationUpdate) -> ConversationModel:
-        query = (
-            update(self.model)
-            .filter_by(id=record_id)
-            .values(**data.model_dump(exclude_defaults=True))
-            .returning(self.model)
-        )
-        return await self.update_one(session, query)
-
-    async def get_with_messages_with_results(self, session: AsyncSession, conversation_id: int) -> ConversationModel:
+    async def get_with_messages_with_results(self, session: AsyncSession, conversation_id: UUID) -> ConversationModel:
         query = (
             select(self.model)
             .filter_by(id=conversation_id)

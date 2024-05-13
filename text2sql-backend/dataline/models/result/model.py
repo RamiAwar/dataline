@@ -1,20 +1,18 @@
-from typing import TYPE_CHECKING
+from uuid import UUID
 
-from sqlalchemy import Integer, String, Text
+from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from dataline.models.base import DBModel
-
-if TYPE_CHECKING:
-    from dataline.models.message.model import MessageModel
+from dataline.models.base import DBModel, UUIDMixin
+from dataline.models.message.model import MessageModel
 
 
-class ResultModel(DBModel, kw_only=True):
+class ResultModel(DBModel, UUIDMixin, kw_only=True):
     __tablename__ = "results"
-    id: Mapped[int] = mapped_column("id", Integer, primary_key=True, init=False)
     content: Mapped[str] = mapped_column("content", Text, nullable=False)
     type: Mapped[str] = mapped_column("type", String, nullable=False)
     created_at: Mapped[str | None] = mapped_column("created_at", String)
+    message_id: Mapped[UUID] = mapped_column(ForeignKey(MessageModel.id, ondelete="CASCADE"))
 
     # Relationships
     message: Mapped["MessageModel"] = relationship("MessageModel", back_populates="results")

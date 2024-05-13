@@ -28,11 +28,11 @@ class ConversationService:
         )
         return ConversationOut.from_model(conversation)
 
-    async def get_conversation(self, session: AsyncSession, conversation_id: int) -> ConversationOut:
-        conversation = await self.conversation_repo.get_by_id(session, conversation_id)
+    async def get_conversation(self, session: AsyncSession, conversation_id: UUID) -> ConversationOut:
+        conversation = await self.conversation_repo.get_by_uuid(session, conversation_id)
         return ConversationOut.from_model(conversation)
 
-    async def get_conversation_with_messages(self, session: AsyncSession, conversation_id: int) -> None:
+    async def get_conversation_with_messages(self, session: AsyncSession, conversation_id: UUID) -> None:
         conversation = await self.conversation_repo.get_with_messages_with_results(session, conversation_id)
         # return ConversationWithMessagesWithResultsOut
         return None
@@ -48,11 +48,13 @@ class ConversationService:
     #         for message in messages:
     #             ...
 
-    async def delete_conversation(self, session: AsyncSession, conversation_id: int) -> None:
-        await self.conversation_repo.delete_by_id(session, record_id=conversation_id)
+    async def delete_conversation(self, session: AsyncSession, conversation_id: UUID) -> None:
+        await self.conversation_repo.delete_by_uuid(session, record_id=conversation_id)
 
-    async def update_conversation_name(self, session: AsyncSession, conversation_id: int, name: str) -> ConversationOut:
-        conversation = await self.conversation_repo.update_by_id(
+    async def update_conversation_name(
+        self, session: AsyncSession, conversation_id: UUID, name: str
+    ) -> ConversationOut:
+        conversation = await self.conversation_repo.update_by_uuid(
             session, conversation_id, ConversationUpdate(name=name)
         )
         return ConversationOut.from_model(conversation)

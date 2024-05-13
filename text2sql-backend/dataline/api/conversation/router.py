@@ -1,9 +1,7 @@
-import json
 import logging
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response
-from langchain_core.pydantic_v1 import SecretStr
-from pydantic.json import pydantic_encoder
+from fastapi import APIRouter, Depends, Response
 
 from dataline import db
 from dataline.models.conversation.schema import (
@@ -13,9 +11,8 @@ from dataline.models.conversation.schema import (
     UpdateConversationRequest,
 )
 from dataline.models.llm_flow.schema import QueryOptions
-from dataline.old_models import DataResult, Result, SuccessResponse, UnsavedResult
-from dataline.old_services import QueryService, results_from_query_response
-from dataline.repositories.base import AsyncSession, NotFoundError, get_session
+from dataline.old_models import SuccessResponse, UnsavedResult
+from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.connection import ConnectionService
 from dataline.services.conversation import ConversationService
 from dataline.services.llm_flow.graph import QueryGraphService
@@ -23,7 +20,7 @@ from dataline.services.settings import SettingsService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["connections"])
+router = APIRouter(tags=["conversations"])
 
 
 @router.get("/conversations")
@@ -51,7 +48,7 @@ async def create_conversation(
 
 @router.patch("/conversation/{conversation_id}")
 async def update_conversation(
-    conversation_id: int,
+    conversation_id: UUID,
     conversation_in: UpdateConversationRequest,
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(ConversationService),
@@ -64,7 +61,7 @@ async def update_conversation(
 
 @router.delete("/conversation/{conversation_id}")
 async def delete_conversation(
-    conversation_id: int,
+    conversation_id: UUID,
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(ConversationService),
 ) -> None:
@@ -73,7 +70,7 @@ async def delete_conversation(
 
 @router.get("/conversation/{conversation_id}")
 async def get_conversation(
-    conversation_id: int,
+    conversation_id: UUID,
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(ConversationService),
 ) -> SuccessResponse[ConversationOut]:
@@ -83,7 +80,7 @@ async def get_conversation(
 
 @router.get("/conversation/{conversation_id}/query", response_model=list[UnsavedResult])
 async def query(
-    conversation_id: int,
+    conversation_id: UUID,
     query: str,
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(ConversationService),
@@ -100,13 +97,15 @@ async def query(
     )
 
     query_service.query(
-        conversation_id=conversation_id,
         query=query,
         options=QueryOptions(
-            openai_api_key=user_with_model_details.openai_api_key,
+            openai_api_key=user_with_model_details.openai_api_key.get_secret_value(),  # type: ignore  # Old pydantic version from LC
             model_name=user_with_model_details.preferred_openai_model,
         ),
+        history=[],
     )
+
+    # TODO: Store results and final message in database
 
     return Response()
 

@@ -59,7 +59,7 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, BaseTool):
     description: str = "Get the schema and sample rows for the specified SQL tables."
 
     # Pydantic model to validate input to the tool
-    args_schema = _InfoSQLDatabaseToolInput
+    args_schema: Type[BaseModel] = _InfoSQLDatabaseToolInput
 
     def _run(
         self,
@@ -89,7 +89,7 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, BaseTool):
     If the query is not correct, an error message will be returned.
     If an error is returned, rewrite the query, check the query, and try again.
     """
-    args_schema = _QuerySQLDataBaseToolInput
+    args_schema: Type[BaseModel] = _QuerySQLDataBaseToolInput
 
     def _run(
         self,
@@ -121,9 +121,9 @@ class ListSQLTablesTool(BaseSQLDatabaseTool, BaseTool):
 
     name: str = SQLToolNames.LIST_SQL_TABLES
     description: str = "Input is an empty string, output is a comma-separated list of tables in the database."
-    args_schema = _ListSQLTablesToolInput
+    args_schema: Type[BaseModel] = _ListSQLTablesToolInput
 
-    def _run(
+    def _run(  # type: ignore
         self,
         tool_input: str = "",
         run_manager: Optional[CallbackManagerForToolRun] = None,

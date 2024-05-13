@@ -1,18 +1,17 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from dataline.models.base import DBModel
+from dataline.models.base import DBModel, UUIDMixin
 from dataline.models.conversation.model import ConversationModel
 
 if TYPE_CHECKING:
     from dataline.models.result.model import ResultModel
 
 
-class MessageModel(DBModel, kw_only=True):
+class MessageModel(DBModel, UUIDMixin, kw_only=True):
     __tablename__ = "messages"
-    id: Mapped[int] = mapped_column("id", Integer, primary_key=True, init=False)
     content: Mapped[str] = mapped_column("content", Text, nullable=False)
     role: Mapped[str] = mapped_column("role", String, nullable=False)
     created_at: Mapped[str | None] = mapped_column("created_at", String)
