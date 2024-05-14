@@ -25,7 +25,11 @@ class SettingsService:
     media_repo: MediaRepository
     user_repo: UserRepository
 
-    def __init__(self, media_repo: MediaRepository = Depends(), user_repo: UserRepository = Depends()) -> None:
+    def __init__(
+        self,
+        media_repo: MediaRepository = Depends(MediaRepository),
+        user_repo: UserRepository = Depends(UserRepository),
+    ) -> None:
         self.media_repo = media_repo
         self.user_repo = user_repo
 

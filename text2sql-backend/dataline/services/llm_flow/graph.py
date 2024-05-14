@@ -1,4 +1,3 @@
-from pprint import pprint
 from typing import Sequence, Type
 
 from langchain_community.utilities.sql_database import SQLDatabase
@@ -6,7 +5,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolExecutor
 
-from dataline.models.llm_flow.schema import QueryGraphState, QueryOptions
+from dataline.models.llm_flow.schema import QueryOptions, QueryResultSchema, ResultType
 from dataline.services.llm_flow.nodes import (
     CallListTablesToolNode,
     CallModelNode,
@@ -16,7 +15,7 @@ from dataline.services.llm_flow.nodes import (
     ShouldCallToolCondition,
 )
 from dataline.services.llm_flow.prompt import SQL_FUNCTIONS_SUFFIX, SQL_PREFIX
-from dataline.services.llm_flow.toolkit import SQLDatabaseToolkit
+from dataline.services.llm_flow.toolkit import QueryGraphState, SQLDatabaseToolkit
 
 
 def add_node(graph: StateGraph, node: Type[Node]) -> None:
@@ -42,7 +41,9 @@ class QueryGraphService:
         self.db._sample_rows_in_table_info = 0  # Preventative security
         self.toolkit = SQLDatabaseToolkit(db=self.db)
 
-    def query(self, query: str, options: QueryOptions, history: Sequence[BaseMessage] = []) -> None:
+    def query(
+        self, query: str, options: QueryOptions, history: Sequence[BaseMessage] = []
+    ) -> tuple[Sequence[BaseMessage], Sequence[ResultType]]:
         graph = self.build_graph()
         app = graph.compile()
 
@@ -58,9 +59,18 @@ class QueryGraphService:
         }
 
         chunks = []
+        messages: Sequence[BaseMessage] = []
+        results: Sequence[ResultType] = []
         for chunk in app.stream(initial_state):
-            pprint(chunk)
             chunks.append(chunk)
+            for tool, tool_chunk in chunk.items():
+                if tool_chunk.get("results"):
+                    results.extend(tool_chunk["results"])
+
+                if tool_chunk.get("messages"):
+                    messages.extend(tool_chunk["messages"])
+
+        return messages, results
 
     def build_graph(self) -> StateGraph:
         # Create the graph
@@ -93,57 +103,3 @@ class QueryGraphService:
                 HumanMessage(content=query),
                 AIMessage(content=suffix),
             ]
-
-    # async def get_related_tables(self, query: str, message_history: list[dict] = []) -> tuple[str, list[str]]:
-    #     # Fetch table context
-    #     context_str, table_names = await self.context_builder.get_relevant_table_context(
-    #         query_str=query,
-    #         store_context_str=True,
-    #         message_history=message_history,
-    #     )
-
-    #     # If no table schemas found for context, raise error
-    #     if context_str.strip() == "":
-    #         raise RelatedTablesNotFoundError
-
-    #     return context_str, table_names
-
-    # async def query(self, query: str, conversation_id: str) -> SQLQueryResult:
-    #     # Query with table context
-    #     message_history = db.get_message_history_with_selected_tables_with_sql(conversation_id)
-
-    #     # Fetch table context
-    #     context_str, table_names = await self.get_related_tables(query, message_history)
-
-    #     # Add user message to message history
-    #     db.add_message_to_conversation(conversation_id, content=query, role="user", selected_tables=table_names)
-
-    #     generated_json = "".join(
-    #         self.query_manager.query(query, table_context=context_str, message_history=message_history)
-    #     )
-    #     data = json.loads(generated_json)
-    #     result = SQLQueryResult(**data, selected_tables=table_names)
-
-    #     if result.sql:
-    #         # Validate SQL
-    #         valid, error = self.sql_db.validate_sql(result.sql)
-    #         if not valid:
-    #             logger.debug("\n\n------------------\n\n")
-    #             logger.debug("Reasking...")
-    #             logger.debug("\n\n------------------\n\n")
-    #             # Reask with error
-    #             generated_json = "".join(self.query_manager.reask(query, result.sql, context_str, error))
-    #             data = json.loads(generated_json)
-
-    #             # TODO: Add invalid SQL status to result type so it can be communicated to frontend  # noqa
-    #             # Return all generated data + selected tables
-    #             return SQLQueryResult(**data, selected_tables=table_names)
-
-    #     return result
-
-    # def run_sql(self, sql: str):
-    #     results = self.sql_db.run_sql(sql)
-    #     if results and len(results) > 1:
-    #         return results[1]
-
-    #     raise Exception("Uknown error running sql, got no results: ", results)

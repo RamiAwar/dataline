@@ -1,10 +1,22 @@
-from typing import Any, List, Optional, Type, cast
+import operator
+from typing import Annotated, Any, List, Optional, Sequence, Type, TypedDict, cast
 
 from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_core.callbacks import CallbackManagerForToolRun
-from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_core.messages import BaseMessage
+from langchain_core.pydantic_v1 import BaseModel
+from langchain_core.pydantic_v1 import BaseModel as BaseModelV1
+from langchain_core.pydantic_v1 import Field
 from langchain_core.tools import BaseTool, BaseToolkit
+from langgraph.prebuilt import ToolExecutor
 from sqlalchemy import Result
+
+from dataline.models.llm_flow.schema import (
+    QueryOptions,
+    QueryResultSchema,
+    SelectedTablesResult,
+    SQLQueryRunResult,
+)
 
 
 def truncate_word(content: Any, *, length: int, suffix: str = "...") -> str:  # type: ignore[misc]
@@ -74,12 +86,6 @@ class _QuerySQLDataBaseToolInput(BaseModel):
     query: str = Field(..., description="A detailed and correct SQL query.")
 
 
-class SQLQueryResult(BaseModel):  # type: ignore[misc]
-    columns: List[str]
-    rows: List[List[Any]]  # type: ignore[misc]
-    is_secure: bool = False
-
-
 class QuerySQLDataBaseTool(BaseSQLDatabaseTool, BaseTool):
     """Tool for querying a SQL database."""
 
@@ -95,7 +101,7 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, BaseTool):
         self,
         query: str,
         run_manager: Optional[CallbackManagerForToolRun] = None,
-    ) -> SQLQueryResult:
+    ) -> SQLQueryRunResult:
         """Execute the query, return the results or an error message."""
         result = cast(Result, self.db.run(query, fetch="cursor", include_columns=True))
         truncated_results = []
@@ -105,15 +111,11 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, BaseTool):
             truncated_results.append(truncated_row)
 
         columns = list(result.keys())
-        return SQLQueryResult.construct(columns=columns, rows=truncated_results)
+        return SQLQueryRunResult.construct(columns=columns, rows=truncated_results)
 
 
 class _ListSQLTablesToolInput(BaseModel):
     tool_input: str = Field("", description="An empty string")
-
-
-class SelectedTablesResult(BaseModel):
-    tables: List[str]
 
 
 class ListSQLTablesTool(BaseSQLDatabaseTool, BaseTool):
@@ -181,3 +183,25 @@ class SQLDatabaseToolkit(BaseToolkit):
     def get_context(self) -> dict[str, Any]:  # type: ignore[misc]
         """Return db context that you may want in agent prompt."""
         return self.db.get_context()
+
+
+class QueryGraphState(BaseModelV1):
+    messages: Annotated[Sequence[BaseMessage], operator.add]
+    results: Annotated[Sequence[QueryResultSchema], operator.add]
+    options: QueryOptions
+    sql_toolkit: SQLDatabaseToolkit
+    tool_executor: ToolExecutor
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class QueryGraphStateUpdate(TypedDict):
+    messages: Sequence[BaseMessage]
+    results: Sequence[QueryResultSchema]
+
+
+def state_update(
+    messages: Sequence[BaseMessage] = [], results: Sequence[QueryResultSchema] = []
+) -> QueryGraphStateUpdate:
+    return {"messages": messages, "results": results}

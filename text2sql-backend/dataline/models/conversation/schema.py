@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import Any, Self
+from typing import Any, Self, Sequence
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
 from dataline.models.conversation.model import ConversationModel
+from dataline.models.llm_flow.schema import ResultType
 from dataline.old_models import ConversationWithMessagesWithResults
 
 
@@ -39,9 +40,22 @@ class UpdateConversationRequest(BaseModel):
     name: str
 
 
-class MessageWithResults:
+class MessageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
     content: str
     role: str
-    results: Any  # list[QueryResult]
-    message_id: int
     created_at: datetime
+
+
+class ResultOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    content: str
+    type: str
+
+
+class QueryOut(BaseModel):
+    message: MessageOut
+    results: list[ResultOut]

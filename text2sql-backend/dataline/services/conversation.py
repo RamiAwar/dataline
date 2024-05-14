@@ -2,20 +2,47 @@ from uuid import UUID
 
 from fastapi import Depends
 
-from dataline.models.conversation.schema import ConversationOut
+from dataline.models.conversation.schema import (
+    ConversationOut,
+    MessageOut,
+    QueryOut,
+    ResultOut,
+)
+from dataline.models.llm_flow.schema import QueryOptions, StorableQueryResultSchema
+from dataline.models.message.schema import BaseMessageType, MessageCreate
 from dataline.repositories.base import AsyncSession
 from dataline.repositories.conversation import (
     ConversationCreate,
     ConversationRepository,
     ConversationUpdate,
 )
+from dataline.repositories.message import MessageRepository
+from dataline.repositories.result import ResultRepository
+from dataline.services.connection import ConnectionService
+from dataline.services.llm_flow.graph import QueryGraphService
+from dataline.services.settings import SettingsService
 
 
 class ConversationService:
     conversation_repo: ConversationRepository
+    message_repo: MessageRepository
+    result_repo: ResultRepository
+    connection_service: ConnectionService
+    settings_service: SettingsService
 
-    def __init__(self, conversation_repo: ConversationRepository = Depends()) -> None:
+    def __init__(
+        self,
+        conversation_repo: ConversationRepository = Depends(ConversationRepository),
+        message_repo: MessageRepository = Depends(MessageRepository),
+        result_repo: ResultRepository = Depends(ResultRepository),
+        connection_service: ConnectionService = Depends(ConnectionService),
+        settings_service: SettingsService = Depends(SettingsService),
+    ) -> None:
         self.conversation_repo = conversation_repo
+        self.message_repo = message_repo
+        self.result_repo = result_repo
+        self.connection_service = connection_service
+        self.settings_service = settings_service
 
     async def create_conversation(
         self,
@@ -58,3 +85,73 @@ class ConversationService:
             session, conversation_id, ConversationUpdate(name=name)
         )
         return ConversationOut.from_model(conversation)
+
+    async def query(
+        self,
+        session: AsyncSession,
+        conversation_id: UUID,
+        query: str,
+    ) -> QueryOut:
+        conversation = await self.get_conversation(session, conversation_id=conversation_id)
+        connection = await self.connection_service.get_connection(session, connection_id=conversation.connection_id)
+
+        user_with_model_details = await self.settings_service.get_model_details(session)
+        query_graph = QueryGraphService(
+            dsn=connection.dsn,
+        )
+
+        # Store human message and final AI message without flushing
+        await self.message_repo.create(
+            session,
+            MessageCreate(
+                role=BaseMessageType.HUMAN.value,
+                content=query,
+                conversation_id=conversation_id,
+            ),
+            flush=False,
+        )
+
+        # Perform query and execute graph
+        messages, results = query_graph.query(
+            query=query,
+            options=QueryOptions(
+                openai_api_key=user_with_model_details.openai_api_key.get_secret_value(),  # type: ignore
+                model_name=user_with_model_details.preferred_openai_model,
+            ),
+            history=[],
+        )
+
+        # Find first AI message from the back
+        last_ai_message = None
+        for message in reversed(messages):
+            if message.type == BaseMessageType.AI.value:
+                last_ai_message = message
+                break
+
+        # Store final AI message in history
+        if not last_ai_message:
+            raise Exception("No AI message found in conversation")
+
+        stored_ai_message = await self.message_repo.create(
+            session,
+            MessageCreate(
+                role=BaseMessageType.AI.value,
+                content=str(last_ai_message.content),
+                conversation_id=conversation_id,
+            ),
+            flush=True,
+        )
+
+        # Store results and final message in database
+        create_results = [
+            result.create_storable_result(stored_ai_message.id)
+            for result in results
+            if isinstance(result, StorableQueryResultSchema)
+        ]
+
+        stored_results = await self.result_repo.create_many(session, create_results)
+        output_results = [ResultOut.model_validate(result) for result in stored_results]
+        return QueryOut(
+            message=MessageOut.model_validate(stored_ai_message),
+            results=output_results,
+        )

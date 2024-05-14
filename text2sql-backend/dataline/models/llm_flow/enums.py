@@ -1,0 +1,7 @@
+from enum import Enum
+
+
+class QueryResultType(Enum):
+    SQL_QUERY_RUN_RESULT = "SQL_QUERY_RUN_RESULT"
+    SQL_QUERY_STRING_RESULT = "SQL_QUERY_STRING_RESULT"
+    SELECTED_TABLES = "SELECTED_TABLES"

@@ -9,19 +9,20 @@ from langgraph.graph import END
 from langgraph.prebuilt import ToolInvocation
 
 from dataline.models.llm_flow.schema import (
-    QueryGraphState,
-    QueryGraphStateUpdate,
-    state_update,
+    SelectedTablesResult,
+    SQLQueryRunResult,
+    SQLQueryStringResult,
 )
 from dataline.services.llm_flow.llm_calls.query_sql_corrector import (
     QuerySQLCorrectorCall,
     SQLCorrectionDetails,
 )
 from dataline.services.llm_flow.toolkit import (
+    QueryGraphState,
+    QueryGraphStateUpdate,
     QuerySQLDataBaseTool,
-    SelectedTablesResult,
-    SQLQueryResult,
     SQLToolNames,
+    state_update,
 )
 
 NodeName = str
@@ -84,9 +85,10 @@ class CallToolNode(Node):
         )
 
         # Pre-processing tool invocation
+        # TODO: DO WE REALLY NEED THIS ADVANCED LOGIC? JUST LET IT FAIL INSTEAD MAYBE?
         # TODO: Move this to a method inside the tools themselves that we can call from here
         # - add to BaseTool or something
-        # If the tool is a SQL query tool, we check if it needs correction
+        # If the tool is a SQL query tool, we correct it first and then send it forward
         messages = []
         results = []
         if action.tool == SQLToolNames.EXECUTE_SQL_QUERY and isinstance(action.tool_input, dict):
@@ -104,8 +106,11 @@ class CallToolNode(Node):
             function_message = FunctionMessage(content=str(details.model_dump()), name=SQLToolNames.QUERY_SQL_CORRECTOR)
             messages.append(function_message)
 
+            # Create a result object out of the SQL
+            results.append(SQLQueryStringResult(sql=action.tool_input["query"]))
+
             # We call the tool_executor and get back a response
-            response = cast(SQLQueryResult, sql_query_executor_tool.run(action.tool_input))
+            response = cast(SQLQueryRunResult, sql_query_executor_tool.run(action.tool_input))
             response.is_secure = state.options.secure_data  # nice to also return whether or not generated securely
             results.append(response)
 

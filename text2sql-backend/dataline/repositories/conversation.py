@@ -3,7 +3,7 @@ from typing import Type
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import delete, select, update
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from dataline.models.conversation.model import ConversationModel

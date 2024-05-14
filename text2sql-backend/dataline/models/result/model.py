@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import ForeignKey, String, Text
@@ -11,7 +12,7 @@ class ResultModel(DBModel, UUIDMixin, kw_only=True):
     __tablename__ = "results"
     content: Mapped[str] = mapped_column("content", Text, nullable=False)
     type: Mapped[str] = mapped_column("type", String, nullable=False)
-    created_at: Mapped[str | None] = mapped_column("created_at", String)
+    created_at: Mapped[datetime | None] = mapped_column("created_at", String)
     message_id: Mapped[UUID] = mapped_column(ForeignKey(MessageModel.id, ondelete="CASCADE"))
 
     # Relationships

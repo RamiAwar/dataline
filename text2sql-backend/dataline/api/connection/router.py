@@ -31,7 +31,7 @@ router = APIRouter(tags=["connections"])
 async def connect_db(
     req: ConnectRequest,
     session: AsyncSession = Depends(get_session),
-    connection_service: ConnectionService = Depends(),
+    connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ConnectionOut]:
     connection = await connection_service.create_connection(
         session, dsn=req.dsn, name=req.name, is_sample=req.is_sample
@@ -44,7 +44,7 @@ async def connect_db_from_file(
     file: UploadFile,
     name: str = Body(...),
     session: AsyncSession = Depends(get_session),
-    connection_service: ConnectionService = Depends(),
+    connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ConnectionOut]:
     # Validate file type - currently only sqlite supported
     if not is_valid_sqlite_file(file):
@@ -69,7 +69,7 @@ async def connect_db_from_file(
 async def get_connection(
     connection_id: UUID,
     session: AsyncSession = Depends(get_session),
-    connection_service: ConnectionService = Depends(),
+    connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ConnectionOut]:
     connection = await connection_service.get_connection(session, connection_id)
     return SuccessResponse(
@@ -85,7 +85,7 @@ class ConnectionsOut(BaseModel):
 @router.get("/connections")
 async def get_connections(
     session: AsyncSession = Depends(get_session),
-    connection_service: ConnectionService = Depends(),
+    connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ConnectionsOut]:
     connections = await connection_service.get_connections(session)
     return SuccessResponse(
@@ -98,7 +98,7 @@ async def get_connections(
 @router.delete("/connection/{connection_id}")
 async def delete_connection(
     connection_id: UUID,
-    connection_service: ConnectionService = Depends(),
+    connection_service: ConnectionService = Depends(ConnectionService),
     session: AsyncSession = Depends(get_session),
 ) -> SuccessResponse[None]:
     await connection_service.delete_connection(session, connection_id)
@@ -110,7 +110,7 @@ async def update_connection(
     connection_id: UUID,
     req: ConnectionUpdateIn,
     session: AsyncSession = Depends(get_session),
-    connection_service: ConnectionService = Depends(),
+    connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[GetConnectionOut]:
     updated_connection = await connection_service.update_connection(session, connection_id, req)
 

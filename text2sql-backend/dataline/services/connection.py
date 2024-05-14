@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class ConnectionService:
     connection_repo: ConnectionRepository
 
-    def __init__(self, connection_repo: ConnectionRepository = Depends()) -> None:
+    def __init__(self, connection_repo: ConnectionRepository = Depends(ConnectionRepository)) -> None:
         self.connection_repo = connection_repo
 
     async def create_connection(
