@@ -60,6 +60,12 @@ class ConversationService:
         conversation = await self.conversation_repo.get_by_uuid(session, conversation_id)
         return ConversationOut.model_validate(conversation)
 
+    async def get_conversation_with_messages(
+        self, session: AsyncSession, conversation_id: UUID
+    ) -> ConversationWithMessagesWithResultsOut:
+        conversation = await self.conversation_repo.get_with_messages_with_results(session, conversation_id)
+        return ConversationWithMessagesWithResultsOut.model_validate(conversation)
+
     async def get_conversations(self, session: AsyncSession) -> list[ConversationWithMessagesWithResultsOut]:
         conversations = await self.conversation_repo.list_with_messages_with_results(session)
         return [ConversationWithMessagesWithResultsOut.model_validate(conversation) for conversation in conversations]
@@ -81,10 +87,12 @@ class ConversationService:
         conversation_id: UUID,
         query: str,
     ) -> QueryOut:
+        # Get conversation, connection, user settings
         conversation = await self.get_conversation(session, conversation_id=conversation_id)
         connection = await self.connection_service.get_connection(session, connection_id=conversation.connection_id)
-
         user_with_model_details = await self.settings_service.get_model_details(session)
+
+        # Create query graph
         query_graph = QueryGraphService(
             dsn=connection.dsn,
         )
@@ -120,7 +128,6 @@ class ConversationService:
         # Store final AI message in history
         if not last_ai_message:
             raise Exception("No AI message found in conversation")
-
         stored_ai_message = await self.message_repo.create(
             session,
             MessageCreate(
@@ -137,8 +144,8 @@ class ConversationService:
             for result in results
             if isinstance(result, StorableQueryResultSchema)
         ]
-
         stored_results = await self.result_repo.create_many(session, create_results)
+
         output_results = [ResultOut.model_validate(result) for result in stored_results]
         return QueryOut(
             message=MessageOut.model_validate(stored_ai_message),

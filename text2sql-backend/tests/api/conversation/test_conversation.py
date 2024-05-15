@@ -13,7 +13,13 @@ async def test_create_conversation(client: TestClient, dvdrental_connection: Con
     }
     response = client.post("/conversation", json=data)
     assert response.status_code == 200
-    assert {"conversation_id": 1}.items() <= response.json().get("data", {}).items()
+
+    data = response.json().get("data", {})
+
+    assert "id" in data
+    assert "connection_id" in data
+    assert "created_at" in data
+    assert "name" in data
 
 
 @pytest.mark.asyncio
@@ -21,35 +27,35 @@ async def test_update_conversation_name(client: TestClient, sample_conversation:
     data = {
         "name": "New name",
     }
-    response = client.patch(f"/conversation/{sample_conversation.conversation_id}", json=data)
+    response = client.patch(f"/conversation/{sample_conversation.id}", json=data)
     assert response.status_code == 200
 
     # Check that name updated
     result = response.json()["data"]
     assert result["name"] == "New name"
-    assert result["conversation_id"] == sample_conversation.conversation_id
+    assert result["id"] == str(sample_conversation.id)
     assert result["connection_id"] == str(sample_conversation.connection_id)
     assert result["created_at"] == sample_conversation.created_at.isoformat()
 
 
 @pytest.mark.asyncio
 async def test_delete_conversation(client: TestClient, sample_conversation: ConversationOut) -> None:
-    response = client.delete(f"/conversation/{sample_conversation.conversation_id}")
+    response = client.delete(f"/conversation/{sample_conversation.id}")
     assert response.status_code == 200
 
     # Check that conversation deleted
-    response = client.get(f"/conversation/{sample_conversation.conversation_id}")
+    response = client.get(f"/conversation/{sample_conversation.id}")
     assert response.status_code == 404
 
 
 @pytest.mark.asyncio
 async def test_get_conversation(client: TestClient, sample_conversation: ConversationOut) -> None:
-    response = client.get(f"/conversation/{sample_conversation.conversation_id}")
+    response = client.get(f"/conversation/{sample_conversation.id}")
     assert response.status_code == 200
 
     # Check that conversation returned
     result = response.json()["data"]
-    assert result["conversation_id"] == sample_conversation.conversation_id
+    assert result["id"] == str(sample_conversation.id)
     assert result["connection_id"] == str(sample_conversation.connection_id)
     assert result["created_at"] == sample_conversation.created_at.isoformat()
     assert result["name"] == sample_conversation.name
@@ -59,7 +65,7 @@ async def test_get_conversation(client: TestClient, sample_conversation: Convers
 async def test_get_conversation_with_messages_with_results(
     client: TestClient, sample_conversation: ConversationOut
 ) -> None:
-    response = client.get(f"/conversation/{sample_conversation.conversation_id}/messages")
+    response = client.get(f"/conversation/{sample_conversation.id}/messages")
 
 
 # TODO:

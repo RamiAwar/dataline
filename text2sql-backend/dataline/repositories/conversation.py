@@ -31,6 +31,14 @@ class ConversationRepository(BaseRepository[ConversationModel, ConversationCreat
     def model(self) -> Type[ConversationModel]:
         return ConversationModel
 
+    async def get_with_messages_with_results(self, session: AsyncSession, conversation_id: UUID) -> ConversationModel:
+        query = (
+            select(ConversationModel)
+            .filter_by(id=conversation_id)
+            .options(joinedload(ConversationModel.messages).joinedload(MessageModel.results))
+        )
+        return await self.get_unique(session, query)
+
     async def list_with_messages_with_results(self, session: AsyncSession) -> Sequence[ConversationModel]:
         query = select(ConversationModel).options(
             joinedload(ConversationModel.messages).joinedload(MessageModel.results)

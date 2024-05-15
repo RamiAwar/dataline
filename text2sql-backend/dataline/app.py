@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse
 
 from dataline.api.connection.router import router as connection_router
 from dataline.api.conversation.router import router as conversation_router
-from dataline.api.message.router import router as message_router
 from dataline.api.settings.router import router as settings_router
 from dataline.errors import ValidationError
 from dataline.llm import OpenAIError
@@ -48,7 +47,6 @@ class App(fastapi.FastAPI):
         self.include_router(settings_router)
         self.include_router(connection_router)
         self.include_router(conversation_router)
-        self.include_router(message_router)
 
         # Handle 500s separately to play well with TestClient and allow re-raising in tests
         self.add_exception_handler(NotFoundError, handle_exceptions)

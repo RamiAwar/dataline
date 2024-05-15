@@ -20,6 +20,8 @@ class CreateConversationIn(BaseModel):
 
 
 class ConversationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     connection_id: UUID
     name: str
