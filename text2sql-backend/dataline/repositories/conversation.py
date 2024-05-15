@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import Type
+from typing import Sequence, Type
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 
 from dataline.models.conversation.model import ConversationModel
 from dataline.models.message.model import MessageModel
@@ -31,11 +31,8 @@ class ConversationRepository(BaseRepository[ConversationModel, ConversationCreat
     def model(self) -> Type[ConversationModel]:
         return ConversationModel
 
-    async def get_with_messages_with_results(self, session: AsyncSession, conversation_id: UUID) -> ConversationModel:
-        query = (
-            select(self.model)
-            .filter_by(id=conversation_id)
-            .options(selectinload(ConversationModel.messages), selectinload(MessageModel.results))
+    async def list_with_messages_with_results(self, session: AsyncSession) -> Sequence[ConversationModel]:
+        query = select(ConversationModel).options(
+            joinedload(ConversationModel.messages).joinedload(MessageModel.results)
         )
-
-        return await self.get(session, query)
+        return await self.list_unique(session, query)

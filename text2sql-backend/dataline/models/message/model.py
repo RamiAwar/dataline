@@ -7,7 +7,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dataline.models.base import DBModel, UUIDMixin
 from dataline.models.conversation.model import ConversationModel
-from dataline.models.message.schema import BaseMessageType
 
 if TYPE_CHECKING:
     from dataline.models.result.model import ResultModel

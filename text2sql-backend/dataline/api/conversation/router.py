@@ -1,17 +1,16 @@
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends
 
-from dataline import db
 from dataline.models.conversation.schema import (
     ConversationOut,
-    ConversationsOut,
+    ConversationWithMessagesWithResultsOut,
     CreateConversationIn,
     QueryOut,
     UpdateConversationRequest,
 )
-from dataline.old_models import SuccessResponse, UnsavedResult
+from dataline.old_models import SuccessListResponse, SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.conversation import ConversationService
 
@@ -21,11 +20,13 @@ router = APIRouter(tags=["conversations"])
 
 
 @router.get("/conversations")
-async def conversations() -> SuccessResponse[ConversationsOut]:
-    return SuccessResponse(
-        data=ConversationsOut(
-            conversations=db.get_conversations_with_messages_with_results(),
-        ),
+async def conversations(
+    session: AsyncSession = Depends(get_session),
+    conversation_service: ConversationService = Depends(ConversationService),
+) -> SuccessListResponse[ConversationWithMessagesWithResultsOut]:
+    conversations = await conversation_service.get_conversations(session)
+    return SuccessListResponse(
+        data=conversations,
     )
 
 

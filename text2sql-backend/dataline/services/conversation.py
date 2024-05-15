@@ -4,6 +4,7 @@ from fastapi import Depends
 
 from dataline.models.conversation.schema import (
     ConversationOut,
+    ConversationWithMessagesWithResultsOut,
     MessageOut,
     QueryOut,
     ResultOut,
@@ -53,27 +54,15 @@ class ConversationService:
         conversation = await self.conversation_repo.create(
             session, ConversationCreate(connection_id=connection_id, name=name)
         )
-        return ConversationOut.from_model(conversation)
+        return ConversationOut.model_validate(conversation)
 
     async def get_conversation(self, session: AsyncSession, conversation_id: UUID) -> ConversationOut:
         conversation = await self.conversation_repo.get_by_uuid(session, conversation_id)
-        return ConversationOut.from_model(conversation)
+        return ConversationOut.model_validate(conversation)
 
-    async def get_conversation_with_messages(self, session: AsyncSession, conversation_id: UUID) -> None:
-        conversation = await self.conversation_repo.get_with_messages_with_results(session, conversation_id)
-        # return ConversationWithMessagesWithResultsOut
-        return None
-
-    # async def list_conversations_with_messages_with_results(self, session: AsyncSession) -> list[ConversationOut]:
-    #     conversations = await self.conversation_repo.list_all(session)
-
-    #     conversations_with_messages_with_results = []
-    #     for conversation in conversations:
-    #         messages = await self.message_repo.list_messages_by_conversation(session, conversation.id)
-
-    #         messages_with_results = []
-    #         for message in messages:
-    #             ...
+    async def get_conversations(self, session: AsyncSession) -> list[ConversationWithMessagesWithResultsOut]:
+        conversations = await self.conversation_repo.list_with_messages_with_results(session)
+        return [ConversationWithMessagesWithResultsOut.model_validate(conversation) for conversation in conversations]
 
     async def delete_conversation(self, session: AsyncSession, conversation_id: UUID) -> None:
         await self.conversation_repo.delete_by_uuid(session, record_id=conversation_id)
@@ -84,7 +73,7 @@ class ConversationService:
         conversation = await self.conversation_repo.update_by_uuid(
             session, conversation_id, ConversationUpdate(name=name)
         )
-        return ConversationOut.from_model(conversation)
+        return ConversationOut.model_validate(conversation)
 
     async def query(
         self,
