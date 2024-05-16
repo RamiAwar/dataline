@@ -40,3 +40,5 @@ You can then run uvicorn to start the backend:
 ```
 uvicorn dataline.main:app --reload --port=7377
 ```
+
+To run tests: `PYTHONPATH=. pytest . -vv`

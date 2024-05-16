@@ -12,7 +12,6 @@ import { Dialect } from "../Library/types";
 import { useEffect, useRef, useState } from "react";
 import { useRunSql, useUpdateSqlQuery } from "@/hooks";
 import { useParams } from "react-router-dom";
-import { enqueueSnackbar } from "notistack";
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
@@ -81,7 +80,6 @@ export const CodeBlock = ({
 }) => {
   const { conversationId } = useParams<{ conversationId: string }>();
 
-  const [enabled, setEnabled] = useState<boolean>(false);
   const [savedCode, setSavedCode] = useState<string>(() =>
     formattedCodeOrInitial(code)
   );
@@ -92,14 +90,17 @@ export const CodeBlock = ({
   const [lastChar, setLastChar] = useState<string>("");
   // let BookmarkIcon = isSaved ? BookmarkIconSolid : BookmarkIconOutline;
   const BookmarkIcon = BookmarkIconOutline;
-  const extraSpace = ""; // "\n\n\n";
+  const extraSpace = "";
 
   const { mutate } = useUpdateSqlQuery();
 
-  const { isLoading, data, isError } = useRunSql({
+  const {
+    isPending,
+    data,
+    mutate: runSql,
+  } = useRunSql({
     conversationId: conversationId || "",
     sql: savedCode.replace(/\s+/g, " "),
-    enabled,
   });
 
   function updateQuery() {
@@ -108,24 +109,10 @@ export const CodeBlock = ({
   }
 
   useEffect(() => {
-    if (isError) {
-      enqueueSnackbar({ variant: "error", message: "Error running query" });
-      setEnabled(false);
-    }
-  }, [isError]);
-
-  useEffect(() => {
-    if (data && enabled) {
-      setEnabled(false);
+    if (data) {
       data?.content && updateMessage(data.content as string);
-      if (!isError) {
-        enqueueSnackbar({
-          variant: "success",
-          message: "Query executed successfully",
-        });
-      }
     }
-  }, [enabled, data, updateMessage, isError]);
+  }, [data, updateMessage]);
 
   useEffect(() => {
     try {
@@ -253,20 +240,20 @@ export const CodeBlock = ({
           <button
             tabIndex={-1}
             className={classNames(
-              !isLoading
+              !isPending
                 ? "hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100"
                 : "",
               "group flex ml-auto gap-2 rounded-md p-1 dark:text-gray-400 bg-gray-700 transition-all duration-150 ease-in-out"
             )}
             onClick={() => {
               updateCode(formattedCode);
-              setEnabled(true);
+              runSql();
             }}
-            disabled={isLoading}
+            disabled={isPending}
           >
             <PlayIcon
               className={classNames(
-                isLoading ? "animate-spin" : "group-hover:-rotate-12",
+                isPending ? "animate-spin" : "group-hover:-rotate-12",
                 "w-6 h-6 [&>path]:stroke-[2]"
               )}
             />

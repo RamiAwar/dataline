@@ -2,7 +2,6 @@ import { api } from "@/api";
 import { IMessageWithResultsOut } from "@/components/Library/types";
 import {
   queryOptions,
-  skipToken,
   useMutation,
   useQuery,
   useQueryClient,
@@ -13,7 +12,6 @@ import { isAxiosError } from "axios";
 import { generateUUID } from "@/components/Library/utils";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
-const QUERIES_QUERY_KEY = ["SQL_QUERIES"];
 
 // Load everything
 export function getMessagesQuery({
@@ -94,22 +92,22 @@ export function useGetMessages(conversationId: string) {
 export function useRunSql({
   conversationId,
   sql,
-  enabled,
 }: {
   conversationId: string;
   sql: string;
-  enabled: boolean;
 }) {
-  const result = useQuery({
-    queryKey: [...QUERIES_QUERY_KEY, { conversationId, sql }],
-    queryFn: enabled
-      ? async () => (await api.runSQL(conversationId, sql)).data
-      : skipToken,
-    enabled,
-    retry: false,
+  return useMutation({
+    mutationFn: async () => (await api.runSQL(conversationId, sql)).data,
+    onError() {
+      enqueueSnackbar({ variant: "error", message: "Error running query" });
+    },
+    onSuccess() {
+      enqueueSnackbar({
+        variant: "success",
+        message: "Query executed successfully",
+      });
+    },
   });
-
-  return result;
 }
 
 export function useUpdateSqlQuery(options = {}) {
