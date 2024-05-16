@@ -202,10 +202,11 @@ const query = async (
 };
 
 export type RunSQLResult = ApiResponse<IResult>;
-const runSQL = async (conversationId: number, code: string) => {
+const runSQL = async (conversationId: string, code: string) => {
   return (
     await backendApi<RunSQLResult>({
-      url: `/execute-sql?conversation_id=${conversationId}&sql=${code}`,
+      url: "/execute-sql",
+      params: { conversation_id: conversationId, sql: code },
     })
   ).data;
 };

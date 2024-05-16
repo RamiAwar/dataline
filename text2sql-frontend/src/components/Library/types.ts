@@ -12,7 +12,12 @@ export enum Dialect {
   TransactSQL = "tsql",
 }
 
-export type IResultType = "sql" | "code" | "data" | "text" | "SELECTED_TABLES";
+export type IResultType =
+  | "SQL_QUERY_STRING_RESULT"
+  | "code"
+  | "data"
+  | "text"
+  | "SELECTED_TABLES";
 export type Role = "ai" | "human";
 
 export interface IResult {

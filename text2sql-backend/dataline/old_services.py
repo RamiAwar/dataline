@@ -20,6 +20,22 @@ class SQLResults(TypedDict):
     columns: list[str]
 
 
+class TempQueryService:
+    def __init__(self, connection: Connection) -> None:
+        self.session = connection
+        self.engine = create_engine(connection.dsn)
+        self.insp = inspect(self.engine)
+        self.table_names = self.insp.get_table_names()
+        self.sql_db = CustomSQLDatabase(self.engine, include_tables=self.table_names)
+
+    def run_sql(self, sql: str):
+        results = self.sql_db.run_sql(sql)
+        if results and len(results) > 1:
+            return results[1]
+
+        raise Exception("Uknown error running sql, got no results: ", results)
+
+
 class QueryService:
     def __init__(
         self,

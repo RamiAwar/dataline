@@ -48,7 +48,7 @@ export const Message = ({
     setMessage({
       ...message,
       results: message.results?.map((result) => {
-        if (result.type !== "sql") return result;
+        if (result.type !== "SQL_QUERY_STRING_RESULT") return result;
         return { ...result, content: code };
       }),
     });
@@ -99,8 +99,8 @@ export const Message = ({
               if (b.type === "SELECTED_TABLES") return 1;
               if (a.type === "data") return -1;
               if (b.type === "data") return 1;
-              if (a.type === "sql") return -1;
-              if (b.type === "sql") return 1;
+              if (a.type === "SQL_QUERY_STRING_RESULT") return -1;
+              if (b.type === "SQL_QUERY_STRING_RESULT") return 1;
               return 0;
             })
             .map(
@@ -117,10 +117,10 @@ export const Message = ({
                     data={result.content}
                   />
                 )) ||
-                (result.type === "sql" && (
+                (result.type === "SQL_QUERY_STRING_RESULT" && (
                   <CodeBlock
                     key={`message-${message.id}-code-${index}`}
-                    language="sql"
+                    language="SQL_QUERY_STRING_RESULT"
                     code={result.content as string}
                     resultId={result.result_id}
                     updateMessage={updateData}

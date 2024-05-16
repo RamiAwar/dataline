@@ -97,7 +97,7 @@ export const CodeBlock = ({
   const { mutate } = useUpdateSqlQuery();
 
   const { isLoading, data, isError } = useRunSql({
-    conversationId: parseInt(conversationId || ""),
+    conversationId: conversationId || "",
     sql: savedCode.replace(/\s+/g, " "),
     enabled,
   });
@@ -118,8 +118,14 @@ export const CodeBlock = ({
     if (data && enabled) {
       setEnabled(false);
       data?.content && updateMessage(data.content as string);
+      if (!isError) {
+        enqueueSnackbar({
+          variant: "success",
+          message: "Query executed successfully",
+        });
+      }
     }
-  }, [enabled, data, updateMessage]);
+  }, [enabled, data, updateMessage, isError]);
 
   useEffect(() => {
     try {
@@ -211,7 +217,7 @@ export const CodeBlock = ({
       />
       <SyntaxHighlighter
         children={formattedCode}
-        language={language}
+        language={language === "SQL_QUERY_STRING_RESULT" ? "sql" : language}
         style={monokai}
         wrapLines={true}
         customStyle={{

@@ -6,6 +6,7 @@ import webbrowser
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated, AsyncGenerator
+from uuid import UUID
 
 import uvicorn
 from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
@@ -21,11 +22,12 @@ from dataline import db
 from dataline.app import App
 from dataline.config import IS_BUNDLED, config
 from dataline.old_models import DataResult, SuccessResponse, UnsavedResult
-from dataline.old_services import QueryService
+from dataline.old_services import TempQueryService
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.conversation import ConversationService
 from dataline.services.settings import SettingsService
 from dataline.sql_wrapper import request_execute, request_limit
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -69,7 +71,7 @@ async def healthcheck() -> SuccessResponse[None]:
 
 @app.get("/execute-sql", response_model=UnsavedResult)
 async def execute_sql(
-    conversation_id: int,
+    conversation_id: UUID,
     sql: str,
     limit: int = 10,
     execute: bool = True,
@@ -90,9 +92,7 @@ async def execute_sql(
         except NotFoundError:
             raise HTTPException(status_code=404, detail="Invalid connection_id")
 
-        openai_key = await settings_service.get_openai_api_key(session)
-        preferred_model = await settings_service.get_preferred_model(session)
-        query_service = QueryService(connection, openai_api_key=openai_key, model_name=preferred_model)
+        query_service = TempQueryService(connection)
 
         # Execute query
         data = query_service.run_sql(sql)

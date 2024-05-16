@@ -96,7 +96,7 @@ export function useRunSql({
   sql,
   enabled,
 }: {
-  conversationId: number;
+  conversationId: string;
   sql: string;
   enabled: boolean;
 }) {
