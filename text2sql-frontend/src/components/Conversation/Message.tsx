@@ -57,9 +57,7 @@ export const Message = ({
   return (
     <div
       className={classNames(
-        message.role === "assistant"
-          ? "dark:bg-gray-800/40"
-          : "dark:bg-gray-900",
+        message.role === "ai" ? "dark:bg-gray-800/40" : "dark:bg-gray-900",
         "w-full text-gray-800 dark:text-gray-100 bg-gray-50",
         className
       )}
@@ -68,7 +66,7 @@ export const Message = ({
         <div className="flex-shrink-0 flex flex-col relative items-end">
           <div className="">
             <div className="relative p-1 rounded-sm text-white flex items-center justify-center">
-              {message.role === "assistant" ? (
+              {message.role === "ai" ? (
                 <img src={logo} className="h-7 w-7" />
               ) : avatarUrl ? (
                 <img
@@ -97,8 +95,8 @@ export const Message = ({
           {/** Sort results as selected_tables first, data second, code third using tertiary if **/}
           {message.results
             ?.sort((a, b) => {
-              if (a.type === "selected_tables") return -1;
-              if (b.type === "selected_tables") return 1;
+              if (a.type === "SELECTED_TABLES") return -1;
+              if (b.type === "SELECTED_TABLES") return 1;
               if (a.type === "data") return -1;
               if (b.type === "data") return 1;
               if (a.type === "sql") return -1;
@@ -107,21 +105,21 @@ export const Message = ({
             })
             .map(
               (result, index) =>
-                (result.type === "selected_tables" && (
+                (result.type === "SELECTED_TABLES" && (
                   <SelectedTablesDisplay
                     tables={result.content as string}
-                    key={`message-${message.message_id}-selectedtables-${index}`}
+                    key={`message-${message.id}-selectedtables-${index}`}
                   />
                 )) ||
                 (result.type === "data" && (
                   <DynamicTable
-                    key={`message-${message.message_id}-table-${index}`}
+                    key={`message-${message.id}-table-${index}`}
                     data={result.content}
                   />
                 )) ||
                 (result.type === "sql" && (
                   <CodeBlock
-                    key={`message-${message.message_id}-code-${index}`}
+                    key={`message-${message.id}-code-${index}`}
                     language="sql"
                     code={result.content as string}
                     resultId={result.result_id}

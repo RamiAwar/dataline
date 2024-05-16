@@ -26,7 +26,7 @@ export const ConnectionEditor = () => {
   const { data, isLoading } = useGetConnection(connectionId);
   const { data: conversationsData } = useGetConversations();
   const relatedConversations =
-    conversationsData?.conversations.filter(
+    conversationsData?.filter(
       (conversation) => conversation.connection_id === connectionId
     ) ?? [];
 
@@ -236,8 +236,6 @@ export const ConnectionEditor = () => {
               Save
             </div>
           </div>
-
-
         </div>
       </div>
     </div>

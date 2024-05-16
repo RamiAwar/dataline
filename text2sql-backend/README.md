@@ -1,6 +1,5 @@
 # Text2SQL Backend
 
-
 ## Installation
 
 Make sure you have poetry installed from their official website.
@@ -12,10 +11,10 @@ poetry config virtualenvs.in-project true
 poetry install
 ```
 
-
 ## Current state
 
 They stay if you ship something you're proud of, you've shipped too late.
+
 - Currently some raw SQL from the very early MVP remains and is being replaced with SQLAlchemy queries.
 - The LLM querying code is also pretty non-generic and hard to extend, so that will soon be replaced with some "Agent" implementation.
 
@@ -30,7 +29,14 @@ pre-commit install
 Make sure you have an OpenAI key in your environment variables.
 `export OPENAI_API_KEY=...`
 
-You can then run uvicorn to start the backend:
+Run migrations if needed:
+
 ```
-uvicorn main:app --reload --port=7377
+python -m alembic upgrade head
+```
+
+You can then run uvicorn to start the backend:
+
+```
+uvicorn dataline.main:app --reload --port=7377
 ```

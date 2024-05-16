@@ -19,7 +19,10 @@ import {
   useGetConversations,
   useUpdateConversation,
 } from "@/hooks";
-import { IConversation, IConversationWithMessagesWithResultsOut } from "@components/Library/types";
+import {
+  IConversation,
+  IConversationWithMessagesWithResultsOut,
+} from "@components/Library/types";
 import { ConnectionResult } from "@/api";
 
 const LShapedChar = (
@@ -33,7 +36,7 @@ const LShapedChar = (
     <path
       d="M1 0V4C1 5.65685 2.34315 7 4 7H9"
       stroke="currentColor"
-      stroke-width="1.5"
+      strokeWidth="1.5"
     />
   </svg>
 );
@@ -44,7 +47,6 @@ function classNames(...classes: string[]) {
 
 export const Sidebar = () => {
   const params = useParams<{ conversationId: string }>();
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: conversationsData } = useGetConversations();
   const { data: connectionsData } = useGetConnections();
@@ -55,10 +57,12 @@ export const Sidebar = () => {
   });
 
   const conversations = useMemo<
-    (IConversationWithMessagesWithResultsOut & { connection?: ConnectionResult })[]
+    (IConversationWithMessagesWithResultsOut & {
+      connection?: ConnectionResult;
+    })[]
   >(() => {
-    if (conversationsData?.conversations && connectionsData?.connections) {
-      return conversationsData.conversations.map((convo) => ({
+    if (conversationsData && connectionsData?.connections) {
+      return conversationsData?.map((convo) => ({
         ...convo,
         connection: connectionsData.connections.find(
           (conn) => conn.id === convo.connection_id
@@ -66,7 +70,7 @@ export const Sidebar = () => {
       }));
     }
     return [];
-  }, [conversationsData?.conversations, connectionsData?.connections]);
+  }, [conversationsData, connectionsData?.connections]);
 
   const [currentConversation, setCurrentConversation] =
     useState<IConversation | null>(null);
@@ -115,11 +119,11 @@ export const Sidebar = () => {
     if (conversations.length > 0) {
       if (params.conversationId) {
         const conversation = conversations.find(
-          (c) => c.conversation_id === params.conversationId
+          (c) => c.id === params.conversationId
         );
         if (conversation) {
           setCurrentConversation({
-            id: conversation.conversation_id,
+            id: conversation.id,
             name: conversation.name,
           });
 
@@ -208,13 +212,12 @@ export const Sidebar = () => {
                             <div>New chat</div>
                           </Link>
                           {conversations.map((conversation) => (
-                            <li key={conversation.conversation_id}>
+                            <li key={conversation.id}>
                               <Link
-                                to={`/chat/${conversation.conversation_id}`}
+                                to={`/chat/${conversation.id}`}
                                 onClick={() => setIsEditing(false)}
                                 className={classNames(
-                                  conversation.conversation_id ==
-                                    currentConversation?.id
+                                  conversation.id === currentConversation?.id
                                     ? "bg-gray-700 text-white"
                                     : "text-gray-400 hover:text-white hover:bg-gray-800",
                                   "group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer mt-2"
@@ -229,12 +232,15 @@ export const Sidebar = () => {
                                     {conversation.name}
                                   </span>
                                   {conversation.connection && (
-                                    <div className={classNames(
-                                      conversation.conversation_id ==
-                                        currentConversation?.id
-                                        ? "text-gray-400"
-                                        : "text-gray-500",
-                                      "pl-1 flex flex-row items-center gap-1")}>
+                                    <div
+                                      className={classNames(
+                                        conversation.id ===
+                                          currentConversation?.id
+                                          ? "text-gray-400"
+                                          : "text-gray-500",
+                                        "pl-1 flex flex-row items-center gap-1"
+                                      )}
+                                    >
                                       <div className="pb-px">{LShapedChar}</div>
                                       <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
                                         {conversation.connection.name}
@@ -245,9 +251,7 @@ export const Sidebar = () => {
                                 <TrashIcon
                                   className="h-5 w-5 shrink-0 cursor-pointer"
                                   onClick={() =>
-                                    deleteConversation(
-                                      conversation.conversation_id
-                                    )
+                                    deleteConversation(conversation.id)
                                   }
                                 ></TrashIcon>
                               </Link>
@@ -303,17 +307,17 @@ export const Sidebar = () => {
               </Link>
               <li>
                 <ul role="list" className="-mx-4 space-y-1">
-                  {conversations.map((chat) => (
-                    <li key={chat.conversation_id}>
+                  {conversations.map((conversation) => (
+                    <li key={conversation.id}>
                       {!isEditing ? (
                         <Link
-                          to={`/chat/${chat.conversation_id}`}
+                          to={`/chat/${conversation.id}`}
                           onClick={(e) =>
-                            chat.conversation_id === params.conversationId &&
+                            conversation.id === params.conversationId &&
                             e.preventDefault()
                           }
                           className={classNames(
-                            chat.conversation_id == params.conversationId
+                            conversation.id === params.conversationId
                               ? "bg-gray-700 text-white"
                               : "text-gray-400 hover:text-white hover:bg-gray-800",
                             "group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
@@ -325,24 +329,26 @@ export const Sidebar = () => {
                           />
                           <div className="flex flex-col overflow-hidden">
                             <span className="text-ellipsis overflow-hidden whitespace-nowrap">
-                              {chat.name}
+                              {conversation.name}
                             </span>
-                            {chat.connection && (
-                              <div className={classNames(
-                                chat.conversation_id ==
-                                  params.conversationId
-                                  ? "text-gray-400"
-                                  : "text-gray-500",
-                                "pl-1 flex flex-row items-center gap-1")}>
+                            {conversation.connection && (
+                              <div
+                                className={classNames(
+                                  conversation.id === params.conversationId
+                                    ? "text-gray-400"
+                                    : "text-gray-500",
+                                  "pl-1 flex flex-row items-center gap-1"
+                                )}
+                              >
                                 <div className="pb-px">{LShapedChar}</div>
                                 <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
-                                  {chat.connection.name}
+                                  {conversation.connection.name}
                                 </span>
                               </div>
                             )}
                           </div>
                           {/* Show edit button when not editing and chat selected */}
-                          {chat.conversation_id == params.conversationId && (
+                          {conversation.id === params.conversationId && (
                             <div
                               className={classNames(
                                 "flex justify-end items-center grow gap-1"
@@ -357,7 +363,7 @@ export const Sidebar = () => {
                               <TrashIcon
                                 className="h-5 w-5 shrink-0 cursor-pointer"
                                 onClick={() =>
-                                  deleteConversation(chat.conversation_id)
+                                  deleteConversation(conversation.id)
                                 }
                               ></TrashIcon>
                             </div>
@@ -366,7 +372,7 @@ export const Sidebar = () => {
                       ) : (
                         <div
                           className={classNames(
-                            chat.conversation_id == params.conversationId
+                            conversation.id === params.conversationId
                               ? "bg-gray-700 text-white"
                               : "text-gray-400 hover:text-white hover:bg-gray-800",
                             "group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
@@ -378,7 +384,7 @@ export const Sidebar = () => {
                           />
 
                           {/* Show input field when editing and chat selected */}
-                          {chat.conversation_id == params.conversationId ? (
+                          {conversation.id === params.conversationId ? (
                             <input
                               type="text"
                               value={editedName}
@@ -391,13 +397,13 @@ export const Sidebar = () => {
                           ) : (
                             <div className="flex flex-col overflow-hidden">
                               <span className="text-ellipsis overflow-hidden whitespace-nowrap">
-                                {chat.name}
+                                {conversation.name}
                               </span>
-                              {chat.connection && (
+                              {conversation.connection && (
                                 <div className="pl-1 flex flex-row items-center gap-1 text-gray-500">
                                   <div className="pb-px">{LShapedChar}</div>
                                   <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
-                                    {chat.connection.name}
+                                    {conversation.connection.name}
                                   </span>
                                 </div>
                               )}
@@ -405,7 +411,7 @@ export const Sidebar = () => {
                           )}
 
                           {/* Show check icon when editing to save */}
-                          {chat.conversation_id == params.conversationId && (
+                          {conversation.id === params.conversationId && (
                             <div
                               onClick={handleSaveClick}
                               className="transition-colors duration-150 cursor-pointer rounded-md hover:text-white hover:bg-gray-700 text-gray-300"

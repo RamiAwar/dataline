@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { Message } from "./Message";
+import { generateUUID } from "../Library/utils";
 
 const meta: Meta<typeof Message> = {
   component: Message,
@@ -17,8 +18,9 @@ type Story = StoryObj<typeof Message>;
 export const Primary: Story = {
   args: {
     initialMessage: {
+      id: generateUUID(),
       content: "The number of movies returned on time is:",
-      role: "assistant",
+      role: "ai",
       results: [
         {
           type: "text",
@@ -30,7 +32,7 @@ export const Primary: Story = {
             "SELECT COUNT(*) FROM rental WHERE return_date::date = rental_date::date",
         },
         {
-          type: "selected_tables",
+          type: "SELECTED_TABLES",
           content: "rental,payment",
         },
         {

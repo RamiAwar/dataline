@@ -94,5 +94,5 @@ async def query(
     query: str,
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(),
-) -> QueryOut:
-    return await conversation_service.query(session, conversation_id, query)
+) -> SuccessResponse[QueryOut]:
+    return SuccessResponse(data=await conversation_service.query(session, conversation_id, query))

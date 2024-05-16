@@ -15,13 +15,12 @@ export const ConnectionSelector = () => {
   };
 
   const { mutate } = useCreateConversation({
-    // @ts-expect-error, this is not typed
     onSuccess(resp) {
       setConversation({
-        id: resp.data.conversation_id,
+        id: resp.data.id,
         name: "Untitled chat",
       });
-      navigate(`/chat/${resp.data.conversation_id}`);
+      navigate(`/chat/${resp.data.id}`);
     },
   });
 

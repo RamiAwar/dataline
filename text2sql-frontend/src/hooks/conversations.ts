@@ -1,6 +1,11 @@
 import { enqueueSnackbar } from "notistack";
-import { api } from "@/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ConversationCreationResult, api } from "@/api";
+import {
+  MutationOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { getBackendStatusQuery } from "@/hooks/settings";
 
 export const CONVERSATIONS_QUERY_KEY = ["CONVERSATIONS"];
@@ -23,7 +28,13 @@ export function useGetConversations() {
   return result;
 }
 
-export function useCreateConversation(options = {}) {
+export function useCreateConversation(
+  options: MutationOptions<
+    ConversationCreationResult,
+    Error,
+    { id: string; name: string }
+  > = {}
+) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) =>
@@ -44,7 +55,7 @@ export function useCreateConversation(options = {}) {
 export function useDeleteConversation(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.deleteConversation(id),
+    mutationFn: (id: string) => api.deleteConversation(id),
     onError() {
       enqueueSnackbar({
         variant: "error",
@@ -61,7 +72,7 @@ export function useDeleteConversation(options = {}) {
 export function useUpdateConversation(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) =>
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
       api.updateConversation(id, name),
     onError() {
       enqueueSnackbar({

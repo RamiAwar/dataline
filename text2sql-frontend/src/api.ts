@@ -1,6 +1,7 @@
 // import axios from "axios";
 import {
   IConversationWithMessagesWithResultsOut,
+  IMessageOut,
   IMessageWithResultsOut,
   IResult,
 } from "./components/Library/types";
@@ -116,7 +117,7 @@ const deleteConnection = async (
 };
 
 export type ConversationCreationResult = ApiResponse<{
-  conversation_id: number;
+  id: string;
 }>;
 const createConversation = async (connectionId: string, name: string) => {
   const response = await backendApi<ConversationCreationResult>({
@@ -154,18 +155,18 @@ const deleteConversation = async (conversationId: string) => {
   return response.data;
 };
 
-export type ListConversations = ApiResponse<{
-  conversations: IConversationWithMessagesWithResultsOut[];
-}>;
+export type ListConversations = ApiResponse<
+  IConversationWithMessagesWithResultsOut[]
+>;
 const listConversations = async (): Promise<ListConversations> => {
   return (await backendApi<ListConversations>({ url: "/conversations" })).data;
 };
 
-export type MessagesResult = ApiResponse<{ messages: IMessageWithResultsOut[] }>;
-const getMessages = async (conversationId: number): Promise<MessagesResult> => {
+export type MessagesResult = ApiResponse<IMessageWithResultsOut[]>;
+const getMessages = async (conversationId: string): Promise<MessagesResult> => {
   return (
     await backendApi<MessagesResult>({
-      url: `/messages?conversation_id=${conversationId}`,
+      url: `/conversation/${conversationId}/messages`,
     })
   ).data;
 };
@@ -183,15 +184,19 @@ const createMessage = async (conversationId: number, content: string) => {
   return response.data;
 };
 
-export type QueryResult = ApiResponse<{ message: IMessageWithResultsOut }>;
+export type QueryResult = ApiResponse<{
+  message: IMessageOut;
+  results: IResult[];
+}>;
 const query = async (
-  conversationId: number,
+  conversationId: string,
   query: string,
   execute: boolean
 ): Promise<QueryResult> => {
   return (
     await backendApi<QueryResult>({
-      url: `/query?conversation_id=${conversationId}&query=${query}&execute=${execute}`,
+      url: `/conversation/${conversationId}/query`,
+      params: { query, execute },
     })
   ).data;
 };

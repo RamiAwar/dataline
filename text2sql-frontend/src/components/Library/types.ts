@@ -12,7 +12,7 @@ export enum Dialect {
   TransactSQL = "tsql",
 }
 
-export type IResultType = "sql" | "code" | "data" | "text" | "selected_tables";
+export type IResultType = "sql" | "code" | "data" | "text" | "SELECTED_TABLES";
 export type Role = "ai" | "human";
 
 export interface IResult {
@@ -23,15 +23,18 @@ export interface IResult {
   is_saved?: boolean;
 }
 
-export interface IMessageWithResultsOut {
+export interface IMessageOut {
   id: string;
   content: string;
   role: Role;
-  results?: IResult[];
+  created_at?: string;
 }
 
+export interface IMessageWithResultsOut extends IMessageOut {
+  results?: IResult[];
+}
 export interface IConversationWithMessagesWithResultsOut {
-  id: number;
+  id: string;
   connection_id: string;
   name: string;
   messages: IMessageWithResultsOut[];
@@ -54,4 +57,3 @@ export interface IEditConnection {
   name: string;
   dsn: string;
 }
-

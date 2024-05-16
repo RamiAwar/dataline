@@ -10,12 +10,17 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { getBackendStatusQuery } from "@/hooks/settings";
 import { isAxiosError } from "axios";
+import { generateUUID } from "@/components/Library/utils";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
 const QUERIES_QUERY_KEY = ["SQL_QUERIES"];
 
 // Load everything
-export function getMessagesQuery({ conversationId }: { conversationId: number }) {
+export function getMessagesQuery({
+  conversationId,
+}: {
+  conversationId: string;
+}) {
   return queryOptions({
     queryKey: [...MESSAGES_QUERY_KEY, conversationId],
     queryFn: async () => (await api.getMessages(conversationId)).data,
@@ -26,7 +31,7 @@ export function useSendMessage({
   conversationId,
   execute = true,
 }: {
-  conversationId: number;
+  conversationId: string;
   execute?: boolean;
 }) {
   const queryClient = useQueryClient();
@@ -35,16 +40,21 @@ export function useSendMessage({
     mutationFn: async ({ message }: { message: string }) =>
       (await api.query(conversationId, message, execute)).data,
     onSuccess: (data, variables) => {
-      queryClient.setQueryData(getMessagesQuery({ conversationId }).queryKey, (oldData) => {
-        const newMessages: IMessageWithResultsOut[] = [
-          { content: variables.message, role: "user" },
-          data.message,
-        ];
-        if (oldData == null) {
-          return { messages: newMessages };
+      queryClient.setQueryData(
+        getMessagesQuery({ conversationId }).queryKey,
+        (oldData) => {
+          const newMessages: IMessageWithResultsOut[] = [
+            // TODO: we're currently creating a fake id for the human message because /query doesn't
+            // return ID of the human's message
+            { content: variables.message, role: "human", id: generateUUID() },
+            { ...data.message, results: data.results },
+          ];
+          if (oldData == null) {
+            return newMessages;
+          }
+          return [...oldData, ...newMessages];
         }
-        return { messages: [...oldData.messages, ...newMessages] };
-      });
+      );
     },
     onError: (error) => {
       if (isAxiosError(error) && error.response?.status === 406) {
@@ -63,33 +73,7 @@ export function useSendMessage({
   });
 }
 
-export function useGetNewMessage({
-  conversationId,
-  value,
-  execute = true,
-}: {
-  conversationId: number;
-  value: string;
-  execute?: boolean;
-}) {
-  const result = useQuery({
-    queryKey: [...MESSAGES_QUERY_KEY, { conversationId, value, execute }],
-    queryFn: () => api.query(conversationId, value, execute),
-    enabled: Boolean(value),
-    retry: false,
-  });
-
-  if (result.isError) {
-    enqueueSnackbar({
-      variant: "error",
-      message: "Error querying assistant",
-    });
-  }
-
-  return result;
-}
-
-export function useGetMessages(conversationId: number) {
+export function useGetMessages(conversationId: string) {
   const { isSuccess } = useQuery(getBackendStatusQuery());
   const result = useQuery({
     queryKey: [...MESSAGES_QUERY_KEY, { conversationId }],
