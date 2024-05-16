@@ -4,6 +4,9 @@ import {
   IMessageOut,
   IMessageWithResultsOut,
   IResult,
+  ISelectedTablesResult,
+  ISQLQueryRunResult,
+  ISQLQueryStringResult,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
 import { backendApi } from "./services/api_client";
@@ -162,10 +165,10 @@ const listConversations = async (): Promise<ListConversations> => {
   return (await backendApi<ListConversations>({ url: "/conversations" })).data;
 };
 
-export type MessagesResult = ApiResponse<IMessageWithResultsOut[]>;
-const getMessages = async (conversationId: string): Promise<MessagesResult> => {
+export type GetMessagesResponse = ApiResponse<IMessageWithResultsOut[]>;
+const getMessages = async (conversationId: string): Promise<GetMessagesResponse> => {
   return (
-    await backendApi<MessagesResult>({
+    await backendApi<GetMessagesResponse>({
       url: `/conversation/${conversationId}/messages`,
     })
   ).data;
@@ -184,17 +187,17 @@ const createMessage = async (conversationId: number, content: string) => {
   return response.data;
 };
 
-export type QueryResult = ApiResponse<{
+export type MessageWithResultsOut = ApiResponse<{
   message: IMessageOut;
-  results: IResult[];
+  results: (ISelectedTablesResult | ISQLQueryRunResult | ISQLQueryStringResult)[];
 }>;
 const query = async (
   conversationId: string,
   query: string,
   execute: boolean
-): Promise<QueryResult> => {
+): Promise<MessageWithResultsOut> => {
   return (
-    await backendApi<QueryResult>({
+    await backendApi<MessageWithResultsOut>({
       url: `/conversation/${conversationId}/query`,
       params: { query, execute },
     })

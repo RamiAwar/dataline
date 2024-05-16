@@ -1,11 +1,17 @@
 from datetime import datetime
-from typing import Literal, Self
+from typing import TYPE_CHECKING, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
-from dataline.models.conversation.model import ConversationModel
+from dataline.models.llm_flow.enums import QueryResultType
+from dataline.models.llm_flow.schema import SelectedTablesResult, SQLQueryStringResult
+from dataline.models.result.model import ResultModel
+from dataline.models.result.schema import ResultOut
 from dataline.old_models import ConversationWithMessagesWithResults
+
+if TYPE_CHECKING:
+    from dataline.models.conversation.model import ConversationModel
 
 
 class ConversationsOut(BaseModel):
@@ -41,25 +47,43 @@ class MessageOut(BaseModel):
     created_at: datetime
 
 
-class ResultOut(BaseModel):
+class MessageWithResultsOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    content: str
-    type: str
-
-
-class QueryOut(BaseModel):
     message: MessageOut
     results: list[ResultOut]
 
 
-class MessageWithResultsOut(MessageOut):
-    model_config = ConfigDict(from_attributes=True)
+def render_stored_results(results: list[ResultModel]) -> list[ResultOut]:
+    rendered_results = []
+    for result in results:
+        if result.type not in QueryResultType.__members__:
+            raise ValueError(f"Invalid result type found in DB: {result.type}")
 
-    results: list[ResultOut]
+        if QueryResultType(result.type) == QueryResultType.SQL_QUERY_STRING_RESULT:
+            rendered_results.append(SQLQueryStringResult.deserialize(result).serialize_result())
+        elif QueryResultType(result.type) == QueryResultType.SELECTED_TABLES:
+            rendered_results.append(SelectedTablesResult.deserialize(result).serialize_result())
+
+    return rendered_results
 
 
 class ConversationWithMessagesWithResultsOut(ConversationOut):
     model_config = ConfigDict(from_attributes=True)
 
     messages: list[MessageWithResultsOut]
+
+    @classmethod
+    def from_conversation(cls, conversation: "ConversationModel") -> Self:
+        messages: list[MessageWithResultsOut] = []
+        for message in conversation.messages:
+            results = render_stored_results(message.results)
+            messages.append(MessageWithResultsOut(message=MessageOut.model_validate(message), results=results))
+
+        return cls(
+            id=conversation.id,
+            connection_id=conversation.connection_id,
+            name=conversation.name,
+            created_at=conversation.created_at,
+            messages=messages,
+        )

@@ -9,7 +9,6 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { getBackendStatusQuery } from "@/hooks/settings";
 import { isAxiosError } from "axios";
-import { generateUUID } from "@/components/Library/utils";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
 
@@ -42,10 +41,8 @@ export function useSendMessage({
         getMessagesQuery({ conversationId }).queryKey,
         (oldData) => {
           const newMessages: IMessageWithResultsOut[] = [
-            // TODO: we're currently creating a fake id for the human message because /query doesn't
-            // return ID of the human's message
-            { content: variables.message, role: "human", id: generateUUID() },
-            { ...data.message, results: data.results },
+            { message: { content: variables.message, role: "human", } },
+            { message: { ...data.message }, results: data.results },
           ];
           if (oldData == null) {
             return newMessages;

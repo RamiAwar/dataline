@@ -8,7 +8,6 @@ from dataline.models.conversation.schema import (
     ConversationWithMessagesWithResultsOut,
     CreateConversationIn,
     MessageWithResultsOut,
-    QueryOut,
     UpdateConversationRequest,
 )
 from dataline.old_models import SuccessListResponse, SuccessResponse
@@ -94,5 +93,5 @@ async def query(
     query: str,
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(),
-) -> SuccessResponse[QueryOut]:
+) -> SuccessResponse[MessageWithResultsOut]:
     return SuccessResponse(data=await conversation_service.query(session, conversation_id, query))

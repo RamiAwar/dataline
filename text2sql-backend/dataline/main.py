@@ -28,7 +28,6 @@ from dataline.services.conversation import ConversationService
 from dataline.services.settings import SettingsService
 from dataline.sql_wrapper import request_execute, request_limit
 
-
 logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
@@ -98,18 +97,20 @@ async def execute_sql(
         data = query_service.run_sql(sql)
         if data.get("result"):
             # Convert data to list of rows
-            rows = [data["columns"]]
+            rows = []
             rows.extend([x for x in r] for r in data["result"])
 
             # TODO: Try to remove custom encoding from here
             return Response(
                 content=json.dumps(
                     {
-                        "status": "ok",
-                        "data": DataResult(
-                            type="data",
-                            content=rows,
-                        ),
+                        "data": {
+                            "type": "SQL_QUERY_RUN_RESULT",
+                            "content": {
+                                "columns": data["columns"],
+                                "rows": rows,
+                            },
+                        }
                     },
                     default=pydantic_encoder,
                     indent=4,

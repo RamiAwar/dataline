@@ -6,10 +6,13 @@ from dataline.models.conversation.schema import (
     ConversationOut,
     ConversationWithMessagesWithResultsOut,
     MessageOut,
-    QueryOut,
-    ResultOut,
+    MessageWithResultsOut,
 )
-from dataline.models.llm_flow.schema import QueryOptions, StorableQueryResultSchema
+from dataline.models.llm_flow.schema import (
+    QueryOptions,
+    RenderableResultMixin,
+    StorableResultMixin,
+)
 from dataline.models.message.schema import BaseMessageType, MessageCreate
 from dataline.repositories.base import AsyncSession
 from dataline.repositories.conversation import (
@@ -64,11 +67,13 @@ class ConversationService:
         self, session: AsyncSession, conversation_id: UUID
     ) -> ConversationWithMessagesWithResultsOut:
         conversation = await self.conversation_repo.get_with_messages_with_results(session, conversation_id)
-        return ConversationWithMessagesWithResultsOut.model_validate(conversation)
+        return ConversationWithMessagesWithResultsOut.from_conversation(conversation)
 
     async def get_conversations(self, session: AsyncSession) -> list[ConversationWithMessagesWithResultsOut]:
         conversations = await self.conversation_repo.list_with_messages_with_results(session)
-        return [ConversationWithMessagesWithResultsOut.model_validate(conversation) for conversation in conversations]
+        return [
+            ConversationWithMessagesWithResultsOut.from_conversation(conversation) for conversation in conversations
+        ]
 
     async def delete_conversation(self, session: AsyncSession, conversation_id: UUID) -> None:
         await self.conversation_repo.delete_by_uuid(session, record_id=conversation_id)
@@ -86,7 +91,7 @@ class ConversationService:
         session: AsyncSession,
         conversation_id: UUID,
         query: str,
-    ) -> QueryOut:
+    ) -> MessageWithResultsOut:
         # Get conversation, connection, user settings
         conversation = await self.get_conversation(session, conversation_id=conversation_id)
         connection = await self.connection_service.get_connection(session, connection_id=conversation.connection_id)
@@ -128,6 +133,7 @@ class ConversationService:
         # Store final AI message in history
         if not last_ai_message:
             raise Exception("No AI message found in conversation")
+
         stored_ai_message = await self.message_repo.create(
             session,
             MessageCreate(
@@ -139,15 +145,16 @@ class ConversationService:
         )
 
         # Store results and final message in database
-        create_results = [
-            result.create_storable_result(stored_ai_message.id)
-            for result in results
-            if isinstance(result, StorableQueryResultSchema)
-        ]
-        stored_results = await self.result_repo.create_many(session, create_results)
+        for result in results:
+            if isinstance(result, StorableResultMixin):
+                await result.store_result(session, self.result_repo, stored_ai_message.id)
 
-        output_results = [ResultOut.model_validate(result) for result in stored_results]
-        return QueryOut(
+        # Render renderable results
+        serialized_results = [
+            result.serialize_result() for result in results if isinstance(result, RenderableResultMixin)
+        ]
+
+        return MessageWithResultsOut(
             message=MessageOut.model_validate(stored_ai_message),
-            results=output_results,
+            results=serialized_results,
         )

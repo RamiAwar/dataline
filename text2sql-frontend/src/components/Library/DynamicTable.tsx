@@ -10,15 +10,15 @@ import {
 
 // TODO: Remove after defining this better on backend
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
+export const DynamicTable: React.FC<{ data: { columns: string[]; rows: any[][] } }> = ({ data }) => {
   const page = 0;
   const rowsPerPage = 25;
-  const [dataSubset, setDataSubset] = useState(data.slice(0, rowsPerPage));
+  const [dataSubset, setDataSubset] = useState(data.rows.slice(0, rowsPerPage));
 
   // Create data working subset
   useEffect(() => {
     setDataSubset(
-      data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+      data.rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
     );
   }, [page, rowsPerPage, data]);
   return (
@@ -32,7 +32,7 @@ export const DynamicTable: React.FC<{ data: any }> = ({ data }) => {
       >
         <TableHead>
           <TableRow>
-            {dataSubset[0].map((header: string, index: number) => (
+            {data.columns.map((header: string, index: number) => (
               <TableHeader key={index}>{header}</TableHeader>
             ))}
           </TableRow>

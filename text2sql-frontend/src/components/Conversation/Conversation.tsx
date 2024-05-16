@@ -101,7 +101,7 @@ export const Conversation = () => {
         <div className="overflow-y-auto pb-36 bg-gray-900">
           {messages.map((message) => (
             <Message
-              key={(params.conversationId as string) + message.id}
+              key={(params.conversationId as string) + message.message.id}
               initialMessage={message}
             />
           ))}
@@ -109,17 +109,21 @@ export const Conversation = () => {
             <>
               <Message
                 initialMessage={{
-                  content: newMessageVariable.message,
-                  role: "human",
-                  id: generateUUID(),
+                  message: {
+                    content: newMessageVariable.message,
+                    role: "human",
+                    id: generateUUID(),
+                  }
                 }}
                 className="dark:text-gray-400"
               />
               <Message
                 initialMessage={{
-                  content: "Loading...",
-                  role: "ai",
-                  id: generateUUID(),
+                  message: {
+                    content: "Loading...",
+                    role: "ai",
+                    id: generateUUID(),
+                  }
                 }}
               />
             </>
