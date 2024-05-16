@@ -13,7 +13,7 @@ export enum Dialect {
 }
 
 export type IResultType = "sql" | "code" | "data" | "text" | "selected_tables";
-export type Role = "user" | "assistant";
+export type Role = "ai" | "human";
 
 export interface IResult {
   type: IResultType;
@@ -23,19 +23,18 @@ export interface IResult {
   is_saved?: boolean;
 }
 
-export interface IMessageWithResults {
+export interface IMessageWithResultsOut {
+  id: string;
   content: string;
-  role: "assistant" | "user";
+  role: Role;
   results?: IResult[];
-  message_id?: string;
-  conversation_id?: string;
 }
 
-export interface IConversationResult {
-  conversation_id: number;
+export interface IConversationWithMessagesWithResultsOut {
+  id: number;
   connection_id: string;
   name: string;
-  messages: IMessageWithResults[];
+  messages: IMessageWithResultsOut[];
 }
 
 export interface IConversation {

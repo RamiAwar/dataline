@@ -1,5 +1,5 @@
 import { api } from "@/api";
-import { IMessageWithResults } from "@/components/Library/types";
+import { IMessageWithResultsOut } from "@/components/Library/types";
 import {
   queryOptions,
   skipToken,
@@ -36,7 +36,7 @@ export function useSendMessage({
       (await api.query(conversationId, message, execute)).data,
     onSuccess: (data, variables) => {
       queryClient.setQueryData(getMessagesQuery({ conversationId }).queryKey, (oldData) => {
-        const newMessages: IMessageWithResults[] = [
+        const newMessages: IMessageWithResultsOut[] = [
           { content: variables.message, role: "user" },
           data.message,
         ];

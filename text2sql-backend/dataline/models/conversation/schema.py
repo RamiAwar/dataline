@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -37,7 +37,7 @@ class MessageOut(BaseModel):
 
     id: UUID
     content: str
-    role: str
+    role: Literal["ai"] | Literal["human"]
     created_at: datetime
 
 

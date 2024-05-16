@@ -1,7 +1,7 @@
 // import axios from "axios";
 import {
-  IConversationResult,
-  IMessageWithResults,
+  IConversationWithMessagesWithResultsOut,
+  IMessageWithResultsOut,
   IResult,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
@@ -132,7 +132,7 @@ const createConversation = async (connectionId: string, name: string) => {
 
 export type ConversationUpdateResult = ApiResponse<void>;
 const updateConversation = async (
-  conversationId: number,
+  conversationId: string,
   name: string
 ): Promise<ConversationUpdateResult> => {
   const response = await backendApi<ConversationUpdateResult>({
@@ -146,7 +146,7 @@ const updateConversation = async (
 };
 
 export type ConversationDeletionResult = ApiResponse<void>;
-const deleteConversation = async (conversationId: number) => {
+const deleteConversation = async (conversationId: string) => {
   const response = await backendApi<ConversationDeletionResult>({
     url: `/conversation/${conversationId}`,
     method: "delete",
@@ -155,13 +155,13 @@ const deleteConversation = async (conversationId: number) => {
 };
 
 export type ListConversations = ApiResponse<{
-  conversations: IConversationResult[];
+  conversations: IConversationWithMessagesWithResultsOut[];
 }>;
 const listConversations = async (): Promise<ListConversations> => {
   return (await backendApi<ListConversations>({ url: "/conversations" })).data;
 };
 
-export type MessagesResult = ApiResponse<{ messages: IMessageWithResults[] }>;
+export type MessagesResult = ApiResponse<{ messages: IMessageWithResultsOut[] }>;
 const getMessages = async (conversationId: number): Promise<MessagesResult> => {
   return (
     await backendApi<MessagesResult>({
@@ -183,7 +183,7 @@ const createMessage = async (conversationId: number, content: string) => {
   return response.data;
 };
 
-export type QueryResult = ApiResponse<{ message: IMessageWithResults }>;
+export type QueryResult = ApiResponse<{ message: IMessageWithResultsOut }>;
 const query = async (
   conversationId: number,
   query: string,

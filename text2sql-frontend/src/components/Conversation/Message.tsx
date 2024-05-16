@@ -1,6 +1,6 @@
 import logo from "../../assets/images/logo_md.png";
 import { CodeBlock } from "./CodeBlock";
-import { IMessageWithResults } from "../Library/types";
+import { IMessageWithResultsOut } from "../Library/types";
 import { DynamicTable } from "../Library/DynamicTable";
 import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
@@ -15,7 +15,7 @@ export const Message = ({
   initialMessage,
   className = "",
 }: {
-  initialMessage: IMessageWithResults;
+  initialMessage: IMessageWithResultsOut;
   className?: string;
 }) => {
   const [message, setMessage] = useState(initialMessage);
@@ -39,7 +39,7 @@ export const Message = ({
             result_id: "1",
           },
         ],
-      } as IMessageWithResults;
+      } as IMessageWithResultsOut;
       setMessage(updatedMessage);
     }
   }

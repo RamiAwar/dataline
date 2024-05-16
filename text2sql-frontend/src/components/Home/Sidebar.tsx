@@ -19,7 +19,7 @@ import {
   useGetConversations,
   useUpdateConversation,
 } from "@/hooks";
-import { IConversation, IConversationResult } from "@components/Library/types";
+import { IConversation, IConversationWithMessagesWithResultsOut } from "@components/Library/types";
 import { ConnectionResult } from "@/api";
 
 const LShapedChar = (
@@ -55,7 +55,7 @@ export const Sidebar = () => {
   });
 
   const conversations = useMemo<
-    (IConversationResult & { connection?: ConnectionResult })[]
+    (IConversationWithMessagesWithResultsOut & { connection?: ConnectionResult })[]
   >(() => {
     if (conversationsData?.conversations && connectionsData?.connections) {
       return conversationsData.conversations.map((convo) => ({
