@@ -117,6 +117,12 @@ export function useUpdateSqlQuery(options = {}) {
     onError() {
       enqueueSnackbar({ variant: "error", message: "Error updating query" });
     },
+    onSuccess() {
+      enqueueSnackbar({
+        variant: "success",
+        message: "Query updated successfully",
+      });
+    },
     ...options,
   });
 }
