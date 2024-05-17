@@ -1,4 +1,4 @@
-files: ^text2sql-backend/
+files: ^backend/
 exclude: 'docs|scripts|node_modules|\.git|\.tox|\.idea|min\.css|.*\.js|.*\.csv|.*\.svg|^frontend/packages/old|pnpm-lock\.yaml'
 default_stages: [commit]
 fail_fast: false
@@ -24,14 +24,14 @@ repos:
     rev: 24.3.0
     hooks:
       - id: black
-        args: [--config=./text2sql-backend/pyproject.toml, --target-version=py311]
+        args: [--config=./backend/pyproject.toml, --target-version=py311]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     # Ruff version.
     rev: "v0.0.267"
     hooks:
       - id: ruff
-        args: [--config=./text2sql-backend/pyproject.toml, "--fix"]
+        args: [--config=./backend/pyproject.toml, "--fix"]
         exclude: ".*pb2(_grpc)?.py(i)?$|__init__.py"
 
   # Run tests
@@ -39,7 +39,7 @@ repos:
     hooks:
       - id: pytest
         name: pytest
-        entry: sh -c 'cd text2sql-backend && PYTHONPATH=. poetry run pytest .'
+        entry: sh -c 'cd backend && PYTHONPATH=. poetry run pytest .'
         language: system
         types: [python]
         pass_filenames: false

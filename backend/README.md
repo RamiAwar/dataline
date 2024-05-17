@@ -1,4 +1,4 @@
-# Text2SQL Backend
+# Dataline Backend
 
 ## Installation
 

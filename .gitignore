@@ -15,6 +15,9 @@ src-tauri/
 __pycache__/
 *.py[cod]
 *$py.class
+text2sql-frontend/
+text2sql-backend/
+node_modules/
 
 # C extensions
 *.so

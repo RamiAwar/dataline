@@ -7,11 +7,11 @@ FROM node:21-alpine as temp-frontend
 # Need python for node-gyp in building
 RUN apk add --no-cache python3 make gcc g++
 WORKDIR /home/dataline/frontend
-COPY text2sql-frontend/package.json text2sql-frontend/package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm install
 
 # Copy in frontend source
-COPY text2sql-frontend/ .
+COPY frontend/ .
 
 # Temporary setup - need local env as the 'production' build is landing page only
 ENV NODE_ENV=local
@@ -45,7 +45,7 @@ RUN apt update && \
     apt-get install git libpq-dev build-essential -y
 
 # Copy in poetry files only - this allows us to cache the layer if no new dependencies were added and install base deps
-COPY text2sql-backend/pyproject.toml text2sql-backend/poetry.lock ./
+COPY backend/pyproject.toml backend/poetry.lock ./
 RUN poetry config virtualenvs.in-project true && poetry install --only main --no-root
 
 # -------------------------------
@@ -64,10 +64,10 @@ ENV PATH="/home/dataline/backend/venv/bin:$PATH"
 
 # Copy in backend files
 WORKDIR /home/dataline/backend
-COPY text2sql-backend/*.py .
-COPY text2sql-backend/dataline ./dataline
-COPY text2sql-backend/alembic ./alembic
-COPY text2sql-backend/alembic.ini .
+COPY backend/*.py .
+COPY backend/dataline ./dataline
+COPY backend/alembic ./alembic
+COPY backend/alembic.ini .
 
 WORKDIR /home/dataline
 
@@ -108,7 +108,7 @@ RUN apt update && apt install caddy -y
 # Copy in supervisor config, frontend build, backend source
 COPY supervisord.conf .
 COPY --from=temp-frontend /home/dataline/frontend/dist /home/dataline/frontend/dist
-COPY text2sql-frontend/Caddyfile /home/dataline/frontend/Caddyfile
+COPY frontend/Caddyfile /home/dataline/frontend/Caddyfile
 
 
 CMD ["supervisord", "-n"]
