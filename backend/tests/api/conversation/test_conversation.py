@@ -65,7 +65,7 @@ async def test_get_conversation(client: TestClient, sample_conversation: Convers
 async def test_get_conversation_with_messages_with_results(
     client: TestClient, sample_conversation: ConversationOut
 ) -> None:
-    response = client.get(f"/conversation/{sample_conversation.id}/messages")
+    client.get(f"/conversation/{sample_conversation.id}/messages")
 
 
 # TODO:
