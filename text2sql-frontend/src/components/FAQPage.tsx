@@ -1,15 +1,13 @@
 // Create component that shows how privacy works + privacy policy
 
-import SquareBackground from "./Layouts/SquareBackground";
-import { Disclosure } from '@headlessui/react'
-import { MinusSmallIcon, PlusSmallIcon } from '@heroicons/react/24/outline'
-
+import { BackgroundLayout } from "./Layouts/BackgroundLayout";
+import Header from "@components/Layouts/Header";
 
 const FAQPage = () => {
 
     const faqs = [
         {
-            question: "How do you store convos, messages, etc.?",
+            question: "How do you store convos, messages, others?",
             answer:
                 "Our query flow currently runs everything locally on your machine. Any stored data (conversations, messages, etc.) is stored on your machine in SQLite. No servers, no cloud, no risk of leaks. We don't even own a server, this site is statically hosted 🙂",
         },
@@ -24,39 +22,40 @@ const FAQPage = () => {
     ]
 
     return (
-        <SquareBackground>
+        <>
+            <Header></Header>
 
-            <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8 lg:py-40">
-                <div className="mx-auto max-w-4xl divide-y divide-white/10">
-                    <h2 className="text-2xl font-bold leading-10 tracking-tight text-white">Frequently asked questions</h2>
-                    <dl className="mt-10 space-y-6 divide-y divide-white/10">
-                        {faqs.map((faq) => (
-                            <Disclosure as="div" key={faq.question} className="pt-6">
-                                {({ open }) => (
-                                    <>
-                                        <dt>
-                                            <Disclosure.Button className="flex w-full items-start justify-between text-left text-white">
-                                                <span className="text-base font-semibold leading-7">{faq.question}</span>
-                                                <span className="ml-6 flex h-7 items-center">
-                                                    {open ? (
-                                                        <MinusSmallIcon className="h-6 w-6" aria-hidden="true" />
-                                                    ) : (
-                                                        <PlusSmallIcon className="h-6 w-6" aria-hidden="true" />
-                                                    )}
-                                                </span>
-                                            </Disclosure.Button>
-                                        </dt>
-                                        <Disclosure.Panel as="dd" className="mt-2 pr-12">
-                                            <p className="text-base leading-7 text-gray-300">{faq.answer}</p>
-                                        </Disclosure.Panel>
-                                    </>
-                                )}
-                            </Disclosure>
-                        ))}
-                    </dl>
+            <BackgroundLayout></BackgroundLayout>
+            <div className="relative isolate pt-40">
+                <div className="mx-auto max-w-7xl px-6 h-full lg:px-8 ">
+                    <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
+                        <p className="text-base font-semibold leading-7 text-indigo-600">FAQs</p>
+                        <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-100 sm:text-4xl">Frequently Asked Questions</h1>
+                        <div className="mt-10 grid max-w-xl grid-cols-1 gap-8 text-base leading-7 text-gray-300 lg:max-w-none lg:grid-cols-2">
+                            <div>
+                                <h1 className="text-xl font-semibold mb-2">{faqs[0].question}</h1>
+                                <p>
+                                    {faqs[0].answer}
+                                </p>
+                                <h1 className="text-xl font-semibold mt-8 mb-2">{faqs[1].question}</h1>
+                                <p>
+                                    {faqs[1].answer}
+                                </p>
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-semibold mb-2">{faqs[2].question}</h1>
+                                <p>
+                                    {faqs[2].answer}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="mt-10 flex">
+
+                        </div>
+                    </div>
                 </div>
             </div>
-        </SquareBackground>
+        </>
     );
 }
 
