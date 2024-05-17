@@ -6,7 +6,7 @@ import { ConnectionSelector } from "@components/Connection/ConnectionSelector";
 import { ConnectionEditor } from "@components/Connection/ConnectionEditor";
 import Account from "@components/Settings/Settings";
 import { NewConnection } from "@components/Connection/NewConnection";
-import FAQPage from "./components/FAQPage";
+import FAQPage from "@components/FAQPage";
 
 export enum Routes {
   Root = "/",
