@@ -2987,19 +2987,6 @@ files = [
 plugins = ["importlib-metadata"]
 
 [[package]]
-name = "pygments-pprint-sql"
-version = "0.1.0"
-description = "Pretty format your SQL queries for easier reading."
-optional = false
-python-versions = "*"
-files = [
-    {file = "pygments-pprint-sql-0.1.0.tar.gz", hash = "sha256:741dc47408ea7b1279b3272f4deb10074ea952a94418b6490f20ed187beba498"},
-]
-
-[package.dependencies]
-Pygments = "*"
-
-[[package]]
 name = "pyinstaller"
 version = "5.13.2"
 description = "PyInstaller bundles a Python application and all its dependencies into a single package."
@@ -3809,17 +3796,6 @@ files = [
 ]
 
 [[package]]
-name = "sql-formatter"
-version = "0.6.2"
-description = "A SQL formatter"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "sql_formatter-0.6.2-py3-none-any.whl", hash = "sha256:5c38651a93031b2ea96c977309d38bba94ad77e8f2dcae7b1b6b71e116423c33"},
-    {file = "sql_formatter-0.6.2.tar.gz", hash = "sha256:98b83810e42ba989073c9ea5d53ddda45c36e91004904ca2916fc5fc13373c10"},
-]
-
-[[package]]
 name = "sqlalchemy"
 version = "2.0.27"
 description = "Database Abstraction Library"
@@ -4581,4 +4557,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "2da8e20147035af4f2ee7d4924987065fdd85291f45c64e51c34e813e1e68173"
+content-hash = "77032cd225e7986af8b7cd8697e9534314350d8ef80cb7c63e8b9ddb3d420dcb"

@@ -13,15 +13,13 @@ from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic.json import pydantic_encoder
-from pygments import lexers
-from pygments_pprint_sql import SqlFilter
 
 from alembic import command
 from alembic.config import Config
 from dataline import db
 from dataline.app import App
 from dataline.config import IS_BUNDLED, config
-from dataline.old_models import DataResult, SuccessResponse, UnsavedResult
+from dataline.old_models import SuccessResponse, UnsavedResult
 from dataline.old_services import TempQueryService
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.conversation import ConversationService
@@ -31,8 +29,6 @@ from dataline.sql_wrapper import request_execute, request_limit
 logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
-lexer = lexers.MySqlLexer()
-lexer.add_filter(SqlFilter())
 
 
 def run_migrations() -> None:

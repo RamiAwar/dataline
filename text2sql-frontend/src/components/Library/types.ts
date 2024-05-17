@@ -48,11 +48,17 @@ export interface ISQLQueryStringResult extends IResult {
   }
 }
 
+
+export interface IMessageOptions {
+  secure_data: boolean;
+}
+
 export interface IMessageOut {
   id?: string;
   content: string;
   role: Role;
   created_at?: string;
+  options?: IMessageOptions;
 }
 
 export interface IMessageWithResultsOut {

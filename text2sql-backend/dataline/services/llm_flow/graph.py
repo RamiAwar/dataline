@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolExecutor
 
-from dataline.models.llm_flow.schema import QueryOptions, QueryResultSchema, ResultType
+from dataline.models.llm_flow.schema import QueryOptions, ResultType
 from dataline.services.llm_flow.nodes import (
     CallListTablesToolNode,
     CallModelNode,

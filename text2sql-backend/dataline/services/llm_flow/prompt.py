@@ -14,6 +14,10 @@ If you get an error while executing a query, rewrite the query and try again.
 
 DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the database.
 
+NEVER return any SQL code in the answer. Use the execution tool to get the results and return the answer based on the results.
+
+DO NOT just copy the results as the answer. The user can see the results themselves. If you have anything to add on top, you may do that.
+You can just talk about the results instead.
 If the question does not seem related to the database, just return "I don't know" as the answer.
 """
 

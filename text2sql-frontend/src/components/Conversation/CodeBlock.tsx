@@ -5,7 +5,7 @@ import {
   PlayIcon,
   BookmarkIcon as BookmarkIconOutline,
 } from "@heroicons/react/24/outline";
-import CustomTooltip from "../Library/Tooltip";
+import { CustomTooltip } from "../Library/Tooltip";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { format } from "prettier-sql";
 import { Dialect } from "../Library/types";

@@ -5,15 +5,19 @@ from fastapi import Depends
 from dataline.models.conversation.schema import (
     ConversationOut,
     ConversationWithMessagesWithResultsOut,
-    MessageOut,
-    MessageWithResultsOut,
 )
 from dataline.models.llm_flow.schema import (
     QueryOptions,
     RenderableResultMixin,
     StorableResultMixin,
 )
-from dataline.models.message.schema import BaseMessageType, MessageCreate
+from dataline.models.message.schema import (
+    BaseMessageType,
+    MessageCreate,
+    MessageOptions,
+    MessageOut,
+    MessageWithResultsOut,
+)
 from dataline.repositories.base import AsyncSession
 from dataline.repositories.conversation import (
     ConversationCreate,
@@ -91,6 +95,7 @@ class ConversationService:
         session: AsyncSession,
         conversation_id: UUID,
         query: str,
+        secure_data: bool = True,
     ) -> MessageWithResultsOut:
         # Get conversation, connection, user settings
         conversation = await self.get_conversation(session, conversation_id=conversation_id)
@@ -109,6 +114,7 @@ class ConversationService:
                 role=BaseMessageType.HUMAN.value,
                 content=query,
                 conversation_id=conversation_id,
+                options=MessageOptions(secure_data=secure_data),
             ),
             flush=False,
         )
@@ -117,6 +123,7 @@ class ConversationService:
         messages, results = query_graph.query(
             query=query,
             options=QueryOptions(
+                secure_data=secure_data,
                 openai_api_key=user_with_model_details.openai_api_key.get_secret_value(),  # type: ignore
                 model_name=user_with_model_details.preferred_openai_model,
             ),
@@ -140,6 +147,7 @@ class ConversationService:
                 role=BaseMessageType.AI.value,
                 content=str(last_ai_message.content),
                 conversation_id=conversation_id,
+                options=MessageOptions(secure_data=secure_data),
             ),
             flush=True,
         )

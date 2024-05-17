@@ -6,6 +6,8 @@ import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 import { useState } from "react";
 import { useGetAvatar } from "@/hooks";
+import { ShieldCheckIcon } from "@heroicons/react/24/outline";
+import { InfoTooltip } from "../Library/Tooltip";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -66,17 +68,28 @@ export const Message = ({
         <div className="flex-shrink-0 flex flex-col relative items-end">
           <div className="">
             <div className="relative p-1 rounded-sm text-white flex items-center justify-center">
-              {message.message.role === "ai" ? (
-                <img src={logo} className="h-7 w-7" />
-              ) : avatarUrl ? (
-                <img
-                  className="h-7 w-7 rounded-sm bg-gray-800"
-                  src={avatarUrl}
-                  alt=""
-                />
-              ) : (
-                <UserCircleIcon className="text-gray-300 h-8 w-8 rounded-full " />
-              )}
+              {message.message.role === "ai" ?
+                <div className="flex flex-col items-center">
+                  <img src={logo} className="h-7 w-7" />
+                  {message.message.options?.secure_data && (
+                    <a href="https://dataline.app/faq">
+                      <InfoTooltip content="No data was sent to or processed by the AI in this message. Click to learn more about how we do this." trigger="hover">
+                        <div className="text-green-400/90 mt-3 p-1 bg-green-400/20 rounded-full hover:bg-green-400/40 transition-colors duration-150 cursor-pointer">
+                          <ShieldCheckIcon className="w-7 h-7" />
+                        </div>
+                      </InfoTooltip>
+                    </a>
+                  )}
+                </div>
+                : avatarUrl ? (
+                  <img
+                    className="h-7 w-7 rounded-sm bg-gray-800"
+                    src={avatarUrl}
+                    alt=""
+                  />
+                ) : (
+                  <UserCircleIcon className="text-gray-300 h-8 w-8 rounded-full " />
+                )}
             </div>
           </div>
         </div>
@@ -85,11 +98,23 @@ export const Message = ({
             <div className="flex flex-grow flex-col gap-3">
               <div className="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap break-words">
                 <div className="markdown prose w-full break-words dark:prose-invert dark">
-                  <p>{message.message.content}</p>
+
+                  <p className=" leading-loose">
+                    {/* {message.message.options?.secure_data && (
+                      <span className="mr-2 mt-2 inline-flex gap-1 items-center rounded-full bg-green-500/10 px-3 py-1 font-medium text-green-400 ring-1 ring-inset ring-green-500/50 text-sm">
+                        <LockClosedIcon className="w-3 h-3"></LockClosedIcon> Data
+                      </span>
+
+                    )} */}
+
+                    {message.message.content}
+                  </p>
                 </div>
               </div>
             </div>
           )}
+
+
 
           {/** RESULTS: QUERY, DATA, PLOTS */}
           {/** Sort results as selected_tables first, data second, code third using tertiary if **/}

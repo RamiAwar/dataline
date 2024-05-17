@@ -6,9 +6,11 @@ import { ConnectionSelector } from "@components/Connection/ConnectionSelector";
 import { ConnectionEditor } from "@components/Connection/ConnectionEditor";
 import Account from "@components/Settings/Settings";
 import { NewConnection } from "@components/Connection/NewConnection";
+import FAQPage from "./components/FAQPage";
 
 export enum Routes {
   Root = "/",
+  Faq = "/faq",
   SignIn = "/login",
   UserProfile = "/user",
   NewConnection = "/connection/new",
@@ -21,6 +23,10 @@ let routes: RouteObject[] = [
     path: Routes.Root,
     element: <Landing />,
   },
+  {
+    path: Routes.Faq,
+    element: <FAQPage />,
+  }
 ];
 
 const private_routes: RouteObject[] = [

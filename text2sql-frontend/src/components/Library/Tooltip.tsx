@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 
-interface CustomTooltipProps {
+interface TooltipProps {
   children: React.ReactNode;
   content: string;
   trigger: "click" | "hover";
 }
 
-const CustomTooltip: React.FC<CustomTooltipProps> = ({
+const CustomTooltip: React.FC<TooltipProps> = ({
   children,
   content,
   trigger = "hover",
@@ -69,4 +69,55 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
   );
 };
 
-export default CustomTooltip;
+
+const InfoTooltip: React.FC<TooltipProps> = ({
+  children,
+  content,
+  trigger = "hover",
+}) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const handleButtonClick = () => {
+    if (trigger === "click") {
+      setShowTooltip(true);
+      setTimeout(() => {
+        setShowTooltip(false);
+      }, 1500);
+    }
+  };
+
+  const handleHover = () => {
+    if (trigger === "hover") {
+      setShowTooltip(true);
+    }
+  };
+
+  const handleNoHover = () => {
+    if (trigger === "hover") {
+      setShowTooltip(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "relative" }}>
+      <div
+        onClick={handleButtonClick}
+        onMouseEnter={handleHover}
+        onMouseLeave={handleNoHover}
+        style={{ position: "relative", display: "inline-block" }}
+      >
+        {showTooltip && (
+          <span className="absolute top-full mt-2 flex justify-center transition ease-in duration-100 opacity-100 w-64">
+            <span className="rounded-md bg-gray-700 px-3 py-1 text-sm text-white drop-shadow-md filter">
+              {content}
+            </span>
+          </span>
+        )}
+        {children}
+      </div>
+    </div>
+  );
+};
+
+
+export { CustomTooltip, InfoTooltip };

@@ -1,11 +1,12 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal, Self
+from typing import TYPE_CHECKING, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
 from dataline.models.llm_flow.enums import QueryResultType
 from dataline.models.llm_flow.schema import SelectedTablesResult, SQLQueryStringResult
+from dataline.models.message.schema import MessageOut, MessageWithResultsOut
 from dataline.models.result.model import ResultModel
 from dataline.models.result.schema import ResultOut
 from dataline.old_models import ConversationWithMessagesWithResults
@@ -36,22 +37,6 @@ class ConversationOut(BaseModel):
 
 class UpdateConversationRequest(BaseModel):
     name: str
-
-
-class MessageOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: UUID
-    content: str
-    role: Literal["ai"] | Literal["human"]
-    created_at: datetime
-
-
-class MessageWithResultsOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    message: MessageOut
-    results: list[ResultOut]
 
 
 def render_stored_results(results: list[ResultModel]) -> list[ResultOut]:
