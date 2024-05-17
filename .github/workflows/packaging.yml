@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./text2sql-frontend
+        working-directory: ./frontend
     steps:
       - uses: actions/checkout@v4
       - name: Install Nodejs
@@ -32,7 +32,7 @@ jobs:
         with:
           name: frontend-artifact
           # default workdir is only for runs, here we are using "uses" so it does not apply
-          path: text2sql-frontend/assets/
+          path: frontend/assets/
           overwrite: true
 
   bundle-linux:
@@ -40,13 +40,13 @@ jobs:
     needs: build-frontend
     defaults:
       run:
-        working-directory: ./text2sql-backend
+        working-directory: ./backend
     steps:
       - uses: actions/checkout@v4
       - name: Download Frontend Build
         uses: actions/download-artifact@v4
         with:
-          path: ./text2sql-backend/assets/
+          path: ./backend/assets/
           name: frontend-artifact
       - name: Install Python
         uses: actions/setup-python@v4
@@ -77,13 +77,13 @@ jobs:
     needs: build-frontend
     defaults:
       run:
-        working-directory: ./text2sql-backend
+        working-directory: ./backend
     steps:
       - uses: actions/checkout@v4
       - name: Download Frontend Build
         uses: actions/download-artifact@v4
         with:
-          path: ./text2sql-backend/assets/
+          path: ./backend/assets/
           name: frontend-artifact
       - name: Install Python
         uses: actions/setup-python@v4
@@ -116,13 +116,13 @@ jobs:
     needs: build-frontend
     defaults:
       run:
-        working-directory: ./text2sql-backend
+        working-directory: ./backend
     steps:
       - uses: actions/checkout@v4
       - name: Download Frontend Build
         uses: actions/download-artifact@v4
         with:
-          path: ./text2sql-backend/assets/
+          path: ./backend/assets/
           name: frontend-artifact
       - name: Install Python
         uses: actions/setup-python@v4

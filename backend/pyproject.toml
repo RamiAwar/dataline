@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "text2sql-backend"
+name = "dataline"
 version = "0.1.0"
 description = ""
 authors = ["Rami <rami.awar.ra@gmail.com>"]
 readme = "README.md"
-packages = [{include = "text2sql_backend"}]
+packages = [{include = "dataline"}]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"

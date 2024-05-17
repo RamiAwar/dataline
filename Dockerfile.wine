@@ -93,7 +93,7 @@ RUN apt update && \
     apt upgrade -y && \
     apt-get install git libpq-dev build-essential -y
 
-COPY text2sql-backend/pyproject.toml ./
+COPY backend/pyproject.toml ./
 
 RUN pip install --no-cache-dir poetry && \
     poetry self add poetry-plugin-export && \
@@ -105,12 +105,12 @@ RUN wine C:/Python311/python.exe -m pip install -r requirements.txt
 
 COPY images/logo.ico .
 
-COPY text2sql-backend/*.py .
-COPY text2sql-backend/dataline ./dataline
-COPY text2sql-backend/alembic ./alembic
-COPY text2sql-backend/alembic.ini .
-COPY text2sql-backend/assets ./assets
-COPY text2sql-backend/templates ./templates
+COPY backend/*.py .
+COPY backend/dataline ./dataline
+COPY backend/alembic ./alembic
+COPY backend/alembic.ini .
+COPY backend/assets ./assets
+COPY backend/templates ./templates
 
 COPY entrypoint-wine.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
