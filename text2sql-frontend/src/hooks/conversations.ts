@@ -7,6 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { getBackendStatusQuery } from "@/hooks/settings";
+import { useEffect } from "react";
 
 export const CONVERSATIONS_QUERY_KEY = ["CONVERSATIONS"];
 
@@ -17,13 +18,16 @@ export function useGetConversations() {
     queryFn: async () => (await api.listConversations()).data,
     enabled: isSuccess,
   });
+  const isError = result.isError;
 
-  if (result.isError) {
-    enqueueSnackbar({
-      variant: "error",
-      message: "Error loading conversations",
-    });
-  }
+  useEffect(() => {
+    if (isError) {
+      enqueueSnackbar({
+        variant: "error",
+        message: "Error loading conversations",
+      });
+    }
+  }, [isError]);
 
   return result;
 }
