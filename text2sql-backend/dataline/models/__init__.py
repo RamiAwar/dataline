@@ -1,14 +1,11 @@
 from dataline.models.base import DBModel
-from dataline.models.connection import ConnectionModel
-from dataline.models.conversation import ConversationModel
-from dataline.models.media import MediaModel
-from dataline.models.message import MessageModel
-from dataline.models.message_result import MessageResultModel
-from dataline.models.result import ResultModel
-from dataline.models.saved_query import SavedQueryModel
-from dataline.models.schema_field import SchemaFieldModel
-from dataline.models.schema_table import SchemaTableModel
-from dataline.models.user import UserModel
+from dataline.models.connection.model import ConnectionModel
+from dataline.models.conversation.model import ConversationModel
+from dataline.models.media.model import MediaModel
+from dataline.models.message.model import MessageModel
+from dataline.models.result.model import ResultModel
+from dataline.models.saved_query.model import SavedQueryModel
+from dataline.models.user.model import UserModel
 
 __all__ = [
     "DBModel",
@@ -16,10 +13,7 @@ __all__ = [
     "ConversationModel",
     "MediaModel",
     "MessageModel",
-    "MessageResultModel",
     "ResultModel",
     "SavedQueryModel",
-    "SchemaFieldModel",
-    "SchemaTableModel",
     "UserModel",
 ]

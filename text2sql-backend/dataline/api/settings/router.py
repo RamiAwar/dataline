@@ -13,7 +13,7 @@ router = APIRouter(prefix="/settings", tags=["settings"])
 @router.post("/avatar")
 async def upload_avatar(
     file: UploadFile,
-    settings_service: SettingsService = Depends(),
+    settings_service: SettingsService = Depends(SettingsService),
     session: AsyncSession = Depends(get_session),
 ) -> SuccessResponse[AvatarOut]:
     media = await settings_service.upload_avatar(session, file)
@@ -23,7 +23,7 @@ async def upload_avatar(
 
 @router.get("/avatar")
 async def get_avatar(
-    settings_service: SettingsService = Depends(), session: AsyncSession = Depends(get_session)
+    settings_service: SettingsService = Depends(SettingsService), session: AsyncSession = Depends(get_session)
 ) -> SuccessResponse[AvatarOut]:
     media = await settings_service.get_avatar(session)
     if media is None:
@@ -36,7 +36,7 @@ async def get_avatar(
 @router.patch("/info")
 async def update_info(
     data: UserUpdateIn,
-    settings_service: SettingsService = Depends(),
+    settings_service: SettingsService = Depends(SettingsService),
     session: AsyncSession = Depends(get_session),
 ) -> SuccessResponse[UserOut]:
     user_info = await settings_service.update_user_info(session, data=data)
@@ -45,7 +45,7 @@ async def update_info(
 
 @router.get("/info")
 async def get_info(
-    settings_service: SettingsService = Depends(), session: AsyncSession = Depends(get_session)
+    settings_service: SettingsService = Depends(SettingsService), session: AsyncSession = Depends(get_session)
 ) -> SuccessResponse[UserOut]:
     user_info = await settings_service.get_user_info(session)
     return SuccessResponse(data=user_info)

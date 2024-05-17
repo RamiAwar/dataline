@@ -1,16 +1,14 @@
 import json
 import logging
-from sqlite3 import Connection as SQLiteConnection
 from typing import Any, TypedDict
-from uuid import UUID
 
-from sqlalchemy import MetaData, create_engine, inspect
+from sqlalchemy import create_engine, inspect
 
 from dataline import db
 from dataline.context_builder import CustomSQLContextContainerBuilder
 from dataline.errors import GenerationError, RelatedTablesNotFoundError
 from dataline.models.connection.schema import Connection
-from dataline.old_models import SQLQueryResult, TableField, UnsavedResult
+from dataline.old_models import SQLQueryResult, UnsavedResult
 from dataline.query_manager import SQLQueryManager
 from dataline.sql_wrapper import CustomSQLDatabase
 
@@ -22,83 +20,20 @@ class SQLResults(TypedDict):
     columns: list[str]
 
 
-class SchemaService:
-    @classmethod
-    def extract_tables(cls, conn: SQLiteConnection, connection_id: UUID) -> dict[str, list[TableField]]:
-        # Get DSN from connection
-        connection = db.get_connection(conn, connection_id)
-        engine = create_engine(connection.dsn)
-        metadata = MetaData()
-        metadata.reflect(bind=engine)
+class TempQueryService:
+    def __init__(self, connection: Connection) -> None:
+        self.session = connection
+        self.engine = create_engine(connection.dsn)
+        self.insp = inspect(self.engine)
+        self.table_names = self.insp.get_table_names()
+        self.sql_db = CustomSQLDatabase(self.engine, include_tables=self.table_names)
 
-        tables = {}
+    def run_sql(self, sql: str):
+        results = self.sql_db.run_sql(sql)
+        if results and len(results) > 1:
+            return results[1]
 
-        for table_name, table in metadata.tables.items():
-            fields = {}
-            pk_field_name = table.primary_key.name
-            foreign_keys = {fk.name: fk for fk in table.foreign_keys}
-
-            for column in table.c:
-                field_name, field_type = column.name, type(column.type).__name__
-                if field_name == pk_field_name:
-                    fields[field_name] = TableField(name=field_name, type=field_type, is_primary_key=True)
-                else:
-                    if field_name in foreign_keys:
-                        fk = foreign_keys[field_name].column
-                        fields[field_name] = TableField(
-                            name=field_name,
-                            type=field_type,
-                            is_foreign_key=True,
-                            linked_table=f"{fk.table.name}.{fk.name}",
-                        )
-                    else:
-                        fields[field_name] = TableField(name=field_name, type=field_type)
-
-            tables[table_name] = list(fields.values())
-
-        return tables
-
-    @classmethod
-    def create_or_update_tables(cls, conn: SQLiteConnection, connection_id: UUID) -> None:
-        # TODO: Change later - use UUIDs normally
-        conn_id = str(connection_id)
-        exists = db.exists_schema_table(conn_id)
-        if exists:
-            raise Exception("Update not implemented yet")
-
-        tables = cls.extract_tables(conn, connection_id)
-        for table_name, fields in tables.items():
-            cls._create_or_update_table_schema(conn, conn_id, table_name, fields)
-
-    @classmethod
-    def _create_or_update_table_schema(
-        cls,
-        conn: SQLiteConnection,
-        connection_id: str,
-        table_name: str,
-        fields: list[TableField],
-    ) -> None:
-        """Creates a schema from scratch with empty descriptions or adds missing
-        fields to one that already exists."""
-        # TODO: Delete removed fields as well
-        # Check if schema exists for this connection
-        exists = db.exists_schema_table(connection_id)
-        if not exists:
-            # Create new schema table
-            table_id = db.create_schema_table(conn, connection_id, table_name)
-
-            # Create schema fields
-            for field in fields:
-                db.create_schema_field(
-                    conn=conn,
-                    table_id=table_id,
-                    field_name=field.name,
-                    field_type=field.type,
-                    field_description="",
-                    is_primary_key=field.is_primary_key,
-                    is_foreign_key=field.is_foreign_key,
-                    foreign_table=field.linked_table,
-                )
+        raise Exception("Uknown error running sql, got no results: ", results)
 
 
 class QueryService:

@@ -395,7 +395,7 @@ def get_conversations_with_messages_with_results() -> list[ConversationWithMessa
             )
         conversations_with_messages_with_results.append(
             ConversationWithMessagesWithResults(
-                conversation_id=str(conversation_id),
+                conversation_id=conversation_id,
                 created_at=conversation[3],
                 connection_id=connection_id,
                 name=name,

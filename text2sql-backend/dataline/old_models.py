@@ -1,9 +1,8 @@
-import re
 from datetime import datetime
 from enum import Enum
 from typing import Any, Generic, Literal, Optional, TypeVar, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
 
 ResultType = Union[
@@ -31,6 +30,7 @@ class SuccessResponse(BaseModel, Generic[T]):
 class SuccessListResponse(BaseModel, Generic[T]):
     data: Optional[list[T]] = None
 
+
 @dataclass
 class Result:
     result_id: int
@@ -49,7 +49,7 @@ class UnsavedResult:
 @dataclass
 class DataResult:
     type: ResultType
-    content: Any
+    content: Any  # type: ignore[misc]
 
 
 @dataclass
@@ -69,24 +69,6 @@ class Conversation:
     created_at: datetime
 
 
-class TableField(BaseModel):
-    name: str
-    type: str
-    is_primary_key: bool = False
-    is_foreign_key: bool = False
-    linked_table: str = ""
-
-
-class TableFieldCreate(BaseModel):
-    table_id: str
-    field_name: str
-    field_type: str
-    field_description: str = ""
-    is_primary_key: bool = False
-    is_foreign_key: bool = False
-    foreign_table: str = ""
-
-
 @dataclass
 class ConversationWithMessagesWithResults(Conversation):
     messages: list[MessageWithResults]
@@ -99,29 +81,3 @@ class SQLQueryResult:
     sql: str = Field(default="")
     chart_request: bool = Field(default=False)
     selected_tables: list[str] = Field(default_factory=list)
-
-
-class UpdateConversationRequest(BaseModel):
-    name: str
-
-
-class UpdateConnectionRequest(BaseModel):
-    name: str
-    dsn: str
-
-
-class ConnectRequest(BaseModel):
-    dsn: str = Field(min_length=3)
-    name: str
-
-    @field_validator("dsn")
-    def validate_dsn_format(cls, value: str) -> str:
-        # Define a regular expression to match the DSN format
-        dsn_regex = r"^[\w\+]+:\/\/[\w-]+:\w+@[\w.-]+[:\d]*\/\w+$"
-
-        if not re.match(dsn_regex, value):
-            raise ValueError(
-                'Invalid DSN format. The expected format is "driver://username:password@host:port/database".'
-            )
-
-        return value

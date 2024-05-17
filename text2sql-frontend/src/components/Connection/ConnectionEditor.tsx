@@ -4,7 +4,6 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useNavigate, useParams } from "react-router-dom";
 import { AlertIcon, AlertModal } from "../Library/AlertModal";
 import { Routes } from "../../router";
-import SchemaEditorGrid from "./SchemaEditorGrid";
 import { enqueueSnackbar } from "notistack";
 import {
   useDeleteConnection,
@@ -27,10 +26,11 @@ export const ConnectionEditor = () => {
   const { data, isLoading } = useGetConnection(connectionId);
   const { data: conversationsData } = useGetConversations();
   const relatedConversations =
-    conversationsData?.conversations.filter(
+    conversationsData?.filter(
       (conversation) => conversation.connection_id === connectionId
     ) ?? [];
-  const { connection } = data ?? {};
+
+  const connection = data;
 
   const { mutate: deleteConnection } = useDeleteConnection({
     onSuccess() {
@@ -234,49 +234,6 @@ export const ConnectionEditor = () => {
               className="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm border bg-green-600 border-green-500 hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-colors duration-150"
             >
               Save
-            </div>
-          </div>
-
-          <div className="sm:col-span-6">
-            <label
-              htmlFor="name"
-              className="block text-md font-medium leading-6 text-white pb-2"
-            >
-              Schema Descriptions
-            </label>
-            <span className="block text-md text-gray-400 font-light leading-6 pb-2">
-              Adding descriptions to some hard-to-understand schema fields will
-              help generate higher quality results.
-              <br></br>
-              <br></br>
-              For example, consider a table called{" "}
-              <span className="font-mono text-lime-300 bg-gray-600 rounded-md px-2">
-                users
-              </span>{" "}
-              with a vague column called{" "}
-              <span className="font-mono text-lime-300 bg-gray-600 rounded-md px-2">
-                type
-              </span>{" "}
-              that contains one of{" "}
-              <span className="font-mono text-white bg-gray-600 rounded-md px-2">
-                admin, basic, beta
-              </span>
-              . You could add a description to the{" "}
-              <span className="font-mono text-lime-300 bg-gray-600 rounded-md px-2">
-                type
-              </span>{" "}
-              column that says{" "}
-              <span className="font-semibold text-white">
-                "Contains one of 'admin', 'basic', 'beta'."
-              </span>
-              <br></br>
-              <br></br>
-              This is helpful as DataLine will never look at the actual rows in
-              your database, only the schema, making it hard to guess what the
-              data actually contains.
-            </span>
-            <div className="mt-2">
-              {connection && <SchemaEditorGrid connection={connection} />}
             </div>
           </div>
         </div>

@@ -1,7 +1,13 @@
 import { enqueueSnackbar } from "notistack";
-import { api } from "@/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ConversationCreationResult, api } from "@/api";
+import {
+  MutationOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { getBackendStatusQuery } from "@/hooks/settings";
+import { useEffect } from "react";
 
 export const CONVERSATIONS_QUERY_KEY = ["CONVERSATIONS"];
 
@@ -12,18 +18,27 @@ export function useGetConversations() {
     queryFn: async () => (await api.listConversations()).data,
     enabled: isSuccess,
   });
+  const isError = result.isError;
 
-  if (result.isError) {
-    enqueueSnackbar({
-      variant: "error",
-      message: "Error loading conversations",
-    });
-  }
+  useEffect(() => {
+    if (isError) {
+      enqueueSnackbar({
+        variant: "error",
+        message: "Error loading conversations",
+      });
+    }
+  }, [isError]);
 
   return result;
 }
 
-export function useCreateConversation(options = {}) {
+export function useCreateConversation(
+  options: MutationOptions<
+    ConversationCreationResult,
+    Error,
+    { id: string; name: string }
+  > = {}
+) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) =>

@@ -2,7 +2,10 @@ from abc import ABC, abstractmethod
 from typing import AsyncGenerator, Generic, Iterable, Protocol, Sequence, Type, TypeVar
 from uuid import UUID
 
-from asyncpg import NotNullViolationError, UniqueViolationError
+from asyncpg import (  # type: ignore[import-untyped]
+    NotNullViolationError,
+    UniqueViolationError,
+)
 from pydantic import BaseModel
 from sqlalchemy import Delete, Select, Update, delete, insert, select, text, update
 from sqlalchemy.exc import IntegrityError, MultipleResultsFound, NoResultFound

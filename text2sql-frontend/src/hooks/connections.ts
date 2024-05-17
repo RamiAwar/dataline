@@ -10,6 +10,7 @@ import { isAxiosError } from "axios";
 import { IEditConnection } from "@/components/Library/types";
 import { CONVERSATIONS_QUERY_KEY } from "./conversations";
 import { getBackendStatusQuery } from "@/hooks/settings";
+import { useEffect } from "react";
 
 function getConnectionsQuery(options = {}) {
   return queryOptions({
@@ -23,12 +24,16 @@ export function useGetConnections() {
   const { isSuccess } = useQuery(getBackendStatusQuery());
   const result = useQuery(getConnectionsQuery({ enabled: isSuccess }));
 
-  if (result.isError) {
-    enqueueSnackbar({
-      variant: "error",
-      message: "Error loading connections",
-    });
-  }
+  const isError = result.isError;
+
+  useEffect(() => {
+    if (isError) {
+      enqueueSnackbar({
+        variant: "error",
+        message: "Error loading connections",
+      });
+    }
+  }, [isError]);
 
   return result;
 }

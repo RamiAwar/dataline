@@ -1,11 +1,13 @@
 import logo from "../../assets/images/logo_md.png";
 import { CodeBlock } from "./CodeBlock";
-import { IMessageWithResults } from "../Library/types";
+import { IMessageWithResultsOut } from "../Library/types";
 import { DynamicTable } from "../Library/DynamicTable";
 import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 import { useState } from "react";
 import { useGetAvatar } from "@/hooks";
+import { ShieldCheckIcon } from "@heroicons/react/24/outline";
+import { InfoTooltip } from "../Library/Tooltip";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -15,7 +17,7 @@ export const Message = ({
   initialMessage,
   className = "",
 }: {
-  initialMessage: IMessageWithResults;
+  initialMessage: IMessageWithResultsOut;
   className?: string;
 }) => {
   const [message, setMessage] = useState(initialMessage);
@@ -26,7 +28,7 @@ export const Message = ({
     if (message.results != null && content != null) {
       // Remove data result from results if any
       const newResults = message.results?.filter(
-        (result) => result.type !== "data"
+        (result) => result.type !== "SQL_QUERY_RUN_RESULT"
       );
 
       const updatedMessage = {
@@ -34,12 +36,12 @@ export const Message = ({
         results: [
           ...newResults,
           {
-            type: "data",
+            type: "SQL_QUERY_RUN_RESULT",
             content,
             result_id: "1",
           },
         ],
-      } as IMessageWithResults;
+      } as IMessageWithResultsOut;
       setMessage(updatedMessage);
     }
   }
@@ -48,8 +50,8 @@ export const Message = ({
     setMessage({
       ...message,
       results: message.results?.map((result) => {
-        if (result.type !== "sql") return result;
-        return { ...result, content: code };
+        if (result.type !== "SQL_QUERY_STRING_RESULT") return result;
+        return { ...result, content: { sql: code } };
       }),
     });
   };
@@ -57,7 +59,7 @@ export const Message = ({
   return (
     <div
       className={classNames(
-        message.role === "assistant"
+        message.message.role === "ai"
           ? "dark:bg-gray-800/40"
           : "dark:bg-gray-900",
         "w-full text-gray-800 dark:text-gray-100 bg-gray-50",
@@ -68,8 +70,22 @@ export const Message = ({
         <div className="flex-shrink-0 flex flex-col relative items-end">
           <div className="">
             <div className="relative p-1 rounded-sm text-white flex items-center justify-center">
-              {message.role === "assistant" ? (
-                <img src={logo} className="h-7 w-7" />
+              {message.message.role === "ai" ? (
+                <div className="flex flex-col items-center">
+                  <img src={logo} className="h-7 w-7" />
+                  {message.message.options?.secure_data && (
+                    <a href="https://dataline.app/faq" target="_blank">
+                      <InfoTooltip
+                        content="No data was sent to or processed by the AI in this message. Click to learn more about how we do this."
+                        trigger="hover"
+                      >
+                        <div className="text-green-400/90 mt-3 p-1 bg-green-400/20 rounded-full hover:bg-green-400/40 transition-colors duration-150 cursor-pointer">
+                          <ShieldCheckIcon className="w-7 h-7" />
+                        </div>
+                      </InfoTooltip>
+                    </a>
+                  )}
+                </div>
               ) : avatarUrl ? (
                 <img
                   className="h-7 w-7 rounded-sm bg-gray-800"
@@ -83,11 +99,20 @@ export const Message = ({
           </div>
         </div>
         <div className="flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)] scrollbar-hide">
-          {message.content && (
+          {message.message.content && (
             <div className="flex flex-grow flex-col gap-3">
               <div className="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap break-words">
                 <div className="markdown prose w-full break-words dark:prose-invert dark">
-                  <p>{message.content}</p>
+                  <p className=" leading-loose">
+                    {/* {message.message.options?.secure_data && (
+                      <span className="mr-2 mt-2 inline-flex gap-1 items-center rounded-full bg-green-500/10 px-3 py-1 font-medium text-green-400 ring-1 ring-inset ring-green-500/50 text-sm">
+                        <LockClosedIcon className="w-3 h-3"></LockClosedIcon> Data
+                      </span>
+
+                    )} */}
+
+                    {message.message.content}
+                  </p>
                 </div>
               </div>
             </div>
@@ -97,33 +122,33 @@ export const Message = ({
           {/** Sort results as selected_tables first, data second, code third using tertiary if **/}
           {message.results
             ?.sort((a, b) => {
-              if (a.type === "selected_tables") return -1;
-              if (b.type === "selected_tables") return 1;
-              if (a.type === "data") return -1;
-              if (b.type === "data") return 1;
-              if (a.type === "sql") return -1;
-              if (b.type === "sql") return 1;
+              if (a.type === "SELECTED_TABLES") return -1;
+              if (b.type === "SELECTED_TABLES") return 1;
+              if (a.type === "SQL_QUERY_RUN_RESULT") return -1;
+              if (b.type === "SQL_QUERY_RUN_RESULT") return 1;
+              if (a.type === "SQL_QUERY_STRING_RESULT") return -1;
+              if (b.type === "SQL_QUERY_STRING_RESULT") return 1;
               return 0;
             })
             .map(
               (result, index) =>
-                (result.type === "selected_tables" && (
+                (result.type === "SELECTED_TABLES" && (
                   <SelectedTablesDisplay
-                    tables={result.content as string}
-                    key={`message-${message.message_id}-selectedtables-${index}`}
+                    tables={result.content.tables}
+                    key={`message-${message.message.id}-selectedtables-${index}`}
                   />
                 )) ||
-                (result.type === "data" && (
+                (result.type === "SQL_QUERY_RUN_RESULT" && (
                   <DynamicTable
-                    key={`message-${message.message_id}-table-${index}`}
+                    key={`message-${message.message.id}-table-${index}`}
                     data={result.content}
                   />
                 )) ||
-                (result.type === "sql" && (
+                (result.type === "SQL_QUERY_STRING_RESULT" && (
                   <CodeBlock
-                    key={`message-${message.message_id}-code-${index}`}
-                    language="sql"
-                    code={result.content as string}
+                    key={`message-${message.message.id}-code-${index}`}
+                    language="SQL_QUERY_STRING_RESULT"
+                    code={result.content.sql}
                     resultId={result.result_id}
                     updateMessage={updateData}
                     updateCode={updateCode}

@@ -12,29 +12,64 @@ export enum Dialect {
   TransactSQL = "tsql",
 }
 
-export type IResultType = "sql" | "code" | "data" | "text" | "selected_tables";
-export type Role = "user" | "assistant";
+export type IResultType =
+  | "SQL_QUERY_STRING_RESULT"
+  | "SQL_QUERY_RUN_RESULT"
+  | "SELECTED_TABLES";
+
+export type Role = "ai" | "human";
 
 export interface IResult {
   type: IResultType;
-  content: string | any[][];
-  result_id?: string;
-  is_saved?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: any;
+}
+export interface ISelectedTablesResult extends IResult {
+  type: "SELECTED_TABLES";
+  content: {
+    tables: string[];
+  }
 }
 
-export interface IMessageWithResults {
+export interface ISQLQueryRunResult extends IResult {
+  type: "SQL_QUERY_RUN_RESULT";
+  content: {
+    columns: string[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rows: any[][];
+  };
+}
+
+export interface ISQLQueryStringResult extends IResult {
+  type: "SQL_QUERY_STRING_RESULT";
+  result_id: string;
+  content: {
+    sql: string;
+  }
+}
+
+
+export interface IMessageOptions {
+  secure_data: boolean;
+}
+
+export interface IMessageOut {
+  id?: string;
   content: string;
-  role: "assistant" | "user";
-  results?: IResult[];
-  message_id?: string;
-  conversation_id?: string;
+  role: Role;
+  created_at?: string;
+  options?: IMessageOptions;
 }
 
-export interface IConversationResult {
-  conversation_id: number;
+export interface IMessageWithResultsOut {
+  message: IMessageOut;
+  results?: (ISQLQueryRunResult | ISQLQueryStringResult | ISelectedTablesResult)[];
+}
+export interface IConversationWithMessagesWithResultsOut {
+  id: string;
   connection_id: string;
   name: string;
-  messages: IMessageWithResults[];
+  messages: IMessageWithResultsOut[];
 }
 
 export interface IConversation {
@@ -53,35 +88,4 @@ export interface IConnection {
 export interface IEditConnection {
   name: string;
   dsn: string;
-}
-
-export interface ITableSchemaResult {
-  id: string;
-  name: string;
-  connection_id: string;
-  description: string;
-  field_descriptions: Array<{
-    id: string;
-    schema_id: string;
-    name: string;
-    type: string;
-    description: string;
-    is_primary_key: boolean;
-    is_foreign_key: boolean;
-    linked_table: string;
-  }>;
-}
-
-export interface ITableSchema {
-  // Table field with description and name
-  table: {
-    name: string;
-    description?: string;
-  };
-  // List of fields with their data types
-  fields: Array<{
-    name: string;
-    type: string;
-    description?: string;
-  }>;
 }

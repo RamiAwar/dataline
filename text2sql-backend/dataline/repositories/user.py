@@ -3,7 +3,7 @@ from typing import Optional, Type
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 
-from dataline.models.user import UserModel
+from dataline.models.user.model import UserModel
 from dataline.repositories.base import AsyncSession, BaseRepository, NotFoundError
 
 

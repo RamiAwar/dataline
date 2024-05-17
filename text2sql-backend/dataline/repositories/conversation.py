@@ -1,11 +1,13 @@
 from datetime import datetime
-from typing import Type
+from typing import Sequence, Type
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import delete, select, update
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from dataline.models.conversation.model import ConversationModel
+from dataline.models.message.model import MessageModel
 from dataline.repositories.base import AsyncSession, BaseRepository
 
 
@@ -29,19 +31,16 @@ class ConversationRepository(BaseRepository[ConversationModel, ConversationCreat
     def model(self) -> Type[ConversationModel]:
         return ConversationModel
 
-    async def get_by_id(self, session: AsyncSession, record_id: int) -> ConversationModel:
-        query = select(self.model).filter_by(id=record_id)
-        return await self.get(session, query)
-
-    async def delete_by_id(self, session: AsyncSession, record_id: int) -> None:
-        query = delete(self.model).filter_by(id=record_id)
-        await self.delete_one(session, query)
-
-    async def update_by_id(self, session: AsyncSession, record_id: int, data: ConversationUpdate) -> ConversationModel:
+    async def get_with_messages_with_results(self, session: AsyncSession, conversation_id: UUID) -> ConversationModel:
         query = (
-            update(self.model)
-            .filter_by(id=record_id)
-            .values(**data.model_dump(exclude_defaults=True))
-            .returning(self.model)
+            select(ConversationModel)
+            .filter_by(id=conversation_id)
+            .options(joinedload(ConversationModel.messages).joinedload(MessageModel.results))
         )
-        return await self.update_one(session, query)
+        return await self.get_unique(session, query)
+
+    async def list_with_messages_with_results(self, session: AsyncSession) -> Sequence[ConversationModel]:
+        query = select(ConversationModel).options(
+            joinedload(ConversationModel.messages).joinedload(MessageModel.results)
+        )
+        return await self.list_unique(session, query)

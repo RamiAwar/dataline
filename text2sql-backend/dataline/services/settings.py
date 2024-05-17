@@ -4,18 +4,20 @@ from uuid import uuid4
 
 import openai
 from fastapi import Depends, UploadFile
+from pydantic import SecretStr
 
 from dataline.config import config
 from dataline.errors import ValidationError
 from dataline.models.media.model import MediaModel
-from dataline.models.user.schema import UserOut, UserUpdateIn
+from dataline.models.user.schema import UserOut, UserUpdateIn, UserWithKey
 from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.media import MediaCreate, MediaRepository
 from dataline.repositories.user import UserCreate, UserRepository, UserUpdate
 
 
-def model_exists(openai_api_key: str, model: str):
-    models = openai.OpenAI(api_key=openai_api_key).models.list()
+def model_exists(openai_api_key: SecretStr | str, model: str) -> bool:
+    api_key = openai_api_key.get_secret_value() if isinstance(openai_api_key, SecretStr) else openai_api_key
+    models = openai.OpenAI(api_key=api_key).models.list()
     return model in {model.id for model in models}
 
 
@@ -23,7 +25,11 @@ class SettingsService:
     media_repo: MediaRepository
     user_repo: UserRepository
 
-    def __init__(self, media_repo: MediaRepository = Depends(), user_repo: UserRepository = Depends()) -> None:
+    def __init__(
+        self,
+        media_repo: MediaRepository = Depends(MediaRepository),
+        user_repo: UserRepository = Depends(UserRepository),
+    ) -> None:
         self.media_repo = media_repo
         self.user_repo = user_repo
 
@@ -101,16 +107,13 @@ class SettingsService:
 
         return UserOut.model_validate(user_info)
 
-    async def get_openai_api_key(self, session: AsyncSession) -> str:
+    async def get_model_details(self, session: AsyncSession) -> UserWithKey:
         user_info = await self.user_repo.get_one_or_none(session)
-        if user_info is None or not user_info.openai_api_key:
-            raise Exception("User or OpenAI key not setup. Please setup your application.")
+        if user_info is None:
+            raise NotFoundError("No user found. Please setup your application.")
 
-        return user_info.openai_api_key
+        if not user_info.openai_api_key:
+            raise Exception("OpenAI key not setup. Please setup your application.")
 
-    async def get_preferred_model(self, session: AsyncSession) -> str:
-        user_info = await self.user_repo.get_one_or_none(session)
-        if user_info is None or not user_info.openai_api_key:
-            raise Exception("User or OpenAI key not setup. Please setup your application.")
-
-        return user_info.preferred_openai_model or config.default_model
+        user_info.preferred_openai_model = user_info.preferred_openai_model or config.default_model
+        return UserWithKey.model_validate(user_info)

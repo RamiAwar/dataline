@@ -13,7 +13,7 @@ class Config(BaseSettings):
     # SQLite database will be mounted in the configuration directory
     # This is where all DataLine data is stored
     # Current dir / db.sqlite3
-    sqlite_path: str = user_data_dir(appname="dataline")
+    sqlite_path: str = str(Path(user_data_dir(appname="DataLine")) / "db.sqlite3")
     sqlite_echo: bool = False
 
     # This is where all uploaded files are stored (ex. uploaded sqlite DBs)
@@ -23,7 +23,7 @@ class Config(BaseSettings):
     sample_netflix_path: str = str(Path(__file__).parent.parent / "samples" / "netflix.sqlite3")
     sample_titanic_path: str = str(Path(__file__).parent.parent / "samples" / "titanic.sqlite3")
 
-    default_model: str = "gpt-4"
+    default_model: str = "gpt-3.5-turbo"
     templates_path: Path = Path(__file__).parent.parent / "templates"
     assets_path: Path = Path(__file__).parent.parent / "assets"
 

@@ -26,7 +26,7 @@ const templateMessages = [
     title: "What can you tell me",
     text: "about this database?",
     message: "What can you tell me about this database?",
-  }
+  },
 ];
 
 export const Conversation = () => {
@@ -39,18 +39,20 @@ export const Conversation = () => {
     mutate: sendMessageMutation,
     isPending: isPendingSendMessage,
     variables: newMessageVariable,
-  } = useSendMessage({ conversationId: parseInt(params.conversationId ?? "") });
+  } = useSendMessage({ conversationId: params.conversationId ?? "" });
 
   const {
     data: messages,
     isSuccess: isSuccessGetMessages,
     isPending: isPendingGetMessages,
     error: getMessagesError,
-  } = useQuery(getMessagesQuery({ conversationId: parseInt(params.conversationId ?? "") }));
+  } = useQuery(
+    getMessagesQuery({ conversationId: params.conversationId ?? "" })
+  );
 
   const messageListRef = useRef<HTMLDivElement | null>(null);
-  const currConversation = conversationsData?.conversations.find(
-    (conv) => conv.conversation_id == parseInt(params.conversationId ?? "")
+  const currConversation = conversationsData?.find(
+    (conv) => conv.id === params.conversationId
   );
 
   const currConnection = connectionsData?.connections?.find(
@@ -97,9 +99,9 @@ export const Conversation = () => {
         appear={true}
       >
         <div className="overflow-y-auto pb-36 bg-gray-900">
-          {messages.messages.map((message) => (
+          {messages.map((message) => (
             <Message
-              key={(params.conversationId as string) + message.message_id}
+              key={(params.conversationId as string) + message.message.id}
               initialMessage={message}
             />
           ))}
@@ -107,17 +109,21 @@ export const Conversation = () => {
             <>
               <Message
                 initialMessage={{
-                  content: newMessageVariable.message,
-                  role: "user",
-                  message_id: generateUUID(),
+                  message: {
+                    content: newMessageVariable.message,
+                    role: "human",
+                    id: generateUUID(),
+                  }
                 }}
                 className="dark:text-gray-400"
               />
               <Message
                 initialMessage={{
-                  content: "Loading...",
-                  role: "assistant",
-                  message_id: generateUUID(),
+                  message: {
+                    content: "Loading...",
+                    role: "ai",
+                    id: generateUUID(),
+                  }
                 }}
               />
             </>
@@ -127,7 +133,7 @@ export const Conversation = () => {
       </Transition>
 
       <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center backdrop-blur-md pt-0">
-        {messages.messages.length === 0 && currConnection?.is_sample && (
+        {messages.length === 0 && currConnection?.is_sample && (
           <div className="w-full md:max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-2 justify-between px-2 sm:px-3 my-4">
             {templateMessages.map((template) => (
               <MessageTemplate

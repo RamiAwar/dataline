@@ -1,8 +1,7 @@
 import { api } from "@/api";
-import { IMessageWithResults } from "@/components/Library/types";
+import { IMessageWithResultsOut } from "@/components/Library/types";
 import {
   queryOptions,
-  skipToken,
   useMutation,
   useQuery,
   useQueryClient,
@@ -12,10 +11,13 @@ import { getBackendStatusQuery } from "@/hooks/settings";
 import { isAxiosError } from "axios";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
-const QUERIES_QUERY_KEY = ["SQL_QUERIES"];
 
 // Load everything
-export function getMessagesQuery({ conversationId }: { conversationId: number }) {
+export function getMessagesQuery({
+  conversationId,
+}: {
+  conversationId: string;
+}) {
   return queryOptions({
     queryKey: [...MESSAGES_QUERY_KEY, conversationId],
     queryFn: async () => (await api.getMessages(conversationId)).data,
@@ -26,7 +28,7 @@ export function useSendMessage({
   conversationId,
   execute = true,
 }: {
-  conversationId: number;
+  conversationId: string;
   execute?: boolean;
 }) {
   const queryClient = useQueryClient();
@@ -35,16 +37,19 @@ export function useSendMessage({
     mutationFn: async ({ message }: { message: string }) =>
       (await api.query(conversationId, message, execute)).data,
     onSuccess: (data, variables) => {
-      queryClient.setQueryData(getMessagesQuery({ conversationId }).queryKey, (oldData) => {
-        const newMessages: IMessageWithResults[] = [
-          { content: variables.message, role: "user" },
-          data.message,
-        ];
-        if (oldData == null) {
-          return { messages: newMessages };
+      queryClient.setQueryData(
+        getMessagesQuery({ conversationId }).queryKey,
+        (oldData) => {
+          const newMessages: IMessageWithResultsOut[] = [
+            { message: { content: variables.message, role: "human", } },
+            { message: { ...data.message }, results: data.results },
+          ];
+          if (oldData == null) {
+            return newMessages;
+          }
+          return [...oldData, ...newMessages];
         }
-        return { messages: [...oldData.messages, ...newMessages] };
-      });
+      );
     },
     onError: (error) => {
       if (isAxiosError(error) && error.response?.status === 406) {
@@ -63,33 +68,7 @@ export function useSendMessage({
   });
 }
 
-export function useGetNewMessage({
-  conversationId,
-  value,
-  execute = true,
-}: {
-  conversationId: number;
-  value: string;
-  execute?: boolean;
-}) {
-  const result = useQuery({
-    queryKey: [...MESSAGES_QUERY_KEY, { conversationId, value, execute }],
-    queryFn: () => api.query(conversationId, value, execute),
-    enabled: Boolean(value),
-    retry: false,
-  });
-
-  if (result.isError) {
-    enqueueSnackbar({
-      variant: "error",
-      message: "Error querying assistant",
-    });
-  }
-
-  return result;
-}
-
-export function useGetMessages(conversationId: number) {
+export function useGetMessages(conversationId: string) {
   const { isSuccess } = useQuery(getBackendStatusQuery());
   const result = useQuery({
     queryKey: [...MESSAGES_QUERY_KEY, { conversationId }],
@@ -110,22 +89,22 @@ export function useGetMessages(conversationId: number) {
 export function useRunSql({
   conversationId,
   sql,
-  enabled,
 }: {
-  conversationId: number;
+  conversationId: string;
   sql: string;
-  enabled: boolean;
 }) {
-  const result = useQuery({
-    queryKey: [...QUERIES_QUERY_KEY, { conversationId, sql }],
-    queryFn: enabled
-      ? async () => (await api.runSQL(conversationId, sql)).data
-      : skipToken,
-    enabled,
-    retry: false,
+  return useMutation({
+    mutationFn: async () => (await api.runSQL(conversationId, sql)).data,
+    onError() {
+      enqueueSnackbar({ variant: "error", message: "Error running query" });
+    },
+    onSuccess() {
+      enqueueSnackbar({
+        variant: "success",
+        message: "Query executed successfully",
+      });
+    },
   });
-
-  return result;
 }
 
 export function useUpdateSqlQuery(options = {}) {
@@ -134,6 +113,12 @@ export function useUpdateSqlQuery(options = {}) {
       api.updateResult(id, code),
     onError() {
       enqueueSnackbar({ variant: "error", message: "Error updating query" });
+    },
+    onSuccess() {
+      enqueueSnackbar({
+        variant: "success",
+        message: "Query updated successfully",
+      });
     },
     ...options,
   });
