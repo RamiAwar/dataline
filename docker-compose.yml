@@ -16,19 +16,19 @@ services:
       - "7377:7377"
     volumes:
       - dataline_dev:/home/.dataline # persist local sqlite db
-      - ./text2sql-backend/dataline:/home/dataline/backend/dataline
-      - ./text2sql-backend/alembic:/home/dataline/backend/alembic
+      - ./backend/dataline:/home/dataline/backend/dataline
+      - ./backend/alembic:/home/dataline/backend/alembic
     networks:
       - dataline
 
   frontend:
     build:
-      context: ./text2sql-frontend
+      context: ./frontend
     depends_on:
       - backend
     ports:
       - "5173:5173"
     volumes:
-      - ./text2sql-frontend/src:/app/src
+      - ./frontend/src:/app/src
     networks:
       - dataline
