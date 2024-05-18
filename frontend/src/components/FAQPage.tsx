@@ -26,8 +26,8 @@ const FAQPage = () => {
             <Header></Header>
 
             <BackgroundLayout></BackgroundLayout>
-            <div className="relative isolate pt-40">
-                <div className="mx-auto max-w-7xl px-6 h-full lg:px-8 ">
+            <div className="relative isolate pt-40 h-full lg:-mt-20">
+                <div className="mx-auto max-w-7xl px-6 h-full lg:px-8 flex items-center">
                     <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
                         <p className="text-base font-semibold leading-7 text-indigo-600">FAQs</p>
                         <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-100 sm:text-4xl">Frequently Asked Questions</h1>
