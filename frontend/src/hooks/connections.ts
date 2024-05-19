@@ -117,8 +117,8 @@ export function useCreateConnection(options = {}) {
 export function useCreateFileConnection(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ file, name }: { file: File; name: string }) =>
-      api.createFileConnection(file, name),
+    mutationFn: ({ file, name, type }: { file: File; name: string; type: "sqlite" | "csv" }) =>
+      api.createFileConnection(file, name, type),
     onSettled() {
       queryClient.invalidateQueries({
         queryKey: getConnectionsQuery().queryKey,

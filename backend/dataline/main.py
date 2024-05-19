@@ -48,6 +48,9 @@ def run_migrations() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # On startup
+    # Create data directory if not exists
+    Path(config.data_directory).mkdir(parents=True, exist_ok=True)
+
     if IS_BUNDLED:
         run_migrations()
         webbrowser.open("http://localhost:7377", new=2)

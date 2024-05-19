@@ -39,16 +39,15 @@ export const DynamicTable: React.FC<{ data: { columns: string[]; rows: any[][] }
         </TableHead>
         <TableBody>
           {dataSubset.map((row: string[] | number[], index: number) => {
-            if (index > 0)
-              return (
-                <TableRow key={index}>
-                  {row.map((item: string | number, cellIndex: number) => (
-                    <TableCell key={cellIndex} className="font-medium pl-8">
-                      {item}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              );
+            return (
+              <TableRow key={index}>
+                {row.map((item: string | number, cellIndex: number) => (
+                  <TableCell key={cellIndex} className="font-medium pl-8">
+                    {item}
+                  </TableCell>
+                ))}
+              </TableRow>
+            );
           })}
         </TableBody>
       </Table>

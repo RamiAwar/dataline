@@ -51,11 +51,13 @@ const createConnection = async (
 
 const createFileConnection = async (
   file: File,
-  name: string
+  name: string,
+  type: "sqlite" | "csv",
 ): Promise<ConnectResult> => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("name", name);
+  formData.append("type", type);
   const response = await backendApi<ConnectResult>({
     url: "/connect/file",
     method: "post",

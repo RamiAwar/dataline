@@ -128,7 +128,7 @@ const FileDragAndDrop = ({
 };
 
 const ConnectionCreator = ({ name = null }: { name: string | null }) => {
-  type RadioValue = "database" | "file" | null;
+  type RadioValue = "database" | "sqlite" | "csv" | null;
   const [selectedRadio, setSelectedRadio] = useState<RadioValue>(null);
   const [dsn, setDsn] = useState<string | null>(null);
   const [file, setFile] = useState<File>();
@@ -160,7 +160,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
     );
   };
 
-  const handleFileCreate = async () => {
+  const handleFileCreate = async (type: "sqlite" | "csv") => {
     if (!file) {
       enqueueSnackbar({
         variant: "info",
@@ -187,7 +187,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
     }
 
     createFileConnection(
-      { file, name },
+      { file, name, type },
       {
         onSuccess: () => {
           enqueueSnackbar({
@@ -215,8 +215,12 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
             <Label className="cursor-pointer">Postgres, MySQL connection</Label>
           </RadioField>
           <RadioField>
-            <Radio value="file" color="white" />
+            <Radio value="sqlite" color="white" />
             <Label className="cursor-pointer">SQLite file</Label>
+          </RadioField>
+          <RadioField>
+            <Radio value="csv" color="white" />
+            <Label className="cursor-pointer">CSV file</Label>
           </RadioField>
         </RadioGroup>
       </Fieldset>
@@ -239,18 +243,30 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
             </Button>
           </div>
         )}
-        {selectedRadio === "file" && (
+        {selectedRadio === "sqlite" && (
           <div>
             <Field>
               <Label>SQLite data file</Label>
               <FileDragAndDrop setFile={setFile} currentFile={file} />
             </Field>
-            <Button className="cursor-pointer mt-4" onClick={handleFileCreate}>
+            <Button className="cursor-pointer mt-4" onClick={() => handleFileCreate(selectedRadio)}>
+              Create connection
+            </Button>
+          </div>
+        )}
+        {selectedRadio === "csv" && (
+          <div>
+            <Field>
+              <Label>CSV file</Label>
+              <FileDragAndDrop setFile={setFile} currentFile={file} />
+            </Field>
+            <Button className="cursor-pointer mt-4" onClick={() => handleFileCreate(selectedRadio)}>
               Create connection
             </Button>
           </div>
         )}
       </div>
+
     </>
   );
 };

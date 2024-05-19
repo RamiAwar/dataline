@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile
@@ -10,17 +9,14 @@ from dataline.models.connection.schema import (
     ConnectionOut,
     ConnectionUpdateIn,
     ConnectRequest,
+    FileConnectionType,
     GetConnectionOut,
     SampleOut,
 )
 from dataline.old_models import SuccessListResponse, SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.connection import ConnectionService
-from dataline.utils.utils import (
-    generate_short_uuid,
-    get_sqlite_dsn,
-    is_valid_sqlite_file,
-)
+from dataline.utils.utils import get_sqlite_dsn, is_valid_sqlite_file
 
 logger = logging.getLogger(__name__)
 
@@ -42,27 +38,23 @@ async def connect_db(
 @router.post("/connect/file")
 async def connect_db_from_file(
     file: UploadFile,
+    type: FileConnectionType = Body(...),
     name: str = Body(...),
     session: AsyncSession = Depends(get_session),
     connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ConnectionOut]:
     # Validate file type - currently only sqlite supported
-    if not is_valid_sqlite_file(file):
-        raise HTTPException(status_code=400, detail="File provided must be a valid SQLite file.")
+    if type == FileConnectionType.sqlite:
+        if not is_valid_sqlite_file(file):
+            raise HTTPException(status_code=400, detail="File provided must be a valid SQLite file.")
 
-    # Create data directory if not exists
-    Path(config.data_directory).mkdir(parents=True, exist_ok=True)
+        connection = await connection_service.create_sqlite_connection(session, file, name)
+        return SuccessResponse(data=connection)
 
-    # Store file in data directory
-    generated_name = generate_short_uuid() + ".sqlite"
-    file_path = Path(config.data_directory) / generated_name
-    with file_path.open("wb") as f:
-        f.write(file.file.read())
-
-    # Create connection with the locally copied file
-    dsn = get_sqlite_dsn(str(file_path.absolute()))
-    connection = await connection_service.create_connection(session, dsn=dsn, name=name, is_sample=False)
-    return SuccessResponse(data=connection)
+    elif type == FileConnectionType.csv:
+        # Convert CSV to SQLite and create connection
+        connection = await connection_service.create_csv_connection(session, file, name)
+        return SuccessResponse(data=connection)
 
 
 @router.get("/connection/{connection_id}")
