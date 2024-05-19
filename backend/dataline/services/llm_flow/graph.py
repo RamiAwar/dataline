@@ -89,9 +89,10 @@ class QueryGraphService:
     def get_prompt_messages(
         self, query: str, history: Sequence[BaseMessage], top_k: int = 10, suffix: str = SQL_FUNCTIONS_SUFFIX
     ):
+        prefix = SQL_PREFIX
+        prefix = prefix.format(dialect=self.toolkit.dialect, top_k=top_k)
+
         if not history:
-            prefix = SQL_PREFIX
-            prefix = prefix.format(dialect=self.toolkit.dialect, top_k=top_k)
             return [
                 SystemMessage(content=prefix),
                 HumanMessage(content=query),
@@ -99,6 +100,7 @@ class QueryGraphService:
             ]
         else:
             return [
+                SystemMessage(content=prefix),
                 *history,
                 HumanMessage(content=query),
                 AIMessage(content=suffix),
