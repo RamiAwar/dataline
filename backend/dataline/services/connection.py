@@ -1,10 +1,14 @@
 import logging
+import sqlite3
+from pathlib import Path
 from uuid import UUID
 
-from fastapi import Depends
+import pandas as pd
+from fastapi import Depends, UploadFile
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
+from dataline.config import config
 from dataline.errors import ValidationError
 from dataline.models.connection.model import ConnectionModel
 from dataline.models.connection.schema import ConnectionOut, ConnectionUpdateIn
@@ -14,6 +18,7 @@ from dataline.repositories.connection import (
     ConnectionRepository,
     ConnectionUpdate,
 )
+from dataline.utils.utils import generate_short_uuid, get_sqlite_dsn
 
 logger = logging.getLogger(__name__)
 
@@ -122,3 +127,33 @@ class ConnectionService:
 
         updated_connection = await self.connection_repo.update_by_uuid(session, connection_uuid, update)
         return ConnectionOut.model_validate(updated_connection)
+
+    async def create_sqlite_connection(self, session: AsyncSession, file: UploadFile, name: str) -> ConnectionOut:
+        # Store file in data directory
+        generated_name = generate_short_uuid() + ".sqlite"
+        file_path = Path(config.data_directory) / generated_name
+        with file_path.open("wb") as f:
+            f.write(file.file.read())
+
+        # Create connection with the locally copied file
+        dsn = get_sqlite_dsn(str(file_path.absolute()))
+        return await self.create_connection(session, dsn=dsn, name=name, is_sample=False)
+
+    async def create_csv_connection(self, session: AsyncSession, file: UploadFile, name: str) -> ConnectionOut:
+        generated_name = generate_short_uuid() + ".sqlite"
+        file_path = Path(config.data_directory) / generated_name
+
+        # Connect to the SQLite database (it will be created if it doesn't exist)
+        conn = sqlite3.connect(file_path)
+        # Load CSV file into a Pandas dataframe directly from the URL
+        data_df = pd.read_csv(file.file)
+        # Write the dataframe to the SQLite database
+        table_name = name.lower().replace(" ", "_")
+        data_df.to_sql(table_name, conn, if_exists="replace", index=False)
+        # Commit and close connection to new SQLite database
+        conn.commit()
+        conn.close()
+
+        # Create connection with the locally copied file
+        dsn = get_sqlite_dsn(str(file_path.absolute()))
+        return await self.create_connection(session, dsn=dsn, name=name, is_sample=False)

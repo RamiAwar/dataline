@@ -1,13 +1,13 @@
-import logo from "../../assets/images/logo_md.png";
-import { CodeBlock } from "./CodeBlock";
-import { IMessageWithResultsOut } from "../Library/types";
-import { DynamicTable } from "../Library/DynamicTable";
-import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
+import logo from "@/assets/images/logo_md.png";
+import { CodeBlock } from "@components/Conversation/CodeBlock";
+import { IMessageWithResultsOut } from "@components/Library/types";
+import { DynamicTable } from "@components/Library/DynamicTable";
+import { SelectedTablesDisplay } from "@components/Library/SelectedTablesDisplay";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 import { useState } from "react";
 import { useGetAvatar } from "@/hooks";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { InfoTooltip } from "../Library/Tooltip";
+import { InfoTooltip } from "@components/Library/Tooltip";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -104,13 +104,6 @@ export const Message = ({
               <div className="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap break-words">
                 <div className="markdown prose w-full break-words dark:prose-invert dark">
                   <p className=" leading-loose">
-                    {/* {message.message.options?.secure_data && (
-                      <span className="mr-2 mt-2 inline-flex gap-1 items-center rounded-full bg-green-500/10 px-3 py-1 font-medium text-green-400 ring-1 ring-inset ring-green-500/50 text-sm">
-                        <LockClosedIcon className="w-3 h-3"></LockClosedIcon> Data
-                      </span>
-
-                    )} */}
-
                     {message.message.content}
                   </p>
                 </div>

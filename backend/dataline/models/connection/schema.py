@@ -1,4 +1,5 @@
 import re
+from enum import Enum
 from typing import Optional
 from uuid import UUID
 
@@ -131,3 +132,8 @@ class ConnectionUpdateIn(BaseModel):
     @field_validator("dsn")
     def validate_dsn_format(cls, value: str) -> str:
         return validate_dsn(value)
+
+
+class FileConnectionType(Enum):
+    sqlite = "sqlite"
+    csv = "csv"
