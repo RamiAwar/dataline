@@ -79,6 +79,20 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, BaseTool):
         run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> str:
         """Get the schema for tables in a comma-separated list."""
+        cleaned_names = [table_name.strip() for table_name in table_names.split(",")]
+        available_names = self.db.get_usable_table_names()
+
+        # Check if the table names are valid
+        wrong_tables = []
+        for name in cleaned_names:
+            if name not in available_names:
+                wrong_tables.append(name)
+
+        if wrong_tables:
+            return f"""
+            ERROR: Tables {wrong_tables} that you selected do not exist in the database.
+            Available tables are the following, please select from them ONLY: "{'", "'.join(available_names)}"."""
+
         return self.db.get_table_info_no_throw([t.strip() for t in table_names.split(",")])
 
 
