@@ -2,7 +2,7 @@
 
 ## Build the frontend:
 
-We currently do this manually, will be refactored when we have scripts for bundling
+We currently do this manually, will be refactored when we have scripts for bundling. Must run this whenever frontend code is updated.
 
 ```bash
 cd frontend

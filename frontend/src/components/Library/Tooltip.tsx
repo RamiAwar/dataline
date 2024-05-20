@@ -69,7 +69,6 @@ const CustomTooltip: React.FC<TooltipProps> = ({
   );
 };
 
-
 const InfoTooltip: React.FC<TooltipProps> = ({
   children,
   content,
@@ -107,7 +106,7 @@ const InfoTooltip: React.FC<TooltipProps> = ({
         style={{ position: "relative", display: "inline-block" }}
       >
         {showTooltip && (
-          <span className="absolute top-full mt-2 flex justify-center transition ease-in duration-100 opacity-100 w-64">
+          <span className="absolute top-full mt-2 flex justify-center transition ease-in duration-100 opacity-100 w-64 z-10">
             <span className="rounded-md bg-gray-700 px-3 py-1 text-sm text-white drop-shadow-md filter">
               {content}
             </span>
@@ -118,6 +117,5 @@ const InfoTooltip: React.FC<TooltipProps> = ({
     </div>
   );
 };
-
 
 export { CustomTooltip, InfoTooltip };
