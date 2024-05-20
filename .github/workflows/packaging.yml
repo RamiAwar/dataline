@@ -3,7 +3,7 @@ run-name: Packaging triggered by ${{ github.actor }}
 on:
   push:
     branches:
-      - "S8.1-bundling-the-app"
+      - "S12.4-verify-dataline-directory-creation-fix"
 jobs:
   build-frontend:
     runs-on: ubuntu-latest
