@@ -40,7 +40,6 @@ class SQLToolNames:
     INFO_SQL_DATABASE = "sql_db_schema"
     EXECUTE_SQL_QUERY = "sql_db_query"
     LIST_SQL_TABLES = "list_sql_tables"
-    QUERY_SQL_CHECKER = "sql_db_query_checker"
     QUERY_SQL_CORRECTOR = "sql_db_query_corrector"
 
 
@@ -105,7 +104,7 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, BaseTool):
 
     name: str = SQLToolNames.EXECUTE_SQL_QUERY
     description: str = """
-    Execute a SQL query against the database and get back the result..
+    Execute a SQL query against the database and get back the result.
     If the query is not correct, an error message will be returned.
     If an error is returned, rewrite the query, check the query, and try again.
     """
@@ -163,7 +162,7 @@ class SQLDatabaseToolkit(BaseToolkit):
 
         arbitrary_types_allowed = True
 
-    def get_tools(self, secure_data: bool = False, allow_execution: bool = True) -> List[BaseTool]:
+    def get_tools(self, allow_execution: bool = True) -> List[BaseTool]:
         """Get the tools in the toolkit."""
         list_sql_database_tool = ListSQLTablesTool(db=self.db)
         info_sql_database_tool_description = (
