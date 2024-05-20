@@ -122,8 +122,9 @@ async def execute_sql(
 
 @app.get("/toggle-save-query/{result_id}")
 async def toggle_save_query(result_id: str) -> SuccessResponse[None]:
-    db.toggle_save_query(result_id=result_id)
-    return SuccessResponse()
+    with db.DatabaseManager() as conn:
+        db.toggle_save_query(result_id=result_id, conn=conn)
+        return SuccessResponse()
 
 
 @app.patch("/result/{result_id}")
