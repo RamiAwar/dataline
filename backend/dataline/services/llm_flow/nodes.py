@@ -1,29 +1,23 @@
 from abc import ABC, abstractmethod
 from typing import cast
 
-from langchain_core.messages import AIMessage, FunctionMessage, ToolMessage
+from langchain_core.messages import AIMessage, BaseMessage, FunctionMessage, ToolMessage
 from langchain_core.utils.function_calling import convert_to_openai_function
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END
 
-from dataline.models.llm_flow.schema import (
-    QueryResultSchema,
-    SelectedTablesResult,
-    SQLQueryRunResult,
-    SQLQueryStringResult,
-)
+from dataline.models.llm_flow.schema import QueryResultSchema
 
 # from dataline.services.llm_flow.llm_calls.query_sql_corrector import (
 #     QuerySQLCorrectorCall,
 #     SQLCorrectionDetails,
 # )
 from dataline.services.llm_flow.toolkit import (
-    InfoSQLDatabaseTool,
     ListSQLTablesTool,
     QueryGraphState,
     QueryGraphStateUpdate,
-    QuerySQLDataBaseTool,
     SQLToolNames,
+    StateUpdaterTool,
     state_update,
 )
 
@@ -72,100 +66,24 @@ class CallModelNode(Node):
 class CallToolNode(Node):
     __name__ = "perform_action"
 
-    # @classmethod
-    # def correct_sql(cls, api_key: str, query: str, dialect: str) -> SQLCorrectionDetails:
-    #     return QuerySQLCorrectorCall(api_key=api_key, query=query, dialect=dialect).extract()
-
-    # TODO: Refactor the below - if any tool wants to add a result to the state, it should be done in the tool itself
-    # We'll redesign tool calls to return a list of results and messages maybe?
-    # Think about it later
     @classmethod
     def run(cls, state: QueryGraphState) -> QueryGraphStateUpdate:
         messages = state.messages
         last_message = cast(AIMessage, messages[-1])
 
-        output_messages = []
+        output_messages: list[BaseMessage] = []
         results: list[QueryResultSchema] = []
         for tool_call in last_message.tool_calls:
-            # Post-processing SQL tool to purge data if secure_data is enabled
-            if tool_call["name"] == SQLToolNames.EXECUTE_SQL_QUERY:
-                # Create a result object out of the SQL
-                results.append(SQLQueryStringResult(sql=tool_call["args"]["query"]))
+            tool = state.tool_executor.tool_map[tool_call["name"]]
+            if isinstance(tool, StateUpdaterTool):
+                updates = tool.get_response(state, tool_call["args"], str(tool_call["id"]))
+                output_messages.extend(updates["messages"])
+                results.extend(updates["results"])
 
-                sql_query_executor_tool = cast(
-                    QuerySQLDataBaseTool, state.tool_executor.tool_map[SQLToolNames.EXECUTE_SQL_QUERY]
-                )
-
-                # # PREEMPTIVE SQL CORRECTION
-                # TODO: DO WE REALLY NEED THIS ADVANCED LOGIC? JUST LET IT FAIL INSTEAD MAYBE?
-                # Let's try to add it in after the regression tests are up, then we can test speed+accuracy improvement
-                # query = action.tool_input.get("query", "")
-                # dialect = sql_query_executor_tool.db.dialect
-                # details = cls.correct_sql(state.options.openai_api_key.get_secret_value(), query, dialect)
-                # if details.needs_correction and details.query:
-                #     action.tool_input["query"] = details.query
-
-                # # Add correction results as a function message
-                # tool_message = FunctionMessage(
-                #     content=str(details.model_dump()), name=SQLToolNames.QUERY_SQL_CORRECTOR
-                # )
-                # messages.append(tool_message)
-
-                # We call the tool_executor and get back a response
-                response = cast(SQLQueryRunResult, sql_query_executor_tool.run(tool_call["args"]))
-                response.is_secure = state.options.secure_data  # return whether or not generated securely
-                results.append(response)
-
-                # We use the response to create a FunctionMessage
-                if not state.options.secure_data:
-                    # TODO: Cast this to a string by including the column names in every row so
-                    # it's easier for llm to understand
-                    tool_message = ToolMessage(
-                        content=str(response), name=tool_call["name"], tool_call_id=str(tool_call["id"])
-                    )
-                    output_messages.append(tool_message)
-                else:
-                    # Get data description from results
-                    if response.columns and response.rows:
-                        data_types = [type(cell).__name__ for cell in response.rows[0]]
-                        data_description = (
-                            "Returned data description:\n"
-                            f"Columns:{response.columns}\n"
-                            f"First row: {data_types}\n"
-                            f"Number of rows: {len(response.rows)}"
-                        )
-                    elif len(response.rows) == 1:
-                        data_types = [type(cell).__name__ for cell in response.rows[0]]
-                        data_description = f"Returned data description:\nOnly one row: {data_types}"
-                    else:
-                        data_description = "No data returned"
-
-                    tool_message = ToolMessage(
-                        content="Query executed successfully - here is the returned data description. "
-                        "I cannot view the data for security reasons but the user should be able to see the results!\n"
-                        f"{data_description}",
-                        name=tool_call["name"],
-                        tool_call_id=str(tool_call["id"]),
-                    )
-                    output_messages.append(tool_message)
-            elif tool_call["name"] == SQLToolNames.INFO_SQL_DATABASE:
-                # We call the tool_executor and get back a response
-                tool = cast(InfoSQLDatabaseTool, state.tool_executor.tool_map[tool_call["name"]])
-                response = tool.run(tool_call["args"])
-                # We use the response to create a FunctionMessage
-                tool_message = ToolMessage(
-                    content=str(response), name=tool_call["name"], tool_call_id=str(tool_call["id"])
-                )
-
-                # Add selected tables result if successful
-                if tool.table_names:
-                    results.append(SelectedTablesResult(tables=tool.table_names))
-
-                output_messages.append(tool_message)
             else:
                 # We call the tool_executor and get back a response
                 response = state.tool_executor.tool_map[tool_call["name"]].run(tool_call["args"])
-                # We use the response to create a FunctionMessage
+                # We use the response to create a ToolMessage
                 tool_message = ToolMessage(
                     content=str(response), name=tool_call["name"], tool_call_id=str(tool_call["id"])
                 )
