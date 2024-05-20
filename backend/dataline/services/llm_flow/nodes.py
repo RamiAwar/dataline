@@ -5,7 +5,6 @@ from langchain_core.messages import AIMessage, FunctionMessage, ToolMessage
 from langchain_core.utils.function_calling import convert_to_openai_function
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END
-from langgraph.prebuilt import ToolInvocation
 
 from dataline.models.llm_flow.schema import (
     QueryResultSchema,
@@ -13,11 +12,14 @@ from dataline.models.llm_flow.schema import (
     SQLQueryRunResult,
     SQLQueryStringResult,
 )
-from dataline.services.llm_flow.llm_calls.query_sql_corrector import (
-    QuerySQLCorrectorCall,
-    SQLCorrectionDetails,
-)
+
+# from dataline.services.llm_flow.llm_calls.query_sql_corrector import (
+#     QuerySQLCorrectorCall,
+#     SQLCorrectionDetails,
+# )
 from dataline.services.llm_flow.toolkit import (
+    InfoSQLDatabaseTool,
+    ListSQLTablesTool,
     QueryGraphState,
     QueryGraphStateUpdate,
     QuerySQLDataBaseTool,
@@ -70,10 +72,13 @@ class CallModelNode(Node):
 class CallToolNode(Node):
     __name__ = "perform_action"
 
-    @classmethod
-    def correct_sql(cls, api_key: str, query: str, dialect: str) -> SQLCorrectionDetails:
-        return QuerySQLCorrectorCall(api_key=api_key, query=query, dialect=dialect).extract()
+    # @classmethod
+    # def correct_sql(cls, api_key: str, query: str, dialect: str) -> SQLCorrectionDetails:
+    #     return QuerySQLCorrectorCall(api_key=api_key, query=query, dialect=dialect).extract()
 
+    # TODO: Refactor the below - if any tool wants to add a result to the state, it should be done in the tool itself
+    # We'll redesign tool calls to return a list of results and messages maybe?
+    # Think about it later
     @classmethod
     def run(cls, state: QueryGraphState) -> QueryGraphStateUpdate:
         messages = state.messages
@@ -143,6 +148,20 @@ class CallToolNode(Node):
                         tool_call_id=str(tool_call["id"]),
                     )
                     output_messages.append(tool_message)
+            elif tool_call["name"] == SQLToolNames.INFO_SQL_DATABASE:
+                # We call the tool_executor and get back a response
+                tool = cast(InfoSQLDatabaseTool, state.tool_executor.tool_map[tool_call["name"]])
+                response = tool.run(tool_call["args"])
+                # We use the response to create a FunctionMessage
+                tool_message = ToolMessage(
+                    content=str(response), name=tool_call["name"], tool_call_id=str(tool_call["id"])
+                )
+
+                # Add selected tables result if successful
+                if tool.table_names:
+                    results.append(SelectedTablesResult(tables=tool.table_names))
+
+                output_messages.append(tool_message)
             else:
                 # We call the tool_executor and get back a response
                 response = state.tool_executor.tool_map[tool_call["name"]].run(tool_call["args"])
@@ -161,10 +180,11 @@ class CallListTablesToolNode(Node):
 
     @classmethod
     def run(cls, state: QueryGraphState) -> QueryGraphStateUpdate:
-        action = ToolInvocation(tool=SQLToolNames.LIST_SQL_TABLES, tool_input={})
-        response = cast(SelectedTablesResult, state.tool_executor.invoke(action))
-        tool_message = FunctionMessage(content=str(", ".join(response.tables)), name=action.tool)
-        return state_update(messages=[tool_message], results=[response])
+        # action = ToolInvocation(tool=SQLToolNames.LIST_SQL_TABLES, tool_input={})
+        tool = cast(ListSQLTablesTool, state.tool_executor.tool_map[SQLToolNames.LIST_SQL_TABLES])
+        response: list[str] = tool.run(tool_input={})
+        tool_message = FunctionMessage(content=str(", ".join(response)), name=tool.name)
+        return state_update(messages=[tool_message])
 
 
 class ShouldCallToolCondition(Condition):

@@ -59,15 +59,18 @@ class _InfoSQLDatabaseToolInput(BaseModel):
         description=(
             "A comma-separated list of the table names for which to return the schema. "
             "Example input: 'table1, table2, table3'"
+            "Try to pass in all the tables in one go to avoid multiple calls to this tool."
         ),
     )
 
 
 class InfoSQLDatabaseTool(BaseSQLDatabaseTool, BaseTool):
-    """Tool for getting metadata about a SQL database."""
+    """Tool for getting metadata about tables in a SQL database."""
 
     name: str = SQLToolNames.INFO_SQL_DATABASE
     description: str = "Get the schema and sample rows for the specified SQL tables."
+
+    table_names: Optional[list[str]] = None
 
     # Pydantic model to validate input to the tool
     args_schema: Type[BaseModel] = _InfoSQLDatabaseToolInput
@@ -78,6 +81,7 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, BaseTool):
         run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> str:
         """Get the schema for tables in a comma-separated list."""
+        self.table_names = None  # Reset internal state in case it remains from tool calls
         cleaned_names = [table_name.strip() for table_name in table_names.split(",")]
         available_names = self.db.get_usable_table_names()
 
@@ -88,11 +92,11 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, BaseTool):
                 wrong_tables.append(name)
 
         if wrong_tables:
-            return f"""
-            ERROR: Tables {wrong_tables} that you selected do not exist in the database.
+            return f"""ERROR: Tables {wrong_tables} that you selected do not exist in the database.
             Available tables are the following, please select from them ONLY: "{'", "'.join(available_names)}"."""
 
-        return self.db.get_table_info_no_throw([t.strip() for t in table_names.split(",")])
+        self.table_names = [t.strip() for t in table_names.split(",")]
+        return self.db.get_table_info_no_throw(self.table_names)
 
 
 class _QuerySQLDataBaseToolInput(BaseModel):
@@ -142,9 +146,9 @@ class ListSQLTablesTool(BaseSQLDatabaseTool, BaseTool):
         self,
         tool_input: str = "",
         run_manager: Optional[CallbackManagerForToolRun] = None,
-    ) -> SelectedTablesResult:
+    ) -> list[str]:
         """Get a comma-separated list of table names."""
-        return SelectedTablesResult(tables=list(self.db.get_usable_table_names()))
+        return list(self.db.get_usable_table_names())
 
 
 class SQLDatabaseToolkit(BaseToolkit):
