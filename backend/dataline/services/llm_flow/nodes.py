@@ -135,7 +135,7 @@ class CallToolNode(Node):
 
                 function_message = FunctionMessage(
                     content="Query executed successfully - here is the returned data description. "
-                    "I cannot view this data for security reasons.\n"
+                    "I cannot view the data for security reasons but the user should be able to see the results!\n"
                     f"{data_description}",
                     name=action.tool,
                 )

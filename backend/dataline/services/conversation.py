@@ -1,6 +1,8 @@
+import logging
 from uuid import UUID
 
 from fastapi import Depends
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 
 from dataline.models.conversation.schema import (
     ConversationOut,
@@ -29,6 +31,8 @@ from dataline.repositories.result import ResultRepository
 from dataline.services.connection import ConnectionService
 from dataline.services.llm_flow.graph import QueryGraphService
 from dataline.services.settings import SettingsService
+
+logger = logging.getLogger(__name__)
 
 
 class ConversationService:
@@ -120,6 +124,7 @@ class ConversationService:
         )
 
         # Perform query and execute graph
+        history = await self.get_conversation_history(session, conversation_id)
         messages, results = query_graph.query(
             query=query,
             options=QueryOptions(
@@ -127,7 +132,7 @@ class ConversationService:
                 openai_api_key=user_with_model_details.openai_api_key.get_secret_value(),  # type: ignore
                 model_name=user_with_model_details.preferred_openai_model,
             ),
-            history=[],
+            history=history,
         )
 
         # Find first AI message from the back
@@ -166,3 +171,21 @@ class ConversationService:
             message=MessageOut.model_validate(stored_ai_message),
             results=serialized_results,
         )
+
+    async def get_conversation_history(self, session: AsyncSession, conversation_id: UUID) -> list[BaseMessage]:
+        """
+        Get the last 10 messages of a conversation (AI, Human, and System)
+        """
+        messages = await self.message_repo.get_by_conversation(session, conversation_id)
+        base_messages = []
+        for message in messages:
+            if message.role == BaseMessageType.HUMAN.value:
+                base_messages.append(HumanMessage(content=message.content))
+            elif message.role == BaseMessageType.AI.value:
+                base_messages.append(AIMessage(content=message.content))
+            elif message.role == BaseMessageType.SYSTEM.value:
+                base_messages.append(SystemMessage(content=message.content))
+            else:
+                logger.error(Exception(f"Unknown message role: {message.role}"))
+
+        return base_messages[-10:]
