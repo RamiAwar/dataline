@@ -24,7 +24,7 @@ from dataline.old_services import TempQueryService
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.conversation import ConversationService
 from dataline.services.settings import SettingsService
-from dataline.sql_wrapper import request_execute, request_limit
+from dataline.old_services import request_execute, request_limit
 
 logging.basicConfig(level=logging.DEBUG)
 
