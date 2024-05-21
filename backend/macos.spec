@@ -9,7 +9,7 @@ block_cipher = None
 
 
 a = Analysis(
-    ['main.py'],
+    ['dataline/main.py'],
     pathex=[],
     binaries=[],
     datas=datas,

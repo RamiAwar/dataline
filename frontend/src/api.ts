@@ -52,7 +52,7 @@ const createConnection = async (
 const createFileConnection = async (
   file: File,
   name: string,
-  type: "sqlite" | "csv",
+  type: "sqlite" | "csv"
 ): Promise<ConnectResult> => {
   const formData = new FormData();
   formData.append("file", file);
@@ -168,7 +168,9 @@ const listConversations = async (): Promise<ListConversations> => {
 };
 
 export type GetMessagesResponse = ApiResponse<IMessageWithResultsOut[]>;
-const getMessages = async (conversationId: string): Promise<GetMessagesResponse> => {
+const getMessages = async (
+  conversationId: string
+): Promise<GetMessagesResponse> => {
   return (
     await backendApi<GetMessagesResponse>({
       url: `/conversation/${conversationId}/messages`,
@@ -191,7 +193,11 @@ const createMessage = async (conversationId: number, content: string) => {
 
 export type MessageWithResultsOut = ApiResponse<{
   message: IMessageOut;
-  results: (ISelectedTablesResult | ISQLQueryRunResult | ISQLQueryStringResult)[];
+  results: (
+    | ISelectedTablesResult
+    | ISQLQueryRunResult
+    | ISQLQueryStringResult
+  )[];
 }>;
 const query = async (
   conversationId: string,
@@ -214,14 +220,6 @@ const runSQL = async (conversationId: string, code: string) => {
       params: { conversation_id: conversationId, sql: code },
     })
   ).data;
-};
-
-export type SaveQueryResult = ApiResponse<void>;
-const toggleSaveQuery = async (resultId: string) => {
-  const response = await backendApi<SaveQueryResult>({
-    url: `/toggle-save-query/${resultId}`,
-  });
-  return response.data;
 };
 
 export type UpdateResultResult = ApiResponse<void>;
@@ -304,7 +302,6 @@ export const api = {
   createMessage,
   query,
   runSQL,
-  toggleSaveQuery,
   updateResult,
   getAvatar,
   updateAvatar,
