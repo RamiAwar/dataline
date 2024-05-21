@@ -16,14 +16,14 @@ from pydantic.json import pydantic_encoder
 
 from alembic import command
 from alembic.config import Config
-from dataline import db
 from dataline.app import App
 from dataline.config import IS_BUNDLED, config
 from dataline.old_models import SuccessResponse, UnsavedResult
 from dataline.old_services import TempQueryService
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
+from dataline.services.connection import ConnectionService
 from dataline.services.conversation import ConversationService
-from dataline.services.settings import SettingsService
+from dataline.services.result import ResultService
 from dataline.old_services import request_execute, request_limit
 
 logging.basicConfig(level=logging.DEBUG)
@@ -75,64 +75,59 @@ async def execute_sql(
     execute: bool = True,
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(ConversationService),
-    settings_service: SettingsService = Depends(SettingsService),
+    connection_service: ConnectionService = Depends(ConnectionService),
 ) -> Response:
     request_limit.set(limit)
     request_execute.set(execute)
 
     # Get conversation
-    with db.DatabaseManager() as conn:
-        # Will raise error that's auto captured by middleware if not exists
-        conversation = await conversation_service.get_conversation(session, conversation_id=conversation_id)
-        connection_id = conversation.connection_id
-        try:
-            connection = db.get_connection(conn, connection_id)
-        except NotFoundError:
-            raise HTTPException(status_code=404, detail="Invalid connection_id")
+    # Will raise error that's auto captured by middleware if not exists
+    conversation = await conversation_service.get_conversation(session, conversation_id=conversation_id)
+    connection_id = conversation.connection_id
+    try:
+        connection = await connection_service.get_connection(session, connection_id)
+    except NotFoundError:
+        raise HTTPException(status_code=404, detail="Invalid connection_id")
 
-        query_service = TempQueryService(connection)
+    query_service = TempQueryService(connection)
 
-        # Execute query
-        data = query_service.run_sql(sql)
-        if data.get("result"):
-            # Convert data to list of rows
-            rows = []
-            rows.extend([x for x in r] for r in data["result"])
+    # Execute query
+    data = query_service.run_sql(sql)
+    if data.get("result"):
+        # Convert data to list of rows
+        rows = []
+        rows.extend([x for x in r] for r in data["result"])
 
-            # TODO: Try to remove custom encoding from here
-            return Response(
-                content=json.dumps(
-                    {
-                        "data": {
-                            "type": "SQL_QUERY_RUN_RESULT",
-                            "content": {
-                                "columns": data["columns"],
-                                "rows": rows,
-                            },
-                        }
-                    },
-                    default=pydantic_encoder,
-                    indent=4,
-                ),
-                media_type="application/json",
-            )
-        else:
-            raise HTTPException(status_code=404, detail="No results found")
-
-
-@app.get("/toggle-save-query/{result_id}")
-async def toggle_save_query(result_id: str) -> SuccessResponse[None]:
-    with db.DatabaseManager() as conn:
-        db.toggle_save_query(result_id=result_id, conn=conn)
-        return SuccessResponse()
+        # TODO: Try to remove custom encoding from here
+        return Response(
+            content=json.dumps(
+                {
+                    "data": {
+                        "type": "SQL_QUERY_RUN_RESULT",
+                        "content": {
+                            "columns": data["columns"],
+                            "rows": rows,
+                        },
+                    }
+                },
+                default=pydantic_encoder,
+                indent=4,
+            ),
+            media_type="application/json",
+        )
+    else:
+        raise HTTPException(status_code=404, detail="No results found")
 
 
 @app.patch("/result/{result_id}")
-async def update_result_content(result_id: str, content: Annotated[str, Body(embed=True)]) -> SuccessResponse[None]:
-    with db.DatabaseManager() as conn:
-        db.update_result_content(conn, result_id=result_id, content=content)
-        conn.commit()
-        return SuccessResponse()
+async def update_result_content(
+    result_id: UUID,
+    content: Annotated[str, Body(embed=True)],
+    session: AsyncSession = Depends(get_session),
+    result_service: ResultService = Depends(ResultService),
+) -> SuccessResponse[None]:
+    await result_service.update_result_content(session, result_id=result_id, content=content)
+    return SuccessResponse()
 
 
 if IS_BUNDLED:

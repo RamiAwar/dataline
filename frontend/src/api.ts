@@ -222,14 +222,6 @@ const runSQL = async (conversationId: string, code: string) => {
   ).data;
 };
 
-export type SaveQueryResult = ApiResponse<void>;
-const toggleSaveQuery = async (resultId: string) => {
-  const response = await backendApi<SaveQueryResult>({
-    url: `/toggle-save-query/${resultId}`,
-  });
-  return response.data;
-};
-
 export type UpdateResultResult = ApiResponse<void>;
 const updateResult = async (resultId: string, code: string) => {
   const response = await backendApi<UpdateResultResult>({
@@ -310,7 +302,6 @@ export const api = {
   createMessage,
   query,
   runSQL,
-  toggleSaveQuery,
   updateResult,
   getAvatar,
   updateAvatar,
