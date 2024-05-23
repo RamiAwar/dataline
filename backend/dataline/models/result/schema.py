@@ -12,9 +12,13 @@ class ResultCreate(BaseModel):
     type: str
     message_id: UUID
 
+    # Used for linking results together ex. chart -> query
+    linked_id: UUID | None = None
+
 
 class ResultUpdate(BaseModel):
-    content: str
+    content: str | None = None
+    linked_id: UUID | None = None
 
 
 class TableOut(BaseModel):
@@ -27,7 +31,10 @@ class TableOut(BaseModel):
 class ResultOut(BaseModel):  # type: ignore[misc]
     model_config = ConfigDict(from_attributes=True)
 
+    created_at: datetime | None = None
+
     content: Any  # type: ignore[misc]
     type: str
 
     result_id: UUID | None = None
+    linked_id: UUID | None = None

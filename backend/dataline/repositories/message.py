@@ -14,5 +14,5 @@ class MessageRepository(BaseRepository[MessageModel, MessageCreate, MessageUpdat
         return MessageModel
 
     async def get_by_conversation(self, session: AsyncSession, conversation_id: UUID) -> Sequence[MessageModel]:
-        query = select(MessageModel).filter_by(conversation_id=conversation_id)
+        query = select(MessageModel).filter_by(conversation_id=conversation_id).order_by(MessageModel.created_at)
         return await self.list(session, query=query)

@@ -103,7 +103,7 @@ export const CodeBlock = ({
     sql: savedCode.replace(/\s+/g, " "),
   });
 
-  function updateQuery() {
+  function saveNewSQLString() {
     if (!resultId) return;
     mutate({ id: resultId, code: savedCode });
   }
@@ -214,29 +214,29 @@ export const CodeBlock = ({
       />
       <div className="absolute bottom-0 right-0 m-1 flex gap-1">
         {/* Save Icon */}
-        <CustomTooltip content="Save" trigger="hover">
+        <CustomTooltip hoverText="Save">
           <button
             tabIndex={-1}
-            onClick={updateQuery}
+            onClick={saveNewSQLString}
             className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out"
           >
             <BookmarkIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
 
-        <CustomTooltip content="COPIED!" trigger="click">
-          <CustomTooltip content="Copy" trigger="hover">
-            <button
-              tabIndex={-1}
-              onClick={() => copyToClipboard(savedCode)}
-              className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out"
-            >
-              <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
-            </button>
-          </CustomTooltip>
+        <CustomTooltip clickText="COPIED!" hoverText="Copy">
+
+          <button
+            tabIndex={-1}
+            onClick={() => copyToClipboard(savedCode)}
+            className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out"
+          >
+            <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+          </button>
+
         </CustomTooltip>
 
-        <CustomTooltip content="Run" trigger="hover">
+        <CustomTooltip hoverText="Run">
           <button
             tabIndex={-1}
             className={classNames(

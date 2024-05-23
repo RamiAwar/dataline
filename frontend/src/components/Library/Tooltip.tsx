@@ -2,34 +2,38 @@ import React, { useState } from "react";
 
 interface TooltipProps {
   children: React.ReactNode;
-  content: string;
-  trigger: "click" | "hover";
+  hoverText?: string;
+  clickText?: string;
 }
 
 const CustomTooltip: React.FC<TooltipProps> = ({
   children,
-  content,
-  trigger = "hover",
+  hoverText,
+  clickText,
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipText, setTooltipText] = useState(hoverText);
 
   const handleButtonClick = () => {
-    if (trigger === "click") {
+    if (clickText) {
       setShowTooltip(true);
+      setTooltipText(clickText);
       setTimeout(() => {
         setShowTooltip(false);
-      }, 1500);
+        setTooltipText(hoverText);  // reset the tooltip text
+      }, 2000);
     }
   };
 
   const handleHover = () => {
-    if (trigger === "hover") {
+    if (hoverText) {
       setShowTooltip(true);
+      setTooltipText(hoverText);
     }
   };
 
   const handleNoHover = () => {
-    if (trigger === "hover") {
+    if (hoverText) {
       setShowTooltip(false);
     }
   };
@@ -59,7 +63,7 @@ const CustomTooltip: React.FC<TooltipProps> = ({
                   fill="currentColor"
                 ></path>
               </svg>
-              {content}
+              {tooltipText}
             </span>
           </span>
         )}
@@ -71,28 +75,32 @@ const CustomTooltip: React.FC<TooltipProps> = ({
 
 const InfoTooltip: React.FC<TooltipProps> = ({
   children,
-  content,
-  trigger = "hover",
+  hoverText,
+  clickText,
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipText, setTooltipText] = useState(hoverText);
 
   const handleButtonClick = () => {
-    if (trigger === "click") {
+    if (clickText) {
       setShowTooltip(true);
+      setTooltipText(clickText);
       setTimeout(() => {
         setShowTooltip(false);
-      }, 1500);
+        setTooltipText(hoverText);  // reset the tooltip text
+      }, 2000);
     }
   };
 
   const handleHover = () => {
-    if (trigger === "hover") {
+    if (hoverText) {
       setShowTooltip(true);
+      setTooltipText(hoverText);
     }
   };
 
   const handleNoHover = () => {
-    if (trigger === "hover") {
+    if (hoverText) {
       setShowTooltip(false);
     }
   };
@@ -108,7 +116,7 @@ const InfoTooltip: React.FC<TooltipProps> = ({
         {showTooltip && (
           <span className="absolute top-full mt-2 flex justify-center transition ease-in duration-100 opacity-100 w-64 z-10">
             <span className="rounded-md bg-gray-700 px-3 py-1 text-sm text-white drop-shadow-md filter">
-              {content}
+              {tooltipText}
             </span>
           </span>
         )}

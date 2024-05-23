@@ -53,6 +53,7 @@ async def connect_db_from_file(
 
     elif type == FileConnectionType.csv:
         # Convert CSV to SQLite and create connection
+        # TODO: Handle pandas invalid CSV error and forward to user
         connection = await connection_service.create_csv_connection(session, file, name)
         return SuccessResponse(data=connection)
 

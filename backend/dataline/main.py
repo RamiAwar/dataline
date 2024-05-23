@@ -70,6 +70,8 @@ async def healthcheck() -> SuccessResponse[None]:
 @app.get("/execute-sql", response_model=UnsavedResult)
 async def execute_sql(
     conversation_id: UUID,
+    # TODO: Add query_string_id to support linking result to query here
+    # query_string_id: UUID,
     sql: str,
     limit: int = 10,
     execute: bool = True,

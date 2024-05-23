@@ -1,4 +1,5 @@
 import logging
+from typing import cast
 from uuid import UUID
 
 from fastapi import Depends
@@ -20,6 +21,8 @@ from dataline.models.message.schema import (
     MessageOut,
     MessageWithResultsOut,
 )
+from dataline.models.result.model import ResultModel
+from dataline.models.result.schema import ResultUpdate
 from dataline.repositories.base import AsyncSession
 from dataline.repositories.conversation import (
     ConversationCreate,
@@ -110,6 +113,7 @@ class ConversationService:
         query_graph = QueryGraphService(
             dsn=connection.dsn,
         )
+        history = await self.get_conversation_history(session, conversation_id)
 
         # Store human message and final AI message without flushing
         await self.message_repo.create(
@@ -124,7 +128,6 @@ class ConversationService:
         )
 
         # Perform query and execute graph
-        history = await self.get_conversation_history(session, conversation_id)
         messages, results = query_graph.query(
             query=query,
             options=QueryOptions(
@@ -157,9 +160,32 @@ class ConversationService:
         )
 
         # Store results and final message in database
+        stored_results: list[ResultModel] = []
         for result in results:
             if isinstance(result, StorableResultMixin):
-                await result.store_result(session, self.result_repo, stored_ai_message.id)
+                stored_result = await result.store_result(session, self.result_repo, stored_ai_message.id)
+                stored_results.append(stored_result)
+
+        # Go over stored results, replace linked_id with the stored result_id
+        for result in results:
+            if hasattr(result, "linked_id"):
+                # Find corresponding result with this ephemeral ID
+                linked_result = cast(
+                    StorableResultMixin,
+                    next(
+                        (r for r in results if r.ephemeral_id == getattr(result, "linked_id")),
+                        None,
+                    ),
+                )
+                # Update linked_id with the stored result_id
+                if linked_result:
+                    # Update result
+                    setattr(result, "linked_id", linked_result.result_id)
+
+                    if isinstance(result, StorableResultMixin) and result.result_id:
+                        await self.result_repo.update_by_uuid(
+                            session, result.result_id, ResultUpdate(linked_id=linked_result.result_id)
+                        )
 
         # Render renderable results
         serialized_results = [
@@ -175,6 +201,7 @@ class ConversationService:
         """
         Get the last 10 messages of a conversation (AI, Human, and System)
         """
+        # TODO: [low-prio] Fetch only last 10 messages, this will be slower as the conversation grows
         messages = await self.message_repo.get_by_conversation(session, conversation_id)
         base_messages = []
         for message in messages:

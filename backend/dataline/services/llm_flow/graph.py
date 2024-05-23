@@ -15,7 +15,11 @@ from dataline.services.llm_flow.nodes import (
     ShouldCallToolCondition,
 )
 from dataline.services.llm_flow.prompt import SQL_FUNCTIONS_SUFFIX, SQL_PREFIX
-from dataline.services.llm_flow.toolkit import QueryGraphState, SQLDatabaseToolkit
+from dataline.services.llm_flow.toolkit import (
+    ChartGeneratorTool,
+    QueryGraphState,
+    SQLDatabaseToolkit,
+)
 
 
 def add_node(graph: StateGraph, node: Type[Node]) -> None:
@@ -40,7 +44,8 @@ class QueryGraphService:
         # TODO: Add this in later if data security disabled
         self.db._sample_rows_in_table_info = 0  # Preventative security
         self.toolkit = SQLDatabaseToolkit(db=self.db)
-        self.tool_executor = ToolExecutor(tools=self.toolkit.get_tools())
+        all_tools = self.toolkit.get_tools() + [ChartGeneratorTool()]
+        self.tool_executor = ToolExecutor(tools=all_tools)
 
     def query(
         self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None

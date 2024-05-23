@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useGetAvatar } from "@/hooks";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { InfoTooltip } from "@components/Library/Tooltip";
+import Chart from "../Library/Chart";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -51,7 +52,7 @@ export const Message = ({
       ...message,
       results: message.results?.map((result) => {
         if (result.type !== "SQL_QUERY_STRING_RESULT") return result;
-        return { ...result, content: { sql: code } };
+        return { ...result, content: { ...result.content, sql: code } };
       }),
     });
   };
@@ -75,10 +76,7 @@ export const Message = ({
                   <img src={logo} className="h-7 w-7" />
                   {message.message.options?.secure_data && (
                     <a href="https://dataline.app/faq" target="_blank">
-                      <InfoTooltip
-                        content="No data was sent to or processed by the AI in this message. Click to learn more about how we do this."
-                        trigger="hover"
-                      >
+                      <InfoTooltip hoverText="No data was sent to or processed by the AI in this message. Click to learn more about how we do this.">
                         <div className="text-green-400/90 mt-3 p-1 bg-green-400/20 rounded-full hover:bg-green-400/40 transition-colors duration-150 cursor-pointer">
                           <ShieldCheckIcon className="w-7 h-7" />
                         </div>
@@ -103,22 +101,25 @@ export const Message = ({
             <div className="flex flex-grow flex-col gap-3">
               <div className="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap break-words">
                 <div className="markdown prose w-full break-words dark:prose-invert dark">
-                  <p className=" leading-loose">
-                    {message.message.content}
-                  </p>
+                  <p className=" leading-loose">{message.message.content}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/** RESULTS: QUERY, DATA, PLOTS */}
-          {/** Sort results as selected_tables first, data second, code third using tertiary if **/}
+          {/** Sort results as selected_tables first, charts second, data third, code fourth using tertiary if **/}
           {message.results
             ?.sort((a, b) => {
               if (a.type === "SELECTED_TABLES") return -1;
               if (b.type === "SELECTED_TABLES") return 1;
+
+              if (a.type === "CHART_GENERATION_RESULT") return -1;
+              if (b.type === "CHART_GENERATION_RESULT") return 1;
+
               if (a.type === "SQL_QUERY_RUN_RESULT") return -1;
               if (b.type === "SQL_QUERY_RUN_RESULT") return 1;
+
               if (a.type === "SQL_QUERY_STRING_RESULT") return -1;
               if (b.type === "SQL_QUERY_STRING_RESULT") return 1;
               return 0;
@@ -146,6 +147,13 @@ export const Message = ({
                     updateMessage={updateData}
                     updateCode={updateCode}
                   />
+                )) ||
+                (result.type === "CHART_GENERATION_RESULT" && (
+                  <Chart
+                    key={`message-${message.message.id}-chart-${index}`}
+                    data={JSON.parse(result.content.chartjs_json)}
+                    createdAt={new Date(result.created_at as string)}
+                  ></Chart>
                 ))
             )}
 

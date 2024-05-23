@@ -28,7 +28,7 @@ export const DynamicTable: React.FC<{ data: { columns: string[]; rows: any[][] }
         bleed
         striped
         dense
-        className="ml-0 mr-0 [--gutter:theme(spacing.6)] sm:[--gutter:theme(spacing.8)]"
+        className="ml-0 mr-0 [--gutter:theme(spacing.6)] "
       >
         <TableHead>
           <TableRow>
