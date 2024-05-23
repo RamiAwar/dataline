@@ -1,27 +1,23 @@
-import json
 from abc import ABC, abstractmethod
 from typing import cast
 
-from langchain_core.messages import FunctionMessage
+from langchain_core.messages import AIMessage, BaseMessage, FunctionMessage, ToolMessage
 from langchain_core.utils.function_calling import convert_to_openai_function
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END
-from langgraph.prebuilt import ToolInvocation
 
-from dataline.models.llm_flow.schema import (
-    SelectedTablesResult,
-    SQLQueryRunResult,
-    SQLQueryStringResult,
-)
-from dataline.services.llm_flow.llm_calls.query_sql_corrector import (
-    QuerySQLCorrectorCall,
-    SQLCorrectionDetails,
-)
+from dataline.models.llm_flow.schema import QueryResultSchema
+
+# from dataline.services.llm_flow.llm_calls.query_sql_corrector import (
+#     QuerySQLCorrectorCall,
+#     SQLCorrectionDetails,
+# )
 from dataline.services.llm_flow.toolkit import (
+    ListSQLTablesTool,
     QueryGraphState,
     QueryGraphStateUpdate,
-    QuerySQLDataBaseTool,
     SQLToolNames,
+    StateUpdaterTool,
     state_update,
 )
 
@@ -60,9 +56,9 @@ class CallModelNode(Node):
         model = ChatOpenAI(
             model=state.options.model_name, api_key=state.options.openai_api_key, temperature=0, streaming=True
         )
-        tools = state.sql_toolkit.get_tools(secure_data=state.options.secure_data)
-        functions = [convert_to_openai_function(t) for t in tools]
-        model = cast(ChatOpenAI, model.bind_functions(functions=functions))
+        sql_tools = state.sql_toolkit.get_tools()
+        tools = [convert_to_openai_function(t) for t in sql_tools]
+        model = cast(ChatOpenAI, model.bind_tools(tools))
         response = model.invoke(state.messages)
         return state_update(messages=[response])
 
@@ -71,84 +67,30 @@ class CallToolNode(Node):
     __name__ = "perform_action"
 
     @classmethod
-    def correct_sql(cls, api_key: str, query: str, dialect: str) -> SQLCorrectionDetails:
-        return QuerySQLCorrectorCall(api_key=api_key, query=query, dialect=dialect).extract()
-
-    @classmethod
     def run(cls, state: QueryGraphState) -> QueryGraphStateUpdate:
         messages = state.messages
-        last_message = messages[-1]
+        last_message = cast(AIMessage, messages[-1])
 
-        action = ToolInvocation(
-            tool=last_message.additional_kwargs.get("function_call", {}).get("name"),
-            tool_input=json.loads(last_message.additional_kwargs.get("function_call", {}).get("arguments")),
-        )
+        output_messages: list[BaseMessage] = []
+        results: list[QueryResultSchema] = []
+        for tool_call in last_message.tool_calls:
+            tool = state.tool_executor.tool_map[tool_call["name"]]
+            if isinstance(tool, StateUpdaterTool):
+                updates = tool.get_response(state, tool_call["args"], str(tool_call["id"]))
+                output_messages.extend(updates["messages"])
+                results.extend(updates["results"])
 
-        # Pre-processing tool invocation
-        # TODO: DO WE REALLY NEED THIS ADVANCED LOGIC? JUST LET IT FAIL INSTEAD MAYBE?
-        # TODO: Move this to a method inside the tools themselves that we can call from here
-        # - add to BaseTool or something
-        # If the tool is a SQL query tool, we correct it first and then send it forward
-        messages = []
-        results = []
-        if action.tool == SQLToolNames.EXECUTE_SQL_QUERY and isinstance(action.tool_input, dict):
-            sql_query_executor_tool = cast(
-                QuerySQLDataBaseTool, state.tool_executor.tool_map[SQLToolNames.EXECUTE_SQL_QUERY]
-            )
-            query = action.tool_input.get("query", "")
-            dialect = sql_query_executor_tool.db.dialect
-
-            details = cls.correct_sql(state.options.openai_api_key.get_secret_value(), query, dialect)
-            if details.needs_correction and details.query:
-                action.tool_input["query"] = details.query
-
-            # Log correction results as a function message
-            function_message = FunctionMessage(content=str(details.model_dump()), name=SQLToolNames.QUERY_SQL_CORRECTOR)
-            messages.append(function_message)
-
-            # Create a result object out of the SQL
-            results.append(SQLQueryStringResult(sql=action.tool_input["query"]))
-
-            # We call the tool_executor and get back a response
-            response = cast(SQLQueryRunResult, sql_query_executor_tool.run(action.tool_input))
-            response.is_secure = state.options.secure_data  # nice to also return whether or not generated securely
-            results.append(response)
-
-            # We use the response to create a FunctionMessage
-            if not state.options.secure_data:
-                # TODO: Cast this to a string by including the column names in every row so
-                # it's easier for llm to understand
-                function_message = FunctionMessage(content=str(response), name=action.tool)
-                messages.append(function_message)
             else:
-                # Get data description from results
-                if response.columns and response.rows:
-                    data_types = [type(cell).__name__ for cell in response.rows[0]]
-                    data_description = (
-                        f"Returned data description:\nColumns:{response.columns}\nFirst row: {data_types}"
-                    )
-                elif len(response.rows) == 1:
-                    data_types = [type(cell).__name__ for cell in response.rows[0]]
-                    data_description = f"Returned data description:\nOnly one row: {data_types}"
-                else:
-                    data_description = "No data returned"
-
-                function_message = FunctionMessage(
-                    content="Query executed successfully - here is the returned data description. "
-                    "I cannot view the data for security reasons but the user should be able to see the results!\n"
-                    f"{data_description}",
-                    name=action.tool,
+                # We call the tool_executor and get back a response
+                response = tool.run(tool_call["args"])
+                # We use the response to create a ToolMessage
+                tool_message = ToolMessage(
+                    content=str(response), name=tool_call["name"], tool_call_id=str(tool_call["id"])
                 )
-                messages.append(function_message)
-        else:
-            # We call the tool_executor and get back a response
-            response = state.tool_executor.invoke(action)
-            # We use the response to create a FunctionMessage
-            function_message = FunctionMessage(content=str(response), name=action.tool)
-            messages.append(function_message)
+                output_messages.append(tool_message)
 
         # We return a list, because this will get added to the existing list
-        return state_update(messages=messages, results=results)
+        return state_update(messages=output_messages, results=results)
 
 
 class CallListTablesToolNode(Node):
@@ -156,10 +98,11 @@ class CallListTablesToolNode(Node):
 
     @classmethod
     def run(cls, state: QueryGraphState) -> QueryGraphStateUpdate:
-        action = ToolInvocation(tool=SQLToolNames.LIST_SQL_TABLES, tool_input={})
-        response = cast(SelectedTablesResult, state.tool_executor.invoke(action))
-        function_message = FunctionMessage(content=str(", ".join(response.tables)), name=action.tool)
-        return state_update(messages=[function_message], results=[response])
+        # action = ToolInvocation(tool=SQLToolNames.LIST_SQL_TABLES, tool_input={})
+        tool = cast(ListSQLTablesTool, state.tool_executor.tool_map[SQLToolNames.LIST_SQL_TABLES])
+        response: list[str] = tool.run(tool_input={})
+        tool_message = FunctionMessage(content=str(", ".join(response)), name=tool.name)
+        return state_update(messages=[tool_message])
 
 
 class ShouldCallToolCondition(Condition):
@@ -172,8 +115,27 @@ class ShouldCallToolCondition(Condition):
         messages = state.messages
         last_message = messages[-1]
         # If there is no function call, then we go to end
-        if "function_call" not in last_message.additional_kwargs:
+        if "tool_calls" not in last_message.additional_kwargs:
             return END
         # Otherwise if there is, we continue
         else:
             return CallToolNode.__name__
+
+
+# class ShouldGenerateChartCondition(Condition):
+#     @classmethod
+#     def run(cls, state: QueryGraphState) -> NodeName:
+#         """
+#         If previous function call was executing SQL and state contains should generate charts,
+#         go to the charting subgraph
+#         """
+#         messages = state.messages
+#         last_message = messages[-1]
+
+#         # Check if the previous function call was to execute SQL
+#         just_executed_sql = last_message.additional_kwargs["function_call"]["name"] == SQLToolNames.EXECUTE_SQL_QUERY
+#         if "function_call" not in last_message.additional_kwargs or not just_executed_sql:
+#             return CallModelNode.__name__
+
+#         # Check if the state contains should generate charts
+#         should_generate_charts = state.options.should_generate_charts

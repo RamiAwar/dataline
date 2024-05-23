@@ -141,11 +141,10 @@ class ConversationService:
             if message.type == BaseMessageType.AI.value:
                 last_ai_message = message
                 break
-
-        # Store final AI message in history
-        if not last_ai_message:
+        else:
             raise Exception("No AI message found in conversation")
 
+        # Store final AI message in history
         stored_ai_message = await self.message_repo.create(
             session,
             MessageCreate(

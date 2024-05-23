@@ -40,14 +40,16 @@ class QueryGraphService:
         # TODO: Add this in later if data security disabled
         self.db._sample_rows_in_table_info = 0  # Preventative security
         self.toolkit = SQLDatabaseToolkit(db=self.db)
+        self.tool_executor = ToolExecutor(tools=self.toolkit.get_tools())
 
     def query(
-        self, query: str, options: QueryOptions, history: Sequence[BaseMessage] = []
+        self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
     ) -> tuple[Sequence[BaseMessage], Sequence[ResultType]]:
+        if history is None:
+            history = []
         graph = self.build_graph()
         app = graph.compile()
 
-        tool_executor = ToolExecutor(tools=self.toolkit.get_tools(secure_data=options.secure_data))
         initial_state = {
             "messages": [
                 *self.get_prompt_messages(query, history),
@@ -55,12 +57,12 @@ class QueryGraphService:
             "results": [],
             "options": options,
             "sql_toolkit": self.toolkit,
-            "tool_executor": tool_executor,
+            "tool_executor": self.tool_executor,
         }
 
         chunks = []
-        messages: Sequence[BaseMessage] = []
-        results: Sequence[ResultType] = []
+        messages: list[BaseMessage] = []
+        results: list[ResultType] = []
         for chunk in app.stream(initial_state):
             chunks.append(chunk)
             for tool, tool_chunk in chunk.items():
