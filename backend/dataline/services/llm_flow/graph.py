@@ -43,8 +43,10 @@ class QueryGraphService:
         self.tool_executor = ToolExecutor(tools=self.toolkit.get_tools())
 
     def query(
-        self, query: str, options: QueryOptions, history: Sequence[BaseMessage] = []
+        self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
     ) -> tuple[Sequence[BaseMessage], Sequence[ResultType]]:
+        if history is None:
+            history = []
         graph = self.build_graph()
         app = graph.compile()
 
@@ -59,8 +61,8 @@ class QueryGraphService:
         }
 
         chunks = []
-        messages: Sequence[BaseMessage] = []
-        results: Sequence[ResultType] = []
+        messages: list[BaseMessage] = []
+        results: list[ResultType] = []
         for chunk in app.stream(initial_state):
             chunks.append(chunk)
             for tool, tool_chunk in chunk.items():

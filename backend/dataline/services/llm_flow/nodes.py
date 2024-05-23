@@ -82,7 +82,7 @@ class CallToolNode(Node):
 
             else:
                 # We call the tool_executor and get back a response
-                response = state.tool_executor.tool_map[tool_call["name"]].run(tool_call["args"])
+                response = tool.run(tool_call["args"])
                 # We use the response to create a ToolMessage
                 tool_message = ToolMessage(
                     content=str(response), name=tool_call["name"], tool_call_id=str(tool_call["id"])
