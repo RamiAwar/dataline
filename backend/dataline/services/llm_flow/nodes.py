@@ -7,15 +7,6 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import END
 
 from dataline.models.llm_flow.schema import QueryResultSchema
-
-# from dataline.services.llm_flow.llm_calls.query_sql_corrector import (
-#     QuerySQLCorrectorCall,
-#     SQLCorrectionDetails,
-# )
-from dataline.services.llm_flow.llm_calls.chart_generator import (
-    GenerateChartCall,
-    ShouldGenerateChartCall,
-)
 from dataline.services.llm_flow.toolkit import (
     ChartGeneratorTool,
     ListSQLTablesTool,
@@ -111,14 +102,6 @@ class CallListTablesToolNode(Node):
         return state_update(messages=[tool_message])
 
 
-# class GenerateChartNode(Node):
-#     __name__ = "generate_chart"
-
-#     @classmethod
-#     def run(cls, state: QueryGraphState) -> QueryGraphStateUpdate:
-#         GenerateChartCall(api_key=state.options.openai_api_key.get_secret_value()).extract()
-
-
 class ShouldCallToolCondition(Condition):
     @classmethod
     def run(cls, state: QueryGraphState) -> NodeName:
@@ -134,12 +117,3 @@ class ShouldCallToolCondition(Condition):
         # Otherwise if there is, we continue
         else:
             return CallToolNode.__name__
-
-
-# class ShouldGenerateChartCondition(Condition):
-#     @classmethod
-#     def run(cls, state: QueryGraphState) -> NodeName:
-#         should_gen = ShouldGenerateChartCall(api_key=state.options.openai_api_key.get_secret_value()).extract()
-#         if should_gen.should_generate_chart:
-#             return GenerateChartNode.__name__
-#         return CallModelNode.__name__
