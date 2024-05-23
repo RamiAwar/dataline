@@ -1,7 +1,7 @@
 """add linked_id to result model
 
 Revision ID: 6a78ebe5b53e
-Revises: c8c61fb4633d
+Revises: 4d3e13d7f6d1
 Create Date: 2024-05-23 08:50:09.368382
 
 """
@@ -15,7 +15,7 @@ from dataline.models.base import CustomUUIDType
 
 # revision identifiers, used by Alembic.
 revision: str = "6a78ebe5b53e"
-down_revision: Union[str, None] = "c8c61fb4633d"
+down_revision: Union[str, None] = "4d3e13d7f6d1"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
