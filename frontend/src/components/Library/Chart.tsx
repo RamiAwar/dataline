@@ -52,6 +52,20 @@ const Chart = ({
     }, []);
 
     useEffect(() => {
+        const handleResize = () => {
+            if (chartInstanceRef.current) {
+                chartInstanceRef.current.resize();
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
+    useEffect(() => {
         if (chartRef.current) {
             if (chartInstanceRef.current) {
                 chartInstanceRef.current.destroy(); // Destroy the existing chart instance
