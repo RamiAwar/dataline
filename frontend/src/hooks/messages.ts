@@ -113,6 +113,7 @@ export function useRunSql(
       enqueueSnackbar({
         variant: "success",
         message: "Query executed successfully",
+        autoHideDuration: 1500,
       });
     },
     ...options,

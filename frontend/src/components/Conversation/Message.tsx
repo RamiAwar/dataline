@@ -24,13 +24,16 @@ export const Message = ({
   const [message, setMessage] = useState(initialMessage);
   const { data: avatarUrl } = useGetAvatar();
 
-  function updateData(content: string) {
+  function updateData(sql_string_result_id: string, content: string) {
     // != null, rules out both null and undefined
     if (message.results != null && content != null) {
-      // Remove data result from results if any
+
+      // Remove SQL query run result linked to this ID if any
       const newResults = message.results?.filter(
-        (result) => result.type !== "SQL_QUERY_RUN_RESULT"
+        (result) => !(result.type === "SQL_QUERY_RUN_RESULT" && result.linked_id === sql_string_result_id)
       );
+
+      console.log("filtered res: ", newResults)
 
       const updatedMessage = {
         ...message,
@@ -38,21 +41,32 @@ export const Message = ({
           ...newResults,
           {
             type: "SQL_QUERY_RUN_RESULT",
+            linked_id: sql_string_result_id,
             content,
-            result_id: "1",
           },
         ],
       } as IMessageWithResultsOut;
+
+      console.log("updatedres: ", updatedMessage.results)
       setMessage(updatedMessage);
     }
   }
 
-  const updateCode = (code: string) => {
+  const updateCode = (sql_string_result_id: string, code: string) => {
     setMessage(prevMessage => ({
       ...prevMessage,
       results: prevMessage.results?.map((result) => {
-        if (result.type !== "SQL_QUERY_STRING_RESULT") return result;
-        return { ...result, content: { ...result.content, sql: code } };
+        if (result.type === "SQL_QUERY_STRING_RESULT" && result.result_id === sql_string_result_id) {
+          return {
+            ...result,
+            content: {
+              ...result.content,
+              sql: code,
+            },
+          };
+        } else {
+          return result;
+        }
       }),
     }));
   };
@@ -129,28 +143,28 @@ export const Message = ({
                 (result.type === "SELECTED_TABLES" && (
                   <SelectedTablesDisplay
                     tables={result.content.tables}
-                    key={`message-${message.message.id}-selectedtables-${index}`}
+                    key={`message-${message.message.id}-selectedtables-${result.result_id}-${index}`}
                   />
                 )) ||
                 (result.type === "SQL_QUERY_RUN_RESULT" && (
                   <DynamicTable
-                    key={`message-${message.message.id}-table-${index}`}
+                    key={`message-${message.message.id}-table-${result.linked_id}-${index}`}
                     data={result.content}
                   />
                 )) ||
                 (result.type === "SQL_QUERY_STRING_RESULT" && (
                   <CodeBlock
-                    key={`message-${message.message.id}-code-${index}`}
+                    key={`message-${message.message.id}-code-${result.result_id}-${index}`}
                     language="SQL_QUERY_STRING_RESULT"
                     code={result.content.sql}
                     resultId={result.result_id}
-                    updateMessage={updateData}
-                    updateCode={updateCode}
+                    updateSQLRunResult={updateData}
+                    updateSQLStringResult={updateCode}
                   />
                 )) ||
                 (result.type === "CHART_GENERATION_RESULT" && (
                   <Chart
-                    key={`message-${message.message.id}-chart-${index}`}
+                    key={`message-${message.message.id}-chart-${result.result_id}-${index}`}
                     data={JSON.parse(result.content.chartjs_json)}
                     createdAt={new Date(result.created_at as string)}
                   ></Chart>

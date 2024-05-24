@@ -109,7 +109,7 @@ class ChartGenerationResult(QueryResultSchema, StorableResultMixin, RenderableRe
 
     def serialize_result(self) -> ResultOut:
         return ResultOut(
-            content=self.model_dump(exclude={"ephemeral_id", "linked_id", "created_at"}),
+            content=self.model_dump(exclude={"result_id", "ephemeral_id", "linked_id", "created_at"}),
             type=self.result_type.value,
             result_id=self.result_id,
             linked_id=self.linked_id,
@@ -148,7 +148,7 @@ class SQLQueryStringResult(QueryResultSchema, StorableResultMixin, RenderableRes
 
     def serialize_result(self) -> ResultOut:
         return ResultOut(
-            content=self.model_dump(exclude={"ephemeral_id", "created_at"}),
+            content=self.model_dump(exclude={"result_id", "ephemeral_id", "created_at"}),
             type=self.result_type.value,
             result_id=self.result_id,
             created_at=self.created_at,
@@ -176,8 +176,12 @@ class SelectedTablesResult(QueryResultSchema, StorableResultMixin, RenderableRes
     def deserialize(cls, result: ResultModel) -> Self:
         return cls(tables=result.content.split(","), result_id=result.id)
 
-    def serialize_result(self: QueryResultSchema) -> ResultOut:
-        return ResultOut(content=self.model_dump(exclude={"ephemeral_id"}), type=self.result_type.value)
+    def serialize_result(self) -> ResultOut:
+        return ResultOut(
+            content=self.model_dump(exclude={"result_id", "ephemeral_id"}),
+            type=self.result_type.value,
+            result_id=self.result_id,
+        )
 
 
 ResultType = SQLQueryRunResult | SQLQueryStringResult | SelectedTablesResult | ChartGenerationResult

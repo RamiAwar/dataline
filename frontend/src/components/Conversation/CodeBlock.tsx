@@ -69,14 +69,14 @@ export const CodeBlock = ({
   code,
   language,
   resultId,
-  updateMessage,
-  updateCode,
+  updateSQLRunResult,
+  updateSQLStringResult,
 }: {
   code: string;
-  resultId?: string;
+  resultId: string;
   language: IResultType;
-  updateMessage: (arg: string) => void;
-  updateCode: (arg: string) => void;
+  updateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
+  updateSQLStringResult: (sql_string_result_id: string, arg: string) => void;
 }) => {
   const { conversationId } = useParams<{ conversationId: string }>();
 
@@ -93,7 +93,6 @@ export const CodeBlock = ({
   const extraSpace = "";
 
   const { mutate: updateSQL } = useUpdateSqlQuery();
-
   const {
     isPending,
     mutate: runSql,
@@ -101,9 +100,13 @@ export const CodeBlock = ({
     conversationId: conversationId || "",
     sql: savedCode.replace(/\s+/g, " "),
   }, {
-    onSettled: (data) => {
-      if (data) {
-        data?.content && updateMessage(data.content as string);
+    onSettled: (data, error) => {
+      if (error) {
+        console.log("onsettled error: ", error);
+      } else {
+        if (data?.content) {
+          updateSQLRunResult(resultId, data.content as string);
+        }
       }
     }
   });
@@ -245,7 +248,7 @@ export const CodeBlock = ({
               "group flex ml-auto gap-2 rounded-md p-1 dark:text-gray-400 bg-gray-700 transition-all duration-150 ease-in-out"
             )}
             onClick={() => {
-              updateCode(formattedCode);
+              updateSQLStringResult(resultId, formattedCode);
               runSql();
             }}
             disabled={isPending}
