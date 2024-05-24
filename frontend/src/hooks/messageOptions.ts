@@ -11,7 +11,7 @@ export interface IStorageMessageOptions {
   [connection_id: string]: IMessageOptions;
 }
 
-function readMessageOptions(
+function readMessageOptionsFromLocalStorage(
   connection_id: string | undefined
 ): IMessageOptions {
   if (connection_id == null) {
@@ -27,19 +27,19 @@ function readMessageOptions(
   }
 }
 
-export function getMessasgeOptions(
+export function getMessageOptions(
   connection_id: string | undefined,
   options = {}
 ) {
   return queryOptions({
     queryKey: ["MESSAGE_OPTIONS", connection_id],
-    queryFn: () => readMessageOptions(connection_id),
+    queryFn: () => readMessageOptionsFromLocalStorage(connection_id),
     retry: false,
     ...options,
   });
 }
 
-function patchMessageOptions(
+function saveMessageOptionsToLocalStorage(
   connection_id: string,
   changes: Partial<IMessageOptions>
 ) {
@@ -64,7 +64,7 @@ export function usePatchMessageOptions(connection_id: string, options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (changes: Partial<IMessageOptions>) =>
-      patchMessageOptions(connection_id, changes),
+      saveMessageOptionsToLocalStorage(connection_id, changes),
     onError() {
       enqueueSnackbar({
         variant: "error",
@@ -73,7 +73,7 @@ export function usePatchMessageOptions(connection_id: string, options = {}) {
     },
     onSuccess() {
       queryClient.invalidateQueries({
-        queryKey: getMessasgeOptions(connection_id).queryKey,
+        queryKey: getMessageOptions(connection_id).queryKey,
       });
     },
     ...options,

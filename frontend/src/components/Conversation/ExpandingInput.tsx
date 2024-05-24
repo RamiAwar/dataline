@@ -1,5 +1,5 @@
 import { PaperAirplaneIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { SetStateAction, useRef, useState } from "react";
+import { SetStateAction, useEffect, useRef, useState } from "react";
 
 import { Switch, SwitchField, SwitchGroup } from "../Catalyst/switch";
 import { Description, Fieldset, Label } from "../Catalyst/fieldset";
@@ -9,7 +9,7 @@ import { useClickOutside } from "@components/Library/utils";
 import { useQuery } from "@tanstack/react-query";
 
 import {
-  getMessasgeOptions,
+  getMessageOptions,
   usePatchMessageOptions,
   useGetRelatedConnection,
 } from "@/hooks";
@@ -25,23 +25,20 @@ function classNames(...classes: string[]) {
 
 type MessageSettingsPopupProps = {
   isShown: boolean;
-  setIsShown: (val: boolean) => void;
 };
 
 const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
   isShown,
-  setIsShown,
 }) => {
   const currConnection = useGetRelatedConnection();
   const { data: messageOptions } = useQuery(
-    getMessasgeOptions(currConnection?.id)
+    getMessageOptions(currConnection?.id)
   );
-  const { mutate } = usePatchMessageOptions(currConnection!.id);
+  const { mutate: patchMessageOptions } = usePatchMessageOptions(currConnection!.id);
   const settingsRef = useRef<HTMLDivElement | null>(null);
 
-  useClickOutside([settingsRef], () => {
-    setIsShown(false);
-  });
+
+
   // TODO: GREEN COG BACKGROUND IF ON
   // TODO: USE HEIGHT OF POPUP TO TRANSLATE UPWARD OR OTHER SOLUTION LIKE BOTTOM 0 RELATIVE TO SOMETHING ELSE
   return (
@@ -70,7 +67,7 @@ const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
               <Switch
                 checked={messageOptions?.secure_data}
                 onChange={(checked) => {
-                  mutate({ secure_data: checked });
+                  patchMessageOptions({ secure_data: checked });
                 }}
                 name="data_security"
               />
@@ -138,7 +135,6 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
 
       <MessageSettingsPopup
         isShown={messageSettingsShown}
-        setIsShown={setMessageSettingsShown}
       />
       <div
         onClick={() => setMessageSettingsShown((prev) => !prev)}

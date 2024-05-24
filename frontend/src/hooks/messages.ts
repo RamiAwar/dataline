@@ -10,7 +10,7 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { getBackendStatusQuery } from "@/hooks/settings";
 import { isAxiosError } from "axios";
-import { getMessasgeOptions } from "./messageOptions";
+import { getMessageOptions } from "./messageOptions";
 import { useGetRelatedConnection } from "./conversations";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
@@ -37,8 +37,9 @@ export function useSendMessage({
   const queryClient = useQueryClient();
   const current_connection = useGetRelatedConnection();
   const { data: messageOptions } = useQuery(
-    getMessasgeOptions(current_connection?.id)
+    getMessageOptions(current_connection?.id)
   );
+
   return useMutation({
     retry: false,
     mutationFn: async ({ message }: { message: string }) =>
@@ -101,7 +102,7 @@ export function useRunSql(
     conversationId: string;
     sql: string;
   },
-  options = {}
+  options: UseMutationOptions<IResult> = {}
 ) {
   return useMutation({
     mutationFn: async () => (await api.runSQL(conversationId, sql)).data,
