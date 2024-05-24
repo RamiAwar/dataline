@@ -92,27 +92,26 @@ export const CodeBlock = ({
   const BookmarkIcon = BookmarkIconOutline;
   const extraSpace = "";
 
-  const { mutate } = useUpdateSqlQuery();
+  const { mutate: updateSQL } = useUpdateSqlQuery();
 
   const {
     isPending,
-    data,
     mutate: runSql,
   } = useRunSql({
     conversationId: conversationId || "",
     sql: savedCode.replace(/\s+/g, " "),
+  }, {
+    onSettled: (data) => {
+      if (data) {
+        data?.content && updateMessage(data.content as string);
+      }
+    }
   });
 
   function saveNewSQLString() {
     if (!resultId) return;
-    mutate({ id: resultId, code: savedCode });
+    updateSQL({ id: resultId, code: savedCode });
   }
-
-  useEffect(() => {
-    if (data) {
-      data?.content && updateMessage(data.content as string);
-    }
-  }, [data, updateMessage]);
 
   useEffect(() => {
     try {

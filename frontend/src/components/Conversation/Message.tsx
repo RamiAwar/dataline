@@ -48,13 +48,13 @@ export const Message = ({
   }
 
   const updateCode = (code: string) => {
-    setMessage({
-      ...message,
-      results: message.results?.map((result) => {
+    setMessage(prevMessage => ({
+      ...prevMessage,
+      results: prevMessage.results?.map((result) => {
         if (result.type !== "SQL_QUERY_STRING_RESULT") return result;
         return { ...result, content: { ...result.content, sql: code } };
       }),
-    });
+    }));
   };
 
   return (

@@ -227,13 +227,13 @@ const runSQL = async (conversationId: string, code: string) => {
   ).data;
 };
 
-export type UpdateResultResult = ApiResponse<void>;
-const updateResult = async (resultId: string, code: string) => {
-  const response = await backendApi<UpdateResultResult>({
-    url: `/result/${resultId}`,
+export type UpdateSQLQueryStringResponse = ApiResponse<void>;
+const updateSQLQueryString = async (resultId: string, code: string) => {
+  const response = await backendApi<UpdateSQLQueryStringResponse>({
+    url: `/result/sql/${resultId}`,
     method: "patch",
     data: {
-      content: code,
+      sql: code,
     },
   });
   return response.data;
@@ -307,7 +307,7 @@ export const api = {
   createMessage,
   query,
   runSQL,
-  updateResult,
+  updateResult: updateSQLQueryString,
   getAvatar,
   updateAvatar,
   updateUserInfo,

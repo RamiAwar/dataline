@@ -1,8 +1,9 @@
 import { api } from "@/api";
-import { IMessageWithResultsOut } from "@/components/Library/types";
+import { IMessageWithResultsOut, IResult } from "@/components/Library/types";
 import {
   queryOptions,
   useMutation,
+  UseMutationOptions,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -92,13 +93,16 @@ export function useGetMessages(conversationId: string) {
   return result;
 }
 
-export function useRunSql({
-  conversationId,
-  sql,
-}: {
-  conversationId: string;
-  sql: string;
-}) {
+export function useRunSql(
+  {
+    conversationId,
+    sql,
+  }: {
+    conversationId: string;
+    sql: string;
+  },
+  options = {}
+) {
   return useMutation({
     mutationFn: async () => (await api.runSQL(conversationId, sql)).data,
     onError() {
@@ -110,6 +114,7 @@ export function useRunSql({
         message: "Query executed successfully",
       });
     },
+    ...options,
   });
 }
 
