@@ -199,7 +199,7 @@ export function Switch({
         aria-hidden="true"
         className={clsx(
           // Basic layout
-          "pointer-events-none relative inline-block size-[1.125rem] rounded-full sm:size-3.5",
+          "pointer-events-none relative inline-block w-[1.125rem] h-[1.125rem] size-[1.125rem] rounded-full sm:size-3.5 sm:w-3.5 sm:h-3.5",
 
           // Transition
           "translate-x-0 transition duration-200 ease-in-out",

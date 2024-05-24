@@ -1,7 +1,8 @@
 import logging
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 
 from dataline.models.conversation.schema import (
     ConversationOut,
@@ -9,7 +10,7 @@ from dataline.models.conversation.schema import (
     CreateConversationIn,
     UpdateConversationRequest,
 )
-from dataline.models.message.schema import MessageWithResultsOut
+from dataline.models.message.schema import MessageOptions, MessageWithResultsOut
 from dataline.old_models import SuccessListResponse, SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.conversation import ConversationService
@@ -87,14 +88,14 @@ async def delete_conversation(
     return await conversation_service.delete_conversation(session, conversation_id)
 
 
-@router.get("/conversation/{conversation_id}/query")
+@router.post("/conversation/{conversation_id}/query")
 async def query(
     conversation_id: UUID,
     query: str,
-    secure_data: bool = True,
+    message_options: Annotated[MessageOptions, Body(embed=True)],
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(),
 ) -> SuccessResponse[MessageWithResultsOut]:
     return SuccessResponse(
-        data=await conversation_service.query(session, conversation_id, query, secure_data=secure_data)
+        data=await conversation_service.query(session, conversation_id, query, secure_data=message_options.secure_data)
     )

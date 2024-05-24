@@ -15,7 +15,7 @@ class BaseMessageType(Enum):
 
 
 class MessageOptions(BaseModel):
-    secure_data: bool = False
+    secure_data: bool = True
 
 
 class MessageCreate(BaseModel):

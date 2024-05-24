@@ -1,6 +1,7 @@
 // import axios from "axios";
 import {
   IConversationWithMessagesWithResultsOut,
+  IMessageOptions,
   IMessageOut,
   IMessageWithResultsOut,
   IResult,
@@ -191,6 +192,7 @@ const createMessage = async (conversationId: number, content: string) => {
   return response.data;
 };
 
+export const DEFAULT_OPTIONS = { secure_data: true };
 export type MessageWithResultsOut = ApiResponse<{
   message: IMessageOut;
   results: (
@@ -202,12 +204,15 @@ export type MessageWithResultsOut = ApiResponse<{
 const query = async (
   conversationId: string,
   query: string,
-  execute: boolean
+  execute: boolean,
+  message_options: IMessageOptions = DEFAULT_OPTIONS
 ): Promise<MessageWithResultsOut> => {
   return (
     await backendApi<MessageWithResultsOut>({
       url: `/conversation/${conversationId}/query`,
       params: { query, execute },
+      data: { message_options },
+      method: "POST",
     })
   ).data;
 };

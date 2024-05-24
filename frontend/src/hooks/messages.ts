@@ -9,6 +9,8 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { getBackendStatusQuery } from "@/hooks/settings";
 import { isAxiosError } from "axios";
+import { getMessasgeOptions } from "./messageOptions";
+import { useGetRelatedConnection } from "./conversations";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
 
@@ -32,16 +34,20 @@ export function useSendMessage({
   execute?: boolean;
 }) {
   const queryClient = useQueryClient();
+  const current_connection = useGetRelatedConnection();
+  const { data: messageOptions } = useQuery(
+    getMessasgeOptions(current_connection?.id)
+  );
   return useMutation({
     retry: false,
     mutationFn: async ({ message }: { message: string }) =>
-      (await api.query(conversationId, message, execute)).data,
+      (await api.query(conversationId, message, execute, messageOptions)).data,
     onSuccess: (data, variables) => {
       queryClient.setQueryData(
         getMessagesQuery({ conversationId }).queryKey,
         (oldData) => {
           const newMessages: IMessageWithResultsOut[] = [
-            { message: { content: variables.message, role: "human", } },
+            { message: { content: variables.message, role: "human" } },
             { message: { ...data.message }, results: data.results },
           ];
           if (oldData == null) {
