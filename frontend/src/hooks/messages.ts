@@ -10,7 +10,7 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { getBackendStatusQuery } from "@/hooks/settings";
 import { isAxiosError } from "axios";
-import { getMessageOptions } from "./messageOptions";
+import { readMessageOptionsFromLocalStorage } from "./messageOptions";
 import { useGetRelatedConnection } from "./conversations";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
@@ -36,14 +36,16 @@ export function useSendMessage({
 }) {
   const queryClient = useQueryClient();
   const current_connection = useGetRelatedConnection();
-  const { data: messageOptions } = useQuery(
-    getMessageOptions(current_connection?.id)
-  );
 
   return useMutation({
     retry: false,
-    mutationFn: async ({ message }: { message: string }) =>
-      (await api.query(conversationId, message, execute, messageOptions)).data,
+    mutationFn: async ({ message }: { message: string }) => {
+      const messageOptions = readMessageOptionsFromLocalStorage(
+        current_connection?.id
+      );
+      return (await api.query(conversationId, message, execute, messageOptions))
+        .data;
+    },
     onSuccess: (data, variables) => {
       queryClient.setQueryData(
         getMessagesQuery({ conversationId }).queryKey,

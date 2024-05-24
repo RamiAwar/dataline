@@ -5,14 +5,14 @@ import { Switch, SwitchField, SwitchGroup } from "../Catalyst/switch";
 import { Description, Fieldset, Label } from "../Catalyst/fieldset";
 
 import { Transition } from "@headlessui/react";
-import { useClickOutside } from "@components/Library/utils";
-import { useQuery } from "@tanstack/react-query";
 
 import {
-  getMessageOptions,
-  usePatchMessageOptions,
   useGetRelatedConnection,
+  readMessageOptionsFromLocalStorage,
+  saveMessageOptionsToLocalStorage,
 } from "@/hooks";
+import { useClickOutside } from "../Library/utils";
+import { useLocation } from "react-router-dom";
 
 type ExpandingInputProps = {
   onSubmit: (value: string) => void;
@@ -25,21 +25,29 @@ function classNames(...classes: string[]) {
 
 type MessageSettingsPopupProps = {
   isShown: boolean;
+  setIsShown: (val: boolean) => void;
+  settingsCogRef: React.MutableRefObject<HTMLDivElement | null>;
 };
 
 const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
   isShown,
+  setIsShown,
+  settingsCogRef: cogRef,
 }) => {
+  const location = useLocation();
   const currConnection = useGetRelatedConnection();
-  const { data: messageOptions } = useQuery(
-    getMessageOptions(currConnection?.id)
+
+  const [messageOptions, setMessageOptions] = useState(() =>
+    readMessageOptionsFromLocalStorage(currConnection?.id)
   );
-  const { mutate: patchMessageOptions } = usePatchMessageOptions(currConnection!.id);
-  const settingsRef = useRef<HTMLDivElement | null>(null);
+  const settingsPopupRef = useRef<HTMLDivElement | null>(null);
+  useClickOutside([settingsPopupRef, cogRef], () => {
+    setIsShown(false);
+  });
+  useEffect(() => {
+    setMessageOptions(readMessageOptionsFromLocalStorage(currConnection?.id));
+  }, [location, currConnection]);
 
-
-
-  // TODO: GREEN COG BACKGROUND IF ON
   // TODO: USE HEIGHT OF POPUP TO TRANSLATE UPWARD OR OTHER SOLUTION LIKE BOTTOM 0 RELATIVE TO SOMETHING ELSE
   return (
     <Transition
@@ -52,7 +60,7 @@ const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
       leaveTo="opacity-0"
     >
       <div
-        ref={settingsRef}
+        ref={settingsPopupRef}
         className={classNames(
           "absolute left-0 -top-24 border p-4 bg-gray-900 border-gray-600 rounded-xl"
         )}
@@ -65,9 +73,16 @@ const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
                 Hide your data from the AI model
               </Description>
               <Switch
+                color="teal"
                 checked={messageOptions?.secure_data}
                 onChange={(checked) => {
-                  patchMessageOptions({ secure_data: checked });
+                  setMessageOptions((prevOptions) => ({
+                    ...prevOptions,
+                    secure_data: !prevOptions.secure_data,
+                  }));
+                  saveMessageOptionsToLocalStorage(currConnection!.id, {
+                    secure_data: checked,
+                  });
                 }}
                 name="data_security"
               />
@@ -78,13 +93,14 @@ const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
     </Transition>
   );
 };
-
 const ExpandingInput: React.FC<ExpandingInputProps> = ({
   onSubmit,
   disabled,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [messageSettingsShown, setMessageSettingsShown] = useState(false);
+
+  const settingsCogRef = useRef<HTMLDivElement | null>(null);
 
   const handleChange = (e: {
     target: {
@@ -135,9 +151,14 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
 
       <MessageSettingsPopup
         isShown={messageSettingsShown}
+        setIsShown={setMessageSettingsShown}
+        settingsCogRef={settingsCogRef}
       />
       <div
-        onClick={() => setMessageSettingsShown((prev) => !prev)}
+        ref={settingsCogRef}
+        onClick={() => {
+          setMessageSettingsShown((prev) => !prev);
+        }}
         className={
           "hover:cursor-pointer hover:bg-white/10 group absolute left-0 dark:text-gray-400 ml-2 p-1 rounded-md transition-all duration-150"
         }
