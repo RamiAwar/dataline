@@ -48,7 +48,6 @@ const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
     setMessageOptions(readMessageOptionsFromLocalStorage(currConnection?.id));
   }, [location, currConnection]);
 
-  // TODO: USE HEIGHT OF POPUP TO TRANSLATE UPWARD OR OTHER SOLUTION LIKE BOTTOM 0 RELATIVE TO SOMETHING ELSE
   return (
     <Transition
       show={isShown}
@@ -62,16 +61,14 @@ const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
       <div
         ref={settingsPopupRef}
         className={classNames(
-          "absolute left-0 -top-24 border p-4 bg-gray-900 border-gray-600 rounded-xl"
+          "absolute left-0 bottom-1 border p-4 bg-gray-900 border-gray-600 rounded-xl"
         )}
       >
         <Fieldset>
           <SwitchGroup>
             <SwitchField>
               <Label>Data Security</Label>
-              <Description className={"truncate"}>
-                Hide your data from the AI model
-              </Description>
+              <Description>Hide your data from the AI model</Description>
               <Switch
                 color="teal"
                 checked={messageOptions?.secure_data}
@@ -148,12 +145,13 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
         onChange={handleChange}
         onKeyDown={handleKeyPress}
       />
-
-      <MessageSettingsPopup
-        isShown={messageSettingsShown}
-        setIsShown={setMessageSettingsShown}
-        settingsCogRef={settingsCogRef}
-      />
+      <div className="absolute left-0 top-0 w-full">
+        <MessageSettingsPopup
+          isShown={messageSettingsShown}
+          setIsShown={setMessageSettingsShown}
+          settingsCogRef={settingsCogRef}
+        />
+      </div>
       <div
         ref={settingsCogRef}
         onClick={() => {
