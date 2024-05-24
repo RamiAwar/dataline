@@ -49,7 +49,7 @@ const Chart = ({
                 chartInstanceRef.current.destroy(); // Destroy the chart instance when the component unmounts
             }
         };
-    }, []);
+    }, [data]);
 
     const saveCanvas = () => {
         if (chartInstanceRef.current) {
