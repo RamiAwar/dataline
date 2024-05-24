@@ -34,6 +34,23 @@ const Chart = ({
     const chartRef = useRef<HTMLCanvasElement>(null);
     const chartInstanceRef = useRef<ChartJS | null>(null); // Add a useRef to store the chart instance
 
+    // Update the chart when the tab becomes visible again after a while
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                if (chartInstanceRef.current) {
+                    chartInstanceRef.current.update();
+                }
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
+
     useEffect(() => {
         if (chartRef.current) {
             if (chartInstanceRef.current) {
