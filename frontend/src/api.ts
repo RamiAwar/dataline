@@ -193,22 +193,26 @@ const createMessage = async (conversationId: number, content: string) => {
 };
 
 export const DEFAULT_OPTIONS = { secure_data: true };
-export type MessageWithResultsOut = ApiResponse<{
+type MessageWithResultsOut = {
   message: IMessageOut;
   results: (
     | ISelectedTablesResult
     | ISQLQueryRunResult
     | ISQLQueryStringResult
   )[];
+};
+export type QueryOut = ApiResponse<{
+  human_message: IMessageOut;
+  ai_message: MessageWithResultsOut;
 }>;
 const query = async (
   conversationId: string,
   query: string,
   execute: boolean,
   message_options: IMessageOptions = DEFAULT_OPTIONS
-): Promise<MessageWithResultsOut> => {
+): Promise<QueryOut> => {
   return (
-    await backendApi<MessageWithResultsOut>({
+    await backendApi<QueryOut>({
       url: `/conversation/${conversationId}/query`,
       params: { query, execute },
       data: { message_options },

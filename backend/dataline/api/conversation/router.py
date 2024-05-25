@@ -10,7 +10,7 @@ from dataline.models.conversation.schema import (
     CreateConversationIn,
     UpdateConversationRequest,
 )
-from dataline.models.message.schema import MessageOptions, MessageWithResultsOut
+from dataline.models.message.schema import MessageOptions, MessageWithResultsOut, QueryOut
 from dataline.old_models import SuccessListResponse, SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.conversation import ConversationService
@@ -95,7 +95,7 @@ async def query(
     message_options: Annotated[MessageOptions, Body(embed=True)],
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(),
-) -> SuccessResponse[MessageWithResultsOut]:
+) -> SuccessResponse[QueryOut]:
     return SuccessResponse(
         data=await conversation_service.query(session, conversation_id, query, secure_data=message_options.secure_data)
     )

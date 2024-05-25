@@ -20,6 +20,7 @@ from dataline.models.message.schema import (
     MessageOptions,
     MessageOut,
     MessageWithResultsOut,
+    QueryOut,
 )
 from dataline.models.result.model import ResultModel
 from dataline.models.result.schema import ResultUpdate
@@ -103,7 +104,7 @@ class ConversationService:
         conversation_id: UUID,
         query: str,
         secure_data: bool = True,
-    ) -> MessageWithResultsOut:
+    ) -> QueryOut:
         # Get conversation, connection, user settings
         conversation = await self.get_conversation(session, conversation_id=conversation_id)
         connection = await self.connection_service.get_connection(session, connection_id=conversation.connection_id)
@@ -116,7 +117,7 @@ class ConversationService:
         history = await self.get_conversation_history(session, conversation_id)
 
         # Store human message and final AI message without flushing
-        await self.message_repo.create(
+        human_message = await self.message_repo.create(
             session,
             MessageCreate(
                 role=BaseMessageType.HUMAN.value,
@@ -192,9 +193,12 @@ class ConversationService:
             result.serialize_result() for result in results if isinstance(result, RenderableResultMixin)
         ]
 
-        return MessageWithResultsOut(
-            message=MessageOut.model_validate(stored_ai_message),
-            results=serialized_results,
+        return QueryOut(
+            human_message=MessageOut.model_validate(human_message),
+            ai_message=MessageWithResultsOut(
+                message=MessageOut.model_validate(stored_ai_message),
+                results=serialized_results,
+            ),
         )
 
     async def get_conversation_history(self, session: AsyncSession, conversation_id: UUID) -> list[BaseMessage]:
