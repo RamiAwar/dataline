@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import Depends
@@ -61,8 +62,9 @@ class ResultService:
         updated_content = ChartGenerationResultContent(
             chartjs_json=updated_chartjs_json, chart_type=chart_content.chart_type
         )
+        updated_date = datetime.now()
         await self.result_repo.update_by_uuid(
-            session, result_id, ResultUpdate(content=updated_content.model_dump_json())
+            session, result_id, ResultUpdate(created_at=updated_date, content=updated_content.model_dump_json())
         )
 
-        return ChartRefreshOut(chartjs_json=updated_chartjs_json)
+        return ChartRefreshOut(chartjs_json=updated_chartjs_json, created_at=updated_date)

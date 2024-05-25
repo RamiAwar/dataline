@@ -70,13 +70,11 @@ export const CodeBlock = ({
   language,
   resultId,
   updateSQLRunResult,
-  updateSQLStringResult,
 }: {
   code: string;
   resultId: string;
   language: IResultType;
   updateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
-  updateSQLStringResult: (sql_string_result_id: string, arg: string) => void;
 }) => {
   const { conversationId } = useParams<{ conversationId: string }>();
 
@@ -196,7 +194,6 @@ export const CodeBlock = ({
       onKeyDown={() => textareaRef.current?.focus()}
       onClick={() => textareaRef.current?.focus()}
     >
-      {/** TODO: Get the cursor to follow the reformatted text - make it based on index maybe? */}
       <textarea
         spellCheck={false}
         ref={textareaRef}
@@ -248,7 +245,6 @@ export const CodeBlock = ({
               "group flex ml-auto gap-2 rounded-md p-1 dark:text-gray-400 bg-gray-700 transition-all duration-150 ease-in-out"
             )}
             onClick={() => {
-              updateSQLStringResult(resultId, formattedCode);
               runSql();
             }}
             disabled={isPending}

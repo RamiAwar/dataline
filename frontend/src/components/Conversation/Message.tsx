@@ -33,8 +33,6 @@ export const Message = ({
         (result) => !(result.type === "SQL_QUERY_RUN_RESULT" && result.linked_id === sql_string_result_id)
       );
 
-      console.log("filtered res: ", newResults)
-
       const updatedMessage = {
         ...message,
         results: [
@@ -46,30 +44,9 @@ export const Message = ({
           },
         ],
       } as IMessageWithResultsOut;
-
-      console.log("updatedres: ", updatedMessage.results)
       setMessage(updatedMessage);
     }
   }
-
-  const updateCode = (sql_string_result_id: string, code: string) => {
-    setMessage(prevMessage => ({
-      ...prevMessage,
-      results: prevMessage.results?.map((result) => {
-        if (result.type === "SQL_QUERY_STRING_RESULT" && result.result_id === sql_string_result_id) {
-          return {
-            ...result,
-            content: {
-              ...result.content,
-              sql: code,
-            },
-          };
-        } else {
-          return result;
-        }
-      }),
-    }));
-  };
 
   return (
     <div
@@ -143,31 +120,30 @@ export const Message = ({
                 (result.type === "SELECTED_TABLES" && (
                   <SelectedTablesDisplay
                     tables={result.content.tables}
-                    key={`message-${message.message.id}-selectedtables-${result.result_id}-${index}`}
+                    key={`message-${message.message.id}-selectedtables-${result.result_id}`}
                   />
                 )) ||
                 (result.type === "SQL_QUERY_RUN_RESULT" && (
                   <DynamicTable
-                    key={`message-${message.message.id}-table-${result.linked_id}-${index}`}
+                    key={`message-${message.message.id}-table-${result.linked_id}`}
                     data={result.content}
                   />
                 )) ||
                 (result.type === "SQL_QUERY_STRING_RESULT" && (
                   <CodeBlock
-                    key={`message-${message.message.id}-code-${result.result_id}-${index}`}
+                    key={`message-${message.message.id}-code-${result.result_id}`}
                     language="SQL_QUERY_STRING_RESULT"
                     code={result.content.sql}
                     resultId={result.result_id}
                     updateSQLRunResult={updateData}
-                    updateSQLStringResult={updateCode}
                   />
                 )) ||
                 (result.type === "CHART_GENERATION_RESULT" && (
                   <Chart
                     resultId={result.result_id}
-                    key={`message-${message.message.id}-chart-${result.result_id}-${index}`}
+                    key={`message-${message.message.id}-chart-${result.result_id}`}
                     initialData={JSON.parse(result.content.chartjs_json)}
-                    createdAt={new Date(result.created_at as string)}
+                    initialCreatedAt={new Date(result.created_at as string)}
                   ></Chart>
                 ))
             )}

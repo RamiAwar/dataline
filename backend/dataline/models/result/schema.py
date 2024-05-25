@@ -17,6 +17,7 @@ class ResultCreate(BaseModel):
 
 
 class ResultUpdate(BaseModel):
+    created_at: datetime | None = None
     content: str | None = None
     linked_id: UUID | None = None
 
@@ -43,4 +44,5 @@ class ResultOut(BaseModel):  # type: ignore[misc]
 class ChartRefreshOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    created_at: datetime
     chartjs_json: str

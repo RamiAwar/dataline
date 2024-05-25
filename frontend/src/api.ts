@@ -296,6 +296,7 @@ const getUserInfo = async () => {
 
 
 export type RefreshChartResult = ApiResponse<{
+  created_at: string;
   chartjs_json: string;
 }>;
 const refreshChart = async (chartResultId: string) => {

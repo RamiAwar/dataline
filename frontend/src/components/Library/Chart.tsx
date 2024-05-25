@@ -34,12 +34,13 @@ const canvasBackgroundColorPlugin = {
 const Chart = ({
   resultId,
   initialData,
-  createdAt,
+  initialCreatedAt,
 }: {
   resultId: string;
   initialData: ChartConfiguration;
-  createdAt?: Date;
+  initialCreatedAt: Date;
 }) => {
+  const [createdAt, setCreatedAt] = useState<Date>(initialCreatedAt);
   const [chartData, setChartData] = useState<ChartConfiguration>(initialData);
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<ChartJS | null>(null); // Add a useRef to store the chart instance
@@ -98,6 +99,7 @@ const Chart = ({
       if (error || !data?.data.chartjs_json) {
         console.error("Error refreshing chart", error);
       } else {
+        setCreatedAt(new Date(data?.data.created_at));
         setChartData(JSON.parse(data?.data.chartjs_json));
       }
     },
