@@ -217,7 +217,6 @@ export const CodeBlock = ({
           <button
             tabIndex={-1}
             onClick={saveNewSQLString}
-            className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out"
           >
             <BookmarkIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
@@ -228,7 +227,6 @@ export const CodeBlock = ({
           <button
             tabIndex={-1}
             onClick={() => copyToClipboard(savedCode)}
-            className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out"
           >
             <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
@@ -238,12 +236,6 @@ export const CodeBlock = ({
         <CustomTooltip hoverText="Run">
           <button
             tabIndex={-1}
-            className={classNames(
-              !isPending
-                ? "hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100"
-                : "",
-              "group flex ml-auto gap-2 rounded-md p-1 dark:text-gray-400 bg-gray-700 transition-all duration-150 ease-in-out"
-            )}
             onClick={() => {
               runSql();
             }}

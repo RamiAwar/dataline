@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { Chart as ChartJS, ChartConfiguration } from "chart.js/auto";
+import { Chart as ChartJS, ChartConfiguration, ChartTypeRegistry } from "chart.js/auto";
 import { CustomTooltip } from "./Tooltip";
 import {
   ArrowDownTrayIcon,
@@ -10,6 +10,7 @@ import {
   ClipboardIcon,
 } from "@heroicons/react/24/outline";
 import { useRefreshChartData } from "@/hooks";
+import { Select } from "@catalyst/select";
 
 ChartJS.defaults.borderColor = "#334155";
 ChartJS.defaults.color = "#eee";
@@ -42,6 +43,7 @@ const Chart = ({
 }) => {
   const [createdAt, setCreatedAt] = useState<Date>(initialCreatedAt);
   const [chartData, setChartData] = useState<ChartConfiguration>(initialData);
+
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<ChartJS | null>(null); // Add a useRef to store the chart instance
 
@@ -147,13 +149,16 @@ const Chart = ({
         </div>
       )}
       <div className="absolute top-0 right-0 m-2 flex gap-1">
+        <Select value={chartData.type} onChange={(e) => setChartData({ ...chartData, type: e.target.value as keyof ChartTypeRegistry })}>
+          <option value="bar">Bar</option>
+          <option value="line">Line</option>
+          <option value="doughnut">Doughnut</option>
+        </Select>
         <CustomTooltip hoverText="Refresh">
           <button
             tabIndex={-1}
             onClick={triggerRefreshChart}
-            className={
-              "group flex ml-auto gap-2 rounded-md p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50 transition-all duration-150 ease-in-out"
-            }
+
           >
             <ArrowPathIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
@@ -164,16 +169,13 @@ const Chart = ({
           <button
             tabIndex={-1}
             onClick={saveCanvas}
-            className={
-              "group flex ml-auto gap-2 rounded-md p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50 transition-all duration-150 ease-in-out"
-            }
           >
             <ArrowDownTrayIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
 
         <CustomTooltip
-          hoverText={window.ClipboardItem ? "Copy" : ""}
+          hoverText={window.ClipboardItem ? "Copy" : "Not supported in this browser"}
           clickText="COPIED!"
         >
           <button
@@ -182,9 +184,8 @@ const Chart = ({
             onClick={copyCanvasToClipboard}
             className={classNames(
               window.ClipboardItem
-                ? "bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 transition-all duration-150 ease-in-out"
-                : "bg-gray-500/10",
-              "text-gray-100/50 group flex ml-auto gap-2 rounded-md p-1"
+                ? "transition-all duration-150 ease-in-out"
+                : "cursor-not-allowed",
             )}
           >
             <ClipboardIcon
