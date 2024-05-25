@@ -1,10 +1,11 @@
 // Create a chart component that takes in a dictionary of data and renders a chart using Chart.js.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Chart as ChartJS, ChartConfiguration } from "chart.js/auto";
 import { CustomTooltip } from "./Tooltip";
-import { ArrowDownTrayIcon, ClipboardIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, ArrowPathIcon, ClipboardIcon } from "@heroicons/react/24/outline";
+import { useRefreshChartData } from "@/hooks";
 
 ChartJS.defaults.borderColor = '#334155';
 ChartJS.defaults.color = '#eee';
@@ -25,12 +26,15 @@ const canvasBackgroundColorPlugin = {
 
 
 const Chart = ({
-    data,
-    createdAt
+    resultId,
+    initialData,
+    createdAt,
 }: {
-    data: ChartConfiguration,
+    resultId: string,
+    initialData: ChartConfiguration,
     createdAt?: Date,
 }) => {
+    const [chartData, setChartData] = useState<ChartConfiguration>(initialData);
     const chartRef = useRef<HTMLCanvasElement>(null);
     const chartInstanceRef = useRef<ChartJS | null>(null); // Add a useRef to store the chart instance
 
@@ -51,6 +55,7 @@ const Chart = ({
         };
     }, []);
 
+    // Resize the canvas when the window is resized
     useEffect(() => {
         const handleResize = () => {
             if (chartInstanceRef.current) {
@@ -65,14 +70,14 @@ const Chart = ({
         };
     }, []);
 
+    // Refresh the chart data when the data prop changes
     useEffect(() => {
         if (chartRef.current) {
             if (chartInstanceRef.current) {
                 chartInstanceRef.current.destroy(); // Destroy the existing chart instance
             }
-            data.plugins = [canvasBackgroundColorPlugin];
-
-            chartInstanceRef.current = new ChartJS(chartRef.current, data);
+            chartData.plugins = [canvasBackgroundColorPlugin];
+            chartInstanceRef.current = new ChartJS(chartRef.current, chartData);
         }
 
         return () => {
@@ -80,7 +85,25 @@ const Chart = ({
                 chartInstanceRef.current.destroy(); // Destroy the chart instance when the component unmounts
             }
         };
-    }, [data]);
+    }, [chartData]);
+
+    const {
+        mutate: refreshChart,
+    } = useRefreshChartData(
+        {
+            onSettled: (data, error) => {
+                if (error || !data?.data.chartjs_json) {
+                    console.error("Error refreshing chart", error);
+                } else {
+                    setChartData(JSON.parse(data?.data.chartjs_json))
+                }
+            }
+        }
+    );
+
+    const triggerRefreshChart = () => {
+        refreshChart({ chartResultId: resultId });
+    }
 
     const saveCanvas = () => {
         if (chartInstanceRef.current) {
@@ -121,6 +144,18 @@ const Chart = ({
                 </div>
             )}
             <div className="absolute top-0 right-0 m-2 flex gap-1">
+                <CustomTooltip hoverText="Refresh">
+                    <button
+                        tabIndex={-1}
+                        onClick={triggerRefreshChart}
+                        className={
+                            "group flex ml-auto gap-2 rounded-md p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50 transition-all duration-150 ease-in-out"
+                        }
+                    >
+                        <ArrowPathIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+                    </button>
+                </CustomTooltip>
+
                 {/* Save Icon */}
                 <CustomTooltip hoverText="Save">
                     <button

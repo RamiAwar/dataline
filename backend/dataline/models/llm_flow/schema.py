@@ -59,12 +59,16 @@ class RenderableResultMixin(abc.ABC):
         raise NotImplementedError
 
 
-class SQLQueryRunResult(QueryResultSchema, RenderableResultMixin):  # type: ignore[misc]
+# TODO: Create subtypes for charting validated data (constraints on rows length and such, based on chart type)
+class QueryRunData(BaseModel):  # type: ignore[misc]
+    columns: list[str]
+    rows: list[list[Any] | Any]  # type: ignore[misc]
+
+
+class SQLQueryRunResult(QueryRunData, QueryResultSchema, RenderableResultMixin):  # type: ignore[misc]
     result_type: ClassVar[QueryResultType] = QueryResultType.SQL_QUERY_RUN_RESULT
     linked_id: UUID  # Links this result to it's parent query result.
 
-    columns: list[str]
-    rows: list[list[Any] | Any]  # type: ignore[misc]
     is_secure: bool = False
 
     for_chart: bool = False
@@ -78,17 +82,25 @@ class SQLQueryRunResult(QueryResultSchema, RenderableResultMixin):  # type: igno
         )
 
 
+class ChartGenerationResultContent(BaseModel):
+    chartjs_json: str
+    chart_type: str
+
+
 class ChartGenerationResult(QueryResultSchema, StorableResultMixin, RenderableResultMixin):
     result_type: ClassVar[QueryResultType] = QueryResultType.CHART_GENERATION_RESULT
     linked_id: UUID
     chartjs_json: str
+    chart_type: str
 
     # Implement storage for chart generation results with data
     async def store_result(
         self, session: AsyncSession, result_repo: ResultRepository, message_id: UUID, linked_id: UUID | None = None
     ) -> ResultModel:
         create = ResultCreate(
-            content=self.chartjs_json,
+            content=ChartGenerationResultContent(
+                chartjs_json=self.chartjs_json, chart_type=self.chart_type
+            ).model_dump_json(),
             type=self.result_type.value,
             message_id=message_id,
             linked_id=linked_id,
@@ -102,9 +114,13 @@ class ChartGenerationResult(QueryResultSchema, StorableResultMixin, RenderableRe
     def deserialize(cls, result: ResultModel) -> Self:
         if not result.linked_id:
             raise ValueError("Attempting to deserialize a chart generation result without a linked_id")
-
+        content = ChartGenerationResultContent.model_validate_json(result.content)
         return cls(
-            chartjs_json=result.content, result_id=result.id, linked_id=result.linked_id, created_at=result.created_at
+            chartjs_json=content.chartjs_json,
+            result_id=result.id,
+            linked_id=result.linked_id,
+            created_at=result.created_at,
+            chart_type=content.chart_type,
         )
 
     def serialize_result(self) -> ResultOut:

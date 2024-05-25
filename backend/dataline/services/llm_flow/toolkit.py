@@ -17,6 +17,7 @@ from dataline.models.llm_flow.schema import (
     ChartGenerationResult,
     QueryOptions,
     QueryResultSchema,
+    QueryRunData,
     SelectedTablesResult,
     SQLQueryRunResult,
     SQLQueryStringResult,
@@ -33,6 +34,14 @@ class QueryGraphStateUpdate(TypedDict):
     results: Sequence[QueryResultSchema]
 
 
+class RunException(Exception):
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(message)
+
+
 def truncate_word(content: Any, *, length: int, suffix: str = "...") -> str:  # type: ignore[misc]
     """
     Truncate a string to a certain number of words, based on the max string
@@ -46,6 +55,59 @@ def truncate_word(content: Any, *, length: int, suffix: str = "...") -> str:  # 
         return content
 
     return content[: length - len(suffix)].rsplit(" ", 1)[0] + suffix
+
+
+def execute_sql_query(
+    db: SQLDatabase, query: str, for_chart: bool = False, chart_type: Optional[ChartType] = None
+) -> QueryRunData:
+    """Execute the SQL query and return the results or an error message."""
+    result = cast(Result[Any], db.run(query, fetch="cursor", include_columns=True))  # type: ignore[misc]
+    truncated_rows = []
+    for row in result.fetchall():
+        # truncate each column, then convert the row to a tuple
+        truncated_row = tuple(truncate_word(column, length=db._max_string_length) for column in row)
+        truncated_rows.append(truncated_row)
+
+    if for_chart:
+        if chart_type in [ChartType.bar, ChartType.line, ChartType.doughnut]:
+            # These chart types take in single dimensional data for labels and values
+            # Validate that each row has only 1 element
+            if not truncated_rows:
+                raise RunException("No data returned from the query.")
+
+            row = truncated_rows[0]
+            if len(row) != 2:
+                raise RunException(
+                    f"Validation of results output format failed. You chose {len(row)} columns in the select statement."
+                    f"You selected: {row}\n"
+                    "Please select only two of them for the chart X and Y axes (labels and values respectively)."
+                )
+
+    columns = list(result.keys())
+    return QueryRunData(columns=columns, rows=truncated_rows)
+
+
+def query_run_result_to_chart_json(chart_json: str, chart_type: ChartType, query_run_data: QueryRunData) -> str:
+    """
+    Insert query run result data into the chartjs JSON.
+    This assumes that the query run data is properly validated for charting purposes!
+
+    Args:
+        chart_json: The chartjs JSON string (can be a template or already populated)
+        chart_type: The type of chart to generate (used to format the chartjs JSON)
+        query_run_result: The result of the SQL query execution.
+    """
+    if chart_type in [ChartType.bar, ChartType.line, ChartType.doughnut]:
+        # Insert the flattened query result data into the chartjs JSON
+        flattened_labels = [row[0] for row in query_run_data.rows]
+        flattened_values = [row[1] for row in query_run_data.rows]
+
+        formatted_json = json.loads(chart_json)
+        formatted_json["data"]["labels"] = flattened_labels
+        formatted_json["data"]["datasets"][0]["data"] = flattened_values
+        return json.dumps(formatted_json)
+    else:
+        raise NotImplementedError(f"Chart type {chart_type} is not supported.")
 
 
 class ToolNames:
@@ -167,14 +229,6 @@ class _QuerySQLDataBaseToolInput(BaseModel):
     chart_type: ChartType | None = Field(default=None, description="If for chart, the type of chart to generate.")
 
 
-class RunException(Exception):
-    message: str
-
-    def __init__(self, message: str):
-        self.message = message
-        super().__init__(message)
-
-
 class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
     """Tool for querying a SQL database."""
 
@@ -192,30 +246,9 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         for_chart: bool = False,
         chart_type: Optional[ChartType] = None,
         run_manager: Optional[CallbackManagerForToolRun] = None,
-    ) -> (list[str], list[list[Any] | Any], bool):  # type: ignore[misc]
+    ) -> tuple[QueryRunData, bool]:  # type: ignore[misc]
         """Execute the query, return the results or an error message."""
-        result = cast(Result[Any], self.db.run(query, fetch="cursor", include_columns=True))  # type: ignore[misc]
-        truncated_rows = []
-        for row in result.fetchall():
-            # truncate each column, then convert the row to a tuple
-            truncated_row = tuple(truncate_word(column, length=self.db._max_string_length) for column in row)
-            truncated_rows.append(truncated_row)
-
-        if for_chart:
-            # Validate that each row has only 1 element
-            # current chart types support single dimensional data only
-            if not truncated_rows:
-                raise RunException("No data returned from the query.")
-
-            row = truncated_rows[0]
-            if len(row) != 2:
-                raise RunException(
-                    f"Validation of results output format failed. You chose {len(row)} columns in the select statement."
-                    f"You selected: {row}\n Please select only two of them for the chart X and Y axes."
-                )
-
-        columns = list(result.keys())
-        return (columns, truncated_rows, for_chart)
+        return execute_sql_query(self.db, query, for_chart, chart_type), for_chart
 
     def get_response(  # type: ignore[misc]
         self,
@@ -232,9 +265,12 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
 
         # Add query run result to results
         try:
-            columns, rows, for_chart = self.run(args)
+            query_run_data, for_chart = cast(tuple[QueryRunData, bool], self.run(args))
             response = SQLQueryRunResult(
-                columns=columns, rows=rows, for_chart=for_chart, linked_id=query_string_result.ephemeral_id
+                columns=query_run_data.columns,
+                rows=query_run_data.rows,
+                for_chart=for_chart,
+                linked_id=query_string_result.ephemeral_id,
             )
             response.is_secure = state.options.secure_data  # return whether or not generated securely
             results.append(response)
@@ -406,11 +442,12 @@ class ChartGeneratorTool(StateUpdaterTool):
         messages: list[BaseMessage] = []
         results: list[QueryResultSchema] = []
 
+        chart_type = ChartType[args["chart_type"]]
         generate_chart_call = GenerateChartCall(
             api_key=state.options.openai_api_key.get_secret_value(),
             chart_type=args["chart_type"],
             request=args["request"],
-            chartjs_template=TEMPLATES[ChartType[args["chart_type"]]],
+            chartjs_template=TEMPLATES[chart_type],
         )
         res = generate_chart_call.extract()
 
@@ -431,18 +468,16 @@ class ChartGeneratorTool(StateUpdaterTool):
             )
             return state_update(messages=messages)
 
-        # Insert the flattened query result data into the chartjs JSON
-        flattened_labels = [row[0] for row in last_data_result.rows]
-        flattened_values = [row[1] for row in last_data_result.rows]
-
         try:
-            formatted_json = json.loads(res.chartjs_json)
-            formatted_json["data"]["labels"] = flattened_labels
-            formatted_json["data"]["datasets"][0]["data"] = flattened_values
+            chart_json = query_run_result_to_chart_json(
+                chart_json=res.chartjs_json,
+                chart_type=chart_type,
+                query_run_data=last_data_result,
+            )
 
             # Link to same SQL query string result as the run result does
             result = ChartGenerationResult(
-                chartjs_json=json.dumps(formatted_json), linked_id=last_data_result.linked_id
+                chartjs_json=chart_json, chart_type=chart_type.value, linked_id=last_data_result.linked_id
             )
             results.append(result)
 
@@ -456,7 +491,7 @@ class ChartGeneratorTool(StateUpdaterTool):
             messages.append(tool_message)
         except json.JSONDecodeError as e:
             message = ToolMessage(
-                content=f"ERROR: Failed decode chart json. Plese try regenerating the chart: {e.msg}",
+                content=f"ERROR: Failed to decode chart json. Plese try regenerating the chart: {e.msg}",
                 name=self.name,
                 tool_call_id=call_id,
             )

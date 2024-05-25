@@ -164,8 +164,9 @@ export const Message = ({
                 )) ||
                 (result.type === "CHART_GENERATION_RESULT" && (
                   <Chart
+                    resultId={result.result_id}
                     key={`message-${message.message.id}-chart-${result.result_id}-${index}`}
-                    data={JSON.parse(result.content.chartjs_json)}
+                    initialData={JSON.parse(result.content.chartjs_json)}
                     createdAt={new Date(result.created_at as string)}
                   ></Chart>
                 ))

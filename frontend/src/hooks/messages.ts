@@ -1,6 +1,7 @@
-import { api } from "@/api";
+import { api, RefreshChartResult } from "@/api";
 import { IMessageWithResultsOut, IResult } from "@/components/Library/types";
 import {
+  DefaultError,
   queryOptions,
   useMutation,
   UseMutationOptions,
@@ -116,6 +117,25 @@ export function useUpdateSqlQuery(options = {}) {
       enqueueSnackbar({
         variant: "success",
         message: "Query updated successfully",
+      });
+    },
+    ...options,
+  });
+}
+
+
+export function useRefreshChartData(
+  options: UseMutationOptions<RefreshChartResult, DefaultError, { chartResultId: string }>
+) {
+  return useMutation({
+    mutationFn: async ({ chartResultId }: { chartResultId: string }) => await api.refreshChart(chartResultId),
+    onError() {
+      enqueueSnackbar({ variant: "error", message: "Error refreshing chart" });
+    },
+    onSuccess() {
+      enqueueSnackbar({
+        variant: "success",
+        message: "Chart updated!",
       });
     },
     ...options,

@@ -5,11 +5,11 @@ import sys
 import webbrowser
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Annotated, AsyncGenerator
+from typing import AsyncGenerator
 from uuid import UUID
 
 import uvicorn
-from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic.json import pydantic_encoder
@@ -23,7 +23,6 @@ from dataline.old_services import TempQueryService, request_execute, request_lim
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.connection import ConnectionService
 from dataline.services.conversation import ConversationService
-from dataline.services.result import ResultService
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -118,17 +117,6 @@ async def execute_sql(
         )
     else:
         raise HTTPException(status_code=404, detail="No results found")
-
-
-@app.patch("/result/sql/{result_id}")
-async def update_sql_query_result(
-    result_id: UUID,
-    sql: Annotated[str, Body(embed=True)],
-    session: AsyncSession = Depends(get_session),
-    result_service: ResultService = Depends(ResultService),
-) -> SuccessResponse[None]:
-    await result_service.update_sql_query_result_content(session, result_id=result_id, sql=sql)
-    return SuccessResponse()
 
 
 if IS_BUNDLED:

@@ -294,6 +294,14 @@ const getUserInfo = async () => {
   return (await backendApi<GetUserInfoResult>({ url: `/settings/info` })).data;
 };
 
+
+export type RefreshChartResult = ApiResponse<{
+  chartjs_json: string;
+}>;
+const refreshChart = async (chartResultId: string) => {
+  return (await backendApi<RefreshChartResult>({ url: `/result/chart/${chartResultId}/refresh`, method: "patch" })).data;
+}
+
 export const api = {
   healthcheck,
   getConnection,
@@ -316,4 +324,5 @@ export const api = {
   updateAvatar,
   updateUserInfo,
   getUserInfo,
+  refreshChart,
 };

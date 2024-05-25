@@ -2,11 +2,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from sqlalchemy import JSON, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from dataline.models.base import DBModel, UUIDMixin
 from dataline.models.conversation.model import ConversationModel
+from sqlalchemy import JSON, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from dataline.models.result.model import ResultModel

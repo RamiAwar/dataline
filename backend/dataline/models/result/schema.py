@@ -38,3 +38,9 @@ class ResultOut(BaseModel):  # type: ignore[misc]
 
     result_id: UUID | None = None
     linked_id: UUID | None = None
+
+
+class ChartRefreshOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    chartjs_json: str
