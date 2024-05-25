@@ -11,6 +11,9 @@ ChartJS.defaults.borderColor = '#334155';
 ChartJS.defaults.color = '#eee';
 ChartJS.defaults.layout.padding = 10;
 
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(" ");
+}
 
 const canvasBackgroundColorPlugin = {
     id: 'customCanvasBackgroundColor',
@@ -116,20 +119,22 @@ const Chart = ({
         }
     };
 
-    const copyCanvasToClipboard = () => {
-        if (chartInstanceRef.current) {
-            const canvas = chartInstanceRef.current.canvas;
-            canvas.toBlob((blob) => {
-                if (blob) {
-                    navigator.clipboard.write([
-                        new ClipboardItem({
-                            "image/png": blob,
-                        }),
-                    ]);
-                }
-            });
-        }
-    };
+  const copyCanvasToClipboard = () => {
+    if (chartInstanceRef.current) {
+      const canvas = chartInstanceRef.current.canvas;
+      if (navigator.clipboard && window.ClipboardItem) {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            navigator.clipboard.write([
+              new ClipboardItem({
+                "image/png": blob,
+              }),
+            ]);
+          }
+        });
+      }
+    }
+  };
 
     return (
         <div className="relative max-w-7xl border border-gray-500 rounded-xl p-4 bg-gray-900">
@@ -169,18 +174,32 @@ const Chart = ({
                     </button>
                 </CustomTooltip>
 
-                <CustomTooltip hoverText="Copy" clickText="COPIED!">
-                    <button
-                        tabIndex={-1}
-                        onClick={copyCanvasToClipboard}
-                        className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50 transition-all duration-150 ease-in-out"
-                    >
-                        <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
-                    </button>
-                </CustomTooltip>
-            </div>
-        </div>
-    );
+        <CustomTooltip
+          hoverText={window.ClipboardItem ? "Copy" : ""}
+          clickText="COPIED!"
+        >
+          <button
+            disabled={!window.ClipboardItem}
+            tabIndex={-1}
+            onClick={copyCanvasToClipboard}
+            className={classNames(
+              window.ClipboardItem
+                ? "bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 transition-all duration-150 ease-in-out"
+                : "bg-gray-500/10",
+              "text-gray-100/50 group flex ml-auto gap-2 rounded-md p-1"
+            )}
+          >
+            <ClipboardIcon
+              className={classNames(
+                window.ClipboardItem && "group-hover:-rotate-6",
+                "w-6 h-6 [&>path]:stroke-[2]"
+              )}
+            />
+          </button>
+        </CustomTooltip>
+      </div>
+    </div>
+  );
 };
 
 export default Chart;
