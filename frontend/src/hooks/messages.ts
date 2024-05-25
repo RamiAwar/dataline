@@ -4,11 +4,9 @@ import {
   queryOptions,
   useMutation,
   UseMutationOptions,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
-import { getBackendStatusQuery } from "@/hooks/settings";
 import { isAxiosError } from "axios";
 import { readMessageOptionsFromLocalStorage } from "./messageOptions";
 import { useGetRelatedConnection } from "./conversations";
@@ -46,13 +44,16 @@ export function useSendMessage({
       return (await api.query(conversationId, message, execute, messageOptions))
         .data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       queryClient.setQueryData(
         getMessagesQuery({ conversationId }).queryKey,
         (oldData) => {
           const newMessages: IMessageWithResultsOut[] = [
-            { message: { content: variables.message, role: "human" } },
-            { message: { ...data.message }, results: data.results },
+            { message: data.human_message },
+            {
+              message: { ...data.ai_message.message },
+              results: data.ai_message.results,
+            },
           ];
           if (oldData == null) {
             return newMessages;
@@ -76,24 +77,6 @@ export function useSendMessage({
       }
     },
   });
-}
-
-export function useGetMessages(conversationId: string) {
-  const { isSuccess } = useQuery(getBackendStatusQuery());
-  const result = useQuery({
-    queryKey: [...MESSAGES_QUERY_KEY, { conversationId }],
-    queryFn: () => api.getMessages(conversationId),
-    enabled: isSuccess,
-  });
-
-  if (result.isError) {
-    enqueueSnackbar({
-      variant: "error",
-      message: "Error getting messages",
-    });
-  }
-
-  return result;
 }
 
 export function useRunSql(
