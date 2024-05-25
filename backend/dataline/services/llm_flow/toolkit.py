@@ -263,6 +263,16 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         query_string_result = SQLQueryStringResult(sql=args["query"], for_chart=args["for_chart"])
         results.append(query_string_result)
 
+        # Attempt to link previous selected tables result to this query (backlinking, weird IK)
+        last_selected_tables_result = None
+        for result in reversed(state.results):
+            if isinstance(result, SelectedTablesResult):
+                last_selected_tables_result = result
+                break
+
+        if last_selected_tables_result:
+            last_selected_tables_result.linked_id = query_string_result.ephemeral_id
+
         # Add query run result to results
         try:
             query_run_data, for_chart = cast(tuple[QueryRunData, bool], self.run(args))

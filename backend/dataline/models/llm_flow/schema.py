@@ -173,7 +173,7 @@ class SQLQueryStringResult(QueryResultSchema, StorableResultMixin, RenderableRes
 
 class SelectedTablesResult(QueryResultSchema, StorableResultMixin, RenderableResultMixin):
     result_type: ClassVar[QueryResultType] = QueryResultType.SELECTED_TABLES
-
+    linked_id: UUID | None = None
     tables: List[str]
 
     async def store_result(
@@ -183,6 +183,7 @@ class SelectedTablesResult(QueryResultSchema, StorableResultMixin, RenderableRes
             content=",".join(self.tables),
             type=self.result_type.value,
             message_id=message_id,
+            linked_id=linked_id,
         )
         stored_result = await result_repo.create(session, create)
         self.result_id = stored_result.id
@@ -190,13 +191,14 @@ class SelectedTablesResult(QueryResultSchema, StorableResultMixin, RenderableRes
 
     @classmethod
     def deserialize(cls, result: ResultModel) -> Self:
-        return cls(tables=result.content.split(","), result_id=result.id)
+        return cls(tables=result.content.split(","), result_id=result.id, linked_id=result.linked_id)
 
     def serialize_result(self) -> ResultOut:
         return ResultOut(
-            content=self.model_dump(exclude={"result_id", "ephemeral_id"}),
+            content=self.model_dump(exclude={"result_id", "ephemeral_id", "linked_id"}),
             type=self.result_type.value,
             result_id=self.result_id,
+            linked_id=self.linked_id,
         )
 
 

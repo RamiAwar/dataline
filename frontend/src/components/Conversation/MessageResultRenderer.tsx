@@ -86,7 +86,7 @@ export const MessageResultRenderer = ({
 
         // Loop over results again and loop over groups to add linked results to proper group
         results?.forEach((result) => {
-            if (result.type === "SQL_QUERY_RUN_RESULT" || result.type === "CHART_GENERATION_RESULT") {
+            if (result.type === "SQL_QUERY_RUN_RESULT" || result.type === "CHART_GENERATION_RESULT" || result.type === "SELECTED_TABLES") {
                 const groupIndex = groups.findIndex((group) =>
                     (group[0] as ISQLQueryStringResult).result_id === result.linked_id
                 );
@@ -101,6 +101,9 @@ export const MessageResultRenderer = ({
         // Sort each group
         groups.forEach((group) => {
             group.sort((a, b) => {
+                if (a.type === "SELECTED_TABLES") return -1;
+                if (b.type === "SELECTED_TABLES") return 1;
+
                 if (a.type === "CHART_GENERATION_RESULT") return -1;
                 if (b.type === "CHART_GENERATION_RESULT") return 1;
 

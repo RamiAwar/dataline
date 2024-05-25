@@ -29,6 +29,7 @@ export interface IResult {
 export interface ISelectedTablesResult extends IResult {
   type: "SELECTED_TABLES";
   result_id: string;
+  linked_id: string;
   content: {
     tables: string[];
   }
