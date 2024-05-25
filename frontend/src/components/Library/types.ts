@@ -12,7 +12,7 @@ export enum Dialect {
   TransactSQL = "tsql",
 }
 
-export type IResultType =
+export type IResultTypeName =
   | "SQL_QUERY_STRING_RESULT"
   | "SQL_QUERY_RUN_RESULT"
   | "SELECTED_TABLES"
@@ -21,7 +21,7 @@ export type IResultType =
 export type Role = "ai" | "human";
 
 export interface IResult {
-  type: IResultType;
+  type: IResultTypeName;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   content: any;
   created_at?: string;
@@ -75,9 +75,10 @@ export interface IMessageOut {
   options?: IMessageOptions;
 }
 
+export type IResultType = ISQLQueryRunResult | ISQLQueryStringResult | ISelectedTablesResult | IChartGenerationResult;
 export interface IMessageWithResultsOut {
   message: IMessageOut;
-  results?: (ISQLQueryRunResult | ISQLQueryStringResult | ISelectedTablesResult | IChartGenerationResult)[];
+  results?: IResultType[];
 }
 export interface IConversationWithMessagesWithResultsOut {
   id: string;

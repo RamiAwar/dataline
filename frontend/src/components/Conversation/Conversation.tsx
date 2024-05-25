@@ -102,13 +102,13 @@ export const Conversation = () => {
           {messages.map((message) => (
             <Message
               key={(params.conversationId as string) + message.message.id}
-              initialMessage={message}
+              message={message}
             />
           ))}
           {isPendingSendMessage && (
             <>
               <Message
-                initialMessage={{
+                message={{
                   message: {
                     content: newMessageVariable.message,
                     role: "human",
@@ -118,7 +118,7 @@ export const Conversation = () => {
                 className="dark:text-gray-400"
               />
               <Message
-                initialMessage={{
+                message={{
                   message: {
                     content: "Loading...",
                     role: "ai",

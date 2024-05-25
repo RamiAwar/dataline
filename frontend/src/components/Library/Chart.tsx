@@ -140,9 +140,6 @@ const Chart = ({
   return (
     <div className="relative max-w-7xl border border-gray-500 rounded-xl p-4 bg-gray-900">
       <canvas ref={chartRef} className="" />
-      {/* <div className="absolute top-0 right-0 m-2 rounded-md overflow-hidden">
-                <img src={logo} alt="logo" className="h-6 w-6" />
-            </div> */}
 
       {createdAt && (
         <div className="absolute top-0 left-0 m-2 text-gray-100/70 text-xs">

@@ -1,5 +1,5 @@
 import SyntaxHighlighter from "react-syntax-highlighter";
-import { IResultType } from "../Library/types";
+import { IResultTypeName } from "@components/Library/types";
 import {
   ClipboardIcon,
   PlayIcon,
@@ -73,7 +73,7 @@ export const CodeBlock = ({
 }: {
   code: string;
   resultId: string;
-  language: IResultType;
+  language: IResultTypeName;
   updateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
 }) => {
   const { conversationId } = useParams<{ conversationId: string }>();
