@@ -10,6 +10,36 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
+
+const MessageIcon = ({ message }: { message: IMessageWithResultsOut }) => {
+  const { data: avatarUrl } = useGetAvatar();
+
+  return (
+    message.message.role === "ai" ? (
+      <div className="flex flex-col shrink-0 items-center mt-2 ">
+        <img src={logo} className="h-8 w-8 rounded-md" />
+        {message.message.options?.secure_data && (
+          <a href="https://dataline.app/faq" target="_blank">
+            <InfoTooltip hoverText="No data was sent to or processed by the AI in this message. Click to learn more about how we do this.">
+              <div className="text-green-400/90 mt-3 bg-green-400/20 rounded-full hover:bg-green-400/40 transition-colors duration-150 cursor-pointer p-1">
+                <ShieldCheckIcon className="w-6 h-6" />
+              </div>
+            </InfoTooltip>
+          </a>
+        )}
+      </div>
+    ) : avatarUrl ? (
+      <img
+        className="h-8 w-8 rounded-md mt-2"
+        src={avatarUrl}
+        alt=""
+      />
+    ) : (
+      <UserCircleIcon className="text-gray-300 h-8 w-8 mt-1 rounded-full" />
+    )
+  )
+};
+
 export const Message = ({
   message,
   className = "",
@@ -17,57 +47,33 @@ export const Message = ({
   message: IMessageWithResultsOut;
   className?: string;
 }) => {
-  const { data: avatarUrl } = useGetAvatar();
 
   return (
     <div
       className={classNames(
         message.message.role === "ai"
-          ? "dark:bg-gray-800/40"
+          ? "dark:bg-gray-700/30"
           : "dark:bg-gray-900",
         "w-full text-gray-800 dark:text-gray-100 bg-gray-50",
         className
       )}
     >
-      <div className="flex p-4 gap-4 text-base md:gap-6 md:max-w-2xl lg:max-w-3xl xl:max-w-4xl md:py-6 lg:px-0 m-auto">
-        <div className="flex-shrink-0 flex flex-col relative items-end">
-          <div className="">
-            <div className="relative p-1 rounded-sm text-white flex items-center justify-center">
-              {message.message.role === "ai" ? (
-                <div className="flex flex-col items-center">
-                  <img src={logo} className="h-7 w-7" />
-                  {message.message.options?.secure_data && (
-                    <a href="https://dataline.app/faq" target="_blank">
-                      <InfoTooltip hoverText="No data was sent to or processed by the AI in this message. Click to learn more about how we do this.">
-                        <div className="text-green-400/90 mt-3 p-1 bg-green-400/20 rounded-full hover:bg-green-400/40 transition-colors duration-150 cursor-pointer">
-                          <ShieldCheckIcon className="w-7 h-7" />
-                        </div>
-                      </InfoTooltip>
-                    </a>
-                  )}
-                </div>
-              ) : avatarUrl ? (
-                <img
-                  className="h-7 w-7 rounded-sm bg-gray-800"
-                  src={avatarUrl}
-                  alt=""
-                />
-              ) : (
-                <UserCircleIcon className="text-gray-300 h-8 w-8 rounded-full " />
-              )}
+      <div className="py-4 text-base md:max-w-2xl lg:max-w-3xl xl:max-w-4xl md:py-6 lg:px-0 m-auto">
+        <div className="px-1 w-full flex flex-col gap-2 md:gap-6 lg:w-[calc(100%-115px)] scrollbar-hide">
+          <div className="px-2 md:px-0 flex justify-center gap-2 sm:gap-4 md:gap-6">
+            <div className="flex flex-col shrink-0">
+              <MessageIcon message={message} />
             </div>
-          </div>
-        </div>
-        <div className="flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)] scrollbar-hide">
-          {message.message.content && (
-            <div className="flex flex-grow flex-col gap-3">
-              <div className="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap break-words">
-                <div className="markdown prose w-full break-words dark:prose-invert dark">
-                  <p className=" leading-loose">{message.message.content}</p>
+            {message.message.content && (
+              <div className="flex flex-grow">
+                <div className="min-h-[20px] flex whitespace-pre-wrap break-words">
+                  <div className="markdown prose w-full break-words dark:prose-invert dark">
+                    <p className=" leading-loose">{message.message.content}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/** RESULTS: QUERY, DATA, PLOTS */}
           <MessageResultRenderer
@@ -79,3 +85,5 @@ export const Message = ({
     </div>
   );
 };
+
+
