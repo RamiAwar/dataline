@@ -156,15 +156,15 @@ const Chart = ({
   };
 
   return (
-    <div className="relative w-full md:max-w-7xl border border-gray-500 rounded-xl pt-7 md:px-4 bg-gray-900 overflow-hidden">
-      <canvas ref={chartRef} className="" />
+    <div className="relative w-full md:max-w-7xl border border-gray-500 rounded-xl pt-7 md:px-4 bg-gray-900">
+      <canvas ref={chartRef} className="overflow-hidden rounded-xl" />
 
       {createdAt && (
         <div className="absolute top-0 left-0 m-2 text-gray-100/70 text-xs invisible md:visible">
           {createdAt?.toLocaleDateString()} @ {createdAt?.toLocaleTimeString()}
         </div>
       )}
-      <div className="absolute top-0 right-0 m-2 flex gap-1">
+      <div className="absolute top-0 right-0 m-2 flex gap-1 ">
         <Select value={chartData.type} onChange={(e) => setChartData({ ...chartData, type: e.target.value as keyof ChartTypeRegistry })}>
           <option value="bar">Bar</option>
           <option value="line">Line</option>
