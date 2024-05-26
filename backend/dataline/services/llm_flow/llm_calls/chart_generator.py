@@ -14,21 +14,27 @@ class ChartType(Enum):
     # radar = "radar"
 
 
-# TODO: Deal with weird dataset label colors
 TEMPLATES: dict[ChartType, str] = {
     ChartType.line: """{
   type: 'line',
-  data: data: {
+  data: {
   labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
   datasets: [{
-    label: 'My First Dataset',
     data: [65, 59, 80, 81, 56, 55, 40],
     fill: false,
-    borderColor: 'rgb(75, 192, 192)',
     tension: 0.1
   }]
 },
   options: {
+    plugins: {
+      legend: {
+        display: false
+      },
+      title: {
+        display: true,
+        text: 'Numbers per month'
+      }
+    },
     scales: {
       x: {
         beginAtZero: true
@@ -41,7 +47,6 @@ TEMPLATES: dict[ChartType, str] = {
     data: {
     labels: ['Cats', 'Dogs', 'Sheep', 'Goats', 'Cows', 'Pigs', 'Chickens'],
     datasets: [{
-      label: 'My First Dataset',
       data: [65, 59, 80, 81, 56, 55, 40],
       backgroundColor: [
         'rgba(255, 99, 132, 0.5)',
@@ -63,31 +68,51 @@ TEMPLATES: dict[ChartType, str] = {
       ],
       borderWidth: 1
     }]
-  }
+  },
+  options: {
+      plugins: {
+        legend: {
+          display: false
+        },
+        title: {
+          display: true,
+          text: 'Numbers per month'
+        }
+      }
+   }
 };""",
     ChartType.doughnut: """{
-  type: 'doughnut',
-  data: {
-  labels: [
-    'Red',
-    'Blue',
-    'Yellow'
-  ],
-  datasets: [{
-    label: 'My First Dataset',
-    data: [300, 50, 100],
-    backgroundColor: [
-      'rgb(255, 99, 132)',
-      'rgb(54, 162, 235)',
-      'rgb(255, 205, 86)'
-    ],
-    hoverOffset: 4
-  }]
-},
-}""",
+    type: 'doughnut',
+    data: {
+      labels: [
+        'Red',
+        'Blue',
+        'Yellow'
+      ],
+      datasets: [{
+        data: [300, 50, 100],
+        backgroundColor: [
+          'rgb(255, 99, 132)',
+          'rgb(54, 162, 235)',
+          'rgb(255, 205, 86)'
+        ],
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          display: false
+        },
+        title: {
+          display: true,
+          text: 'Numbers per month'
+        }
+      }
+    }
+  }""",
     #     ChartType.bubble: """{
     #   datasets: [{
-    #     label: 'First Dataset',
     #     data: [{
     #       x: 20,
     #       y: 30,
@@ -113,7 +138,6 @@ TEMPLATES: dict[ChartType, str] = {
     #     'Running'
     #   ],
     #   datasets: [{
-    #     label: 'My First Dataset',
     #     data: [65, 59, 90, 81, 56, 55, 40],
     #     fill: true,
     #     backgroundColor: 'rgba(255, 99, 132, 0.5)',
