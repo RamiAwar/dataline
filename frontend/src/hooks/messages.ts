@@ -108,10 +108,22 @@ export function useRunSql(
 
 export function useUpdateSqlQuery(options = {}) {
   return useMutation({
-    mutationFn: ({ id, code }: { id: string; code: string }) =>
-      api.updateResult(id, code),
-    onError() {
-      enqueueSnackbar({ variant: "error", message: "Error updating query" });
+    mutationFn: ({ id, code, forChart }: { id: string; code: string; forChart: boolean; }) =>
+      api.updateSQLQueryString(id, code, forChart),
+    onError(error) {
+      console.log("in onerror: ", error);
+      if (isAxiosError(error) && error.response?.status === 400) {
+        enqueueSnackbar({
+          variant: "error",
+          message: error.response.data.message,
+          persist: true,
+        });
+      } else {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error updating query, make sure SQL is valid!",
+        });
+      }
     },
     onSuccess() {
       enqueueSnackbar({
@@ -122,7 +134,6 @@ export function useUpdateSqlQuery(options = {}) {
     ...options,
   });
 }
-
 
 export function useRefreshChartData(
   options: UseMutationOptions<RefreshChartResult, DefaultError, { chartResultId: string }>

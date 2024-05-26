@@ -4,6 +4,7 @@ import {
   ClipboardIcon,
   PlayIcon,
   BookmarkIcon as BookmarkIconOutline,
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
 import { CustomTooltip } from "../Library/Tooltip";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
@@ -12,6 +13,8 @@ import { Dialect } from "../Library/types";
 import { useEffect, useRef, useState } from "react";
 import { useRunSql, useUpdateSqlQuery } from "@/hooks";
 import { useParams } from "react-router-dom";
+import { Alert, AlertActions, AlertDescription, AlertTitle } from "../Catalyst/alert";
+import { Button } from "../Catalyst/button";
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
@@ -70,11 +73,13 @@ export const CodeBlock = ({
   language,
   resultId,
   updateSQLRunResult,
+  forChart = false,
 }: {
   code: string;
   resultId: string;
   language: IResultTypeName;
   updateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
+  forChart: boolean;
 }) => {
   const { conversationId } = useParams<{ conversationId: string }>();
 
@@ -111,7 +116,7 @@ export const CodeBlock = ({
 
   function saveNewSQLString() {
     if (!resultId) return;
-    updateSQL({ id: resultId, code: savedCode });
+    updateSQL({ id: resultId, code: savedCode, forChart: forChart });
   }
 
   useEffect(() => {
@@ -186,6 +191,11 @@ export const CodeBlock = ({
     }
   };
 
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const openSQLForChartHelp = () => {
+    setIsHelpOpen(true);
+  };
+
   return (
     <div
       role="button"
@@ -211,7 +221,20 @@ export const CodeBlock = ({
           background: "transparent",
         }}
       />
-      <div className="absolute bottom-0 right-0 m-1 flex gap-1">
+
+      {/* Top right corner icons */}
+      <div className="absolute top-0 right-0 m-2 flex gap-1">
+        {/* Help Icon */}
+        {forChart && (
+          <CustomTooltip hoverText="Help">
+            <button tabIndex={-1} onClick={openSQLForChartHelp}>
+              <QuestionMarkCircleIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-12" />
+            </button>
+          </CustomTooltip>
+        )}
+      </div>
+
+      <div className="absolute bottom-0 right-0 m-2 flex gap-1">
         {/* Save Icon */}
         <CustomTooltip hoverText="Save">
           <button tabIndex={-1} onClick={saveNewSQLString}>
@@ -234,6 +257,26 @@ export const CodeBlock = ({
           </button>
         </CustomTooltip>
       </div>
+
+      {/* Help for editing queries when codeblock is linked to a chart */}
+      {forChart && (
+        <Alert className="lg:ml-72" open={isHelpOpen} onClose={setIsHelpOpen}>
+          <AlertTitle>Quick overview of how you can edit chart-linked queries</AlertTitle>
+          <AlertDescription>
+            Charts are generated from the SQL results automatically. <br /><br />
+            The first column returned by the query is used as the x-axis, and the second column is used as the y-axis.
+            <br /><br />
+            You can edit the query to change the chart type, add filters, or change the x-axis and y-axis columns.<br /><br />
+            But the query must return at least two columns for the basic chart types to work (labels and values respectively).
+          </AlertDescription>
+          <AlertActions>
+            <Button plain onClick={() => setIsHelpOpen(false)}>
+              Got it!
+            </Button>
+          </AlertActions>
+        </Alert>
+      )}
+
     </div>
   );
 };

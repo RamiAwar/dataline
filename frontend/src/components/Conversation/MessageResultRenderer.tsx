@@ -156,6 +156,7 @@ export const MessageResultRenderer = ({
                                     code={result.content.sql}
                                     resultId={result.result_id}
                                     updateSQLRunResult={updateLinkedSQLRun}
+                                    forChart={result.content.for_chart}
                                 />
                             )) ||
                             (result.type === "CHART_GENERATION_RESULT" && (

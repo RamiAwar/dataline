@@ -232,12 +232,13 @@ const runSQL = async (conversationId: string, code: string) => {
 };
 
 export type UpdateSQLQueryStringResponse = ApiResponse<void>;
-const updateSQLQueryString = async (resultId: string, code: string) => {
+const updateSQLQueryString = async (resultId: string, code: string, forChart: boolean = false) => {
   const response = await backendApi<UpdateSQLQueryStringResponse>({
     url: `/result/sql/${resultId}`,
     method: "patch",
     data: {
       sql: code,
+      for_chart: forChart,
     },
   });
   return response.data;
@@ -320,7 +321,7 @@ export const api = {
   createMessage,
   query,
   runSQL,
-  updateResult: updateSQLQueryString,
+  updateSQLQueryString,
   getAvatar,
   updateAvatar,
   updateUserInfo,

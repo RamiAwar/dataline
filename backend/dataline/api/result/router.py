@@ -15,10 +15,11 @@ router = APIRouter(tags=["results"])
 async def update_sql_query_result(
     result_id: UUID,
     sql: Annotated[str, Body(embed=True)],
+    for_chart: Annotated[bool, Body(embed=True)],
     session: AsyncSession = Depends(get_session),
     result_service: ResultService = Depends(ResultService),
 ) -> SuccessResponse[None]:
-    await result_service.update_sql_query_result_content(session, result_id=result_id, sql=sql)
+    await result_service.update_sql_query_result_content(session, result_id=result_id, sql=sql, for_chart=for_chart)
     return SuccessResponse()
 
 

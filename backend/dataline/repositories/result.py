@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from dataline.models.connection.model import ConnectionModel
 from dataline.models.conversation.model import ConversationModel
+from dataline.models.llm_flow.enums import QueryResultType
 from dataline.models.message.model import MessageModel
 from dataline.models.result.model import ResultModel
 from dataline.models.result.schema import ResultCreate, ResultUpdate
@@ -30,3 +31,16 @@ class ResultRepository(BaseRepository[ResultModel, ResultCreate, ResultUpdate]):
             raise ValueError(f"Could not find DSN for result_id: {result_id}")
 
         return dsn[0]
+
+    async def get_chart_from_sql_query(self, session: AsyncSession, sql_string_result_id: UUID) -> ResultModel:
+        query = (
+            select(ResultModel)
+            .filter_by(linked_id=sql_string_result_id)  # Find all linked results to this result
+            .filter(ResultModel.type == QueryResultType.CHART_GENERATION_RESULT.value)  # Filter on charts only
+        )
+        result = await session.execute(query)
+        chart = result.fetchone()
+        if not chart:
+            raise ValueError(f"Could not find chart for result_id: {sql_string_result_id}")
+
+        return chart[0]
