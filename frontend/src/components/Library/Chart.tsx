@@ -86,6 +86,22 @@ const Chart = ({
         chartInstanceRef.current.destroy(); // Destroy the existing chart instance
       }
       chartData.plugins = [canvasBackgroundColorPlugin];
+
+      // TODO: [responsiveness] Add smaller titles for small screens
+      chartData.options = {
+        ...chartData.options,
+        plugins: {
+          ...chartData.options?.plugins,
+          title: {
+            ...chartData.options?.plugins?.title,
+            font: {
+              ...chartData.options?.plugins?.title?.font,
+              size: 14
+            }
+          }
+        }
+      };
+
       chartInstanceRef.current = new ChartJS(chartRef.current, chartData);
     }
 
@@ -140,7 +156,7 @@ const Chart = ({
   };
 
   return (
-    <div className="relative max-w-7xl border border-gray-500 rounded-xl p-4 pt-7 bg-gray-900">
+    <div className="relative w-full md:max-w-7xl border border-gray-500 rounded-xl pt-7 md:px-4 bg-gray-900 overflow-hidden">
       <canvas ref={chartRef} className="" />
 
       {createdAt && (
