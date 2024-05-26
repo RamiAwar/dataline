@@ -231,18 +231,6 @@ const runSQL = async (conversationId: string, code: string) => {
   ).data;
 };
 
-export type UpdateSQLQueryStringResponse = ApiResponse<void>;
-const updateSQLQueryString = async (resultId: string, code: string, forChart: boolean = false) => {
-  const response = await backendApi<UpdateSQLQueryStringResponse>({
-    url: `/result/sql/${resultId}`,
-    method: "patch",
-    data: {
-      sql: code,
-      for_chart: forChart,
-    },
-  });
-  return response.data;
-};
 
 export type GetAvatarResult = ApiResponse<{ blob: string }>;
 const getAvatar = async () => {
@@ -303,6 +291,23 @@ export type RefreshChartResult = ApiResponse<{
 const refreshChart = async (chartResultId: string) => {
   return (await backendApi<RefreshChartResult>({ url: `/result/chart/${chartResultId}/refresh`, method: "patch" })).data;
 }
+
+
+export type UpdateSQLQueryStringResponse = RefreshChartResult | ApiResponse<void>;
+const updateSQLQueryString = async (resultId: string, code: string, forChart: boolean = false) => {
+  const response = await backendApi<UpdateSQLQueryStringResponse>({
+    url: `/result/sql/${resultId}`,
+    method: "patch",
+    data: {
+      sql: code,
+      for_chart: forChart,
+    },
+  });
+
+  if (forChart) return response.data as RefreshChartResult;
+
+  return response.data as ApiResponse<void>;
+};
 
 export const api = {
   healthcheck,

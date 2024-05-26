@@ -18,9 +18,11 @@ async def update_sql_query_result(
     for_chart: Annotated[bool, Body(embed=True)],
     session: AsyncSession = Depends(get_session),
     result_service: ResultService = Depends(ResultService),
-) -> SuccessResponse[None]:
-    await result_service.update_sql_query_result_content(session, result_id=result_id, sql=sql, for_chart=for_chart)
-    return SuccessResponse()
+) -> SuccessResponse[None | ChartRefreshOut]:
+    chart_out = await result_service.update_sql_query_result_content(
+        session, result_id=result_id, sql=sql, for_chart=for_chart
+    )
+    return SuccessResponse(data=chart_out)
 
 
 @router.patch("/result/chart/{result_id}/refresh")

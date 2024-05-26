@@ -59,6 +59,34 @@ export const MessageResultRenderer = ({
         }
     }
 
+    function updateLinkedChart(sql_string_result_id: string, newJson: string, newCreatedAt: string) {
+        // != null, rules out both null and undefined
+        if (results != null && newJson != null) {
+            // Find the linked chart
+            const linkedChart = results?.find(
+                (result) => result.type === "CHART_GENERATION_RESULT" && result.linked_id === sql_string_result_id
+            );
+
+            // Filter out results to exclude linked chart
+            const newResults = results?.filter(
+                (result) => !(result.type === "CHART_GENERATION_RESULT" && result.linked_id === sql_string_result_id)
+            );
+
+            // Update linked chart with new content and add it back to results
+            const updatedResults = [
+                ...newResults,
+                {
+                    ...linkedChart,
+                    created_at: newCreatedAt,
+                    content: {
+                        chartjs_json: newJson,
+                    }
+                },
+            ] as IResultType[];
+            setResults(updatedResults);
+        }
+    }
+
     // Group and then sort results every time they change
     // Every group is identified by the first SQL Query String Result result_id
     // Other results are grouped with it if they have a linked_id that matches that result_id
@@ -116,8 +144,6 @@ export const MessageResultRenderer = ({
             });
         });
         setResultGroups(groups);
-        console.log(groups);
-
     }, [results]);
 
 
@@ -156,13 +182,14 @@ export const MessageResultRenderer = ({
                                     code={result.content.sql}
                                     resultId={result.result_id}
                                     updateSQLRunResult={updateLinkedSQLRun}
+                                    updateChartResult={updateLinkedChart}
                                     forChart={result.content.for_chart}
                                 />
                             )) ||
                             (result.type === "CHART_GENERATION_RESULT" && (
                                 <Chart
                                     resultId={result.result_id}
-                                    key={`message-${messageId}-chart-${result.result_id}`}
+                                    key={`message-${messageId}-chart-${result.result_id}-${result.created_at}`}
                                     initialData={JSON.parse(result.content.chartjs_json)}
                                     initialCreatedAt={new Date(result.created_at as string)}
                                 ></Chart>

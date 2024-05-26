@@ -1,4 +1,4 @@
-import { api, RefreshChartResult } from "@/api";
+import { api, RefreshChartResult, UpdateSQLQueryStringResponse } from "@/api";
 import { IMessageWithResultsOut, IResult } from "@/components/Library/types";
 import {
   DefaultError,
@@ -106,7 +106,9 @@ export function useRunSql(
   });
 }
 
-export function useUpdateSqlQuery(options = {}) {
+export function useUpdateSqlQuery(
+  options: UseMutationOptions<UpdateSQLQueryStringResponse, DefaultError, { id: string, code: string, forChart: boolean }>
+) {
   return useMutation({
     mutationFn: ({ id, code, forChart }: { id: string; code: string; forChart: boolean; }) =>
       api.updateSQLQueryString(id, code, forChart),

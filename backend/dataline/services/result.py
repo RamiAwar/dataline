@@ -31,14 +31,15 @@ class ResultService:
 
     async def update_sql_query_result_content(
         self, session: AsyncSession, result_id: UUID, sql: str, for_chart: bool
-    ) -> ResultOut:
+    ) -> ChartRefreshOut | None:
         # Need to validate the SQL run output to ensure it's compatible with the linked chart
+        chart_out = None
         if for_chart:
             linked_chart = await self.result_repo.get_chart_from_sql_query(session, result_id)
             chart_content = ChartGenerationResultContent.model_validate_json(linked_chart.content)
             await self.validate_sql_query_result_for_chart(session, result_id, sql, ChartType[chart_content.chart_type])
             # Refresh chart data
-            await self.refresh_chart_result_data(session, linked_chart.id)
+            chart_out = await self.refresh_chart_result_data(session, linked_chart.id)
 
         query_string_result = await self.result_repo.get_by_uuid(session, result_id)
 
@@ -48,8 +49,9 @@ class ResultService:
 
         # Dump json and update stored model
         content_dumps = new_content.model_dump_json()
-        result = await self.result_repo.update_by_uuid(session, result_id, ResultUpdate(content=content_dumps))
-        return ResultOut.model_validate(result)
+        await self.result_repo.update_by_uuid(session, result_id, ResultUpdate(content=content_dumps))
+        if chart_out:
+            return ChartRefreshOut.model_validate(chart_out)
 
     async def refresh_chart_result_data(self, session: AsyncSession, result_id: UUID) -> ChartRefreshOut:
         chart_result = await self.result_repo.get_by_uuid(session, result_id)

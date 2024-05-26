@@ -160,7 +160,7 @@ const Chart = ({
       <canvas ref={chartRef} className="" />
 
       {createdAt && (
-        <div className="absolute top-0 left-0 m-2 text-gray-100/70 text-xs hidden md:visible">
+        <div className="absolute top-0 left-0 m-2 text-gray-100/70 text-xs invisible md:visible">
           {createdAt?.toLocaleDateString()} @ {createdAt?.toLocaleTimeString()}
         </div>
       )}

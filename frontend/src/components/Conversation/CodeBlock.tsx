@@ -73,12 +73,14 @@ export const CodeBlock = ({
   language,
   resultId,
   updateSQLRunResult,
+  updateChartResult,
   forChart = false,
 }: {
   code: string;
   resultId: string;
   language: IResultTypeName;
   updateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
+  updateChartResult: (sql_string_result_id: string, newJson: string, newCreatedAt: string) => void;
   forChart: boolean;
 }) => {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -95,7 +97,6 @@ export const CodeBlock = ({
   const BookmarkIcon = BookmarkIconOutline;
   const extraSpace = "";
 
-  const { mutate: updateSQL } = useUpdateSqlQuery();
   const {
     isPending,
     mutate: runSql,
@@ -109,6 +110,21 @@ export const CodeBlock = ({
       } else {
         if (data?.content) {
           updateSQLRunResult(resultId, data.content as string);
+        }
+      }
+    }
+  });
+
+  const {
+    mutate: updateSQL
+  } = useUpdateSqlQuery({
+    onSettled: (data, error) => {
+      if (error) {
+        console.error("onsettled error in: ", error);
+      } else {
+        // Check if data not undefined then we have chart response
+        if (data && data.data && data.data.chartjs_json) {
+          updateChartResult(resultId, data.data.chartjs_json, data.data.created_at)
         }
       }
     }
