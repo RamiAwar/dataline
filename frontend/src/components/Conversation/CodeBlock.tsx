@@ -100,7 +100,7 @@ export const CodeBlock = ({
   }, {
     onSettled: (data, error) => {
       if (error) {
-        console.log("onsettled error: ", error);
+        console.error("onsettled error in: ", error);
       } else {
         if (data?.content) {
           updateSQLRunResult(resultId, data.content as string);
@@ -214,39 +214,23 @@ export const CodeBlock = ({
       <div className="absolute bottom-0 right-0 m-1 flex gap-1">
         {/* Save Icon */}
         <CustomTooltip hoverText="Save">
-          <button
-            tabIndex={-1}
-            onClick={saveNewSQLString}
-          >
+          <button tabIndex={-1} onClick={saveNewSQLString}>
             <BookmarkIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
 
+        {/* Copy Icon */}
         <CustomTooltip clickText="COPIED!" hoverText="Copy">
-
-          <button
-            tabIndex={-1}
-            onClick={() => copyToClipboard(savedCode)}
-          >
+          <button tabIndex={-1} onClick={() => copyToClipboard(savedCode)}>
             <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
 
         </CustomTooltip>
 
+        {/* Run Icon */}
         <CustomTooltip hoverText="Run">
-          <button
-            tabIndex={-1}
-            onClick={() => {
-              runSql();
-            }}
-            disabled={isPending}
-          >
-            <PlayIcon
-              className={classNames(
-                isPending ? "animate-spin" : "group-hover:-rotate-12",
-                "w-6 h-6 [&>path]:stroke-[2]"
-              )}
-            />
+          <button tabIndex={-1} onClick={() => { runSql() }} disabled={isPending}>
+            <PlayIcon className={classNames(isPending ? "animate-spin" : "group-hover:-rotate-12", "w-6 h-6 [&>path]:stroke-[2]")} />
           </button>
         </CustomTooltip>
       </div>

@@ -140,7 +140,7 @@ const Chart = ({
   };
 
   return (
-    <div className="relative max-w-7xl border border-gray-500 rounded-xl p-4 bg-gray-900">
+    <div className="relative max-w-7xl border border-gray-500 rounded-xl p-4 pt-7 bg-gray-900">
       <canvas ref={chartRef} className="" />
 
       {createdAt && (
