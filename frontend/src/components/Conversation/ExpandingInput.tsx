@@ -70,7 +70,7 @@ const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
               <Label>Data Security</Label>
               <Description>Hide your data from the AI model</Description>
               <Switch
-                color="teal"
+                color="green"
                 checked={messageOptions?.secure_data}
                 onChange={(checked) => {
                   setMessageOptions((prevOptions) => ({
