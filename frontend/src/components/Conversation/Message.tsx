@@ -58,8 +58,8 @@ export const Message = ({
         className
       )}
     >
-      <div className="text-base md:max-w-2xl lg:max-w-2xl xl:max-w-2xl py-4 md:py-6 lg:px-0 m-auto bg-teal-400/50">
-        <div className="px-1 w-full flex flex-col gap-2 md:gap-6 scrollbar-hide bg-yellow-400/50">
+      <div className="text-base md:max-w-2xl lg:max-w-2xl xl:max-w-2xl py-4 md:py-6 lg:px-0 m-auto">
+        <div className="px-1 w-full flex flex-col gap-2 md:gap-6 scrollbar-hide">
           <div className="px-2 md:px-0 flex justify-center gap-2 sm:gap-4 md:gap-6">
             <div className="flex flex-col shrink-0">
               <MessageIcon message={message} />

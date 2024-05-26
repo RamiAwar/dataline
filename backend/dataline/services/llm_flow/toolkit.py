@@ -82,6 +82,8 @@ def execute_sql_query(
                     f"You selected: {row}\n"
                     "Please select only two of them for the chart X and Y axes (labels and values respectively)."
                 )
+        else:
+            raise RunException(f"Chart type {chart_type} is not supported.")
 
     columns = list(result.keys())
     return QueryRunData(columns=columns, rows=truncated_rows)
@@ -226,7 +228,9 @@ class _QuerySQLDataBaseToolInput(BaseModel):
             "If it is true, make sure to return ONLY TWO columns in the SQL: (label, value)."
         ),
     )
-    chart_type: ChartType | None = Field(default=None, description="If for chart, the type of chart to generate.")
+    chart_type: ChartType | None = Field(
+        default=None, description="If for chart is true, specify the type of chart to generate."
+    )
 
 
 class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
