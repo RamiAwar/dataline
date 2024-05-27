@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 import { isAxiosError } from "axios";
-import { readMessageOptionsFromLocalStorage } from "./messageOptions";
+import { getMessageOptions } from "./messageOptions";
 import { useGetRelatedConnection } from "./conversations";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
@@ -39,8 +39,8 @@ export function useSendMessage({
   return useMutation({
     retry: false,
     mutationFn: async ({ message }: { message: string }) => {
-      const messageOptions = readMessageOptionsFromLocalStorage(
-        current_connection?.id
+      const messageOptions = await queryClient.fetchQuery(
+        getMessageOptions(current_connection?.id)
       );
       return (await api.query(conversationId, message, execute, messageOptions))
         .data;
@@ -107,11 +107,22 @@ export function useRunSql(
 }
 
 export function useUpdateSqlQuery(
-  options: UseMutationOptions<UpdateSQLQueryStringResponse, DefaultError, { id: string, code: string, forChart: boolean }>
+  options: UseMutationOptions<
+    UpdateSQLQueryStringResponse,
+    DefaultError,
+    { id: string; code: string; forChart: boolean }
+  >
 ) {
   return useMutation({
-    mutationFn: ({ id, code, forChart }: { id: string; code: string; forChart: boolean; }) =>
-      api.updateSQLQueryString(id, code, forChart),
+    mutationFn: ({
+      id,
+      code,
+      forChart,
+    }: {
+      id: string;
+      code: string;
+      forChart: boolean;
+    }) => api.updateSQLQueryString(id, code, forChart),
     onError(error) {
       console.log("in onerror: ", error);
       if (isAxiosError(error) && error.response?.status === 400) {
@@ -138,10 +149,15 @@ export function useUpdateSqlQuery(
 }
 
 export function useRefreshChartData(
-  options: UseMutationOptions<RefreshChartResult, DefaultError, { chartResultId: string }>
+  options: UseMutationOptions<
+    RefreshChartResult,
+    DefaultError,
+    { chartResultId: string }
+  >
 ) {
   return useMutation({
-    mutationFn: async ({ chartResultId }: { chartResultId: string }) => await api.refreshChart(chartResultId),
+    mutationFn: async ({ chartResultId }: { chartResultId: string }) =>
+      await api.refreshChart(chartResultId),
     onError() {
       enqueueSnackbar({ variant: "error", message: "Error refreshing chart" });
     },

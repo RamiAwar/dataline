@@ -1,5 +1,6 @@
 import { PaperAirplaneIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { SetStateAction, useEffect, useRef, useState } from "react";
+import { SetStateAction, useRef, useState } from "react";
 
 import { Switch, SwitchField, SwitchGroup } from "../Catalyst/switch";
 import { Description, Fieldset, Label } from "../Catalyst/fieldset";
@@ -8,10 +9,12 @@ import { Transition } from "@headlessui/react";
 
 import {
   useGetRelatedConnection,
-  readMessageOptionsFromLocalStorage,
-  saveMessageOptionsToLocalStorage,
+  getMessageOptions,
+  usePatchMessageOptions,
 } from "@/hooks";
 import { useClickOutside } from "../Library/utils";
+import { useQuery } from "@tanstack/react-query";
+
 import { useLocation } from "react-router-dom";
 
 type ExpandingInputProps = {
@@ -34,19 +37,17 @@ const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
   setIsShown,
   settingsCogRef: cogRef,
 }) => {
-  const location = useLocation();
   const currConnection = useGetRelatedConnection();
-
-  const [messageOptions, setMessageOptions] = useState(() =>
-    readMessageOptionsFromLocalStorage(currConnection?.id)
+  const { data: messageOptions } = useQuery(
+    getMessageOptions(currConnection?.id)
+  );
+  const { mutate: patchMessageOptions } = usePatchMessageOptions(
+    currConnection!.id
   );
   const settingsPopupRef = useRef<HTMLDivElement | null>(null);
   useClickOutside([settingsPopupRef, cogRef], () => {
     setIsShown(false);
   });
-  useEffect(() => {
-    setMessageOptions(readMessageOptionsFromLocalStorage(currConnection?.id));
-  }, [location, currConnection]);
 
   return (
     <Transition
@@ -72,6 +73,9 @@ const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
               <Switch
                 color="green"
                 checked={messageOptions?.secure_data}
+                onChange={(checked) =>
+                  patchMessageOptions({ secure_data: checked })
+                }
                 onChange={(checked) => {
                   setMessageOptions((prevOptions) => ({
                     ...prevOptions,
@@ -154,9 +158,7 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
       </div>
       <div
         ref={settingsCogRef}
-        onClick={() => {
-          setMessageSettingsShown((prev) => !prev);
-        }}
+        onClick={() => setMessageSettingsShown((prev) => !prev)}
         className={
           "hover:cursor-pointer hover:bg-white/10 group absolute left-0 dark:text-gray-400 ml-2 p-1 rounded-md transition-all duration-150"
         }

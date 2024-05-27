@@ -10,34 +10,27 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-
 const MessageIcon = ({ message }: { message: IMessageWithResultsOut }) => {
   const { data: avatarUrl } = useGetAvatar();
 
-  return (
-    message.message.role === "ai" ? (
-      <div className="flex flex-col shrink-0 items-center mt-2 ">
-        <img src={logo} className="h-8 w-8 rounded-md" />
-        {message.message.options?.secure_data && (
-          <a href="https://dataline.app/faq" target="_blank">
-            <InfoTooltip hoverText="No data was sent to or processed by the AI in this message. Click to learn more about how we do this.">
-              <div className="text-green-400/90 mt-3 bg-green-400/20 rounded-full hover:bg-green-400/40 transition-colors duration-150 cursor-pointer p-1">
-                <ShieldCheckIcon className="w-6 h-6" />
-              </div>
-            </InfoTooltip>
-          </a>
-        )}
-      </div>
-    ) : avatarUrl ? (
-      <img
-        className="h-8 w-8 rounded-md mt-2"
-        src={avatarUrl}
-        alt=""
-      />
-    ) : (
-      <UserCircleIcon className="text-gray-300 h-8 w-8 mt-1 rounded-full" />
-    )
-  )
+  return message.message.role === "ai" ? (
+    <div className="flex flex-col shrink-0 items-center mt-2 ">
+      <img src={logo} className="h-8 w-8 rounded-md" />
+      {message.message.options?.secure_data && (
+        <a href="https://dataline.app/faq" target="_blank">
+          <InfoTooltip hoverText="No data was sent to or processed by the AI in this message. Click to learn more about how we do this.">
+            <div className="text-green-400/90 mt-3 bg-green-400/20 rounded-full hover:bg-green-400/40 transition-colors duration-150 cursor-pointer p-1">
+              <ShieldCheckIcon className="w-6 h-6" />
+            </div>
+          </InfoTooltip>
+        </a>
+      )}
+    </div>
+  ) : avatarUrl ? (
+    <img className="h-8 w-8 rounded-md mt-2" src={avatarUrl} alt="" />
+  ) : (
+    <UserCircleIcon className="text-gray-300 h-8 w-8 mt-1 rounded-full" />
+  );
 };
 
 export const Message = ({
@@ -47,7 +40,6 @@ export const Message = ({
   message: IMessageWithResultsOut;
   className?: string;
 }) => {
-
   return (
     <div
       className={classNames(
@@ -85,5 +77,3 @@ export const Message = ({
     </div>
   );
 };
-
-
