@@ -155,6 +155,44 @@ const Chart = ({
     }
   };
 
+  const updateChartType = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const oldType = chartData.type;
+    const newType = e.target.value as keyof ChartTypeRegistry;
+
+    let updatedData = {
+      ...chartData,
+      type: newType,
+    }
+
+    if (oldType === "line" && newType !== "line") {
+      // Need to remove border colors if singular (for basic types)
+      if (chartData.data.datasets.length === 1) {
+        // Check if borderColor is truthy and NOT an array (means original chart type is line)
+        // If it is an array, the transition will not be problematic, nothing to do
+        // Since borderColor will already have a border color for every entry
+        // This is enough to suppress the problem - real solution managing colors will have to come later
+        if (chartData.data.datasets[0].borderColor && !Array.isArray(chartData.data.datasets[0].borderColor)) {
+          const newChartDataDatasets = [
+            {
+              ...chartData.data.datasets[0],
+              borderColor: undefined,
+            },
+          ];
+
+          updatedData = {
+            ...updatedData,
+            data: {
+              ...chartData.data,
+              datasets: newChartDataDatasets,
+            },
+          }
+        }
+      }
+    }
+
+    setChartData(updatedData);
+  }
+
   return (
     <div className="relative w-full md:max-w-7xl border border-gray-500 rounded-xl pt-7 md:px-4 bg-gray-900">
       <canvas ref={chartRef} className="overflow-hidden rounded-xl" />
@@ -165,7 +203,7 @@ const Chart = ({
         </div>
       )}
       <div className="absolute top-0 right-0 m-2 flex gap-1 ">
-        <Select value={chartData.type} onChange={(e) => setChartData({ ...chartData, type: e.target.value as keyof ChartTypeRegistry })}>
+        <Select value={chartData.type} onChange={updateChartType}>
           <option value="bar">Bar</option>
           <option value="line">Line</option>
           <option value="doughnut">Doughnut</option>

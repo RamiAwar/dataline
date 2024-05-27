@@ -11,7 +11,6 @@ from dataline.api.conversation.router import router as conversation_router
 from dataline.api.result.router import router as result_router
 from dataline.api.settings.router import router as settings_router
 from dataline.errors import ValidationError
-from dataline.llm import OpenAIError
 from dataline.repositories.base import NotFoundError, NotUniqueError
 
 logger = logging.getLogger(__name__)
@@ -22,8 +21,6 @@ def handle_exceptions(request: Request, e: Exception) -> JSONResponse:
         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": e.message})
     elif isinstance(e, NotUniqueError):
         return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"message": e.message})
-    elif isinstance(e, OpenAIError):
-        return JSONResponse(status_code=status.HTTP_406_NOT_ACCEPTABLE, content={"message": e.message})
     elif isinstance(e, ValidationError):
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)})
 
@@ -53,6 +50,5 @@ class App(fastapi.FastAPI):
         # Handle 500s separately to play well with TestClient and allow re-raising in tests
         self.add_exception_handler(NotFoundError, handle_exceptions)
         self.add_exception_handler(NotUniqueError, handle_exceptions)
-        self.add_exception_handler(OpenAIError, handle_exceptions)
         self.add_exception_handler(ValidationError, handle_exceptions)
         self.add_exception_handler(Exception, handle_exceptions)
