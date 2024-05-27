@@ -9,7 +9,7 @@ from dataline.models.llm_flow.enums import QueryResultType
 from dataline.models.message.model import MessageModel
 from dataline.models.result.model import ResultModel
 from dataline.models.result.schema import ResultCreate, ResultUpdate
-from dataline.repositories.base import AsyncSession, BaseRepository
+from dataline.repositories.base import AsyncSession, BaseRepository, NotFoundError
 
 
 class ResultRepository(BaseRepository[ResultModel, ResultCreate, ResultUpdate]):
@@ -41,6 +41,6 @@ class ResultRepository(BaseRepository[ResultModel, ResultCreate, ResultUpdate]):
         result = await session.execute(query)
         chart = result.fetchone()
         if not chart:
-            raise ValueError(f"Could not find chart for result_id: {sql_string_result_id}")
+            raise NotFoundError(f"Could not find chart for result_id: {sql_string_result_id}")
 
         return chart[0]

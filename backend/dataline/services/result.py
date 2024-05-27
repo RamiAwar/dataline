@@ -10,8 +10,8 @@ from dataline.models.llm_flow.schema import (
     ChartGenerationResultContent,
     SQLQueryStringResultContent,
 )
-from dataline.models.result.schema import ChartRefreshOut, ResultOut, ResultUpdate
-from dataline.repositories.base import AsyncSession
+from dataline.models.result.schema import ChartRefreshOut, ResultUpdate
+from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.result import ResultRepository
 from dataline.services.llm_flow.llm_calls.chart_generator import ChartType
 from dataline.services.llm_flow.toolkit import (
@@ -34,12 +34,19 @@ class ResultService:
     ) -> ChartRefreshOut | None:
         # Need to validate the SQL run output to ensure it's compatible with the linked chart
         chart_out = None
-        if for_chart:
-            linked_chart = await self.result_repo.get_chart_from_sql_query(session, result_id)
-            chart_content = ChartGenerationResultContent.model_validate_json(linked_chart.content)
-            await self.validate_sql_query_result_for_chart(session, result_id, sql, ChartType[chart_content.chart_type])
-            # Refresh chart data
-            chart_out = await self.refresh_chart_result_data(session, linked_chart.id)
+        try:
+            if for_chart:
+                linked_chart = await self.result_repo.get_chart_from_sql_query(session, result_id)
+                chart_content = ChartGenerationResultContent.model_validate_json(linked_chart.content)
+                await self.validate_sql_query_result_for_chart(
+                    session, result_id, sql, ChartType[chart_content.chart_type]
+                )
+                # Refresh chart data
+                chart_out = await self.refresh_chart_result_data(session, linked_chart.id)
+        except NotFoundError:
+            # TODO: Deal with faulty chart generation in a better way
+            # Chart generation probably failed, let's let it slide
+            pass
 
         query_string_result = await self.result_repo.get_by_uuid(session, result_id)
 

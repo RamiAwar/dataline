@@ -12,6 +12,7 @@ from dataline.models.conversation.schema import (
 from dataline.models.llm_flow.schema import (
     QueryOptions,
     RenderableResultMixin,
+    SQLQueryStringResultContent,
     StorableResultMixin,
 )
 from dataline.models.message.schema import (
@@ -205,14 +206,19 @@ class ConversationService:
         """
         Get the last 10 messages of a conversation (AI, Human, and System)
         """
-        # TODO: [low-prio] Fetch only last 10 messages, this will be slower as the conversation grows
-        messages = await self.message_repo.get_by_conversation(session, conversation_id)
+        messages = await self.message_repo.get_by_conversation_with_sql_results(session, conversation_id, n=10)
         base_messages = []
         for message in messages:
             if message.role == BaseMessageType.HUMAN.value:
                 base_messages.append(HumanMessage(content=message.content))
             elif message.role == BaseMessageType.AI.value:
                 base_messages.append(AIMessage(content=message.content))
+                if message.results:
+                    sqls = [
+                        SQLQueryStringResultContent.model_validate_json(result.content).sql
+                        for result in message.results
+                    ]
+                    base_messages.append(AIMessage(content=f"Generated SQL: {str(sqls)}"))
             elif message.role == BaseMessageType.SYSTEM.value:
                 base_messages.append(SystemMessage(content=message.content))
             else:
