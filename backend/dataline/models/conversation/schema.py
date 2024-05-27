@@ -5,7 +5,11 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 from dataline.models.llm_flow.enums import QueryResultType
-from dataline.models.llm_flow.schema import SelectedTablesResult, SQLQueryStringResult
+from dataline.models.llm_flow.schema import (
+    ChartGenerationResult,
+    SelectedTablesResult,
+    SQLQueryStringResult,
+)
 from dataline.models.message.schema import MessageOut, MessageWithResultsOut
 from dataline.models.result.model import ResultModel
 from dataline.models.result.schema import ResultOut
@@ -49,6 +53,8 @@ def render_stored_results(results: list[ResultModel]) -> list[ResultOut]:
             rendered_results.append(SQLQueryStringResult.deserialize(result).serialize_result())
         elif QueryResultType(result.type) == QueryResultType.SELECTED_TABLES:
             rendered_results.append(SelectedTablesResult.deserialize(result).serialize_result())
+        elif QueryResultType(result.type) == QueryResultType.CHART_GENERATION_RESULT:
+            rendered_results.append(ChartGenerationResult.deserialize(result).serialize_result())
 
     return rendered_results
 

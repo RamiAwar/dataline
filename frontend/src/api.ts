@@ -1,6 +1,7 @@
 // import axios from "axios";
 import {
   IConversationWithMessagesWithResultsOut,
+  IMessageOptions,
   IMessageOut,
   IMessageWithResultsOut,
   IResult,
@@ -191,23 +192,31 @@ const createMessage = async (conversationId: number, content: string) => {
   return response.data;
 };
 
-export type MessageWithResultsOut = ApiResponse<{
+export const DEFAULT_OPTIONS = { secure_data: true };
+type MessageWithResultsOut = {
   message: IMessageOut;
   results: (
     | ISelectedTablesResult
     | ISQLQueryRunResult
     | ISQLQueryStringResult
   )[];
+};
+export type QueryOut = ApiResponse<{
+  human_message: IMessageOut;
+  ai_message: MessageWithResultsOut;
 }>;
 const query = async (
   conversationId: string,
   query: string,
-  execute: boolean
-): Promise<MessageWithResultsOut> => {
+  execute: boolean,
+  message_options: IMessageOptions = DEFAULT_OPTIONS
+): Promise<QueryOut> => {
   return (
-    await backendApi<MessageWithResultsOut>({
+    await backendApi<QueryOut>({
       url: `/conversation/${conversationId}/query`,
       params: { query, execute },
+      data: { message_options },
+      method: "POST",
     })
   ).data;
 };
@@ -222,17 +231,6 @@ const runSQL = async (conversationId: string, code: string) => {
   ).data;
 };
 
-export type UpdateResultResult = ApiResponse<void>;
-const updateResult = async (resultId: string, code: string) => {
-  const response = await backendApi<UpdateResultResult>({
-    url: `/result/${resultId}`,
-    method: "patch",
-    data: {
-      content: code,
-    },
-  });
-  return response.data;
-};
 
 export type GetAvatarResult = ApiResponse<{ blob: string }>;
 const getAvatar = async () => {
@@ -285,6 +283,32 @@ const getUserInfo = async () => {
   return (await backendApi<GetUserInfoResult>({ url: `/settings/info` })).data;
 };
 
+
+export type RefreshChartResult = ApiResponse<{
+  created_at: string;
+  chartjs_json: string;
+}>;
+const refreshChart = async (chartResultId: string) => {
+  return (await backendApi<RefreshChartResult>({ url: `/result/chart/${chartResultId}/refresh`, method: "patch" })).data;
+}
+
+
+export type UpdateSQLQueryStringResponse = RefreshChartResult | ApiResponse<void>;
+const updateSQLQueryString = async (resultId: string, code: string, forChart: boolean = false) => {
+  const response = await backendApi<UpdateSQLQueryStringResponse>({
+    url: `/result/sql/${resultId}`,
+    method: "patch",
+    data: {
+      sql: code,
+      for_chart: forChart,
+    },
+  });
+
+  if (forChart) return response.data as RefreshChartResult;
+
+  return response.data as ApiResponse<void>;
+};
+
 export const api = {
   healthcheck,
   getConnection,
@@ -302,9 +326,10 @@ export const api = {
   createMessage,
   query,
   runSQL,
-  updateResult,
+  updateSQLQueryString,
   getAvatar,
   updateAvatar,
   updateUserInfo,
   getUserInfo,
+  refreshChart,
 };

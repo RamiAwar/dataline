@@ -1,4 +1,5 @@
 import logging
+from typing import cast
 from uuid import UUID
 
 from fastapi import Depends
@@ -11,6 +12,7 @@ from dataline.models.conversation.schema import (
 from dataline.models.llm_flow.schema import (
     QueryOptions,
     RenderableResultMixin,
+    SQLQueryStringResultContent,
     StorableResultMixin,
 )
 from dataline.models.message.schema import (
@@ -19,7 +21,10 @@ from dataline.models.message.schema import (
     MessageOptions,
     MessageOut,
     MessageWithResultsOut,
+    QueryOut,
 )
+from dataline.models.result.model import ResultModel
+from dataline.models.result.schema import ResultUpdate
 from dataline.repositories.base import AsyncSession
 from dataline.repositories.conversation import (
     ConversationCreate,
@@ -100,7 +105,7 @@ class ConversationService:
         conversation_id: UUID,
         query: str,
         secure_data: bool = True,
-    ) -> MessageWithResultsOut:
+    ) -> QueryOut:
         # Get conversation, connection, user settings
         conversation = await self.get_conversation(session, conversation_id=conversation_id)
         connection = await self.connection_service.get_connection(session, connection_id=conversation.connection_id)
@@ -110,9 +115,10 @@ class ConversationService:
         query_graph = QueryGraphService(
             dsn=connection.dsn,
         )
+        history = await self.get_conversation_history(session, conversation_id)
 
         # Store human message and final AI message without flushing
-        await self.message_repo.create(
+        human_message = await self.message_repo.create(
             session,
             MessageCreate(
                 role=BaseMessageType.HUMAN.value,
@@ -124,7 +130,6 @@ class ConversationService:
         )
 
         # Perform query and execute graph
-        history = await self.get_conversation_history(session, conversation_id)
         messages, results = query_graph.query(
             query=query,
             options=QueryOptions(
@@ -157,31 +162,63 @@ class ConversationService:
         )
 
         # Store results and final message in database
+        stored_results: list[ResultModel] = []
         for result in results:
             if isinstance(result, StorableResultMixin):
-                await result.store_result(session, self.result_repo, stored_ai_message.id)
+                stored_result = await result.store_result(session, self.result_repo, stored_ai_message.id)
+                stored_results.append(stored_result)
+
+        # Go over stored results, replace linked_id with the stored result_id
+        for result in results:
+            if hasattr(result, "linked_id"):
+                # Find corresponding result with this ephemeral ID
+                linked_result = cast(
+                    StorableResultMixin,
+                    next(
+                        (r for r in results if r.ephemeral_id == getattr(result, "linked_id")),
+                        None,
+                    ),
+                )
+                # Update linked_id with the stored result_id
+                if linked_result:
+                    # Update result
+                    setattr(result, "linked_id", linked_result.result_id)
+
+                    if isinstance(result, StorableResultMixin) and result.result_id:
+                        await self.result_repo.update_by_uuid(
+                            session, result.result_id, ResultUpdate(linked_id=linked_result.result_id)
+                        )
 
         # Render renderable results
         serialized_results = [
             result.serialize_result() for result in results if isinstance(result, RenderableResultMixin)
         ]
 
-        return MessageWithResultsOut(
-            message=MessageOut.model_validate(stored_ai_message),
-            results=serialized_results,
+        return QueryOut(
+            human_message=MessageOut.model_validate(human_message),
+            ai_message=MessageWithResultsOut(
+                message=MessageOut.model_validate(stored_ai_message),
+                results=serialized_results,
+            ),
         )
 
     async def get_conversation_history(self, session: AsyncSession, conversation_id: UUID) -> list[BaseMessage]:
         """
         Get the last 10 messages of a conversation (AI, Human, and System)
         """
-        messages = await self.message_repo.get_by_conversation(session, conversation_id)
+        messages = await self.message_repo.get_by_conversation_with_sql_results(session, conversation_id, n=10)
         base_messages = []
         for message in messages:
             if message.role == BaseMessageType.HUMAN.value:
                 base_messages.append(HumanMessage(content=message.content))
             elif message.role == BaseMessageType.AI.value:
                 base_messages.append(AIMessage(content=message.content))
+                if message.results:
+                    sqls = [
+                        SQLQueryStringResultContent.model_validate_json(result.content).sql
+                        for result in message.results
+                    ]
+                    base_messages.append(AIMessage(content=f"Generated SQL: {str(sqls)}"))
             elif message.role == BaseMessageType.SYSTEM.value:
                 base_messages.append(SystemMessage(content=message.content))
             else:

@@ -15,7 +15,7 @@ class BaseMessageType(Enum):
 
 
 class MessageOptions(BaseModel):
-    secure_data: bool = False
+    secure_data: bool = True
 
 
 class MessageCreate(BaseModel):
@@ -50,3 +50,10 @@ class MessageWithResultsOut(BaseModel):
 
     message: MessageOut
     results: list[ResultOut]
+
+
+class QueryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    human_message: MessageOut
+    ai_message: MessageWithResultsOut

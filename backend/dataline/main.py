@@ -5,11 +5,11 @@ import sys
 import webbrowser
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Annotated, AsyncGenerator
+from typing import AsyncGenerator
 from uuid import UUID
 
 import uvicorn
-from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic.json import pydantic_encoder
@@ -19,12 +19,10 @@ from alembic.config import Config
 from dataline.app import App
 from dataline.config import IS_BUNDLED, config
 from dataline.old_models import SuccessResponse, UnsavedResult
-from dataline.old_services import TempQueryService
+from dataline.old_services import TempQueryService, request_execute, request_limit
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.services.connection import ConnectionService
 from dataline.services.conversation import ConversationService
-from dataline.services.result import ResultService
-from dataline.old_services import request_execute, request_limit
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -70,6 +68,8 @@ async def healthcheck() -> SuccessResponse[None]:
 @app.get("/execute-sql", response_model=UnsavedResult)
 async def execute_sql(
     conversation_id: UUID,
+    # TODO: Add query_string_id to support linking result to query here
+    # query_string_id: UUID,
     sql: str,
     limit: int = 10,
     execute: bool = True,
@@ -117,17 +117,6 @@ async def execute_sql(
         )
     else:
         raise HTTPException(status_code=404, detail="No results found")
-
-
-@app.patch("/result/{result_id}")
-async def update_result_content(
-    result_id: UUID,
-    content: Annotated[str, Body(embed=True)],
-    session: AsyncSession = Depends(get_session),
-    result_service: ResultService = Depends(ResultService),
-) -> SuccessResponse[None]:
-    await result_service.update_result_content(session, result_id=result_id, content=content)
-    return SuccessResponse()
 
 
 if IS_BUNDLED:

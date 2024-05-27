@@ -22,13 +22,13 @@ export const DynamicTable: React.FC<{ data: { columns: string[]; rows: any[][] }
     );
   }, [page, rowsPerPage, data]);
   return (
-    <div className="max-w-7xl border border-gray-500 overflow-hidden rounded-xl">
+    <div className="max-w-7xl border border-gray-500 bg-gray-800 overflow-hidden rounded-xl">
       <Table
         grid
         bleed
         striped
         dense
-        className="ml-0 mr-0 [--gutter:theme(spacing.6)] sm:[--gutter:theme(spacing.8)]"
+        className="ml-0 mr-0 [--gutter:theme(spacing.6)] "
       >
         <TableHead>
           <TableRow>

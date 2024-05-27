@@ -1,10 +1,11 @@
 import abc
+import json
 import operator
 from typing import Annotated, Any, List, Optional, Sequence, Type, TypedDict, cast
 
 from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_core.callbacks import CallbackManagerForToolRun
-from langchain_core.messages import BaseMessage, ToolMessage
+from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from langchain_core.pydantic_v1 import BaseModel
 from langchain_core.pydantic_v1 import BaseModel as BaseModelV1
 from langchain_core.pydantic_v1 import Field
@@ -13,17 +14,32 @@ from langgraph.prebuilt import ToolExecutor
 from sqlalchemy import Result
 
 from dataline.models.llm_flow.schema import (
+    ChartGenerationResult,
     QueryOptions,
     QueryResultSchema,
+    QueryRunData,
     SelectedTablesResult,
     SQLQueryRunResult,
     SQLQueryStringResult,
+)
+from dataline.services.llm_flow.llm_calls.chart_generator import (
+    TEMPLATES,
+    ChartType,
+    GenerateChartCall,
 )
 
 
 class QueryGraphStateUpdate(TypedDict):
     messages: Sequence[BaseMessage]
     results: Sequence[QueryResultSchema]
+
+
+class RunException(Exception):
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(message)
 
 
 def truncate_word(content: Any, *, length: int, suffix: str = "...") -> str:  # type: ignore[misc]
@@ -41,13 +57,69 @@ def truncate_word(content: Any, *, length: int, suffix: str = "...") -> str:  # 
     return content[: length - len(suffix)].rsplit(" ", 1)[0] + suffix
 
 
-class SQLToolNames:
+def execute_sql_query(
+    db: SQLDatabase, query: str, for_chart: bool = False, chart_type: Optional[ChartType] = None
+) -> QueryRunData:
+    """Execute the SQL query and return the results or an error message."""
+    result = cast(Result[Any], db.run(query, fetch="cursor", include_columns=True))  # type: ignore[misc]
+    truncated_rows = []
+    for row in result.fetchall():
+        # truncate each column, then convert the row to a tuple
+        truncated_row = tuple(truncate_word(column, length=db._max_string_length) for column in row)
+        truncated_rows.append(truncated_row)
+
+    if for_chart:
+        if chart_type in [ChartType.bar, ChartType.line, ChartType.doughnut]:
+            # These chart types take in single dimensional data for labels and values
+            # Validate that each row has only 1 element
+            if not truncated_rows:
+                raise RunException("No data returned from the query.")
+
+            row = truncated_rows[0]
+            if len(row) != 2:
+                raise RunException(
+                    f"Validation of results output format failed. You chose {len(row)} columns in the select statement."
+                    f"You selected: {row}\n"
+                    "Please select only two of them for the chart X and Y axes (labels and values respectively)."
+                )
+        else:
+            raise RunException(f"Chart type {chart_type} is not supported.")
+
+    columns = list(result.keys())
+    return QueryRunData(columns=columns, rows=truncated_rows)
+
+
+def query_run_result_to_chart_json(chart_json: str, chart_type: ChartType, query_run_data: QueryRunData) -> str:
+    """
+    Insert query run result data into the chartjs JSON.
+    This assumes that the query run data is properly validated for charting purposes!
+
+    Args:
+        chart_json: The chartjs JSON string (can be a template or already populated)
+        chart_type: The type of chart to generate (used to format the chartjs JSON)
+        query_run_result: The result of the SQL query execution.
+    """
+    if chart_type in [ChartType.bar, ChartType.line, ChartType.doughnut]:
+        # Insert the flattened query result data into the chartjs JSON
+        flattened_labels = [row[0] for row in query_run_data.rows]
+        flattened_values = [row[1] for row in query_run_data.rows]
+
+        formatted_json = json.loads(chart_json)
+        formatted_json["data"]["labels"] = flattened_labels
+        formatted_json["data"]["datasets"][0]["data"] = flattened_values
+        return json.dumps(formatted_json)
+    else:
+        raise NotImplementedError(f"Chart type {chart_type} is not supported.")
+
+
+class ToolNames:
     """Class for storing the names of the SQL tools."""
 
     INFO_SQL_DATABASE = "sql_db_schema"
     EXECUTE_SQL_QUERY = "sql_db_query"
     LIST_SQL_TABLES = "list_sql_tables"
     QUERY_SQL_CORRECTOR = "sql_db_query_corrector"
+    GENERATE_CHART = "generate_chart"
 
 
 class BaseSQLDatabaseTool(BaseModel):
@@ -88,7 +160,7 @@ class _InfoSQLDatabaseToolInput(BaseModel):
 class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
     """Tool for getting metadata about tables in a SQL database."""
 
-    name: str = SQLToolNames.INFO_SQL_DATABASE
+    name: str = ToolNames.INFO_SQL_DATABASE
     description: str = "Get the schema and sample rows for the specified SQL tables."
 
     table_names: Optional[list[str]] = None
@@ -130,7 +202,7 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
 
         # We call the tool_executor and get back a response
         response = self.run(args)
-        # We use the response to create a FunctionMessage
+        # We use the response to create a ToolMessage
         tool_message = ToolMessage(content=str(response), name=self.name, tool_call_id=call_id)
         messages.append(tool_message)
 
@@ -145,13 +217,26 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
 
 
 class _QuerySQLDataBaseToolInput(BaseModel):
-    query: str = Field(..., description="A detailed and correct SQL query.")
+    query: str = Field(
+        ...,
+        description="A detailed and correct SQL query. If for charting, return only two columns: labels and values in that order!",
+    )
+    for_chart: bool = Field(
+        ...,
+        description=(
+            "Whether the query is going to be later used for generating a chart."
+            "If it is true, make sure to return ONLY TWO columns in the SQL: (label, value)."
+        ),
+    )
+    chart_type: ChartType | None = Field(
+        default=None, description="If for chart is true, specify the type of chart to generate."
+    )
 
 
 class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
     """Tool for querying a SQL database."""
 
-    name: str = SQLToolNames.EXECUTE_SQL_QUERY
+    name: str = ToolNames.EXECUTE_SQL_QUERY
     description: str = """
     Execute a SQL query against the database and get back the result.
     If the query is not correct, an error message will be returned.
@@ -162,18 +247,12 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
     def _run(
         self,
         query: str,
+        for_chart: bool = False,
+        chart_type: Optional[ChartType] = None,
         run_manager: Optional[CallbackManagerForToolRun] = None,
-    ) -> SQLQueryRunResult:
+    ) -> tuple[QueryRunData, bool]:  # type: ignore[misc]
         """Execute the query, return the results or an error message."""
-        result = cast(Result[Any], self.db.run(query, fetch="cursor", include_columns=True))  # type: ignore[misc]
-        truncated_results = []
-        for row in result.fetchall():
-            # truncate each column, then convert the row to a tuple
-            truncated_row = tuple(truncate_word(column, length=self.db._max_string_length) for column in row)
-            truncated_results.append(truncated_row)
-
-        columns = list(result.keys())
-        return SQLQueryRunResult.model_construct(columns=columns, rows=truncated_results)
+        return execute_sql_query(self.db, query, for_chart, chart_type), for_chart
 
     def get_response(  # type: ignore[misc]
         self,
@@ -185,12 +264,39 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         results: list[QueryResultSchema] = []
 
         # Add SQL query to results
-        results.append(SQLQueryStringResult(sql=args["query"]))
+        query_string_result = SQLQueryStringResult(sql=args["query"], for_chart=args["for_chart"])
+        results.append(query_string_result)
+
+        # Attempt to link previous selected tables result to this query (backlinking, weird IK)
+        last_selected_tables_result = None
+        for result in reversed(state.results):
+            if isinstance(result, SelectedTablesResult):
+                last_selected_tables_result = result
+                break
+
+        if last_selected_tables_result:
+            last_selected_tables_result.linked_id = query_string_result.ephemeral_id
 
         # Add query run result to results
-        response: SQLQueryRunResult = self.run(args)
-        response.is_secure = state.options.secure_data  # return whether or not generated securely
-        results.append(response)
+        try:
+            query_run_data, for_chart = cast(tuple[QueryRunData, bool], self.run(args))
+            response = SQLQueryRunResult(
+                columns=query_run_data.columns,
+                rows=query_run_data.rows,
+                for_chart=for_chart,
+                linked_id=query_string_result.ephemeral_id,
+            )
+            response.is_secure = state.options.secure_data  # return whether or not generated securely
+            results.append(response)
+
+        except RunException as e:
+            tool_message = ToolMessage(content=f"ERROR: {e.message}", name=self.name, tool_call_id=call_id)
+            messages.append(tool_message)
+            return state_update(messages=messages)
+        except Exception as e:
+            tool_message = ToolMessage(content=f"ERROR: {str(e)}", name=self.name, tool_call_id=call_id)
+            messages.append(tool_message)
+            return state_update(messages=messages)
 
         # Create ToolMessages
         if not state.options.secure_data:
@@ -223,6 +329,9 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
             )
             messages.append(tool_message)
 
+        if args["for_chart"]:
+            messages.append(AIMessage(content="Now that I generated the data, I should call the generate chart tool"))
+
         return {
             "messages": messages,
             "results": results,
@@ -236,7 +345,7 @@ class _ListSQLTablesToolInput(BaseModel):
 class ListSQLTablesTool(BaseSQLDatabaseTool, BaseTool):
     """Tool for getting tables names."""
 
-    name: str = SQLToolNames.LIST_SQL_TABLES
+    name: str = ToolNames.LIST_SQL_TABLES
     description: str = "Input is an empty string, output is a comma-separated list of tables in the database."
     args_schema: Type[BaseModel] = _ListSQLTablesToolInput
 
@@ -269,15 +378,17 @@ class SQLDatabaseToolkit(BaseToolkit):
         list_sql_database_tool = ListSQLTablesTool(db=self.db)
         info_sql_database_tool_description = (
             "Input to this tool is a comma-separated list of tables, output is the "
-            "schema and sample rows for those tables. "
+            "schema and sample rows for those tables."
             "Be sure that the tables actually exist by calling "
             f"{list_sql_database_tool.name} first! "
             "Example Input: table1, table2, table3"
         )
         info_sql_database_tool = InfoSQLDatabaseTool(db=self.db, description=info_sql_database_tool_description)
         query_sql_database_tool_description = (
+            f"NEVER run this without running the {info_sql_database_tool.name} tool first."
             "Input to this tool is a detailed and correct SQL query, output is a "
-            "result from the database. If the query is not correct, an error message "
+            "result from the database."
+            "If the query is not correct, an error message "
             "will be returned. If an error is returned, rewrite the query, check the "
             "query, and try again. If you encounter an issue with Unknown column "
             f"'xxxx' in 'field list', use {info_sql_database_tool.name} "
@@ -315,3 +426,98 @@ def state_update(
     messages: Sequence[BaseMessage] = [], results: Sequence[QueryResultSchema] = []
 ) -> QueryGraphStateUpdate:
     return {"messages": messages, "results": results}
+
+
+class _ChartGeneratorToolInput(BaseModel):
+    chart_type: ChartType
+    request: str = Field(..., description="Some text describing what the chart is and to generate it.")
+
+
+class ChartGeneratorTool(StateUpdaterTool):
+    """Tool for generating a chart from a query result."""
+
+    name: str = ToolNames.GENERATE_CHART
+    description: str = (
+        "Generate a chart from the query result."
+        "Use this only after executing SQL since we need data to add into the chart."
+        "If the chart is not based on SQL query generated data, then don't use this tool."
+    )
+    args_schema: Type[BaseModel] = _ChartGeneratorToolInput
+
+    def _run(self, *args: Any, **kwargs: Any) -> Any:
+        pass
+
+    def get_response(  # type: ignore[misc]
+        self,
+        state: QueryGraphState,
+        args: dict[str, Any],
+        call_id: str,
+    ) -> QueryGraphStateUpdate:
+        messages: list[BaseMessage] = []
+        results: list[QueryResultSchema] = []
+
+        chart_type = ChartType[args["chart_type"]]
+        generate_chart_call = GenerateChartCall(
+            api_key=state.options.openai_api_key.get_secret_value(),
+            chart_type=args["chart_type"],
+            request=args["request"],
+            chartjs_template=TEMPLATES[chart_type],
+        )
+        res = generate_chart_call.extract()
+
+        # Find the last data result
+        last_data_result = None
+        for result in reversed(state.results):
+            if isinstance(result, SQLQueryRunResult) and result.for_chart:
+                last_data_result = result
+                break
+
+        if last_data_result is None:
+            message = ToolMessage(
+                content="ERROR: No data result was found prior to generating"
+                "the chart, failed to populate the chart."
+                "Only use this tool after using the SQL query executor tool!",
+                name=self.name,
+                tool_call_id=call_id,
+            )
+            return state_update(messages=messages)
+
+        try:
+            chart_json = query_run_result_to_chart_json(
+                chart_json=res.chartjs_json,
+                chart_type=chart_type,
+                query_run_data=last_data_result,
+            )
+
+            # Link to same SQL query string result as the run result does
+            result = ChartGenerationResult(
+                chartjs_json=chart_json, chart_type=chart_type.value, linked_id=last_data_result.linked_id
+            )
+            results.append(result)
+
+            msg = "Chart generation was successful!"
+            if state.options.secure_data:
+                msg += (
+                    "I cannot view the results for security reasons, but the user is able to."
+                    "For this reason I can't do any further analysis on the chart or results. The user could run queries in 'insecure mode'"
+                    "if they'd like me to help further"
+                )
+
+            tool_message = ToolMessage(
+                content=msg,
+                name=self.name,
+                tool_call_id=call_id,
+            )
+            messages.append(tool_message)
+        except json.JSONDecodeError as e:
+            message = ToolMessage(
+                content=f"ERROR: Failed to decode chart json. Plese try regenerating the chart: {e.msg}",
+                name=self.name,
+                tool_call_id=call_id,
+            )
+            messages.append(message)
+
+        return {
+            "messages": messages,
+            "results": results,
+        }

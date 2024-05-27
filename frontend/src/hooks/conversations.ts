@@ -8,6 +8,8 @@ import {
 } from "@tanstack/react-query";
 import { getBackendStatusQuery } from "@/hooks/settings";
 import { useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { useGetConnections } from "./connections";
 
 export const CONVERSATIONS_QUERY_KEY = ["CONVERSATIONS"];
 
@@ -89,4 +91,16 @@ export function useUpdateConversation(options = {}) {
     },
     ...options,
   });
+}
+
+export function useGetRelatedConnection() {
+  const params = useParams<{ conversationId: string }>();
+  const { data: connectionsData } = useGetConnections();
+  const { data: conversationsData } = useGetConversations();
+  const currConversation = conversationsData?.find(
+    (conv) => conv.id === params.conversationId
+  );
+  return connectionsData?.connections?.find(
+    (conn) => conn.id === currConversation?.connection_id
+  );
 }

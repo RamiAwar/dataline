@@ -1,5 +1,24 @@
-import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
-import { SetStateAction, useState } from "react";
+import {
+  PaperAirplaneIcon,
+  Cog6ToothIcon,
+  ShieldExclamationIcon,
+  ShieldCheckIcon,
+} from "@heroicons/react/24/outline";
+import { SetStateAction, useRef, useState } from "react";
+
+import { Switch, SwitchField, SwitchGroup } from "../Catalyst/switch";
+import { Description, Fieldset, Label } from "../Catalyst/fieldset";
+
+import { Transition } from "@headlessui/react";
+
+import {
+  useGetRelatedConnection,
+  getMessageOptions,
+  usePatchMessageOptions,
+} from "@/hooks";
+import { useClickOutside } from "../Library/utils";
+import { useQuery } from "@tanstack/react-query";
+
 
 type ExpandingInputProps = {
   onSubmit: (value: string) => void;
@@ -10,11 +29,78 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
+type MessageSettingsPopupProps = {
+  isShown: boolean;
+  setIsShown: (val: boolean) => void;
+  settingsCogRef: React.MutableRefObject<HTMLDivElement | null>;
+};
+
+const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
+  isShown,
+  setIsShown,
+  settingsCogRef: cogRef,
+}) => {
+  const currConnection = useGetRelatedConnection();
+  const { data: messageOptions } = useQuery(
+    getMessageOptions(currConnection?.id)
+  );
+  const { mutate: patchMessageOptions } = usePatchMessageOptions(
+    currConnection?.id
+  );
+  const settingsPopupRef = useRef<HTMLDivElement | null>(null);
+  useClickOutside([settingsPopupRef, cogRef], () => {
+    setIsShown(false);
+  });
+
+  return (
+    <Transition
+      show={isShown}
+      enter="transition-opacity duration-200"
+      enterFrom="opacity-0"
+      enterTo="opacity-100"
+      leave="transition-opacity duration-200"
+      leaveFrom="opacity-100"
+      leaveTo="opacity-0"
+    >
+      <div
+        ref={settingsPopupRef}
+        className={classNames(
+          "absolute left-0 bottom-1 border p-4 bg-gray-900 border-gray-600 rounded-xl"
+        )}
+      >
+        <Fieldset>
+          <SwitchGroup>
+            <SwitchField>
+              <Label className="flex items-center">
+                Data Security{" "}
+              </Label>
+              <Description>Hide your data from the AI model</Description>
+              <Switch
+                color="green"
+                checked={messageOptions?.secure_data}
+                onChange={(checked) =>
+                  patchMessageOptions({ secure_data: checked })
+                }
+                name="data_security"
+              />
+            </SwitchField>
+          </SwitchGroup>
+        </Fieldset>
+      </div>
+    </Transition>
+  );
+};
 const ExpandingInput: React.FC<ExpandingInputProps> = ({
   onSubmit,
   disabled,
 }) => {
   const [inputValue, setInputValue] = useState("");
+  const [messageSettingsShown, setMessageSettingsShown] = useState(false);
+  const currConnection = useGetRelatedConnection();
+  const { data: messageOptions } = useQuery(
+    getMessageOptions(currConnection?.id)
+  );
+  const settingsCogRef = useRef<HTMLDivElement | null>(null);
 
   const handleChange = (e: {
     target: {
@@ -53,7 +139,7 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
         id="email"
         className={classNames(
           disabled ? "placeholder:text-gray-600" : "placeholder:text-gray-400",
-          "block rounded-xl border p-4 text-gray-900 shadow-sm sm:text-md sm:leading-6 resize-none dark:text-gray-200 dark:bg-gray-900 dark:border-gray-600 pr-12 overflow-y-hidden mr-1"
+          "block rounded-xl border p-4 text-gray-900 shadow-sm sm:text-md sm:leading-6 resize-none dark:text-gray-200 dark:bg-gray-900 dark:border-gray-600 pl-12 sm:pl-20 pr-12 overflow-y-hidden mr-1"
         )}
         style={{ height: "auto" }}
         rows={1}
@@ -62,6 +148,27 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
         onChange={handleChange}
         onKeyDown={handleKeyPress}
       />
+      <div className="absolute left-0 top-0 w-full">
+        <MessageSettingsPopup
+          isShown={messageSettingsShown}
+          setIsShown={setMessageSettingsShown}
+          settingsCogRef={settingsCogRef}
+        />
+      </div>
+      <div
+        className={
+          "group absolute flex items-center left-0"
+        }
+      >
+        <div ref={settingsCogRef} onClick={() => setMessageSettingsShown((prev) => !prev)} className="hover:cursor-pointer hover:bg-white/10 dark:text-gray-400 ml-2 p-1 rounded-md transition-all duration-150">
+          <Cog6ToothIcon
+            className={"hover:-rotate-6 h-6 w-6 [&>path]:stroke-[2]"}
+          />
+        </div>
+        <div className="dark:text-gray-400 ml-1 invisible sm:visible">
+          {messageOptions?.secure_data ? <ShieldCheckIcon className="h-6 w-6 text-green-500 [&>path]:stroke-[2]" /> : <ShieldExclamationIcon className="h-6 w-6 text-gray-400 [&>path]:stroke-[2]" />}
+        </div>
+      </div>
       <div
         onClick={handleSubmit}
         className={classNames(

@@ -39,7 +39,7 @@ export const Conversation = () => {
     mutate: sendMessageMutation,
     isPending: isPendingSendMessage,
     variables: newMessageVariable,
-  } = useSendMessage({ conversationId: params.conversationId ?? "" });
+  } = useSendMessage();
 
   const {
     data: messages,
@@ -102,32 +102,33 @@ export const Conversation = () => {
           {messages.map((message) => (
             <Message
               key={(params.conversationId as string) + message.message.id}
-              initialMessage={message}
+              message={message}
             />
           ))}
-          {isPendingSendMessage && (
-            <>
-              <Message
-                initialMessage={{
-                  message: {
-                    content: newMessageVariable.message,
-                    role: "human",
-                    id: generateUUID(),
-                  }
-                }}
-                className="dark:text-gray-400"
-              />
-              <Message
-                initialMessage={{
-                  message: {
-                    content: "Loading...",
-                    role: "ai",
-                    id: generateUUID(),
-                  }
-                }}
-              />
-            </>
-          )}
+          {isPendingSendMessage &&
+            newMessageVariable.conversationId === currConversation?.id && (
+              <>
+                <Message
+                  message={{
+                    message: {
+                      content: newMessageVariable.message,
+                      role: "human",
+                      id: generateUUID(),
+                    },
+                  }}
+                  className="dark:text-gray-400"
+                />
+                <Message
+                  message={{
+                    message: {
+                      content: "Loading...",
+                      role: "ai",
+                      id: generateUUID(),
+                    },
+                  }}
+                />
+              </>
+            )}
         </div>
         <div ref={messageListRef}></div>
       </Transition>
@@ -141,7 +142,10 @@ export const Conversation = () => {
                 title={template.title}
                 text={template.text}
                 onClick={() =>
-                  sendMessageMutation({ message: template.message })
+                  sendMessageMutation({
+                    message: template.message,
+                    conversationId: params.conversationId ?? "",
+                  })
                 }
               />
             ))}
@@ -149,7 +153,12 @@ export const Conversation = () => {
         )}
         <div className="w-full md:max-w-3xl flex flex-col justify-center items-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
           <ExpandingInput
-            onSubmit={(message: string) => sendMessageMutation({ message })}
+            onSubmit={(message: string) =>
+              sendMessageMutation({
+                message,
+                conversationId: params.conversationId ?? "",
+              })
+            }
             disabled={false}
           />
           <p className="text-gray-400 text-sm">

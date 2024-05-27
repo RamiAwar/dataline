@@ -1,9 +1,10 @@
 import SyntaxHighlighter from "react-syntax-highlighter";
-import { IResultType } from "../Library/types";
+import { IResultTypeName } from "@components/Library/types";
 import {
   ClipboardIcon,
   PlayIcon,
   BookmarkIcon as BookmarkIconOutline,
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
 import { CustomTooltip } from "../Library/Tooltip";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
@@ -12,6 +13,8 @@ import { Dialect } from "../Library/types";
 import { useEffect, useRef, useState } from "react";
 import { useRunSql, useUpdateSqlQuery } from "@/hooks";
 import { useParams } from "react-router-dom";
+import { Alert, AlertActions, AlertDescription, AlertTitle } from "../Catalyst/alert";
+import { Button } from "../Catalyst/button";
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
@@ -69,14 +72,16 @@ export const CodeBlock = ({
   code,
   language,
   resultId,
-  updateMessage,
-  updateCode,
+  updateSQLRunResult,
+  updateChartResult,
+  forChart = false,
 }: {
   code: string;
-  resultId?: string;
-  language: IResultType;
-  updateMessage: (arg: string) => void;
-  updateCode: (arg: string) => void;
+  resultId: string;
+  language: IResultTypeName;
+  updateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
+  updateChartResult: (sql_string_result_id: string, newJson: string, newCreatedAt: string) => void;
+  forChart: boolean;
 }) => {
   const { conversationId } = useParams<{ conversationId: string }>();
 
@@ -92,27 +97,43 @@ export const CodeBlock = ({
   const BookmarkIcon = BookmarkIconOutline;
   const extraSpace = "";
 
-  const { mutate } = useUpdateSqlQuery();
-
   const {
     isPending,
-    data,
     mutate: runSql,
   } = useRunSql({
     conversationId: conversationId || "",
     sql: savedCode.replace(/\s+/g, " "),
+  }, {
+    onSettled: (data, error) => {
+      if (error) {
+        console.error("onsettled error in: ", error);
+      } else {
+        if (data?.content) {
+          updateSQLRunResult(resultId, data.content as string);
+        }
+      }
+    }
   });
 
-  function updateQuery() {
-    if (!resultId) return;
-    mutate({ id: resultId, code: savedCode });
-  }
-
-  useEffect(() => {
-    if (data) {
-      data?.content && updateMessage(data.content as string);
+  const {
+    mutate: updateSQL
+  } = useUpdateSqlQuery({
+    onSettled: (data, error) => {
+      if (error) {
+        console.error("onsettled error in: ", error);
+      } else {
+        // Check if data not undefined then we have chart response
+        if (data && data.data && data.data.chartjs_json) {
+          updateChartResult(resultId, data.data.chartjs_json, data.data.created_at)
+        }
+      }
     }
-  }, [data, updateMessage]);
+  });
+
+  function saveNewSQLString() {
+    if (!resultId) return;
+    updateSQL({ id: resultId, code: savedCode, forChart: forChart });
+  }
 
   useEffect(() => {
     try {
@@ -186,6 +207,11 @@ export const CodeBlock = ({
     }
   };
 
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const openSQLForChartHelp = () => {
+    setIsHelpOpen(true);
+  };
+
   return (
     <div
       role="button"
@@ -194,7 +220,6 @@ export const CodeBlock = ({
       onKeyDown={() => textareaRef.current?.focus()}
       onClick={() => textareaRef.current?.focus()}
     >
-      {/** TODO: Get the cursor to follow the reformatted text - make it based on index maybe? */}
       <textarea
         spellCheck={false}
         ref={textareaRef}
@@ -212,54 +237,62 @@ export const CodeBlock = ({
           background: "transparent",
         }}
       />
-      <div className="absolute bottom-0 right-0 m-1 flex gap-1">
+
+      {/* Top right corner icons */}
+      <div className="absolute top-0 right-0 m-2 flex gap-1">
+        {/* Help Icon */}
+        {forChart && (
+          <CustomTooltip hoverText="Help">
+            <button tabIndex={-1} onClick={openSQLForChartHelp}>
+              <QuestionMarkCircleIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-12" />
+            </button>
+          </CustomTooltip>
+        )}
+      </div>
+
+      <div className="absolute bottom-0 right-0 m-2 flex gap-1">
         {/* Save Icon */}
-        <CustomTooltip content="Save" trigger="hover">
-          <button
-            tabIndex={-1}
-            onClick={updateQuery}
-            className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out"
-          >
+        <CustomTooltip hoverText="Save">
+          <button tabIndex={-1} onClick={saveNewSQLString}>
             <BookmarkIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
 
-        <CustomTooltip content="COPIED!" trigger="click">
-          <CustomTooltip content="Copy" trigger="hover">
-            <button
-              tabIndex={-1}
-              onClick={() => copyToClipboard(savedCode)}
-              className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100 transition-all duration-150 ease-in-out"
-            >
-              <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
-            </button>
-          </CustomTooltip>
+        {/* Copy Icon */}
+        <CustomTooltip clickText="COPIED!" hoverText="Copy">
+          <button tabIndex={-1} onClick={() => copyToClipboard(savedCode)}>
+            <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+          </button>
+
         </CustomTooltip>
 
-        <CustomTooltip content="Run" trigger="hover">
-          <button
-            tabIndex={-1}
-            className={classNames(
-              !isPending
-                ? "hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-200 disabled:dark:hover:text-gray-100"
-                : "",
-              "group flex ml-auto gap-2 rounded-md p-1 dark:text-gray-400 bg-gray-700 transition-all duration-150 ease-in-out"
-            )}
-            onClick={() => {
-              updateCode(formattedCode);
-              runSql();
-            }}
-            disabled={isPending}
-          >
-            <PlayIcon
-              className={classNames(
-                isPending ? "animate-spin" : "group-hover:-rotate-12",
-                "w-6 h-6 [&>path]:stroke-[2]"
-              )}
-            />
+        {/* Run Icon */}
+        <CustomTooltip hoverText="Run">
+          <button tabIndex={-1} onClick={() => { runSql() }} disabled={isPending}>
+            <PlayIcon className={classNames(isPending ? "animate-spin" : "group-hover:-rotate-12", "w-6 h-6 [&>path]:stroke-[2]")} />
           </button>
         </CustomTooltip>
       </div>
+
+      {/* Help for editing queries when codeblock is linked to a chart */}
+      {forChart && (
+        <Alert className="lg:ml-72" open={isHelpOpen} onClose={setIsHelpOpen}>
+          <AlertTitle>Quick overview of how you can edit chart-linked queries</AlertTitle>
+          <AlertDescription>
+            Charts are generated from the SQL results automatically. <br /><br />
+            The first column returned by the query is used as the x-axis, and the second column is used as the y-axis.
+            <br /><br />
+            You can edit the query to change the chart type, add filters, or change the x-axis and y-axis columns.<br /><br />
+            But the query must return at least two columns for the basic chart types to work (labels and values respectively).
+          </AlertDescription>
+          <AlertActions>
+            <Button plain onClick={() => setIsHelpOpen(false)}>
+              Got it!
+            </Button>
+          </AlertActions>
+        </Alert>
+      )}
+
     </div>
   );
 };

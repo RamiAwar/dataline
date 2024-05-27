@@ -35,7 +35,7 @@ export const Select = forwardRef<HTMLSelectElement, HeadlessSelectProps>(
           {...props}
           className={clsx([
             // Basic layout
-            "relative block w-full appearance-none rounded-lg py-[calc(theme(spacing[2.5])-1px)] sm:py-[calc(theme(spacing[1.5])-1px)]",
+            "relative block w-full appearance-none rounded-lg py-[calc(theme(spacing[2]))] sm:py-[calc(theme(spacing[1]))]",
 
             // Horizontal padding
             multiple
@@ -46,7 +46,7 @@ export const Select = forwardRef<HTMLSelectElement, HeadlessSelectProps>(
             "[&_optgroup]:font-semibold",
 
             // Typography
-            "text-base/6 text-gray-950 placeholder:text-gray-500 sm:text-sm/6 dark:text-white dark:*:text-white",
+            "text-xs text-gray-950 placeholder:text-gray-500 sm:text-sm/6 dark:text-white dark:*:text-white",
 
             // Border
             "border border-gray-950/10 data-[hover]:border-gray-950/20 dark:border-white/10 dark:data-[hover]:border-white/20",

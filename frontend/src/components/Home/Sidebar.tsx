@@ -215,7 +215,10 @@ export const Sidebar = () => {
                             <li key={conversation.id}>
                               <Link
                                 to={`/chat/${conversation.id}`}
-                                onClick={() => setIsEditing(false)}
+                                onClick={() => {
+                                  setIsEditing(false);
+                                  setSidebarOpen(false);
+                                }}
                                 className={classNames(
                                   conversation.id === currentConversation?.id
                                     ? "bg-gray-700 text-white"
@@ -262,23 +265,6 @@ export const Sidebar = () => {
 
                       <li>
                         <hr className="border-gray-800 -mt-2 mb-4" />
-                        {/* Section for saved queries and dashboards */}
-                        {/* <ul role="list" className="-mx-2 space-y-1">
-                          <li key="saved-queries">
-                            <Link
-                              to="/queries"
-                              className="group flex gap-x-3 rounded-md p-3 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer text-gray-400 hover:text-white hover:bg-gray-800"
-                            >
-                              <BookmarkIcon
-                                className="h-5 w-5 shrink-0"
-                                aria-hidden="true"
-                              />
-                              <span className="text-ellipsis overflow-hidden whitespace-nowrap">
-                                Saved queries
-                              </span>
-                            </Link>
-                          </li>
-                        </ul> */}
                       </li>
                     </ul>
                   </nav>

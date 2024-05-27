@@ -7,17 +7,13 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import END
 
 from dataline.models.llm_flow.schema import QueryResultSchema
-
-# from dataline.services.llm_flow.llm_calls.query_sql_corrector import (
-#     QuerySQLCorrectorCall,
-#     SQLCorrectionDetails,
-# )
 from dataline.services.llm_flow.toolkit import (
+    ChartGeneratorTool,
     ListSQLTablesTool,
     QueryGraphState,
     QueryGraphStateUpdate,
-    SQLToolNames,
     StateUpdaterTool,
+    ToolNames,
     state_update,
 )
 
@@ -57,7 +53,8 @@ class CallModelNode(Node):
             model=state.options.model_name, api_key=state.options.openai_api_key, temperature=0, streaming=True
         )
         sql_tools = state.sql_toolkit.get_tools()
-        tools = [convert_to_openai_function(t) for t in sql_tools]
+        all_tools = sql_tools + [ChartGeneratorTool()]
+        tools = [convert_to_openai_function(t) for t in all_tools]
         model = cast(ChatOpenAI, model.bind_tools(tools))
         response = model.invoke(state.messages)
         return state_update(messages=[response])
@@ -99,7 +96,7 @@ class CallListTablesToolNode(Node):
     @classmethod
     def run(cls, state: QueryGraphState) -> QueryGraphStateUpdate:
         # action = ToolInvocation(tool=SQLToolNames.LIST_SQL_TABLES, tool_input={})
-        tool = cast(ListSQLTablesTool, state.tool_executor.tool_map[SQLToolNames.LIST_SQL_TABLES])
+        tool = cast(ListSQLTablesTool, state.tool_executor.tool_map[ToolNames.LIST_SQL_TABLES])
         response: list[str] = tool.run(tool_input={})
         tool_message = FunctionMessage(content=str(", ".join(response)), name=tool.name)
         return state_update(messages=[tool_message])
@@ -120,22 +117,3 @@ class ShouldCallToolCondition(Condition):
         # Otherwise if there is, we continue
         else:
             return CallToolNode.__name__
-
-
-# class ShouldGenerateChartCondition(Condition):
-#     @classmethod
-#     def run(cls, state: QueryGraphState) -> NodeName:
-#         """
-#         If previous function call was executing SQL and state contains should generate charts,
-#         go to the charting subgraph
-#         """
-#         messages = state.messages
-#         last_message = messages[-1]
-
-#         # Check if the previous function call was to execute SQL
-#         just_executed_sql = last_message.additional_kwargs["function_call"]["name"] == SQLToolNames.EXECUTE_SQL_QUERY
-#         if "function_call" not in last_message.additional_kwargs or not just_executed_sql:
-#             return CallModelNode.__name__
-
-#         # Check if the state contains should generate charts
-#         should_generate_charts = state.options.should_generate_charts

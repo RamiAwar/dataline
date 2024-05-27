@@ -82,7 +82,18 @@ export function useGetUserProfile() {
 export function useGetAvatar(options = {}) {
   const result = useQuery({
     queryKey: AVATAR_QUERY_KEY,
-    queryFn: api.getAvatar,
+    queryFn: async () => {
+      try {
+        return await api.getAvatar();
+      } catch (e) {
+        if (isAxiosError(e) && e.response?.status === 404) {
+          return null;
+        } else {
+          throw e;
+        }
+      }
+    },
+    staleTime: Infinity,
     retry: false,
     ...options,
   });

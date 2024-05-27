@@ -1,39 +1,39 @@
 {
-    "features": [
-        {
-            "feature": "Works with databases",
-            "dataline": true,
-            "chatgpt": false
-        },
-        {
-            "feature": "Works with data files",
-            "dataline": true,
-            "chatgpt": true
-        },
-        {
-            "feature": "Allows query edits, re-runs",
-            "dataline": true,
-            "chatgpt": false
-        },
-        {
-            "feature": "Data never leaves your machine",
-            "dataline": true,
-            "chatgpt": false
-        },
-        {
-            "feature": "Nothing is stored on the cloud",
-            "dataline": true,
-            "chatgpt": false
-        },
-        {
-            "feature": "Data visualization",
-            "dataline": "Coming soon.",
-            "chatgpt": true
-        },
-        {
-            "feature": "Open Source",
-            "dataline": true,
-            "chatgpt": false
-        }
-    ]
+  "features": [
+    {
+      "feature": "Works with databases",
+      "dataline": true,
+      "chatgpt": false
+    },
+    {
+      "feature": "Works with data files",
+      "dataline": true,
+      "chatgpt": true
+    },
+    {
+      "feature": "Allows query edits, re-runs",
+      "dataline": true,
+      "chatgpt": false
+    },
+    {
+      "feature": "Data never leaves your machine",
+      "dataline": true,
+      "chatgpt": false
+    },
+    {
+      "feature": "Nothing is stored on the cloud",
+      "dataline": true,
+      "chatgpt": false
+    },
+    {
+      "feature": "Data visualization",
+      "dataline": true,
+      "chatgpt": true
+    },
+    {
+      "feature": "Open Source",
+      "dataline": true,
+      "chatgpt": false
+    }
+  ]
 }
