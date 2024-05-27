@@ -495,10 +495,16 @@ class ChartGeneratorTool(StateUpdaterTool):
             )
             results.append(result)
 
+            msg = "Chart generation was successful!"
+            if state.options.secure_data:
+                msg += (
+                    "I cannot view the results for security reasons, but the user is able to."
+                    "For this reason I can't do any further analysis on the chart or results. The user could run queries in 'insecure mode'"
+                    "if they'd like me to help further"
+                )
+
             tool_message = ToolMessage(
-                content="Chart generation was successful! I cannot view the results for security reasons, but the user is able to."
-                "For this reason I can't do any further analysis on the chart or results. The user could run queries in 'insecure mode'"
-                "if they'd like me to help further",
+                content=msg,
                 name=self.name,
                 tool_call_id=call_id,
             )
