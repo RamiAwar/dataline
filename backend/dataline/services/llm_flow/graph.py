@@ -2,6 +2,7 @@ from typing import Sequence, Type
 
 from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.tracers.langchain import LangChainTracer
 from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolExecutor
 
@@ -19,7 +20,6 @@ from dataline.services.llm_flow.toolkit import (
     ChartGeneratorTool,
     QueryGraphState,
     SQLDatabaseToolkit,
-    execute_sql_query,
 )
 
 
@@ -47,6 +47,7 @@ class QueryGraphService:
         self.toolkit = SQLDatabaseToolkit(db=self.db)
         all_tools = self.toolkit.get_tools() + [ChartGeneratorTool()]
         self.tool_executor = ToolExecutor(tools=all_tools)
+        self.tracer = LangChainTracer()
 
     def query(
         self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
@@ -69,7 +70,7 @@ class QueryGraphService:
         chunks = []
         messages: list[BaseMessage] = []
         results: list[ResultType] = []
-        for chunk in app.stream(initial_state):
+        for chunk in app.stream(initial_state, config={"callbacks": [self.tracer]}):
             chunks.append(chunk)
             for tool, tool_chunk in chunk.items():
                 if tool_chunk.get("results"):
