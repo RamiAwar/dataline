@@ -6,7 +6,7 @@ from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tracers.langchain import LangChainTracer
 from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolExecutor
-from langsmith.utils import LangSmithUserError
+from langsmith import Client
 
 from dataline.models.llm_flow.schema import QueryOptions, ResultType
 from dataline.services.llm_flow.nodes import (
@@ -48,16 +48,18 @@ class QueryGraphService:
         self.toolkit = SQLDatabaseToolkit(db=self.db)
         all_tools = self.toolkit.get_tools() + [ChartGeneratorTool()]
         self.tool_executor = ToolExecutor(tools=all_tools)
-        try:
-            self.tracer = LangChainTracer()
-        except LangSmithUserError:
-            self.tracer = None
+        self.tracer = None  # no tracing by default
 
     def query(
         self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
     ) -> tuple[Sequence[BaseMessage], Sequence[ResultType]]:
+        # Setup tracing with langsmith if api key is provided
+        if options.langsmith_api_key:
+            self.tracer = LangChainTracer(client=Client(api_key=options.langsmith_api_key.get_secret_value()))
+
         if history is None:
             history = []
+
         graph = self.build_graph()
         app = graph.compile()
 

@@ -260,12 +260,14 @@ export type UpdateUserInfoResult = ApiResponse<void>;
 const updateUserInfo = async (options: {
   name?: string;
   openai_api_key?: string;
+  langsmith_api_key?: string;
 }) => {
-  const { name, openai_api_key } = options;
+  const { name, openai_api_key, langsmith_api_key } = options;
   // send only the filled in fields
   const data = {
     ...(name && { name }),
     ...(openai_api_key && { openai_api_key }),
+    ...(langsmith_api_key && { langsmith_api_key }),
   };
   const response = await backendApi<UpdateUserInfoResult>({
     url: `/settings/info`,
@@ -278,6 +280,7 @@ const updateUserInfo = async (options: {
 export type GetUserInfoResult = ApiResponse<{
   name: string;
   openai_api_key: string;
+  langsmith_api_key?: string;
 }>;
 const getUserInfo = async () => {
   return (await backendApi<GetUserInfoResult>({ url: `/settings/info` })).data;

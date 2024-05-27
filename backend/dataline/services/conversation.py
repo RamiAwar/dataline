@@ -130,11 +130,13 @@ class ConversationService:
         )
 
         # Perform query and execute graph
+        langsmith_api_key = user_with_model_details.langsmith_api_key
         messages, results = query_graph.query(
             query=query,
             options=QueryOptions(
                 secure_data=secure_data,
                 openai_api_key=user_with_model_details.openai_api_key.get_secret_value(),  # type: ignore
+                langsmith_api_key=langsmith_api_key.get_secret_value() if langsmith_api_key else None,  # type: ignore
                 model_name=user_with_model_details.preferred_openai_model,
             ),
             history=history,

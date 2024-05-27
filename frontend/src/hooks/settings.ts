@@ -146,7 +146,7 @@ export function useUpdateUserAvatar(options = {}) {
 export function useUpdateUserInfo(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { openai_api_key: string } | { name: string }) =>
+    mutationFn: (payload: { openai_api_key?: string, name?: string, langsmith_api_key?: string }) =>
       api.updateUserInfo(payload),
     onSuccess() {
       enqueueSnackbar({
