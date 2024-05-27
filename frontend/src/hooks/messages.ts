@@ -26,28 +26,30 @@ export function getMessagesQuery({
   });
 }
 
-export function useSendMessage({
-  conversationId,
-  execute = true,
-}: {
-  conversationId: string;
-  execute?: boolean;
-}) {
+export function useSendMessage() {
   const queryClient = useQueryClient();
   const current_connection = useGetRelatedConnection();
 
   return useMutation({
     retry: false,
-    mutationFn: async ({ message }: { message: string }) => {
+    mutationFn: async ({
+      message,
+      conversationId,
+      execute = true,
+    }: {
+      message: string;
+      conversationId: string;
+      execute?: boolean;
+    }) => {
       const messageOptions = await queryClient.fetchQuery(
         getMessageOptions(current_connection?.id)
       );
       return (await api.query(conversationId, message, execute, messageOptions))
         .data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.setQueryData(
-        getMessagesQuery({ conversationId }).queryKey,
+        getMessagesQuery({ conversationId: variables.conversationId }).queryKey,
         (oldData) => {
           const newMessages: IMessageWithResultsOut[] = [
             { message: data.human_message },

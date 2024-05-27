@@ -11,7 +11,7 @@ const meta: Meta<typeof Message> = {
         <div className="dark bg-gray-800 w-full flex flex-col max-w-screen-sm">
           <Story />
         </div>
-      </QueryClientProvider >
+      </QueryClientProvider>
     ),
   ],
 };
@@ -26,7 +26,7 @@ type Story = StoryObj<typeof Message>;
  */
 export const Primary: Story = {
   args: {
-    initialMessage: {
+    message: {
       message: {
         id: generateUUID(),
         content: "The number of movies returned on time is:",
@@ -38,6 +38,8 @@ export const Primary: Story = {
           content: {
             tables: ["rental", "payment"],
           },
+          result_id: generateUUID(),
+          linked_id: "Jjasd",
         },
         {
           type: "SQL_QUERY_STRING_RESULT",
@@ -58,7 +60,7 @@ export const Primary: Story = {
               ["11", "12", "13", "14", "15"],
               ["16", "17", "18", "19", "20"],
               ["21", "22", "23", "24", "25"],
-            ]
+            ],
           },
         },
         {
@@ -96,10 +98,10 @@ export const Primary: Story = {
                     borderWidth: 1,
                   },
                 ],
-              }
-            })
+              },
+            }),
           },
-        }
+        },
       ],
     },
   },
