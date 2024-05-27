@@ -62,7 +62,7 @@ class QueryGraphService:
         app = graph.compile()
 
         if not options.secure_data:
-            self.db._sample_rows_in_table_info = 4
+            self.db._sample_rows_in_table_info = 3
 
         initial_state = {
             "messages": [
