@@ -139,7 +139,7 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
         id="email"
         className={classNames(
           disabled ? "placeholder:text-gray-600" : "placeholder:text-gray-400",
-          "block rounded-xl border p-4 text-gray-900 shadow-sm sm:text-md sm:leading-6 resize-none dark:text-gray-200 dark:bg-gray-900 dark:border-gray-600 pl-20 pr-12 overflow-y-hidden mr-1"
+          "block rounded-xl border p-4 text-gray-900 shadow-sm sm:text-md sm:leading-6 resize-none dark:text-gray-200 dark:bg-gray-900 dark:border-gray-600 pl-12 sm:pl-20 pr-12 overflow-y-hidden mr-1"
         )}
         style={{ height: "auto" }}
         rows={1}
@@ -165,7 +165,7 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
             className={"hover:-rotate-6 h-6 w-6 [&>path]:stroke-[2]"}
           />
         </div>
-        <div className="dark:text-gray-400 ml-1">
+        <div className="dark:text-gray-400 ml-1 invisible sm:visible">
           {messageOptions?.secure_data ? <ShieldCheckIcon className="h-6 w-6 text-green-500 [&>path]:stroke-[2]" /> : <ShieldExclamationIcon className="h-6 w-6 text-gray-400 [&>path]:stroke-[2]" />}
         </div>
       </div>
