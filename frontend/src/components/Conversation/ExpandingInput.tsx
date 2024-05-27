@@ -19,66 +19,6 @@ import {
 import { useClickOutside } from "../Library/utils";
 import { useQuery } from "@tanstack/react-query";
 
-const secureIcon = (
-  <svg
-    width="8"
-    height="13"
-    viewBox="0 0 8 13"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="ml-px"
-  >
-    <rect
-      x="0.15"
-      y="5.15"
-      width="7.7"
-      height="7.7"
-      rx="0.35"
-      fill="currentColor"
-      stroke="currentColor"
-      strokeWidth="0.3"
-    />
-    <path
-      d="M6 5V3C6 1.89543 5.10457 1 4 1V1C2.89543 1 2 1.89543 2 3V5"
-      stroke="currentColor"
-      strokeWidth="0.7"
-    />
-  </svg>
-);
-
-const unsecureIcon = (
-  <svg
-    width="10"
-    height="14"
-    viewBox="0 0 10 14"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <rect
-      x="1.15"
-      y="5.15"
-      width="7.7"
-      height="7.7"
-      rx="0.35"
-      fill="currentColor"
-      stroke="currentColor"
-      strokeWidth="0.3"
-    />
-    <path
-      d="M7 5V3C7 1.89543 6.10457 1 5 1V1C3.89543 1 3 1.89543 3 3V5"
-      stroke="currentColor"
-      strokeWidth="0.7"
-    />
-    <line
-      x1="9.35355"
-      y1="4.40343"
-      x2="0.353553"
-      y2="13.4034"
-      stroke="#FF0000"
-      strokeWidth="1.5"
-    />
-  </svg>
-);
 
 type ExpandingInputProps = {
   onSubmit: (value: string) => void;
@@ -133,17 +73,6 @@ const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
             <SwitchField>
               <Label className="flex items-center">
                 Data Security{" "}
-                {messageOptions?.secure_data ? (
-                  <ShieldCheckIcon
-                    className={
-                      "ml-2 h-3 w-3 [&>path]:stroke-[2] text-green-400"
-                    }
-                  />
-                ) : (
-                  <ShieldExclamationIcon
-                    className={"ml-2 h-3 w-3 [&>path]:stroke-[2] text-red-400"}
-                  />
-                )}
               </Label>
               <Description>Hide your data from the AI model</Description>
               <Switch
@@ -210,7 +139,7 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
         id="email"
         className={classNames(
           disabled ? "placeholder:text-gray-600" : "placeholder:text-gray-400",
-          "block rounded-xl border p-4 text-gray-900 shadow-sm sm:text-md sm:leading-6 resize-none dark:text-gray-200 dark:bg-gray-900 dark:border-gray-600 pl-14 pr-12 overflow-y-hidden mr-1"
+          "block rounded-xl border p-4 text-gray-900 shadow-sm sm:text-md sm:leading-6 resize-none dark:text-gray-200 dark:bg-gray-900 dark:border-gray-600 pl-20 pr-12 overflow-y-hidden mr-1"
         )}
         style={{ height: "auto" }}
         rows={1}
@@ -227,17 +156,17 @@ const ExpandingInput: React.FC<ExpandingInputProps> = ({
         />
       </div>
       <div
-        ref={settingsCogRef}
-        onClick={() => setMessageSettingsShown((prev) => !prev)}
         className={
-          "hover:cursor-pointer hover:bg-white/10 group absolute flex items-center left-0 dark:text-gray-400 ml-2 p-1 rounded-md transition-all duration-150"
+          "group absolute flex items-center left-0"
         }
       >
-        <Cog6ToothIcon
-          className={"hover:-rotate-6 h-6 w-6 [&>path]:stroke-[2]"}
-        />
-        <div className="dark:text-gray-400 ml-1 bg-transparent">
-          {messageOptions?.secure_data ? secureIcon : unsecureIcon}
+        <div ref={settingsCogRef} onClick={() => setMessageSettingsShown((prev) => !prev)} className="hover:cursor-pointer hover:bg-white/10 dark:text-gray-400 ml-2 p-1 rounded-md transition-all duration-150">
+          <Cog6ToothIcon
+            className={"hover:-rotate-6 h-6 w-6 [&>path]:stroke-[2]"}
+          />
+        </div>
+        <div className="dark:text-gray-400 ml-1">
+          {messageOptions?.secure_data ? <ShieldCheckIcon className="h-6 w-6 text-green-500 [&>path]:stroke-[2]" /> : <ShieldExclamationIcon className="h-6 w-6 text-gray-400 [&>path]:stroke-[2]" />}
         </div>
       </div>
       <div
