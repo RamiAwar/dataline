@@ -6,6 +6,8 @@ import {
   AlertTitle,
 } from "@components/Catalyst/alert";
 import { Button } from "@components/Catalyst/button";
+import { Label } from "@components/Catalyst/fieldset";
+import { SwitchField, Switch } from "@components/Catalyst/switch";
 import { useState } from "react";
 import MaskedInput from "@components/Settings/MaskedInput";
 import { enqueueSnackbar } from "notistack";
@@ -14,6 +16,8 @@ import { useUpdateUserInfo } from "@/hooks";
 export function OpenAIKeyPopup() {
   const [isOpen, setIsOpen] = useState(true);
   const [apiKey, setApiKey] = useState("");
+  const [sentryEnabled, setSentryEnabled] = useState(true);
+
   const { mutate, isPending } = useUpdateUserInfo({
     onSuccess() {
       setIsOpen(false);
@@ -32,7 +36,6 @@ export function OpenAIKeyPopup() {
     }
 
     if (!apiKey.startsWith("sk-")) {
-      // TODO: Show error banner: Invalid OpenAI API key
       enqueueSnackbar({
         variant: "error",
         message: "Invalid OpenAI API key.",
@@ -40,7 +43,7 @@ export function OpenAIKeyPopup() {
       return;
     }
 
-    mutate({ openai_api_key: apiKey });
+    mutate({ openai_api_key: apiKey, sentry_enabled: sentryEnabled });
   }
 
   function handleKeyPress(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -62,6 +65,14 @@ export function OpenAIKeyPopup() {
           onChange={setApiKey}
           onKeyUp={handleKeyPress}
         />
+        <SwitchField className="mt-4">
+          <Label>Send Error Reports</Label>
+          <Switch
+            name="allow_sentry"
+            checked={sentryEnabled}
+            onChange={setSentryEnabled}
+          />
+        </SwitchField>
       </AlertBody>
       <AlertDescription>
         <p className="text-xs">

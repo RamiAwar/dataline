@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 from typing import Optional
 from uuid import uuid4
@@ -13,6 +14,9 @@ from dataline.models.user.schema import UserOut, UserUpdateIn, UserWithKeys
 from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.media import MediaCreate, MediaRepository
 from dataline.repositories.user import UserCreate, UserRepository, UserUpdate
+from dataline.sentry import opt_out_of_sentry, setup_sentry
+
+logger = logging.getLogger(__name__)
 
 
 def model_exists(openai_api_key: SecretStr | str, model: str) -> bool:
@@ -71,8 +75,12 @@ class SettingsService:
 
     async def update_user_info(self, session: AsyncSession, data: UserUpdateIn) -> UserOut:
         # Check if user exists
+        logger.warning("DATA HERE:")  # TODO: remove when done testing
+        logger.warning(data)  # TODO: remove when done testing
         user = None
         user_info = await self.user_repo.get_one_or_none(session)
+        logger.warning("USER INFO HERE:")  # TODO: remove when done testing
+        logger.warning(user_info)  # TODO: remove when done testing
         if user_info is None:
             # Create user with data
             user_create = UserCreate.model_construct(**data.model_dump(exclude_none=True))
@@ -83,6 +91,9 @@ class SettingsService:
                     else "gpt-3.5-turbo"
                 )
             user = await self.user_repo.create(session, user_create)
+            if data.sentry_enabled:  # by default, Sentry is off if no user in the db
+                logger.warning("setting up sentry from update_user_info, where user_info is None")
+                setup_sentry()
         else:
             # Update user with data
             user_update = UserUpdate.model_construct(**data.model_dump(exclude_none=True))
@@ -97,6 +108,17 @@ class SettingsService:
                 if not model_exists(user_info.openai_api_key, user_update.preferred_openai_model):
                     raise Exception(f"model {user_update.preferred_openai_model} not accessible with current key")
             user = await self.user_repo.update_by_uuid(session, record_id=user_info.id, data=user_update)
+            if data.sentry_enabled is not None and user_info.sentry_enabled != data.sentry_enabled:
+                if data.sentry_enabled:
+                    logger.warning(
+                        "setting up sentry from update_user_info, where user_info exists"
+                    )  # TODO: remove when done testing
+                    setup_sentry()
+                else:
+                    logger.warning(
+                        "disabling sentry from update_user_info, where user_info exists"
+                    )  # TODO: remove when done testing
+                    opt_out_of_sentry()
 
         return UserOut.model_validate(user)
 

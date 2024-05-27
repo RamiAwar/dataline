@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { UserCircleIcon } from "@heroicons/react/20/solid";
 import MaskedInput from "./MaskedInput";
 import {
@@ -7,7 +7,13 @@ import {
   useUpdateUserInfo,
   useUpdateUserAvatar,
 } from "@/hooks";
+import { Switch, SwitchField } from "@components/Catalyst/switch";
+import { Label } from "@components/Catalyst/fieldset";
+import _ from "lodash";
 
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(" ");
+}
 
 export default function Account() {
   const { data: profile } = useGetUserProfile();
@@ -18,21 +24,23 @@ export default function Account() {
   const avatarUploadRef = useRef<HTMLInputElement>(null);
 
   // Store values from inputs
-  const [userInfo, setUserInfo] = useState({
-    name: profile?.name,
-    openai_api_key: profile?.openai_api_key,
-    langsmith_api_key: profile?.langsmith_api_key,
-  });
+  const [userInfo, setUserInfo] = useState({ ...profile, openai_api_key: "" });
+  //   const [userInfo, setUserInfo] = useState({
+  //   name: profile?.name,
+  //   openai_api_key: profile?.openai_api_key,
+  //   langsmith_api_key: profile?.langsmith_api_key,
+
+  // });
 
   // Update name and api keys when user info changes
-  useEffect(() => {
-    setUserInfo((prevUserInfo) => ({
-      ...prevUserInfo,
-      name: profile?.name,
-      openai_api_key: profile?.openai_api_key,
-      langsmith_api_key: profile?.langsmith_api_key,
-    }));
-  }, [profile]);
+  // useEffect(() => {
+  //   setUserInfo((prevUserInfo) => ({
+  //     ...prevUserInfo,
+  //     name: profile?.name,
+  //     openai_api_key: profile?.openai_api_key,
+  //     langsmith_api_key: profile?.langsmith_api_key,
+  //   }));
+  // }, [profile]);
 
   function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
     if (!event.target.files || event.target.files.length === 0) {
@@ -41,14 +49,18 @@ export default function Account() {
     // Update profile avatar URL
     updateAvatar(event.target.files[0]);
   }
+  const settingsChanged = !_.isEqual(userInfo, {
+    ...profile,
+    openai_api_key: "",
+  });
 
-  function updateUserInfoWithKeys() {
-    const updatedUserInfo = {
-      ...userInfo,
-      openai_api_key: userInfo.openai_api_key === "**********" ? undefined : userInfo.openai_api_key,
-    };
-    updateUserInfo(updatedUserInfo);
-  }
+  // function updateUserInfoWithKeys() {
+  // const updatedUserInfo = {
+  //   ...userInfo,
+  //   openai_api_key: userInfo.openai_api_key === "**********" ? undefined : userInfo.openai_api_key,
+  // };
+  // updateUserInfo(updatedUserInfo);
+  // }
 
   return (
     <>
@@ -59,6 +71,7 @@ export default function Account() {
 
             {/* Settings forms */}
             <div className="divide-y divide-white/5">
+              {/* Personal info */}
               <div className="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
                 <div>
                   <h2 className="text-base font-semibold leading-7 text-white">
@@ -137,6 +150,7 @@ export default function Account() {
                 </div>
               </div>
 
+              {/* Keys */}
               <div className="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
                 <div>
                   <h2 className="text-base font-semibold leading-7 text-white">
@@ -199,58 +213,99 @@ export default function Account() {
                         />
                       </div>
                       <p className="text-xs text-gray-400 pt-2">
-                        Useful to visualize the LLM query graph and different tools used.
+                        Useful to visualize the LLM query graph and different
+                        tools used.
                       </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sentry Preference */}
+              <div className="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
+                <div>
+                  <h2 className="text-base font-semibold leading-7 text-white">
+                    Preferences
+                  </h2>
+                </div>
+
+                <div className="md:col-span-2">
+                  {/*  */}
+                  <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
+                    <div className="col-span-full">
+                      <SwitchField>
+                        <Label>Send Error Reports</Label>
+                        <Switch
+                          name="allow_sentry"
+                          checked={userInfo.sentry_enabled ?? true}
+                          onChange={(value) =>
+                            setUserInfo((prevUserInfo) => ({
+                              ...prevUserInfo,
+                              sentry_enabled: value,
+                            }))
+                          }
+                        />
+                      </SwitchField>
                     </div>
                   </div>
                   <div className="mt-8 flex">
                     <button
+                      disabled={!settingsChanged}
                       type="submit"
-                      className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                      onClick={updateUserInfoWithKeys}
+                      className={classNames(
+                        "rounded-md px-3 py-2 text-sm font-semibold shadow-sm",
+                        settingsChanged
+                          ? "bg-indigo-500 text-white hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                          : "text-gray-300 bg-indigo-700"
+                      )}
+                      onClick={() => updateUserInfo(userInfo)}
                     >
                       Save
                     </button>
                   </div>
-                </div>
-              </div>
-              <div className="p-10">
-                <div className="mx-auto max-w-2xl text-center text-white">
-                  Enjoying DataLine? Subscribe to our newsletter for updates.
-                </div>
-                <form
-                  className="mx-auto mt-4 flex max-w-md gap-x-4"
-                  method="POST"
-                  action="https://listmonk.dataline.app/subscription/form"
-                >
-                  <input type="hidden" name="nonce" />
-                  <label htmlFor="email-address" className="sr-only">
-                    Email address
-                  </label>
-                  <input
-                    id="email-address"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    className="min-w-0 flex-auto rounded-md border-0 bg-white/5 px-3.5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
-                    placeholder="Enter your email"
-                  />
+                  <div className="p-10">
+                    <div className="mx-auto max-w-2xl text-center text-white">
+                      Enjoying DataLine? Subscribe to our newsletter for
+                      updates.
+                    </div>
+                    <form
+                      className="mx-auto mt-4 flex max-w-md gap-x-4"
+                      method="POST"
+                      action="https://listmonk.dataline.app/subscription/form"
+                    >
+                      <input type="hidden" name="nonce" />
+                      <label htmlFor="email-address" className="sr-only">
+                        Email address
+                      </label>
+                      <input
+                        id="email-address"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        className="min-w-0 flex-auto rounded-md border-0 bg-white/5 px-3.5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+                        placeholder="Enter your email"
+                      />
 
-                  {/* Subscribe to "Subscribers" list, add more here if needed */}
-                  <input className="hidden" type="checkbox" name="l" checked value="e675d172-5277-4e0b-9b79-f4f21f164f44" />
-                  <button
-                    type="submit"
-                    className="flex-none rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                  >
-                    Subscribe
-                  </button>
-                </form>
+                      {/* Subscribe to "Subscribers" list, add more here if needed */}
+                      <input
+                        className="hidden"
+                        type="checkbox"
+                        name="l"
+                        checked
+                        value="e675d172-5277-4e0b-9b79-f4f21f164f44"
+                      />
+                      <button
+                        type="submit"
+                        className="flex-none rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                      >
+                        Subscribe
+                      </button>
+                    </form>
+                  </div>
+                </div>
               </div>
             </div>
-
-
-
           </main>
         </div>
       </div>
