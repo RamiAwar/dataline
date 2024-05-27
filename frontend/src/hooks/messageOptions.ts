@@ -60,11 +60,11 @@ function saveMessageOptionsToLocalStorage(
   localStorage.setItem("message_options", JSON.stringify(allMessageOptions));
 }
 
-export function usePatchMessageOptions(connection_id: string, options = {}) {
+export function usePatchMessageOptions(connection_id?: string, options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (changes: Partial<IMessageOptions>) =>
-      saveMessageOptionsToLocalStorage(connection_id, changes),
+      connection_id && saveMessageOptionsToLocalStorage(connection_id, changes),
     onError() {
       enqueueSnackbar({
         variant: "error",
