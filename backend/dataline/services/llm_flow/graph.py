@@ -2,9 +2,11 @@ from typing import Sequence, Type
 
 from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tracers.langchain import LangChainTracer
 from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolExecutor
+from langsmith.utils import LangSmithUserError
 
 from dataline.models.llm_flow.schema import QueryOptions, ResultType
 from dataline.services.llm_flow.nodes import (
@@ -47,7 +49,10 @@ class QueryGraphService:
         self.toolkit = SQLDatabaseToolkit(db=self.db)
         all_tools = self.toolkit.get_tools() + [ChartGeneratorTool()]
         self.tool_executor = ToolExecutor(tools=all_tools)
-        self.tracer = LangChainTracer()
+        try:
+            self.tracer = LangChainTracer()
+        except LangSmithUserError:
+            self.tracer = None
 
     def query(
         self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
@@ -70,7 +75,8 @@ class QueryGraphService:
         chunks = []
         messages: list[BaseMessage] = []
         results: list[ResultType] = []
-        for chunk in app.stream(initial_state, config={"callbacks": [self.tracer]}):
+        config: RunnableConfig | None = {"callbacks": [self.tracer]} if self.tracer is not None else None
+        for chunk in app.stream(initial_state, config=config):
             chunks.append(chunk)
             for tool, tool_chunk in chunk.items():
                 if tool_chunk.get("results"):
