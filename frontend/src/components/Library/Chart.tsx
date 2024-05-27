@@ -22,7 +22,9 @@ function classNames(...classes: string[]) {
 
 const canvasBackgroundColorPlugin = {
   id: "customCanvasBackgroundColor",
-  beforeDraw: (chart, args, options) => {
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  beforeDraw: (chart: { width?: any; height?: any; ctx?: any; }, _: any, options: { color: string; }) => {
     const { ctx } = chart;
     ctx.save();
     ctx.globalCompositeOperation = "destination-over";

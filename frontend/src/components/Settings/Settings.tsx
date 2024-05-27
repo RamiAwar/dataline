@@ -7,7 +7,7 @@ import {
   useUpdateUserInfo,
   useUpdateUserAvatar,
 } from "@/hooks";
-import { EmailSignupForm } from "../Landing/EmailSignupForm";
+
 
 export default function Account() {
   const { data: profile } = useGetUserProfile();
