@@ -44,7 +44,6 @@ class QueryGraphService:
     ) -> None:
         self.db = SQLDatabase.from_uri(dsn)
 
-        # TODO: Add this in later if data security disabled
         self.db._sample_rows_in_table_info = 0  # Preventative security
         self.toolkit = SQLDatabaseToolkit(db=self.db)
         all_tools = self.toolkit.get_tools() + [ChartGeneratorTool()]
@@ -61,6 +60,9 @@ class QueryGraphService:
             history = []
         graph = self.build_graph()
         app = graph.compile()
+
+        if not options.secure_data:
+            self.db._sample_rows_in_table_info = 4
 
         initial_state = {
             "messages": [
