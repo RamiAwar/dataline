@@ -9,7 +9,7 @@ from pydantic import SecretStr
 from dataline.config import config
 from dataline.errors import ValidationError
 from dataline.models.media.model import MediaModel
-from dataline.models.user.schema import UserOut, UserUpdateIn, UserWithKey
+from dataline.models.user.schema import UserOut, UserUpdateIn, UserWithKeys
 from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.media import MediaCreate, MediaRepository
 from dataline.repositories.user import UserCreate, UserRepository, UserUpdate
@@ -107,7 +107,7 @@ class SettingsService:
 
         return UserOut.model_validate(user_info)
 
-    async def get_model_details(self, session: AsyncSession) -> UserWithKey:
+    async def get_model_details(self, session: AsyncSession) -> UserWithKeys:
         user_info = await self.user_repo.get_one_or_none(session)
         if user_info is None:
             raise NotFoundError("No user found. Please setup your application.")
@@ -116,4 +116,4 @@ class SettingsService:
             raise Exception("OpenAI key not setup. Please setup your application.")
 
         user_info.preferred_openai_model = user_info.preferred_openai_model or config.default_model
-        return UserWithKey.model_validate(user_info)
+        return UserWithKeys.model_validate(user_info)

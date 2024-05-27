@@ -17,6 +17,7 @@ from dataline.repositories.result import ResultRepository
 # Need to use pydantic v1 due to langchain
 class QueryOptions(BaseModelV1):
     openai_api_key: SecretStrV1
+    langsmith_api_key: SecretStrV1 | None = None
     model_name: str
     secure_data: bool = False
 

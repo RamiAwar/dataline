@@ -7,6 +7,7 @@ import {
   useUpdateUserInfo,
   useUpdateUserAvatar,
 } from "@/hooks";
+import { EmailSignupForm } from "../Landing/EmailSignupForm";
 
 export default function Account() {
   const { data: profile } = useGetUserProfile();
@@ -17,14 +18,20 @@ export default function Account() {
   const avatarUploadRef = useRef<HTMLInputElement>(null);
 
   // Store values from inputs
-  const [name, setName] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [userInfo, setUserInfo] = useState({
+    name: profile?.name,
+    openai_api_key: profile?.openai_api_key,
+    langsmith_api_key: profile?.langsmith_api_key,
+  });
 
-  // Update name and api key when user info changes
-  // TODO - use a form manager, this is not necessary
+  // Update name and api keys when user info changes
   useEffect(() => {
-    setName(profile?.name || null);
-    setApiKey(profile?.openai_api_key || null);
+    setUserInfo((prevUserInfo) => ({
+      ...prevUserInfo,
+      name: profile?.name,
+      openai_api_key: profile?.openai_api_key,
+      langsmith_api_key: profile?.langsmith_api_key,
+    }));
   }, [profile]);
 
   function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
@@ -35,16 +42,12 @@ export default function Account() {
     updateAvatar(event.target.files[0]);
   }
 
-  // TODO - debounce this
-  function _updateName() {
-    if (!name) return;
-    updateUserInfo({ name });
-  }
-
-  // TODO - debounce this
-  function _updateApiKey() {
-    if (!apiKey) return;
-    updateUserInfo({ openai_api_key: apiKey });
+  function updateUserInfoWithKeys() {
+    const updatedUserInfo = {
+      ...userInfo,
+      openai_api_key: userInfo.openai_api_key === "**********" ? undefined : userInfo.openai_api_key,
+    };
+    updateUserInfo(updatedUserInfo);
   }
 
   return (
@@ -120,21 +123,16 @@ export default function Account() {
                           id="first-name"
                           autoComplete="given-name"
                           className="block w-full rounded-md border-0 bg-white/5 py-1.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
-                          value={name || ""}
-                          onChange={(event) => setName(event.target.value)}
+                          value={userInfo.name || ""}
+                          onChange={(event) =>
+                            setUserInfo((prevUserInfo) => ({
+                              ...prevUserInfo,
+                              name: event.target.value,
+                            }))
+                          }
                         />
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mt-8 flex">
-                    <button
-                      type="submit"
-                      className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                      onClick={_updateName}
-                    >
-                      Save
-                    </button>
                   </div>
                 </div>
               </div>
@@ -145,7 +143,7 @@ export default function Account() {
                     API Keys
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-gray-400">
-                    Update your OpenAI API key.
+                    Update your API keys.
                   </p>
                 </div>
 
@@ -156,12 +154,17 @@ export default function Account() {
                         htmlFor="current-password"
                         className="block text-sm font-medium leading-6 text-white"
                       >
-                        API Key
+                        OpenAI API Key
                       </label>
                       <div className="mt-2">
                         <MaskedInput
-                          value={apiKey || ""}
-                          onChange={setApiKey}
+                          value={userInfo.openai_api_key || ""}
+                          onChange={(value) =>
+                            setUserInfo((prevUserInfo) => ({
+                              ...prevUserInfo,
+                              openai_api_key: value,
+                            }))
+                          }
                         />
                       </div>
                       <p className="text-xs text-gray-400 pt-2">
@@ -176,19 +179,78 @@ export default function Account() {
                         to use DataLine.
                       </p>
                     </div>
+
+                    <div className="col-span-full">
+                      <label
+                        htmlFor="current-password"
+                        className="block text-sm font-medium leading-6 text-white"
+                      >
+                        LangSmith API Key (tracing)
+                      </label>
+                      <div className="mt-2">
+                        <MaskedInput
+                          value={userInfo.langsmith_api_key || ""}
+                          onChange={(value) =>
+                            setUserInfo((prevUserInfo) => ({
+                              ...prevUserInfo,
+                              langsmith_api_key: value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <p className="text-xs text-gray-400 pt-2">
+                        Useful to visualize the LLM query graph and different tools used.
+                      </p>
+                    </div>
                   </div>
                   <div className="mt-8 flex">
                     <button
                       type="submit"
                       className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                      onClick={_updateApiKey}
+                      onClick={updateUserInfoWithKeys}
                     >
                       Save
                     </button>
                   </div>
                 </div>
               </div>
+              <div className="p-10">
+                <div className="mx-auto max-w-2xl text-center text-white">
+                  Enjoying DataLine? Subscribe to our newsletter for updates.
+                </div>
+                <form
+                  className="mx-auto mt-4 flex max-w-md gap-x-4"
+                  method="POST"
+                  action="https://listmonk.dataline.app/subscription/form"
+                >
+                  <input type="hidden" name="nonce" />
+                  <label htmlFor="email-address" className="sr-only">
+                    Email address
+                  </label>
+                  <input
+                    id="email-address"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    className="min-w-0 flex-auto rounded-md border-0 bg-white/5 px-3.5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+                    placeholder="Enter your email"
+                  />
+
+                  {/* Subscribe to "Subscribers" list, add more here if needed */}
+                  <input className="hidden" type="checkbox" name="l" checked value="e675d172-5277-4e0b-9b79-f4f21f164f44" />
+                  <button
+                    type="submit"
+                    className="flex-none rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  >
+                    Subscribe
+                  </button>
+                </form>
+              </div>
             </div>
+
+
+
           </main>
         </div>
       </div>
