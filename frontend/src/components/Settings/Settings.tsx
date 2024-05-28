@@ -43,6 +43,10 @@ export default function Account() {
         userInfo.openai_api_key === "**********"
           ? undefined
           : userInfo.openai_api_key,
+      langsmith_api_key:
+        userInfo.langsmith_api_key === "**********"
+          ? undefined
+          : userInfo.langsmith_api_key,
     };
     updateUserInfo(updatedUserInfo);
   }
