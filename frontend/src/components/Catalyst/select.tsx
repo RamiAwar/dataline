@@ -46,13 +46,13 @@ export const Select = forwardRef<HTMLSelectElement, HeadlessSelectProps>(
             "[&_optgroup]:font-semibold",
 
             // Typography
-            "text-xs text-gray-950 placeholder:text-gray-500 sm:text-sm/6 dark:text-white dark:*:text-white",
+            "text-xs text-gray-950 placeholder:text-gray-500 sm:text-sm/6 dark:text-white dark:[&>*]:text-white",
 
             // Border
             "border border-gray-950/10 data-[hover]:border-gray-950/20 dark:border-white/10 dark:data-[hover]:border-white/20",
 
             // Background color
-            "bg-transparent dark:bg-white/5 dark:*:bg-gray-800",
+            "bg-transparent dark:bg-white/5 dark:[&>*]:bg-gray-800",
 
             // Hide default focus styles
             "focus:outline-none",
