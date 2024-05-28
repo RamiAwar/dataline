@@ -10,23 +10,22 @@ from dataline.repositories.user import UserRepository
 logger = logging.getLogger(__name__)
 
 
-def setup_sentry():
+def setup_sentry() -> None:
     sentry_sdk.init(
-        dsn="https://3efb5a2ad9ae364b894842ea76caa57f@o4506888560508928.ingest.us.sentry.io/4506888562606080",
+        dsn="https://eb866cebe8c8378fd689c1ad3d39bcb5@o4507329853915136.ingest.de.sentry.io/4507335339278416",
         enable_tracing=True,
         integrations=[FastApiIntegration()],
-        profiles_sample_rate=0.05,
-        traces_sample_rate=0.05,
+        traces_sample_rate=1.0,
         include_local_variables=False,
         ignore_errors=[KeyboardInterrupt],
     )
 
 
-def opt_out_of_sentry():
+def opt_out_of_sentry() -> None:
     GLOBAL_HUB.bind_client(None)
 
 
-async def maybe_init_sentry():
+async def maybe_init_sentry() -> None:
     async with SessionCreator.begin() as session:
         user_repo = UserRepository()
         user_info = await user_repo.get_one_or_none(session)

@@ -155,7 +155,7 @@ export default function Account() {
                   <div className="col-span-full">
                     <label
                       htmlFor="current-password"
-                      className="block text-sm font-medium leading-6 text-white"
+                      className="block text-md font-medium leading-6 text-white"
                     >
                       OpenAI API Key
                     </label>
@@ -170,7 +170,7 @@ export default function Account() {
                         }
                       />
                     </div>
-                    <p className="text-xs text-gray-400 pt-2">
+                    <p className="text-xs sm:text-sm text-gray-400 pt-2">
                       Please setup your API key with{" "}
                       <a
                         className="underline"
@@ -186,7 +186,7 @@ export default function Account() {
                   <div className="col-span-full">
                     <label
                       htmlFor="current-password"
-                      className="block text-sm font-medium leading-6 text-white"
+                      className="block text-md font-medium leading-6 text-white"
                     >
                       LangSmith API Key (tracing)
                     </label>
@@ -201,7 +201,7 @@ export default function Account() {
                         }
                       />
                     </div>
-                    <p className="text-xs text-gray-400 pt-2">
+                    <p className="text-xs md:text-sm text-gray-400 pt-2">
                       Useful to visualize the LLM query graph and different
                       tools used.
                     </p>
@@ -221,10 +221,16 @@ export default function Account() {
               <div className="md:col-span-2">
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
                   <div className="col-span-full">
-                    <SwitchField>
-                      <Label>Send Error Reports</Label>
+                    <div className="flex items-center gap-x-6">
+                      <label
+                        htmlFor="current-password"
+                        className="block text-md font-medium leading-6 text-white"
+                      >
+                        Send error reports
+                      </label>
                       <Switch
                         name="allow_sentry"
+                        color="green"
                         checked={userInfo?.sentry_enabled ?? true}
                         onChange={(value) =>
                           setUserInfo((prevUserInfo) => ({
@@ -233,7 +239,11 @@ export default function Account() {
                           }))
                         }
                       />
-                    </SwitchField>
+                    </div>
+                    <p className="text-xs md:text-sm text-gray-400 pt-2">
+                      Send technical errors to our Sentry to help improve DataLine.
+                    </p>
+
                   </div>
                 </div>
                 <div className="mt-8 flex">
@@ -251,51 +261,59 @@ export default function Account() {
                     Save
                   </button>
                 </div>
-                <div className="p-10">
-                  <div className="mx-auto max-w-2xl text-center text-white">
-                    Enjoying DataLine? Subscribe to our newsletter for updates.
-                  </div>
-                  <form
-                    className="mx-auto mt-4 flex max-w-md gap-x-4"
-                    method="POST"
-                    action="https://listmonk.dataline.app/subscription/form"
-                  >
-                    <input type="hidden" name="nonce" />
-                    <label htmlFor="email-address" className="sr-only">
-                      Email address
-                    </label>
-                    <input
-                      id="email-address"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      className="min-w-0 flex-auto rounded-md border-0 bg-white/5 px-3.5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
-                      placeholder="Enter your email"
-                    />
+              </div>
+            </div>
 
-                    {/* Subscribe to "Subscribers" list, add more here if needed */}
-                    <input
-                      className="hidden"
-                      type="checkbox"
-                      name="l"
-                      readOnly
-                      checked
-                      value="e675d172-5277-4e0b-9b79-f4f21f164f44"
-                    />
-                    <button
-                      type="submit"
-                      className="flex-none rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            <div className="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
+              <div></div>
+              <div className="md:col-span-2">
+                <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
+                  <div className="col-span-full">
+                    <div className="max-w-2xl text-white">
+                      Enjoying DataLine? Subscribe to our newsletter for updates.
+                    </div>
+                    <form
+                      className="mt-4 flex max-w-md gap-x-4"
+                      method="POST"
+                      action="https://listmonk.dataline.app/subscription/form"
                     >
-                      Subscribe
-                    </button>
-                  </form>
+                      <input type="hidden" name="nonce" />
+                      <label htmlFor="email-address" className="sr-only">
+                        Email address
+                      </label>
+                      <input
+                        id="email-address"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        className="min-w-0 flex-auto rounded-md border-0 bg-white/5 px-3.5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+                        placeholder="Enter your email"
+                      />
+
+                      {/* Subscribe to "Subscribers" list, add more here if needed */}
+                      <input
+                        className="hidden"
+                        type="checkbox"
+                        name="l"
+                        readOnly
+                        checked
+                        value="e675d172-5277-4e0b-9b79-f4f21f164f44"
+                      />
+                      <button
+                        type="submit"
+                        className="flex-none rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                      >
+                        Subscribe
+                      </button>
+                    </form>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </main>
-      </div>
+        </main >
+      </div >
     </>
   );
 }

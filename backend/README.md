@@ -9,16 +9,24 @@ We're going with 3.11 for now cause of all the nice features.
 ```
 poetry config virtualenvs.in-project true
 poetry install --no-root
+
+
+# Define a custom SQLITE_PATH
+SQLITE_PATH="."  # Define where sqlite DB will be stored
+
+poetry shell  # Active python environment (makes alembic command available)
+alembic upgrade head  # Run migrations
 ```
 
 ## Environment setup
 
 You only need an OpenAI API key to start using DataLine.
-For Langsmith support, you can add your API keys to environment variables while launching the project. 
+For Langsmith support, you can add your API keys to environment variables while launching the project.
 
 If using .env files, you can add the following to get Langsmith logs for your LLM flow.
 
 !NOTE that adding Langsmith will send the graph state to Langsmith to log. The graph state includes your **private results**. Only enable this feature if you are okay with sharing your data with Langsmith. We use this mainly for debugging during development. We will probably add the LLM steps to the frontend in the future (kind of a low priority for now).
+
 ```
 LANGCHAIN_TRACING_V2="true"
 LANGCHAIN_API_KEY="ls__XXXX"

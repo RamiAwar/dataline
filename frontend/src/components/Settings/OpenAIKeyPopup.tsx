@@ -65,14 +65,6 @@ export function OpenAIKeyPopup() {
           onChange={setApiKey}
           onKeyUp={handleKeyPress}
         />
-        <SwitchField className="mt-4">
-          <Label>Send Error Reports</Label>
-          <Switch
-            name="allow_sentry"
-            checked={sentryEnabled}
-            onChange={setSentryEnabled}
-          />
-        </SwitchField>
       </AlertBody>
       <AlertDescription className="!text-xs">
         Please setup your API key with{" "}
@@ -91,6 +83,24 @@ export function OpenAIKeyPopup() {
         >
           OpenAI platform.
         </a>
+      </AlertDescription>
+
+      <AlertBody>
+        <div className="flex">
+          <SwitchField className="mt-4">
+            <Label>Send Error Reports</Label>
+            <Switch
+              name="allow_sentry"
+              color="green"
+              checked={sentryEnabled}
+              onChange={setSentryEnabled}
+            />
+          </SwitchField>
+        </div>
+      </AlertBody>
+      <AlertDescription className="!text-xs">
+        We use Sentry to track errors and improve our service. You can disable
+        this feature at any time.
       </AlertDescription>
       <AlertActions>
         <Button disabled={isPending} onClick={saveApiKey}>

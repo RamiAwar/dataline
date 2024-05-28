@@ -58,7 +58,7 @@ class UserWithKeys(BaseModel):
     name: Optional[str] = None
 
     openai_api_key: SecretStr
-    langsmith_api_key: SecretStr
+    langsmith_api_key: SecretStr | None = None
     preferred_openai_model: str
     sentry_enabled: bool
 
