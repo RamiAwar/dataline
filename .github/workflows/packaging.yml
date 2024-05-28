@@ -2,8 +2,8 @@ name: Packaging
 run-name: Packaging triggered by ${{ github.actor }}
 on:
   push:
-    branches:
-      - "S12.4-verify-dataline-directory-creation-fix"
+    tags:
+      - "v*"
 jobs:
   build-frontend:
     runs-on: ubuntu-latest
