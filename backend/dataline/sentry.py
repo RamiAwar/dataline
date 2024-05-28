@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 def setup_sentry():
-    logger.warning("Enabling sentry")  # TODO: Remove this after verifying user update works
     sentry_sdk.init(
         dsn="https://3efb5a2ad9ae364b894842ea76caa57f@o4506888560508928.ingest.us.sentry.io/4506888562606080",
         enable_tracing=True,
@@ -24,7 +23,6 @@ def setup_sentry():
 
 
 def opt_out_of_sentry():
-    logger.warning("Disabling sentry")  # TODO: Remove this after verifying user update works
     GLOBAL_HUB.bind_client(None)
 
 
