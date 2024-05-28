@@ -24,23 +24,7 @@ export default function Account() {
   const avatarUploadRef = useRef<HTMLInputElement>(null);
 
   // Store values from inputs
-  const [userInfo, setUserInfo] = useState({ ...profile, openai_api_key: "" });
-  //   const [userInfo, setUserInfo] = useState({
-  //   name: profile?.name,
-  //   openai_api_key: profile?.openai_api_key,
-  //   langsmith_api_key: profile?.langsmith_api_key,
-
-  // });
-
-  // Update name and api keys when user info changes
-  // useEffect(() => {
-  //   setUserInfo((prevUserInfo) => ({
-  //     ...prevUserInfo,
-  //     name: profile?.name,
-  //     openai_api_key: profile?.openai_api_key,
-  //     langsmith_api_key: profile?.langsmith_api_key,
-  //   }));
-  // }, [profile]);
+  const [userInfo, setUserInfo] = useState(profile);
 
   function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
     if (!event.target.files || event.target.files.length === 0) {
@@ -49,18 +33,19 @@ export default function Account() {
     // Update profile avatar URL
     updateAvatar(event.target.files[0]);
   }
-  const settingsChanged = !_.isEqual(userInfo, {
-    ...profile,
-    openai_api_key: "",
-  });
+  const settingsChanged = !_.isEqual(userInfo, profile);
 
-  // function updateUserInfoWithKeys() {
-  // const updatedUserInfo = {
-  //   ...userInfo,
-  //   openai_api_key: userInfo.openai_api_key === "**********" ? undefined : userInfo.openai_api_key,
-  // };
-  // updateUserInfo(updatedUserInfo);
-  // }
+  function updateUserInfoWithKeys() {
+    if (userInfo == null) return;
+    const updatedUserInfo = {
+      ...userInfo,
+      openai_api_key:
+        userInfo.openai_api_key === "**********"
+          ? undefined
+          : userInfo.openai_api_key,
+    };
+    updateUserInfo(updatedUserInfo);
+  }
 
   return (
     <>
@@ -136,10 +121,10 @@ export default function Account() {
                           id="first-name"
                           autoComplete="given-name"
                           className="block w-full rounded-md border-0 bg-white/5 py-1.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
-                          value={userInfo.name || ""}
+                          value={userInfo?.name || ""}
                           onChange={(event) =>
                             setUserInfo((prevUserInfo) => ({
-                              ...prevUserInfo,
+                              ...prevUserInfo!,
                               name: event.target.value,
                             }))
                           }
@@ -172,10 +157,10 @@ export default function Account() {
                       </label>
                       <div className="mt-2">
                         <MaskedInput
-                          value={userInfo.openai_api_key || ""}
+                          value={userInfo?.openai_api_key || ""}
                           onChange={(value) =>
                             setUserInfo((prevUserInfo) => ({
-                              ...prevUserInfo,
+                              ...prevUserInfo!,
                               openai_api_key: value,
                             }))
                           }
@@ -203,10 +188,10 @@ export default function Account() {
                       </label>
                       <div className="mt-2">
                         <MaskedInput
-                          value={userInfo.langsmith_api_key || ""}
+                          value={userInfo?.langsmith_api_key || ""}
                           onChange={(value) =>
                             setUserInfo((prevUserInfo) => ({
-                              ...prevUserInfo,
+                              ...prevUserInfo!,
                               langsmith_api_key: value,
                             }))
                           }
@@ -230,17 +215,16 @@ export default function Account() {
                 </div>
 
                 <div className="md:col-span-2">
-                  {/*  */}
                   <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
                     <div className="col-span-full">
                       <SwitchField>
                         <Label>Send Error Reports</Label>
                         <Switch
                           name="allow_sentry"
-                          checked={userInfo.sentry_enabled ?? true}
+                          checked={userInfo?.sentry_enabled ?? true}
                           onChange={(value) =>
                             setUserInfo((prevUserInfo) => ({
-                              ...prevUserInfo,
+                              ...prevUserInfo!,
                               sentry_enabled: value,
                             }))
                           }
@@ -258,7 +242,7 @@ export default function Account() {
                           ? "bg-indigo-500 text-white hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
                           : "text-gray-300 bg-indigo-700"
                       )}
-                      onClick={() => updateUserInfo(userInfo)}
+                      onClick={updateUserInfoWithKeys}
                     >
                       Save
                     </button>
@@ -292,6 +276,7 @@ export default function Account() {
                         className="hidden"
                         type="checkbox"
                         name="l"
+                        readOnly
                         checked
                         value="e675d172-5277-4e0b-9b79-f4f21f164f44"
                       />

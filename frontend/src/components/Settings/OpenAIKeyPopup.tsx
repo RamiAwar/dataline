@@ -74,26 +74,23 @@ export function OpenAIKeyPopup() {
           />
         </SwitchField>
       </AlertBody>
-      <AlertDescription>
-        <p className="text-xs">
-          Please setup your API key with{" "}
-          <a
-            className="underline"
-            target="_blank"
-            href="https://help.openai.com/en/articles/8867743-assign-api-key-permissions"
-          >
-            full permissions{" "}
-          </a>
-          to use DataLine. You can create one on the{" "}
-          <a
-            className="underline"
-            target="_blank"
-            href="https://platform.openai.com/api-keys"
-          >
-            OpenAI platform
-          </a>
-          .
-        </p>
+      <AlertDescription className="!text-xs">
+        Please setup your API key with{" "}
+        <a
+          className="underline"
+          target="_blank"
+          href="https://help.openai.com/en/articles/8867743-assign-api-key-permissions"
+        >
+          full permissions{" "}
+        </a>
+        to use DataLine. You can create one on the{" "}
+        <a
+          className="underline"
+          target="_blank"
+          href="https://platform.openai.com/api-keys"
+        >
+          OpenAI platform.
+        </a>
       </AlertDescription>
       <AlertActions>
         <Button disabled={isPending} onClick={saveApiKey}>
