@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 from typing import Optional
 from uuid import uuid4
@@ -13,6 +14,9 @@ from dataline.models.user.schema import UserOut, UserUpdateIn, UserWithKeys
 from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.media import MediaCreate, MediaRepository
 from dataline.repositories.user import UserCreate, UserRepository, UserUpdate
+from dataline.sentry import opt_out_of_sentry, setup_sentry
+
+logger = logging.getLogger(__name__)
 
 
 def model_exists(openai_api_key: SecretStr | str, model: str) -> bool:
@@ -83,6 +87,8 @@ class SettingsService:
                     else "gpt-3.5-turbo"
                 )
             user = await self.user_repo.create(session, user_create)
+            if data.sentry_enabled:  # by default, Sentry is off if no user in the db
+                setup_sentry()
         else:
             # Update user with data
             user_update = UserUpdate.model_construct(**data.model_dump(exclude_none=True))
@@ -96,7 +102,15 @@ class SettingsService:
             elif user_update.preferred_openai_model and user_info.openai_api_key:
                 if not model_exists(user_info.openai_api_key, user_update.preferred_openai_model):
                     raise Exception(f"model {user_update.preferred_openai_model} not accessible with current key")
+            should_update_sentry_preference = (
+                data.sentry_enabled is not None and user_info.sentry_enabled != data.sentry_enabled
+            )  # Needed before updating the user
             user = await self.user_repo.update_by_uuid(session, record_id=user_info.id, data=user_update)
+            if should_update_sentry_preference:
+                if data.sentry_enabled:
+                    setup_sentry()
+                else:
+                    opt_out_of_sentry()
 
         return UserOut.model_validate(user)
 

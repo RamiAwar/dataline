@@ -231,7 +231,6 @@ const runSQL = async (conversationId: string, code: string) => {
   ).data;
 };
 
-
 export type GetAvatarResult = ApiResponse<{ blob: string }>;
 const getAvatar = async () => {
   return decodeBase64Data(
@@ -261,13 +260,15 @@ const updateUserInfo = async (options: {
   name?: string;
   openai_api_key?: string;
   langsmith_api_key?: string;
+  sentry_enabled?: boolean;
 }) => {
-  const { name, openai_api_key, langsmith_api_key } = options;
+  const { name, openai_api_key, langsmith_api_key, sentry_enabled } = options;
   // send only the filled in fields
   const data = {
     ...(name && { name }),
     ...(openai_api_key && { openai_api_key }),
     ...(langsmith_api_key && { langsmith_api_key }),
+    ...(sentry_enabled != null && { sentry_enabled }),
   };
   const response = await backendApi<UpdateUserInfoResult>({
     url: `/settings/info`,
@@ -281,23 +282,33 @@ export type GetUserInfoResult = ApiResponse<{
   name: string;
   openai_api_key: string;
   langsmith_api_key?: string;
+  sentry_enabled: boolean;
 }>;
 const getUserInfo = async () => {
   return (await backendApi<GetUserInfoResult>({ url: `/settings/info` })).data;
 };
-
 
 export type RefreshChartResult = ApiResponse<{
   created_at: string;
   chartjs_json: string;
 }>;
 const refreshChart = async (chartResultId: string) => {
-  return (await backendApi<RefreshChartResult>({ url: `/result/chart/${chartResultId}/refresh`, method: "patch" })).data;
-}
+  return (
+    await backendApi<RefreshChartResult>({
+      url: `/result/chart/${chartResultId}/refresh`,
+      method: "patch",
+    })
+  ).data;
+};
 
-
-export type UpdateSQLQueryStringResponse = RefreshChartResult | ApiResponse<void>;
-const updateSQLQueryString = async (resultId: string, code: string, forChart: boolean = false) => {
+export type UpdateSQLQueryStringResponse =
+  | RefreshChartResult
+  | ApiResponse<void>;
+const updateSQLQueryString = async (
+  resultId: string,
+  code: string,
+  forChart: boolean = false
+) => {
   const response = await backendApi<UpdateSQLQueryStringResponse>({
     url: `/result/sql/${resultId}`,
     method: "patch",

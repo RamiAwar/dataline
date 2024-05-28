@@ -18,6 +18,7 @@ class UserUpdateIn(BaseModel):
     openai_api_key: Optional[SecretStr] = Field(None, min_length=4)
     langsmith_api_key: Optional[SecretStr] = Field(None, min_length=4)
     preferred_openai_model: Optional[str] = None
+    sentry_enabled: Optional[bool] = None
 
     @field_validator("openai_api_key")
     @classmethod
@@ -48,6 +49,7 @@ class UserOut(BaseModel):
     openai_api_key: Optional[SecretStr] = None
     langsmith_api_key: Optional[SecretStr] = None
     preferred_openai_model: Optional[str] = None
+    sentry_enabled: bool
 
 
 class UserWithKeys(BaseModel):
@@ -56,8 +58,9 @@ class UserWithKeys(BaseModel):
     name: Optional[str] = None
 
     openai_api_key: SecretStr
-    langsmith_api_key: SecretStr
+    langsmith_api_key: SecretStr | None = None
     preferred_openai_model: str
+    sentry_enabled: bool
 
 
 class AvatarOut(BaseModel):

@@ -22,6 +22,8 @@ async def test_update_user_info_name(client: TestClient) -> None:
             "name": "John",
             "openai_api_key": None,
             "preferred_openai_model": None,
+            "langsmith_api_key": None,
+            "sentry_enabled": True,
         },
     }
 

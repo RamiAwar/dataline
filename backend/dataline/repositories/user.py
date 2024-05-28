@@ -14,9 +14,11 @@ class UserCreate(BaseModel):
     openai_api_key: Optional[str] = None
     langsmith_api_key: Optional[str] = None
     preferred_openai_model: Optional[str] = None
+    sentry_enabled: Optional[bool] = True
 
 
-class UserUpdate(UserCreate): ...
+class UserUpdate(UserCreate):
+    sentry_enabled: Optional[bool] = None
 
 
 class UserRepository(BaseRepository[UserModel, UserCreate, UserUpdate]):

@@ -146,19 +146,22 @@ export function useUpdateUserAvatar(options = {}) {
 export function useUpdateUserInfo(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { openai_api_key?: string, name?: string, langsmith_api_key?: string }) =>
-      api.updateUserInfo(payload),
+    mutationFn: (payload: {
+      openai_api_key?: string;
+      name?: string;
+      langsmith_api_key?: string;
+      sentry_enabled?: boolean;
+    }) => api.updateUserInfo(payload),
     onSuccess() {
       enqueueSnackbar({
         variant: "success",
         message: "User info updated",
       });
     },
-    onError(_, args) {
+    onError() {
       enqueueSnackbar({
         variant: "error",
-        message:
-          "name" in args ? "Error updating name" : "Error updating API key",
+        message: "Error updating user info",
       });
     },
     onSettled() {

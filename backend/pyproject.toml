@@ -32,6 +32,7 @@ langchain-openai = "^0.1.6"
 mirascope = "^0.12.3"
 tenacity = "^8.3.0"
 pandas = "^2.2.2"
+sentry-sdk = {extras = ["fastapi"], version = "^2.3.1"}
 
 
 [tool.poetry.group.dev.dependencies]

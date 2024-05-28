@@ -21,6 +21,7 @@ from dataline.config import IS_BUNDLED, config
 from dataline.old_models import SuccessResponse, UnsavedResult
 from dataline.old_services import TempQueryService, request_execute, request_limit
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
+from dataline.sentry import maybe_init_sentry
 from dataline.services.connection import ConnectionService
 from dataline.services.conversation import ConversationService
 
@@ -53,6 +54,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         run_migrations()
         webbrowser.open("http://localhost:7377", new=2)
 
+    await maybe_init_sentry()
     yield
     # On shutdown
 

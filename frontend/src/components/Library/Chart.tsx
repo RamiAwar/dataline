@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { Chart as ChartJS, ChartConfiguration, ChartTypeRegistry } from "chart.js/auto";
+import {
+  Chart as ChartJS,
+  ChartConfiguration,
+  ChartTypeRegistry,
+} from "chart.js/auto";
 import { CustomTooltip } from "./Tooltip";
 import {
   ArrowDownTrayIcon,
@@ -24,7 +28,11 @@ const canvasBackgroundColorPlugin = {
   id: "customCanvasBackgroundColor",
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  beforeDraw: (chart: { width?: any; height?: any; ctx?: any; }, _: any, options: { color: string; }) => {
+  beforeDraw: (
+    chart: { width?: any; height?: any; ctx?: any },
+    _: any,
+    options: { color: string }
+  ) => {
     const { ctx } = chart;
     ctx.save();
     ctx.globalCompositeOperation = "destination-over";
@@ -98,10 +106,10 @@ const Chart = ({
             ...chartData.options?.plugins?.title,
             font: {
               ...chartData.options?.plugins?.title?.font,
-              size: 14
-            }
-          }
-        }
+              size: 14,
+            },
+          },
+        },
       };
 
       chartInstanceRef.current = new ChartJS(chartRef.current, chartData);
@@ -164,7 +172,7 @@ const Chart = ({
     let updatedData = {
       ...chartData,
       type: newType,
-    }
+    };
 
     if (oldType === "line" && newType !== "line") {
       // Need to remove border colors if singular (for basic types)
@@ -173,7 +181,10 @@ const Chart = ({
         // If it is an array, the transition will not be problematic, nothing to do
         // Since borderColor will already have a border color for every entry
         // This is enough to suppress the problem - real solution managing colors will have to come later
-        if (chartData.data.datasets[0].borderColor && !Array.isArray(chartData.data.datasets[0].borderColor)) {
+        if (
+          chartData.data.datasets[0].borderColor &&
+          !Array.isArray(chartData.data.datasets[0].borderColor)
+        ) {
           const newChartDataDatasets = [
             {
               ...chartData.data.datasets[0],
@@ -187,13 +198,13 @@ const Chart = ({
               ...chartData.data,
               datasets: newChartDataDatasets,
             },
-          }
+          };
         }
       }
     }
 
     setChartData(updatedData);
-  }
+  };
 
   return (
     <div className="relative w-full md:max-w-7xl border border-gray-500 rounded-xl pt-7 md:px-4 bg-gray-900">
@@ -205,33 +216,32 @@ const Chart = ({
         </div>
       )}
       <div className="absolute top-0 right-0 m-2 flex gap-1 ">
-        <Select value={chartData.type} onChange={updateChartType}>
+        <Select
+          value={chartData.type}
+          onChange={updateChartType}
+          style={{ backgroundColor: "rgb(29, 36, 50)" }} // firefox's select element doesn't understand rgba...
+        >
           <option value="bar">Bar</option>
           <option value="line">Line</option>
           <option value="doughnut">Doughnut</option>
         </Select>
         <CustomTooltip hoverText="Refresh">
-          <button
-            tabIndex={-1}
-            onClick={triggerRefreshChart}
-
-          >
+          <button tabIndex={-1} onClick={triggerRefreshChart}>
             <ArrowPathIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
 
         {/* Save Icon */}
         <CustomTooltip hoverText="Save">
-          <button
-            tabIndex={-1}
-            onClick={saveCanvas}
-          >
+          <button tabIndex={-1} onClick={saveCanvas}>
             <ArrowDownTrayIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
 
         <CustomTooltip
-          hoverText={window.ClipboardItem ? "Copy" : "Not supported in this browser"}
+          hoverText={
+            window.ClipboardItem ? "Copy" : "Not supported in this browser"
+          }
           clickText="COPIED!"
         >
           <button
@@ -241,7 +251,7 @@ const Chart = ({
             className={classNames(
               window.ClipboardItem
                 ? "transition-all duration-150 ease-in-out"
-                : "cursor-not-allowed",
+                : "cursor-not-allowed"
             )}
           >
             <ClipboardIcon
