@@ -1,8 +1,8 @@
 """Add sentry opt in/out for user
 
-Revision ID: 7f0963fd732d
+Revision ID: 99075557ba6e
 Revises: 6a78ebe5b53e
-Create Date: 2024-05-27 15:03:18.009219
+Create Date: 2024-05-28 10:34:19.765968
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "7f0963fd732d"
+revision: str = "99075557ba6e"
 down_revision: Union[str, None] = "6a78ebe5b53e"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
