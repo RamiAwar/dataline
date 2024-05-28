@@ -7,8 +7,7 @@ import {
   useUpdateUserInfo,
   useUpdateUserAvatar,
 } from "@/hooks";
-import { Switch, SwitchField } from "@components/Catalyst/switch";
-import { Label } from "@components/Catalyst/fieldset";
+import { Switch } from "@components/Catalyst/switch";
 import _ from "lodash";
 
 function classNames(...classes: string[]) {
