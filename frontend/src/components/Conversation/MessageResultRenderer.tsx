@@ -1,5 +1,5 @@
 import { IResultType, ISQLQueryStringResult } from "@components/Library/types";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
 import { DynamicTable } from "../Library/DynamicTable";
 import { CodeBlock } from "./CodeBlock";
@@ -156,19 +156,19 @@ export const MessageResultRenderer = ({
 
   return (
     <>
-      {unlinkedGroup.map((result) => (
-        <div
-          className="flex flex-col gap-1 md:gap-3"
-          key={`message-${messageId}-group-unlinked`}
-        >
-          {result.type === "SELECTED_TABLES" && (
-            <SelectedTablesDisplay
-              tables={result.content.tables}
-              key={`message-${messageId}-selectedtables-${result.result_id}`}
-            />
+      {unlinkedGroup.length > 0 && (
+        <div className="flex flex-col gap-1 md:gap-3">
+          {unlinkedGroup.map(
+            (result) =>
+              result.type === "SELECTED_TABLES" && (
+                <SelectedTablesDisplay
+                  tables={result.content.tables}
+                  key={`message-${messageId}-selectedtables-${result.result_id}`}
+                />
+              )
           )}
         </div>
-      ))}
+      )}
       {/** Sort results as selected_tables first, charts second, data third, code fourth using tertiary if **/}
       {resultGroups.map((group, index) => (
         <div
