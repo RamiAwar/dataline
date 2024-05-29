@@ -71,7 +71,7 @@ Go through the following checklist to explore DataLine's features!
 - [ ] Click inside an SQL query, modify it, and save your modification for later!
 - [ ] Try to modify your sample DB connection and explore the connection editor page
 - [ ] Try asking for a chart!
-- [ ] To really challenge it, ask a question that is answered with multiple results (charts, tables, etc.)
+- [ ] To really challenge it, ask a question that is answered with multiple results (charts, tables, etc.) - [example](https://www.youtube.com/watch?v=6ouSok9bOVo)
 - [ ] Add a profile picture
 
 ## Roadmap
