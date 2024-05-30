@@ -11,7 +11,7 @@ python = ">=3.11,<3.12"
 fastapi = "0.109.1"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
 psycopg2-binary = "^2.9.9"
-pymysql = "^1.0.3"
+pymysql = "^1.1.1"
 cryptography = "^40.0.2"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.27"}
 rapidfuzz = "^3.0.0"
