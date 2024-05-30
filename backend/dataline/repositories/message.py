@@ -32,7 +32,7 @@ class MessageRepository(BaseRepository[MessageModel, MessageCreate, MessageUpdat
                 & (ResultModel.type == QueryResultType.SQL_QUERY_STRING_RESULT.value),
             )
             .options(contains_eager(MessageModel.results))
-            .order_by(MessageModel.created_at)
+            .order_by(MessageModel.created_at.desc())
             .limit(n)
         )
         return await self.list_unique(session, query=query)

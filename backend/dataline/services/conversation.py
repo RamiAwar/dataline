@@ -210,7 +210,7 @@ class ConversationService:
         """
         messages = await self.message_repo.get_by_conversation_with_sql_results(session, conversation_id, n=10)
         base_messages = []
-        for message in messages:
+        for message in reversed(messages):  # Reverse to get the oldest messages first (chat format)
             if message.role == BaseMessageType.HUMAN.value:
                 base_messages.append(HumanMessage(content=message.content))
             elif message.role == BaseMessageType.AI.value:
@@ -226,4 +226,4 @@ class ConversationService:
             else:
                 logger.error(Exception(f"Unknown message role: {message.role}"))
 
-        return base_messages[-10:]
+        return base_messages
