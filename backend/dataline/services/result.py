@@ -33,21 +33,33 @@ class ResultService:
         self, session: AsyncSession, result_id: UUID, sql: str, for_chart: bool
     ) -> ChartRefreshOut | None:
         # Need to validate the SQL run output to ensure it's compatible with the linked chart
-        chart_out = None
-        try:
-            if for_chart:
-                linked_chart = await self.result_repo.get_chart_from_sql_query(session, result_id)
-                chart_content = ChartGenerationResultContent.model_validate_json(linked_chart.content)
-                await self.validate_sql_query_result_for_chart(
-                    session, result_id, sql, ChartType[chart_content.chart_type]
-                )
-                # Refresh chart data
-                chart_out = await self.refresh_chart_result_data(session, linked_chart.id)
-        except NotFoundError:
-            # TODO: Deal with faulty chart generation in a better way
-            # Chart generation probably failed, let's let it slide
-            pass
+        if for_chart:
+            try:
+                chart_id = await self._validate_chart_sql(session, result_id, sql)
+                await self._update_sql(session, result_id, sql)
+                return await self.refresh_chart_result_data(session, chart_id)
+            except NotFoundError:
+                # TODO: Deal with faulty chart generation in a better way
+                # Chart generation probably failed, let's let it slide
+                pass
+        else:
+            # Just update sql, no chart involved
+            await self._update_sql(session, result_id, sql)
 
+    async def _validate_chart_sql(
+        self,
+        session: AsyncSession,
+        sql_query_string_id: UUID,
+        sql: str,
+    ) -> UUID:
+        linked_chart = await self.result_repo.get_chart_from_sql_query(session, sql_query_string_id)
+        chart_content = ChartGenerationResultContent.model_validate_json(linked_chart.content)
+        await self.validate_sql_query_result_for_chart(
+            session, sql_query_string_id, sql, ChartType[chart_content.chart_type]
+        )
+        return linked_chart.id
+
+    async def _update_sql(self, session, result_id: UUID, sql: str):
         query_string_result = await self.result_repo.get_by_uuid(session, result_id)
 
         # Parse json and update content sql (Do not want to ever update for_chart)
@@ -57,11 +69,9 @@ class ResultService:
         # Dump json and update stored model
         content_dumps = new_content.model_dump_json()
         await self.result_repo.update_by_uuid(session, result_id, ResultUpdate(content=content_dumps))
-        if chart_out:
-            return ChartRefreshOut.model_validate(chart_out)
 
-    async def refresh_chart_result_data(self, session: AsyncSession, result_id: UUID) -> ChartRefreshOut:
-        chart_result = await self.result_repo.get_by_uuid(session, result_id)
+    async def refresh_chart_result_data(self, session: AsyncSession, chart_id: UUID) -> ChartRefreshOut:
+        chart_result = await self.result_repo.get_by_uuid(session, chart_id)
         chart_content = ChartGenerationResultContent.model_validate_json(chart_result.content)
         chart_type = ChartType[chart_content.chart_type]
 
@@ -72,7 +82,7 @@ class ResultService:
         sql_string = SQLQueryStringResultContent.model_validate_json(sql_query_string_result.content).sql
 
         # Get DSN from linked connection
-        dsn = await self.result_repo.get_dsn_from_result(session, result_id)
+        dsn = await self.result_repo.get_dsn_from_result(session, chart_id)
         db = SQLDatabase.from_uri(dsn)
 
         # Refresh chart data
@@ -85,7 +95,7 @@ class ResultService:
         )
         updated_date = datetime.now()
         await self.result_repo.update_by_uuid(
-            session, result_id, ResultUpdate(created_at=updated_date, content=updated_content.model_dump_json())
+            session, chart_id, ResultUpdate(created_at=updated_date, content=updated_content.model_dump_json())
         )
 
         return ChartRefreshOut(chartjs_json=updated_chartjs_json, created_at=updated_date)
