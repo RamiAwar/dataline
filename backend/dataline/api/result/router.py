@@ -31,5 +31,5 @@ async def refresh_chart_result_data(
     session: AsyncSession = Depends(get_session),
     result_service: ResultService = Depends(ResultService),
 ) -> SuccessResponse[ChartRefreshOut]:
-    chart_data = await result_service.refresh_chart_result_data(session, result_id=result_id)
+    chart_data = await result_service.refresh_chart_result_data(session, chart_id=result_id)
     return SuccessResponse(data=chart_data)

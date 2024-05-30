@@ -301,7 +301,18 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         # Create ToolMessages
         if not state.options.secure_data:
             # If not secure, just put results in tool message
-            tool_message = ToolMessage(content=str(response), name=self.name, tool_call_id=call_id)
+            # Limit number of rows sent in message to 10 (avoid token overflow)
+            truncated_rows = response.rows[:10]
+            tool_message = ToolMessage(
+                content=(
+                    "Returned data:\n"
+                    f"Columns: {str(response.columns)}"
+                    f"Truncated rows: {str(truncated_rows)}"
+                    f"Number of rows: {len(response.rows)}"
+                ),
+                name=self.name,
+                tool_call_id=call_id,
+            )
             messages.append(tool_message)
         else:
             # If secure, need to hide the actual data
@@ -329,8 +340,17 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
             )
             messages.append(tool_message)
 
+        ai_message = AIMessage(
+            content=(
+                "Now that I have the data, I can analyze it and consider regenerating the query."
+                "I should think about things like: If the user wanted buckets, do the buckets make sense"
+                "given the length of results? Or should I suggest different bucket ranges?"
+                "I should think critically about what the user might want to see."
+            )
+        )
         if args["for_chart"]:
-            messages.append(AIMessage(content="Now that I generated the data, I should call the generate chart tool"))
+            ai_message.content += "If the results look good, I should now generate a chart."
+        messages.append(ai_message)
 
         return {
             "messages": messages,
