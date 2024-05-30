@@ -3,6 +3,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends
+from fastapi.responses import StreamingResponse
 
 from dataline.models.conversation.schema import (
     ConversationOut,
@@ -98,4 +99,18 @@ async def query(
 ) -> SuccessResponse[QueryOut]:
     return SuccessResponse(
         data=await conversation_service.query(session, conversation_id, query, secure_data=message_options.secure_data)
+    )
+
+
+@router.post("/conversation/{conversation_id}/streaming_query")
+def streaming_query(
+    conversation_id: UUID,
+    query: str,
+    message_options: Annotated[MessageOptions, Body(embed=True)],
+    session: AsyncSession = Depends(get_session),
+    conversation_service: ConversationService = Depends(),
+):
+    return StreamingResponse(
+        conversation_service.streaming_query(session, conversation_id, query, secure_data=message_options.secure_data),
+        media_type="text/event-stream",
     )

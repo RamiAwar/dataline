@@ -1,4 +1,4 @@
-from typing import Sequence, Type
+from typing import AsyncGenerator, Sequence, Type
 
 from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -76,12 +76,10 @@ class QueryGraphService:
             "tool_executor": self.tool_executor,
         }
 
-        chunks = []
         messages: list[BaseMessage] = []
         results: list[ResultType] = []
         config: RunnableConfig | None = {"callbacks": [self.tracer]} if self.tracer is not None else None
         for chunk in app.stream(initial_state, config=config):
-            chunks.append(chunk)
             for tool, tool_chunk in chunk.items():
                 if tool_chunk.get("results"):
                     results.extend(tool_chunk["results"])
@@ -90,6 +88,43 @@ class QueryGraphService:
                     messages.extend(tool_chunk["messages"])
 
         return messages, results
+
+    async def streaming_query(
+        self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
+    ) -> AsyncGenerator[tuple[Sequence[BaseMessage] | None, Sequence[ResultType] | None], None]:
+        # Setup tracing with langsmith if api key is provided
+        if options.langsmith_api_key:
+            self.tracer = LangChainTracer(client=Client(api_key=options.langsmith_api_key.get_secret_value()))
+
+        if history is None:
+            history = []
+
+        graph = self.build_graph()
+        app = graph.compile()
+
+        if not options.secure_data:
+            self.db._sample_rows_in_table_info = 3
+
+        initial_state = {
+            "messages": [
+                *self.get_prompt_messages(query, history),
+            ],
+            "results": [],
+            "options": options,
+            "sql_toolkit": self.toolkit,
+            "tool_executor": self.tool_executor,
+        }
+
+        config: RunnableConfig | None = {"callbacks": [self.tracer]} if self.tracer is not None else None
+        async for chunk in app.astream(initial_state, config=config):
+            result: Sequence[ResultType] | None = None
+            message: Sequence[BaseMessage] | None = None
+            for tool, tool_chunk in chunk.items():
+                if tool_chunk.get("results"):
+                    result = tool_chunk["results"]
+                if tool_chunk.get("messages"):
+                    message = tool_chunk["messages"]
+                yield (message, result)
 
     def build_graph(self) -> StateGraph:
         # Create the graph

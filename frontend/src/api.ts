@@ -12,6 +12,7 @@ import {
 import { IEditConnection } from "./components/Library/types";
 import { backendApi } from "./services/api_client";
 import { decodeBase64Data } from "./utils";
+import { fetchEventSource } from "@microsoft/fetch-event-source";
 
 type SuccessResponse<T> = {
   data: T;
@@ -221,6 +222,48 @@ const query = async (
   ).data;
 };
 
+const streamingQuery = async ({
+  conversationId,
+  query,
+  execute = true,
+  message_options = DEFAULT_OPTIONS,
+  onClose,
+}: {
+  conversationId: string;
+  query: string;
+  execute?: boolean;
+  message_options: IMessageOptions;
+  onClose: () => void;
+}): Promise<void> => {
+  const ctrl = new AbortController();
+  return fetchEventSource(
+    `http://localhost:7377/conversation/${conversationId}/streaming_query?execute=${execute}&query=${encodeURIComponent(query)}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      body: JSON.stringify({ message_options }),
+      onmessage(ev) {
+        console.log(ev.event);
+        console.log(ev.data);
+        // ctrl.abort();
+      },
+      onclose() {
+        console.log("closed!");
+        onClose();
+      },
+      onerror(err) {
+        console.log(err);
+        ctrl.abort();
+        onClose();
+      },
+      openWhenHidden: true,
+      signal: ctrl.signal,
+    }
+  );
+};
+
 export type RunSQLResult = ApiResponse<IResult>;
 const runSQL = async (conversationId: string, code: string) => {
   return (
@@ -339,6 +382,7 @@ export const api = {
   getMessages,
   createMessage,
   query,
+  streamingQuery,
   runSQL,
   updateSQLQueryString,
   getAvatar,
