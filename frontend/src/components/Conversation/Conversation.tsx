@@ -59,11 +59,15 @@ export const Conversation = () => {
     (conn) => conn.id === currConversation?.connection_id
   );
 
-  useEffect(() => {
+  const scrollToBottom = () => {
     if (messageListRef.current !== null) {
       window.scrollTo({ top: messageListRef.current?.offsetTop });
     }
-  }, [isPendingGetMessages, messageListRef, params]);
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [isPendingGetMessages, messageListRef, params, isPendingSendMessage]);
 
   if (isPendingGetMessages) {
     return (
