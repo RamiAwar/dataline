@@ -43,9 +43,12 @@ You might get a `"Windows protected your PC"` message, which is normal (more inf
 Homebrew
 
 ```bash
+# install dataline
 brew tap ramiawar/dataline
-
 brew install dataline
+
+# run dataline
+dataline
 ```
 
 DataLine should then be running on port 5173 accessible from your browser: http://localhost:5173
