@@ -75,7 +75,7 @@ RUN mkdir -p /home/.dataline
 
 # Supervisord will forward the env vars to the subprocess envs
 ENV SQLITE_PATH="/home/.dataline/db.sqlite3"
-ENV DATA_DIRECTORY="/home/.dataline"
+ENV DATA_DIRECTORY="/home/.dataline/data"
 
 # -------------------------------
 # DEV BUILD WITH MINIMAL DEPS
@@ -85,7 +85,7 @@ FROM base as dev
 WORKDIR /home/dataline/backend
 
 # Running alembic and uvicorn without combining them in a bash -c command won't work
-CMD ["bash", "-c", "python -m alembic upgrade head && python -m uvicorn main:app --port=7377 --host=0.0.0.0 --reload"]
+CMD ["bash", "-c", "python -m alembic upgrade head && python -m uvicorn dataline.main:app --port=7377 --host=0.0.0.0 --reload"]
 
 
 # -------------------------------
