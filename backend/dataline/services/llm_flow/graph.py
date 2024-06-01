@@ -50,9 +50,9 @@ class QueryGraphService:
         self.tool_executor = ToolExecutor(tools=all_tools)
         self.tracer = None  # no tracing by default
 
-    def query(
-        self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
-    ) -> tuple[Sequence[BaseMessage], Sequence[ResultType]]:
+    async def query(
+        self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None, streaming=True
+    ) -> AsyncGenerator[tuple[Sequence[BaseMessage] | None, Sequence[ResultType] | None], None]:
         # Setup tracing with langsmith if api key is provided
         if options.langsmith_api_key:
             self.tracer = LangChainTracer(client=Client(api_key=options.langsmith_api_key.get_secret_value()))
@@ -79,52 +79,22 @@ class QueryGraphService:
         messages: list[BaseMessage] = []
         results: list[ResultType] = []
         config: RunnableConfig | None = {"callbacks": [self.tracer]} if self.tracer is not None else None
-        for chunk in app.stream(initial_state, config=config):
-            for tool, tool_chunk in chunk.items():
-                if tool_chunk.get("results"):
-                    results.extend(tool_chunk["results"])
-
-                if tool_chunk.get("messages"):
-                    messages.extend(tool_chunk["messages"])
-
-        return messages, results
-
-    async def streaming_query(
-        self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
-    ) -> AsyncGenerator[tuple[Sequence[BaseMessage] | None, Sequence[ResultType] | None], None]:
-        # Setup tracing with langsmith if api key is provided
-        if options.langsmith_api_key:
-            self.tracer = LangChainTracer(client=Client(api_key=options.langsmith_api_key.get_secret_value()))
-
-        if history is None:
-            history = []
-
-        graph = self.build_graph()
-        app = graph.compile()
-
-        if not options.secure_data:
-            self.db._sample_rows_in_table_info = 3
-
-        initial_state = {
-            "messages": [
-                *self.get_prompt_messages(query, history),
-            ],
-            "results": [],
-            "options": options,
-            "sql_toolkit": self.toolkit,
-            "tool_executor": self.tool_executor,
-        }
-
-        config: RunnableConfig | None = {"callbacks": [self.tracer]} if self.tracer is not None else None
+        current_results: Sequence[ResultType] | None
+        current_messages: Sequence[BaseMessage] | None
         async for chunk in app.astream(initial_state, config=config):
-            result: Sequence[ResultType] | None = None
-            message: Sequence[BaseMessage] | None = None
             for tool, tool_chunk in chunk.items():
-                if tool_chunk.get("results"):
-                    result = tool_chunk["results"]
-                if tool_chunk.get("messages"):
-                    message = tool_chunk["messages"]
-                yield (message, result)
+                if not streaming:
+                    if tool_chunk.get("results"):
+                        results.extend(tool_chunk["results"])
+                    if tool_chunk.get("messages"):
+                        messages.extend(tool_chunk["messages"])
+                else:
+                    current_results = tool_chunk.get("results")
+                    current_messages = tool_chunk.get("messages")
+                    yield (current_messages, current_results)
+
+        if not streaming:
+            yield messages, results
 
     def build_graph(self) -> StateGraph:
         # Create the graph

@@ -10,6 +10,7 @@ src-tauri/
 
 *.code_workspace
 
+backend/scripts/notebooks
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

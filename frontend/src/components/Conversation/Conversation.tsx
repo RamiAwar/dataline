@@ -1,4 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  // useState
+} from "react";
 import { Message } from "./Message";
 import { Navigate, useParams } from "react-router-dom";
 import ExpandingInput from "./ExpandingInput";
@@ -8,15 +13,14 @@ import { generateUUID } from "../Library/utils";
 import { Routes } from "@/router";
 import MessageTemplate from "./MessageTemplate";
 import {
-  getMessageOptions,
   getMessagesQuery,
   useGetConnections,
   useGetConversations,
-  // useSendMessage,
+  useSendMessageStreaming,
 } from "@/hooks";
-import { api } from "@/api";
 import { Spinner } from "../Spinner/Spinner";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { IResultType } from "@components/Library/types";
 
 const templateMessages = [
   {
@@ -36,13 +40,21 @@ export const Conversation = () => {
   // Load messages from conversation via API on load
   const { data: connectionsData } = useGetConnections();
   const { data: conversationsData } = useGetConversations();
-  const queryClient = useQueryClient();
 
-  // const {
-  //   mutate: sendMessageMutation,
-  //   isPending: isPendingSendMessage,
-  //   variables: newMessageVariable,
-  // } = useSendMessage();
+  const [tempResults, setTempResults] = useState<IResultType[]>([]);
+
+  const {
+    mutate: sendMessageMutation,
+    isPending: isPendingSendMessage,
+    variables: newMessageVariable,
+  } = useSendMessageStreaming({
+    onAddResult: (result) =>
+      setTempResults((prev) => [
+        ...prev,
+        { ...result, result_id: generateUUID() },
+      ]),
+    onSettled: () => setTempResults([]),
+  });
 
   const {
     data: messages,
@@ -62,31 +74,6 @@ export const Conversation = () => {
     (conn) => conn.id === currConversation?.connection_id
   );
 
-  const [queryMessage, setQueryMessage] = useState("");
-  const sendMessageStream = async ({
-    message,
-    conversationId,
-  }: {
-    message: string;
-    conversationId: string;
-  }) => {
-    setQueryMessage(message);
-    const messageOptions = await queryClient.fetchQuery(
-      getMessageOptions(currConnection?.id)
-    );
-    await api.streamingQuery({
-      conversationId,
-      query: message,
-      message_options: messageOptions,
-      onClose: () => {
-        setQueryMessage("");
-        queryClient.invalidateQueries({
-          queryKey: getMessagesQuery({ conversationId: conversationId })
-            .queryKey,
-        });
-      },
-    });
-  };
   const scrollToBottom = () => {
     if (messageListRef.current !== null) {
       window.scrollTo({ top: messageListRef.current?.offsetTop });
@@ -94,8 +81,7 @@ export const Conversation = () => {
   };
   useEffect(() => {
     scrollToBottom();
-  }, [isPendingGetMessages, messageListRef, params]);
-  // }, [isPendingGetMessages, messageListRef, params, isPendingSendMessage]);
+  }, [isPendingGetMessages, messageListRef, params, isPendingSendMessage]);
 
   if (isPendingGetMessages) {
     return (
@@ -137,30 +123,7 @@ export const Conversation = () => {
               message={message}
             />
           ))}
-          {queryMessage && (
-            <>
-              <Message
-                message={{
-                  message: {
-                    content: queryMessage,
-                    role: "human",
-                    id: generateUUID(),
-                  },
-                }}
-                className="dark:text-gray-400"
-              />
-              <Message
-                message={{
-                  message: {
-                    content: "Loading...",
-                    role: "ai",
-                    id: generateUUID(),
-                  },
-                }}
-              />
-            </>
-          )}
-          {/* {isPendingSendMessage &&
+          {isPendingSendMessage &&
             newMessageVariable.conversationId === currConversation?.id && (
               <>
                 <Message
@@ -174,16 +137,19 @@ export const Conversation = () => {
                   className="dark:text-gray-400"
                 />
                 <Message
+                  key={new Date().toJSON()}
                   message={{
                     message: {
-                      content: "Loading...",
+                      content: "Generating Results...",
                       role: "ai",
                       id: generateUUID(),
                     },
+                    results: tempResults,
                   }}
+                  className="animate-pulse"
                 />
               </>
-            )} */}
+            )}
         </div>
         <div ref={messageListRef}></div>
       </Transition>
@@ -196,16 +162,11 @@ export const Conversation = () => {
                 key={template.title}
                 title={template.title}
                 text={template.text}
-                onClick={
-                  () =>
-                    sendMessageStream({
-                      message: template.message,
-                      conversationId: params.conversationId ?? "",
-                    })
-                  // sendMessageMutation({
-                  //   message: template.message,
-                  //   conversationId: params.conversationId ?? "",
-                  // })
+                onClick={() =>
+                  sendMessageMutation({
+                    message: template.message,
+                    conversationId: params.conversationId ?? "",
+                  })
                 }
               />
             ))}
@@ -213,16 +174,11 @@ export const Conversation = () => {
         )}
         <div className="w-full md:max-w-3xl flex flex-col justify-center items-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
           <ExpandingInput
-            onSubmit={
-              (message: string) =>
-                sendMessageStream({
-                  message,
-                  conversationId: params.conversationId ?? "",
-                })
-              // sendMessageMutation({
-              //   message,
-              //   conversationId: params.conversationId ?? "",
-              // })
+            onSubmit={(message: string) =>
+              sendMessageMutation({
+                message,
+                conversationId: params.conversationId ?? "",
+              })
             }
             disabled={false}
           />

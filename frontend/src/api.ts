@@ -1,13 +1,9 @@
-// import axios from "axios";
 import {
   IConversationWithMessagesWithResultsOut,
   IMessageOptions,
   IMessageOut,
   IMessageWithResultsOut,
   IResult,
-  ISelectedTablesResult,
-  ISQLQueryRunResult,
-  ISQLQueryStringResult,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
 import { backendApi } from "./services/api_client";
@@ -194,17 +190,10 @@ const createMessage = async (conversationId: number, content: string) => {
 };
 
 export const DEFAULT_OPTIONS = { secure_data: true };
-type MessageWithResultsOut = {
-  message: IMessageOut;
-  results: (
-    | ISelectedTablesResult
-    | ISQLQueryRunResult
-    | ISQLQueryStringResult
-  )[];
-};
+
 export type QueryOut = ApiResponse<{
   human_message: IMessageOut;
-  ai_message: MessageWithResultsOut;
+  ai_message: IMessageWithResultsOut;
 }>;
 const query = async (
   conversationId: string,
@@ -227,17 +216,18 @@ const streamingQuery = async ({
   query,
   execute = true,
   message_options = DEFAULT_OPTIONS,
+  onMessage,
   onClose,
 }: {
   conversationId: string;
   query: string;
   execute?: boolean;
   message_options: IMessageOptions;
-  onClose: () => void;
+  onMessage: (event: string, data: string) => void;
+  onClose?: () => void;
 }): Promise<void> => {
-  const ctrl = new AbortController();
   return fetchEventSource(
-    `http://localhost:7377/conversation/${conversationId}/streaming_query?execute=${execute}&query=${encodeURIComponent(query)}`,
+    `http://localhost:7377/conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`,
     {
       headers: {
         "Content-Type": "application/json",
@@ -247,19 +237,19 @@ const streamingQuery = async ({
       onmessage(ev) {
         console.log(ev.event);
         console.log(ev.data);
-        // ctrl.abort();
+        onMessage(ev.event, ev.data);
       },
       onclose() {
         console.log("closed!");
-        onClose();
+        onClose && onClose();
       },
       onerror(err) {
         console.log(err);
-        ctrl.abort();
-        onClose();
+        onClose && onClose();
+        // https://github.com/Azure/fetch-event-source/issues/24#issuecomment-1470332423
+        throw new Error();
       },
       openWhenHidden: true,
-      signal: ctrl.signal,
     }
   );
 };

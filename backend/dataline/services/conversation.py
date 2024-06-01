@@ -106,111 +106,6 @@ class ConversationService:
         conversation_id: UUID,
         query: str,
         secure_data: bool = True,
-    ) -> QueryOut:
-        # Get conversation, connection, user settings
-        conversation = await self.get_conversation(session, conversation_id=conversation_id)
-        connection = await self.connection_service.get_connection(session, connection_id=conversation.connection_id)
-        user_with_model_details = await self.settings_service.get_model_details(session)
-
-        # Create query graph
-        query_graph = QueryGraphService(
-            dsn=connection.dsn,
-        )
-        history = await self.get_conversation_history(session, conversation_id)
-
-        # Store human message and final AI message without flushing
-        human_message = await self.message_repo.create(
-            session,
-            MessageCreate(
-                role=BaseMessageType.HUMAN.value,
-                content=query,
-                conversation_id=conversation_id,
-                options=MessageOptions(secure_data=secure_data),
-            ),
-            flush=False,
-        )
-
-        # Perform query and execute graph
-        langsmith_api_key = user_with_model_details.langsmith_api_key
-        messages, results = query_graph.query(
-            query=query,
-            options=QueryOptions(
-                secure_data=secure_data,
-                openai_api_key=user_with_model_details.openai_api_key.get_secret_value(),  # type: ignore
-                langsmith_api_key=langsmith_api_key.get_secret_value() if langsmith_api_key else None,  # type: ignore
-                model_name=user_with_model_details.preferred_openai_model,
-            ),
-            history=history,
-        )
-
-        # Find first AI message from the back
-        last_ai_message = None
-        for message in reversed(messages):
-            if message.type == BaseMessageType.AI.value:
-                last_ai_message = message
-                break
-        else:
-            raise Exception("No AI message found in conversation")
-
-        # Store final AI message in history
-        stored_ai_message = await self.message_repo.create(
-            session,
-            MessageCreate(
-                role=BaseMessageType.AI.value,
-                content=str(last_ai_message.content),
-                conversation_id=conversation_id,
-                options=MessageOptions(secure_data=secure_data),
-            ),
-            flush=True,
-        )
-
-        # Store results and final message in database
-        stored_results: list[ResultModel] = []
-        for result in results:
-            if isinstance(result, StorableResultMixin):
-                stored_result = await result.store_result(session, self.result_repo, stored_ai_message.id)
-                stored_results.append(stored_result)
-
-        # Go over stored results, replace linked_id with the stored result_id
-        for result in results:
-            if hasattr(result, "linked_id"):
-                # Find corresponding result with this ephemeral ID
-                linked_result = cast(
-                    StorableResultMixin,
-                    next(
-                        (r for r in results if r.ephemeral_id == getattr(result, "linked_id")),
-                        None,
-                    ),
-                )
-                # Update linked_id with the stored result_id
-                if linked_result:
-                    # Update result
-                    setattr(result, "linked_id", linked_result.result_id)
-
-                    if isinstance(result, StorableResultMixin) and result.result_id:
-                        await self.result_repo.update_by_uuid(
-                            session, result.result_id, ResultUpdate(linked_id=linked_result.result_id)
-                        )
-
-        # Render renderable results
-        serialized_results = [
-            result.serialize_result() for result in results if isinstance(result, RenderableResultMixin)
-        ]
-
-        return QueryOut(
-            human_message=MessageOut.model_validate(human_message),
-            ai_message=MessageWithResultsOut(
-                message=MessageOut.model_validate(stored_ai_message),
-                results=serialized_results,
-            ),
-        )
-
-    async def streaming_query(
-        self,
-        session: AsyncSession,
-        conversation_id: UUID,
-        query: str,
-        secure_data: bool = True,
     ) -> AsyncGenerator[str, None]:
         # Get conversation, connection, user settings
         conversation = await self.get_conversation(session, conversation_id=conversation_id)
@@ -240,7 +135,7 @@ class ConversationService:
         # Perform query and execute graph
         langsmith_api_key = user_with_model_details.langsmith_api_key
 
-        async for chunk in query_graph.streaming_query(
+        async for chunk in query_graph.query(
             query=query,
             options=QueryOptions(
                 secure_data=secure_data,
@@ -249,17 +144,18 @@ class ConversationService:
                 model_name=user_with_model_details.preferred_openai_model,
             ),
             history=history,
+            streaming=True,
         ):
             (message, result) = chunk
             if message is not None:
                 messages.extend(message)
-                datas = "\n".join([f"data: {type(mes).__name__}" for mes in message])
-                yield "event: addMessageEvent\n" + f"{datas}\n\n"
 
             if result is not None:
                 results.extend(result)
-                datas = "\n".join([f"data: {type(res).__name__}" for res in result])
-                yield "event: addResultEvent\n" + f"{datas}\n\n"
+                for res in result:
+                    if isinstance(res, RenderableResultMixin):
+                        data = f"data: {res.serialize_result().model_dump_json()}"
+                        yield "event: addResultEvent\n" + f"{data}\n\n"
 
         # Find first AI message from the back
         last_ai_message = None

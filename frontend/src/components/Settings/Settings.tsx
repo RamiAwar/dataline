@@ -240,9 +240,9 @@ export default function Account() {
                       />
                     </div>
                     <p className="text-xs md:text-sm text-gray-400 pt-2">
-                      Send technical errors to our Sentry to help improve DataLine.
+                      Send technical errors to our Sentry to help improve
+                      DataLine.
                     </p>
-
                   </div>
                 </div>
                 <div className="mt-8 flex">
@@ -269,7 +269,8 @@ export default function Account() {
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
                   <div className="col-span-full">
                     <div className="max-w-2xl text-white">
-                      Enjoying DataLine? Subscribe to our newsletter for updates.
+                      Enjoying DataLine? Subscribe to our newsletter for
+                      updates.
                     </div>
                     <form
                       className="mt-4 flex max-w-md gap-x-4"
@@ -311,8 +312,8 @@ export default function Account() {
               </div>
             </div>
           </div>
-        </main >
-      </div >
+        </main>
+      </div>
     </>
   );
 }

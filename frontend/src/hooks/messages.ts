@@ -1,5 +1,10 @@
 import { api, RefreshChartResult, UpdateSQLQueryStringResponse } from "@/api";
-import { IMessageWithResultsOut, IResult } from "@/components/Library/types";
+import {
+  IMessageOut,
+  IMessageWithResultsOut,
+  IResult,
+  IResultType,
+} from "@/components/Library/types";
 import {
   DefaultError,
   queryOptions,
@@ -23,6 +28,87 @@ export function getMessagesQuery({
   return queryOptions({
     queryKey: [...MESSAGES_QUERY_KEY, conversationId],
     queryFn: async () => (await api.getMessages(conversationId)).data,
+  });
+}
+
+export function useSendMessageStreaming({
+  onAddResult,
+  onSettled,
+}: {
+  onAddResult: (result: IResultType) => void;
+  onSettled: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const current_connection = useGetRelatedConnection();
+
+  return useMutation({
+    retry: false,
+    mutationFn: async ({
+      message,
+      conversationId,
+      execute = true,
+    }: {
+      message: string;
+      conversationId: string;
+      execute?: boolean;
+    }) => {
+      const messageOptions = await queryClient.fetchQuery(
+        getMessageOptions(current_connection?.id)
+      );
+      let queryOut: {
+        human_message: IMessageOut;
+        ai_message: IMessageWithResultsOut;
+      };
+      await api.streamingQuery({
+        conversationId,
+        query: message,
+        execute,
+        message_options: messageOptions,
+        onMessage(event, data) {
+          if (event === "queryOutEvent") {
+            queryOut = JSON.parse(data);
+          } else if (event === "addResultEvent") {
+            onAddResult(JSON.parse(data));
+          }
+        },
+      });
+
+      // TODO: ugly error
+      return queryOut;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(
+        getMessagesQuery({ conversationId: variables.conversationId }).queryKey,
+        (oldData) => {
+          const newMessages: IMessageWithResultsOut[] = [
+            { message: data.human_message },
+            {
+              message: { ...data.ai_message.message },
+              results: data.ai_message.results,
+            },
+          ];
+          if (oldData == null) {
+            return newMessages;
+          }
+          return [...oldData, ...newMessages];
+        }
+      );
+    },
+    onError: (error) => {
+      if (isAxiosError(error) && error.response?.status === 406) {
+        enqueueSnackbar({
+          variant: "error",
+          message: error.response.data.message,
+          persist: true,
+        });
+      } else {
+        enqueueSnackbar({
+          variant: "error",
+          message: "Error querying assistant",
+        });
+      }
+    },
+    onSettled,
   });
 }
 
