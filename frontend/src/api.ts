@@ -235,12 +235,9 @@ const streamingQuery = async ({
       method: "POST",
       body: JSON.stringify({ message_options }),
       onmessage(ev) {
-        console.log(ev.event);
-        console.log(ev.data);
         onMessage(ev.event, ev.data);
       },
       onclose() {
-        console.log("closed!");
         onClose && onClose();
       },
       onerror(err) {

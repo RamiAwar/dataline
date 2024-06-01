@@ -32,7 +32,7 @@ export interface ISelectedTablesResult extends IResult {
   linked_id: string;
   content: {
     tables: string[];
-  }
+  };
 }
 
 export interface ISQLQueryStringResult extends IResult {
@@ -41,7 +41,7 @@ export interface ISQLQueryStringResult extends IResult {
   content: {
     sql: string;
     for_chart: boolean;
-  }
+  };
 }
 
 export interface IChartGenerationResult extends IResult {
@@ -63,7 +63,6 @@ export interface ISQLQueryRunResult extends IResult {
   };
 }
 
-
 export interface IMessageOptions {
   secure_data: boolean;
 }
@@ -76,7 +75,16 @@ export interface IMessageOut {
   options?: IMessageOptions;
 }
 
-export type IResultType = ISQLQueryRunResult | ISQLQueryStringResult | ISelectedTablesResult | IChartGenerationResult;
+export enum StreamingEventType {
+  QUERY_OUT = "queryOutEvent",
+  ADD_RESULT = "addResultEvent",
+}
+
+export type IResultType =
+  | ISQLQueryRunResult
+  | ISQLQueryStringResult
+  | ISelectedTablesResult
+  | IChartGenerationResult;
 export interface IMessageWithResultsOut {
   message: IMessageOut;
   results?: IResultType[];

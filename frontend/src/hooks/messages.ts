@@ -4,6 +4,7 @@ import {
   IMessageWithResultsOut,
   IResult,
   IResultType,
+  StreamingEventType,
 } from "@/components/Library/types";
 import {
   DefaultError,
@@ -65,9 +66,9 @@ export function useSendMessageStreaming({
         execute,
         message_options: messageOptions,
         onMessage(event, data) {
-          if (event === "queryOutEvent") {
+          if (event === StreamingEventType.QUERY_OUT.valueOf()) {
             queryOut = JSON.parse(data);
-          } else if (event === "addResultEvent") {
+          } else if (event === StreamingEventType.ADD_RESULT.valueOf()) {
             onAddResult(JSON.parse(data));
           }
         },
