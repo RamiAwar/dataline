@@ -80,7 +80,10 @@ export const Conversation = () => {
     }
   };
   useEffect(() => {
-    scrollToBottom();
+    // Wait for charts to render
+    const animationFrameId = requestAnimationFrame(() => scrollToBottom());
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, [isPendingGetMessages, messageListRef, params, isPendingSendMessage]);
 
   useEffect(() => {
