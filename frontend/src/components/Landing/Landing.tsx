@@ -2,9 +2,9 @@ import { SVGProps } from "react";
 
 import { BackgroundLayout } from "@components/Layouts/BackgroundLayout";
 
-import headline_image from "@/assets/images/headline_image.png";
+import headline_image from "@/assets/images/headline_image.avif";
 import edit_query_gif from "@/assets/images/edit_query.gif";
-import data_security_image from "@/assets/images/data_security.png";
+import data_security_image from "@/assets/images/data_security.avif";
 import ReactGA from "react-ga4";
 
 import "./Landing.css";
@@ -14,7 +14,6 @@ import SquareBackgroundInverted from "@components/Layouts/SquareBackgroundInvert
 import BackgroundHighlight from "@components/Layouts/BackgroundHighlight";
 import FeatureComparisonTable from "./FeatureComparisonTable";
 import Header from "@components/Layouts/Header";
-
 
 const socials = [
   {
@@ -62,7 +61,7 @@ const CohortData = {
     comparison: {
       title: "How do we compare?",
       description:
-        "This is probably the 10th AI tool you see today, so we'll cut to the chase. For more info, <a style=\"text-decoration-line: underline;\" href=\"/faq\">our FAQ page</a>",
+        'This is probably the 10th AI tool you see today, so we\'ll cut to the chase. For more info, <a style="text-decoration-line: underline;" href="/faq">our FAQ page</a>',
     },
     cta_title: "Stay up to date.",
     cta_description: "Promise we won't annoy you, ever.",
@@ -81,10 +80,10 @@ if (process.env.NODE_ENV !== "local") {
 export const Landing = () => {
   return (
     <div className="bg-gray-900 overflow-hidden border-r border-white/5">
-      <Header></Header>
+      <Header />
 
       <div className="relative isolate  pt-12">
-        <BackgroundLayout></BackgroundLayout>
+        <BackgroundLayout />
         <div className="pt-24 sm:pt-20 lg:pt-24">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl py-12 text-center">
@@ -159,6 +158,7 @@ export const Landing = () => {
           <div className="relative pt-16">
             <div className="mx-auto max-w-4xl px-6 lg:px-8">
               <img
+                loading="lazy"
                 src={edit_query_gif}
                 alt="App screenshot"
                 className="mb-[-12%] rounded-xl shadow-2xl ring-1 ring-white/10"
@@ -187,7 +187,7 @@ export const Landing = () => {
                   ></p>
                 </div>
               </div>
-              <FeatureComparisonTable></FeatureComparisonTable>
+              <FeatureComparisonTable />
             </div>
           </div>
         </div>
@@ -211,12 +211,13 @@ export const Landing = () => {
                 </div>
               </div>
               <iframe
+                loading="lazy"
                 className="rounded-xl shadow-xl ring-1 ring-white/10 md:-ml-4 lg:-ml-0 w-full h-[20rem] s:w-["
                 src="https://www.youtube.com/embed/3sKIoVp8QRw?si=e4CJ4X3xdLAMBRke"
                 title="YouTube video player"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                 allowFullScreen
-              ></iframe>
+              />
             </div>
           </div>
         </div>
@@ -227,7 +228,7 @@ export const Landing = () => {
               <EmailSignupForm
                 title={CohortData[selectedCohort].cta_title}
                 description={CohortData[selectedCohort].cta_description}
-              ></EmailSignupForm>
+              />
             </div>
           </div>
         </div>
