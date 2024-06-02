@@ -41,7 +41,7 @@ export const Conversation = () => {
   const { data: connectionsData } = useGetConnections();
   const { data: conversationsData } = useGetConversations();
 
-  const [tempResults, setTempResults] = useState<IResultType[]>([]);
+  const [streamedResults, setStreamedResults] = useState<IResultType[]>([]);
 
   const {
     mutate: sendMessageMutation,
@@ -49,11 +49,11 @@ export const Conversation = () => {
     variables: newMessageVariable,
   } = useSendMessageStreaming({
     onAddResult: (result) =>
-      setTempResults((prev) => [
+      setStreamedResults((prev) => [
         ...prev,
         { ...result, result_id: generateUUID() },
       ]),
-    onSettled: () => setTempResults([]),
+    onSettled: () => setStreamedResults([]),
   });
 
   const {
@@ -74,14 +74,20 @@ export const Conversation = () => {
     (conn) => conn.id === currConversation?.connection_id
   );
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (behavior: ScrollBehavior = "instant") => {
     if (messageListRef.current !== null) {
-      window.scrollTo({ top: messageListRef.current?.offsetTop });
+      window.scrollTo({ top: messageListRef.current?.offsetTop, behavior });
     }
   };
   useEffect(() => {
     scrollToBottom();
   }, [isPendingGetMessages, messageListRef, params, isPendingSendMessage]);
+
+  useEffect(() => {
+    if (streamedResults.length > 0) {
+      scrollToBottom("smooth");
+    }
+  }, [streamedResults]);
 
   if (isPendingGetMessages) {
     return (
@@ -144,7 +150,7 @@ export const Conversation = () => {
                       role: "ai",
                       id: generateUUID(),
                     },
-                    results: tempResults,
+                    results: streamedResults,
                   }}
                   className="animate-pulse"
                 />
