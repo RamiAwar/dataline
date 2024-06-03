@@ -4,7 +4,7 @@ import {
   IMessageWithResultsOut,
   IResult,
   IResultType,
-  StreamingEventType,
+  QueryStreamingEvent,
 } from "@/components/Library/types";
 import {
   DefaultError,
@@ -66,9 +66,9 @@ export function useSendMessageStreaming({
         execute,
         message_options: messageOptions,
         onMessage(event, data) {
-          if (event === StreamingEventType.QUERY_OUT.valueOf()) {
+          if (event === QueryStreamingEvent.QUERY_OUT.valueOf()) {
             queryOut = JSON.parse(data);
-          } else if (event === StreamingEventType.ADD_RESULT.valueOf()) {
+          } else if (event === QueryStreamingEvent.ADD_RESULT.valueOf()) {
             onAddResult(JSON.parse(data));
           }
         },
@@ -78,6 +78,8 @@ export function useSendMessageStreaming({
       return queryOut;
     },
     onSuccess: (data, variables) => {
+      // Update the cached value for the messages query for the given conversation.
+      // Basically appends the human message and ai message with results to the list of cached messages
       queryClient.setQueryData(
         getMessagesQuery({ conversationId: variables.conversationId }).queryKey,
         (oldData) => {

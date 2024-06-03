@@ -8,6 +8,6 @@ class QueryResultType(Enum):
     CHART_GENERATION_RESULT = "CHART_GENERATION_RESULT"
 
 
-class StreamingEventType(str, Enum):
-    QUERY_OUT = "queryOutEvent"
-    ADD_RESULT = "addResultEvent"
+class QueryStreamingEventType(str, Enum):
+    QUERY_OUT = "QUERY_OUT_EVENT"
+    ADD_RESULT = "ADD_RESULT_EVENT"

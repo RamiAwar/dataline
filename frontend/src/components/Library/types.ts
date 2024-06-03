@@ -75,9 +75,9 @@ export interface IMessageOut {
   options?: IMessageOptions;
 }
 
-export enum StreamingEventType {
-  QUERY_OUT = "queryOutEvent",
-  ADD_RESULT = "addResultEvent",
+export enum QueryStreamingEvent {
+  QUERY_OUT = "QUERY_OUT_EVENT",
+  ADD_RESULT = "ADD_RESULT_EVENT",
 }
 
 export type IResultType =

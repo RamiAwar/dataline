@@ -9,7 +9,7 @@ import axios, { AxiosRequestConfig, AxiosResponse, Method } from "axios";
 const axiosInstance = axios.create();
 
 // const apiURL = import.meta.env.VITE_API_URL || "";
-const apiURL = "http://localhost:7377";
+export const apiURL = "http://localhost:7377";
 
 interface AxiosRequestConfigPatch extends Omit<AxiosRequestConfig, "method"> {
   method?: Method; // axios sets it as string, which is unhelpful and can lead to bugs

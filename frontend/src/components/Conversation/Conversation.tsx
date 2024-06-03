@@ -80,7 +80,7 @@ export const Conversation = () => {
     }
   };
   useEffect(() => {
-    // Wait for charts to render
+    // Wait for charts to render, otherwise the scroll will happen and stop before it reaches the bottom
     const animationFrameId = requestAnimationFrame(() => scrollToBottom());
 
     return () => cancelAnimationFrame(animationFrameId);

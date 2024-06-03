@@ -51,7 +51,7 @@ class QueryGraphService:
         self.tracer = None  # no tracing by default
 
     async def query(
-        self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None, streaming=True
+        self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
     ) -> AsyncGenerator[tuple[Sequence[BaseMessage] | None, Sequence[ResultType] | None], None]:
         # Setup tracing with langsmith if api key is provided
         if options.langsmith_api_key:
@@ -76,25 +76,14 @@ class QueryGraphService:
             "tool_executor": self.tool_executor,
         }
 
-        messages: list[BaseMessage] = []
-        results: list[ResultType] = []
         config: RunnableConfig | None = {"callbacks": [self.tracer]} if self.tracer is not None else None
         current_results: Sequence[ResultType] | None
         current_messages: Sequence[BaseMessage] | None
         async for chunk in app.astream(initial_state, config=config):
             for tool, tool_chunk in chunk.items():
-                if not streaming:
-                    if tool_chunk.get("results"):
-                        results.extend(tool_chunk["results"])
-                    if tool_chunk.get("messages"):
-                        messages.extend(tool_chunk["messages"])
-                else:
-                    current_results = tool_chunk.get("results")
-                    current_messages = tool_chunk.get("messages")
-                    yield (current_messages, current_results)
-
-        if not streaming:
-            yield messages, results
+                current_results = tool_chunk.get("results")
+                current_messages = tool_chunk.get("messages")
+                yield (current_messages, current_results)
 
     def build_graph(self) -> StateGraph:
         # Create the graph

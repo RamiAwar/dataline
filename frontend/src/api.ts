@@ -6,7 +6,7 @@ import {
   IResult,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
-import { backendApi } from "./services/api_client";
+import { apiURL, backendApi } from "./services/api_client";
 import { decodeBase64Data } from "./utils";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 
@@ -227,7 +227,7 @@ const streamingQuery = async ({
   onClose?: () => void;
 }): Promise<void> => {
   return fetchEventSource(
-    `http://localhost:7377/conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`,
+    `${apiURL}/conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`,
     {
       headers: {
         "Content-Type": "application/json",
@@ -241,8 +241,8 @@ const streamingQuery = async ({
         onClose && onClose();
       },
       onerror(err) {
-        console.log(err);
         onClose && onClose();
+        // I tried using a AbortController witgh ctrl.abort, but doesn't work, see issue below
         // https://github.com/Azure/fetch-event-source/issues/24#issuecomment-1470332423
         throw new Error();
       },
