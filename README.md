@@ -15,24 +15,6 @@
 
 ### Setup
 
-#### Docker
-
-```bash
-docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest
-```
-
-You can manage this as you would any other container. `docker start dataline`, `docker stop dataline`
-
-For updating to a new version, just remove the container and rerun the command. This way the volume is persisted across updates.
-
-```bash
-docker rm dataline
-docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest
-```
-
-To connect to the frontend, you can then visit:
-[http://localhost:2222](http://localhost:2222)
-
 #### Windows
 
 Head over to our [releases](https://github.com/RamiAwar/dataline/tags) page, and open the most recent one. There you should find a windows-exe.zip file. Download it, unzip it, and run the `DataLine.exe` file.
@@ -64,16 +46,21 @@ You may also wish to use the binary instead, to do so, follow the instructions i
 
 You can also use our official docker image and get started in one command. This is more suitable for business use:
 
-`docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:v1.0.0`
+```bash
+docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest
+```
 
 You can manage this as you would any other container. `docker start dataline`, `docker stop dataline`
 
 For updating to a new version, just remove the container and rerun the command. This way the volume is persisted across updates.
 
-```
+```bash
 docker rm dataline
-docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:vX.X.X
+docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest
 ```
+
+To connect to the frontend, you can then visit:
+[http://localhost:2222](http://localhost:2222)
 
 #### Running manually
 
