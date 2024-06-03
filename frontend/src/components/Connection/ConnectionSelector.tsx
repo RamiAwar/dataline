@@ -35,49 +35,53 @@ export const ConnectionSelector = () => {
           <div className="text-gray-50 text-md md:text-2xl font-semibold">
             Select a connection
           </div>
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 mt-4">
+          <div className="w-full grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 mt-4">
             {data?.connections?.map((connection) => (
               <div
                 key={connection.id}
-                className="hover:cursor-pointer mx-auto md:hover:ring-2 ring-gray-600 border border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-2/3 sm:w-auto sm:max-w-xs"
+                className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border px-2 py-2 border-gray-700 sm:aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-full sm:w-auto sm:max-w-xs"
                 onClick={() => selectConnection(connection)}
               >
                 <div className="hidden sm:flex overflow-hidden w-full justify-center items-center sm:mt-4">
                   <DatabaseDialectImage databaseDialect={connection.dialect} />
                 </div>
-                <div className="h-full sm:h-auto flex justify-center items-center gap-6 text-gray-50 px-4 pb-4 sm:-mt-2">
-                  <div className="flex-initial h-full lg:h-fit flex flex-col justify-center md:items-start">
+                <div className="w-full flex justify-center items-center gap-2 text-gray-50  sm:-mt-2 ">
+                  <div className="h-full lg:h-fit flex flex-col justify-center md:items-start w-full ">
                     <div className="text-xs md:text-sm xxl:text-md font-normal text-gray-400">
                       {connection.dialect.charAt(0).toUpperCase() +
                         connection.dialect.slice(1)}
                     </div>
-                    <div className="text-base md:text-base xxl:text-xl font-normal md:-mt-1">
+
+                    <div className="text-base leading-tight xxl:text-xl font-normal">
                       {connection.name}
                     </div>
+
                   </div>
 
                   {/** ------ Connection Settings ------ */}
-                  <Link
-                    to={`/connection/${connection.id}`}
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent the click event from propagating to the parent container
-                    }}
-                    className="flex-none group w-10 h-10 p-1 flex justify-center items-center hover:bg-gray-600 rounded-md duration-100 transition-colors"
-                  >
-                    <Cog6ToothIcon className="text-gray-50 group-hover:-rotate-45 transition-transform duration-100" />
-                  </Link>
+                  <div className="flex flex-col justify-end items-end h-full">
+                    <Link
+                      to={`/connection/${connection.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent the click event from propagating to the parent container
+                      }}
+                      className="flex-none group w-10 h-10 p-1 flex justify-end items-end hover:bg-gray-600 rounded-md duration-100 transition-colors "
+                    >
+                      <Cog6ToothIcon className="text-gray-50 group-hover:-rotate-45 transition-transform duration-100" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
 
             <div
-              className="hover:cursor-pointer mx-auto md:hover:ring-2 ring-gray-600 border border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-2/3 sm:w-auto sm:max-w-xs"
+              className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border border-gray-700 sm:aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-full"
               onClick={createConnection}
             >
               {/* Item to add new connection */}
-              <div className="hidden md:flex overflow-hidden w-full justify-center items-center md:mt-4">
+              <div className="hidden sm:flex overflow-hidden w-full h-full justify-center items-center sm:mt-6 md:mt-8">
                 <svg
-                  className="h-3/4 lg:h-2/3 my-auto w-full text-gray-200"
+                  className="h-full w-full text-gray-200"
                   stroke="currentColor"
                   fill="none"
                   viewBox="0 0 48 48"
@@ -91,7 +95,7 @@ export const ConnectionSelector = () => {
                   />
                 </svg>
               </div>
-              <div className="h-full lg:h-fit text-gray-50 mx-auto mb-2 lg:mx-6 lg:-mt-2 flex flex-col justify-center md:items-start">
+              <div className="lg:h-fit text-gray-50  flex flex-col justify-end items-start px-2 py-2">
                 <div className="text-xs md:text-sm xxl:text-md font-normal text-gray-400">
                   Add
                 </div>
