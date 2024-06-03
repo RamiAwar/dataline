@@ -2,7 +2,6 @@
 
 - [Getting started](#getting-started)
   - [Setup](#setup)
-    - [Docker](#docker)
     - [Windows](#windows)
     - [Mac](#mac)
     - [Linux](#linux)
