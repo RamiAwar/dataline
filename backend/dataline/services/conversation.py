@@ -38,6 +38,7 @@ from dataline.services.connection import ConnectionService
 from dataline.services.llm_flow.graph import QueryGraphService
 from dataline.services.settings import SettingsService
 from dataline.models.llm_flow.enums import QueryStreamingEventType
+from dataline.utils.utils import stream_event_str
 
 logger = logging.getLogger(__name__)
 
@@ -154,8 +155,10 @@ class ConversationService:
                 results.extend(chunk_results)
                 for result in chunk_results:
                     if isinstance(result, RenderableResultMixin):
-                        data = f"data: {result.serialize_result().model_dump_json()}"
-                        yield f"event: {QueryStreamingEventType.ADD_RESULT.value}\n{data}\n\n"
+                        yield stream_event_str(
+                            event=QueryStreamingEventType.ADD_RESULT.value,
+                            data=result.serialize_result().model_dump_json(),
+                        )
 
         # Find first AI message from the back
         last_ai_message = None
@@ -217,7 +220,7 @@ class ConversationService:
                 message=MessageOut.model_validate(stored_ai_message), results=serialized_results
             ),
         )
-        yield f"event: {QueryStreamingEventType.QUERY_OUT.value}\ndata: {query_out.model_dump_json()}\n\n"
+        yield stream_event_str(event=QueryStreamingEventType.QUERY_OUT.value, data=query_out.model_dump_json())
 
     async def get_conversation_history(self, session: AsyncSession, conversation_id: UUID) -> list[BaseMessage]:
         """

@@ -1,4 +1,5 @@
 import base64
+import json
 import random
 
 from fastapi import UploadFile
@@ -28,3 +29,13 @@ def generate_short_uuid() -> str:
     chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     sample = random.sample(chars, 8)
     return base64.b64encode("".join(sample).encode()).decode()[:8]
+
+
+def stream_event_str(event: str, data: dict | str) -> str:
+    # https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#event_stream_format
+    event_str = f"event: {event}"
+    if isinstance(data, dict):
+        data = json.dumps(data)
+    data_str = f"data: {data}"
+
+    return f"{event_str}\n{data_str}\n\n"

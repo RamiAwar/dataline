@@ -51,6 +51,8 @@ export const Conversation = () => {
     onAddResult: (result) =>
       setStreamedResults((prev) => [
         ...prev,
+        // ok to use generateUUID here because these are temporary, once the stream ends the state is set to an empty
+        // array and the mutation's onSuccess properly populates the new messages + results
         { ...result, result_id: generateUUID() },
       ]),
     onSettled: () => setStreamedResults([]),
