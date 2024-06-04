@@ -244,7 +244,7 @@ const streamingQuery = async ({
         onClose && onClose();
         // I tried using a AbortController witgh ctrl.abort, but doesn't work, see issue below
         // https://github.com/Azure/fetch-event-source/issues/24#issuecomment-1470332423
-        throw new Error();
+        throw new Error(err);
       },
       openWhenHidden: true,
     }

@@ -1,5 +1,8 @@
 # DataLine
 
+- [Who is this for](#who-is-this-for)
+- [What is it](#what-is-it)
+- [Roadmap](#where-is-it-going)
 - [Getting started](#getting-started)
   - [Setup](#setup)
     - [Windows](#windows)
@@ -8,7 +11,36 @@
     - [Docker](#docker)
     - [Running manually](#running-manually)
   - [Startup Quest](#startup-quest)
-- [Roadmap](#roadmap)
+
+
+## Who is this for?
+
+People who want to explore data, fast. It's specially well-suited for businesses given it's security-first and open-source nature.
+
+## What is it?
+
+DataLine is a simple tool for chatting with your data. It's privacy-focused, running only locally and storing everything on your device. It hides your data from the LLMs used by default, but this can be disabled if the data is not deemed sensitive.
+
+It can connect to a variety of data sources (Postgres, MySQL, SQLite, CSV, and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
+
+## Where is it going?
+
+For now, we're trying to help people get insights out of their data, fast.
+This is meant to enable non-technical folks to query data and aid data analysts in getting their jobs done 10x as fast.
+
+## Feature Support
+- [x] Connecting to Postgres, MySQL databases
+- [x] Generating and executing SQL from natural language
+- [x] Ability to modify SQL results, save them, and re-run
+- [x] Better support for explorative questions
+- [x] Querying data files like CSV, SQLite (more connection types)
+- [x] Charting via natural language
+- [x] Modifying chart queries and re-rendering/refreshing charts
+- [ ] Reporting tools (copy tables, copy charts)
+- [ ] Storing copies of queries and labelling and searching them
+- [ ] Creating dashboards
+- [ ] Increasing connection support (NoSQL, Elasticsearch, ...)
+
 
 ## Getting started
 
@@ -78,15 +110,3 @@ Go through the following checklist to explore DataLine's features!
 - [ ] Try asking for a chart!
 - [ ] To really challenge it, ask a question that is answered with multiple results (charts, tables, etc.) - [example](https://www.youtube.com/watch?v=6ouSok9bOVo)
 - [ ] Add a profile picture
-
-## Roadmap
-
-- [x] Connecting to Postgres, MySQL databases
-- [x] Generating and executing SQL from natural language
-- [x] Ability to modify SQL results, save them, and re-run
-- [x] Ability to add extra metadata to table schemas and fields for better results
-- [x] Better support for explorative questions
-- [x] Querying data files like CSV, SQLite (more connection types)
-- [x] Charting via natural language
-- [ ] Storing copies of queries and labelling and searching them
-- [ ] Creating live dashboards of charts and results

@@ -76,7 +76,7 @@ export const Conversation = () => {
     (conn) => conn.id === currConversation?.connection_id
   );
 
-  const scrollToBottom = (behavior: ScrollBehavior = "instant") => {
+  const scrollToBottom = (behavior: ScrollBehavior = "instant" as ScrollBehavior) => {
     if (messageListRef.current !== null) {
       window.scrollTo({ top: messageListRef.current?.offsetTop, behavior });
     }
@@ -147,7 +147,7 @@ export const Conversation = () => {
               <Message
                 message={{
                   message: {
-                    content: newMessageVariable.message,
+                    content: newMessageVariable?.message || "",
                     role: "human",
                     id: generateUUID(),
                   },
