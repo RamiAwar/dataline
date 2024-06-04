@@ -94,6 +94,14 @@ export const Conversation = () => {
     }
   }, [streamedResults]);
 
+  // Checks if the current conversation has an ongoing query
+  // Edge case: if there are two or more ongoing queries in different conversations, the variable below
+  // will only be true for the last query - but the others will still take effect
+  // e.g. if the user queries, jumps to another conv, queries there, jumps back.
+  const currentConversationIsQuerying =
+    isPendingSendMessage &&
+    newMessageVariable.conversationId === currConversation?.id;
+
   if (isPendingGetMessages) {
     return (
       <div className="w-full h-screen flex justify-center items-center text-white">
@@ -134,33 +142,32 @@ export const Conversation = () => {
               message={message}
             />
           ))}
-          {isPendingSendMessage &&
-            newMessageVariable.conversationId === currConversation?.id && (
-              <>
-                <Message
-                  message={{
-                    message: {
-                      content: newMessageVariable.message,
-                      role: "human",
-                      id: generateUUID(),
-                    },
-                  }}
-                  className="dark:text-gray-400"
-                />
-                <Message
-                  key={new Date().toJSON()}
-                  message={{
-                    message: {
-                      content: "Generating Results...",
-                      role: "ai",
-                      id: generateUUID(),
-                    },
-                    results: streamedResults,
-                  }}
-                  className="animate-pulse"
-                />
-              </>
-            )}
+          {currentConversationIsQuerying && (
+            <>
+              <Message
+                message={{
+                  message: {
+                    content: newMessageVariable.message,
+                    role: "human",
+                    id: generateUUID(),
+                  },
+                }}
+                className="dark:text-gray-400"
+              />
+              <Message
+                key={new Date().toJSON()}
+                message={{
+                  message: {
+                    content: "Generating Results...",
+                    role: "ai",
+                    id: generateUUID(),
+                  },
+                  results: streamedResults,
+                }}
+                className="animate-pulse"
+              />
+            </>
+          )}
         </div>
         <div ref={messageListRef}></div>
       </Transition>
@@ -191,7 +198,7 @@ export const Conversation = () => {
                 conversationId: params.conversationId ?? "",
               })
             }
-            disabled={false}
+            disabled={currentConversationIsQuerying}
           />
           <p className="text-gray-400 text-sm">
             Current Connection: {currConnection?.name}
