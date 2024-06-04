@@ -132,8 +132,8 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
   const [selectedRadio, setSelectedRadio] = useState<RadioValue>(null);
   const [dsn, setDsn] = useState<string | null>(null);
   const [file, setFile] = useState<File>();
-  const { mutate: createConnection, isPending } = useCreateConnection();
-  const { mutate: createFileConnection, isPending: isFilePending } = useCreateFileConnection();
+  const { mutate: createConnection } = useCreateConnection();
+  const { mutate: createFileConnection } = useCreateFileConnection();
 
   const navigate = useNavigate();
 
@@ -238,7 +238,6 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
             <Button
               className="cursor-pointer mt-4"
               onClick={handleCustomCreate}
-              disabled={isPending}
             >
               Create connection
             </Button>
@@ -250,7 +249,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
               <Label>SQLite data file</Label>
               <FileDragAndDrop setFile={setFile} currentFile={file} />
             </Field>
-            <Button className="cursor-pointer mt-4" onClick={() => handleFileCreate(selectedRadio)} disabled={isFilePending}>
+            <Button className="cursor-pointer mt-4" onClick={() => handleFileCreate(selectedRadio)}>
               Create connection
             </Button>
           </div>
@@ -261,7 +260,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
               <Label>CSV file</Label>
               <FileDragAndDrop setFile={setFile} currentFile={file} />
             </Field>
-            <Button className="cursor-pointer mt-4" onClick={() => handleFileCreate(selectedRadio)} disabled={isFilePending}>
+            <Button className="cursor-pointer mt-4" onClick={() => handleFileCreate(selectedRadio)}>
               Create connection
             </Button>
           </div>
