@@ -141,6 +141,7 @@ export const Sidebar = () => {
   };
 
   return (
+    // Sidebar component, swap this element with another sidebar if you like
     <div>
       <Transition.Root show={sidebarOpen} as={Fragment}>
         <Dialog
@@ -277,143 +278,140 @@ export const Sidebar = () => {
 
       {/* Static sidebar for large screens */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col border-r border-gray-600">
-        {/* Sidebar component, swap this element with another sidebar if you like */}
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6">
-          <Link to="/" className="flex h-16 shrink-0 items-center">
-            <img className="h-8 w-auto" src={logo} alt="DataLine" />
-          </Link>
-          <nav className="flex flex-1 flex-col mt-4">
-            <ul role="list" className="flex flex-1 flex-col gap-y-4">
-              <Link
-                to="/"
-                className="-mx-4 py-3 px-2 rounded-md flex justify-start items-center border border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
-              >
-                <PlusIcon className="h-5 w-5 shrink-0 mr-2 [&>path]:stroke-[1]"></PlusIcon>
-                <div>New chat</div>
-              </Link>
-              <li>
-                <ul role="list" className="-mx-4 space-y-1">
-                  {conversations.map((conversation) => (
-                    <li key={conversation.id}>
-                      {!isEditing ? (
-                        <Link
-                          to={`/chat/${conversation.id}`}
-                          onClick={(e) =>
-                            conversation.id === params.conversationId &&
-                            e.preventDefault()
-                          }
-                          className={classNames(
-                            conversation.id === params.conversationId
-                              ? "bg-gray-700 text-white"
-                              : "text-gray-400 hover:text-white hover:bg-gray-800",
-                            "group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
-                          )}
-                        >
-                          <ChatBubbleOvalLeftIcon
-                            className="h-5 w-5 shrink-0"
-                            aria-hidden="true"
-                          />
-                          <div className="flex flex-col overflow-hidden">
-                            <span className="text-ellipsis overflow-hidden whitespace-nowrap">
-                              {conversation.name}
-                            </span>
-                            {conversation.connection && (
-                              <div
-                                className={classNames(
-                                  conversation.id === params.conversationId
-                                    ? "text-gray-400"
-                                    : "text-gray-500",
-                                  "pl-1 flex flex-row items-center gap-1"
-                                )}
-                              >
-                                <div className="pb-px">{LShapedChar}</div>
-                                <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
-                                  {conversation.connection.name}
-                                </span>
-                              </div>
+        {/* Dataline logo */}
+        <Link to="/" className="flex h-16 shrink-0 items-center px-6">
+          <img className="h-8 w-auto" src={logo} alt="DataLine" />
+        </Link>
+        {/* New chat button */}
+        <Link
+          to="/"
+          className="mt-9 mb-4 mx-2 py-3 px-2 rounded-md flex justify-start items-center border border-gray-600 text-gray-200 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
+        >
+          <PlusIcon className="h-5 w-5 shrink-0 mr-2 [&>path]:stroke-[1]"></PlusIcon>
+          <div>New chat</div>
+        </Link>
+        {/* Chat list, flex-1 to take as much space as possible */}
+        <nav className="flex flex-1 flex-col gap-y-4 mx-2 overflow-auto">
+          <div className="overflow-y-auto">
+            <ul role="list" className="space-y-1">
+              {conversations.map((conversation) => (
+                <li key={conversation.id}>
+                  {!isEditing ? (
+                    <Link
+                      to={`/chat/${conversation.id}`}
+                      onClick={(e) =>
+                        conversation.id === params.conversationId &&
+                        e.preventDefault()
+                      }
+                      className={classNames(
+                        conversation.id === params.conversationId
+                          ? "bg-gray-700 text-white"
+                          : "text-gray-400 hover:text-white hover:bg-gray-800",
+                        "group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
+                      )}
+                    >
+                      <ChatBubbleOvalLeftIcon
+                        className="h-5 w-5 shrink-0"
+                        aria-hidden="true"
+                      />
+                      <div className="flex flex-col overflow-hidden">
+                        <span className="text-ellipsis overflow-hidden whitespace-nowrap">
+                          {conversation.name}
+                        </span>
+                        {conversation.connection && (
+                          <div
+                            className={classNames(
+                              conversation.id === params.conversationId
+                                ? "text-gray-400"
+                                : "text-gray-500",
+                              "pl-1 flex flex-row items-center gap-1"
                             )}
+                          >
+                            <div className="pb-px">{LShapedChar}</div>
+                            <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
+                              {conversation.connection.name}
+                            </span>
                           </div>
-                          {/* Show edit button when not editing and chat selected */}
-                          {conversation.id === params.conversationId && (
-                            <div
-                              className={classNames(
-                                "flex justify-end items-center grow gap-1"
-                              )}
-                            >
-                              <div
-                                onClick={handleEditClick}
-                                className="transition-colors duration-150 cursor-pointer rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
-                              >
-                                <PencilSquareIcon className="w-5 h-5" />
-                              </div>
-                              <TrashIcon
-                                className="h-5 w-5 shrink-0 cursor-pointer"
-                                onClick={() =>
-                                  deleteConversation(conversation.id)
-                                }
-                              ></TrashIcon>
-                            </div>
-                          )}
-                        </Link>
-                      ) : (
+                        )}
+                      </div>
+                      {/* Show edit button when not editing and chat selected */}
+                      {conversation.id === params.conversationId && (
                         <div
                           className={classNames(
-                            conversation.id === params.conversationId
-                              ? "bg-gray-700 text-white"
-                              : "text-gray-400 hover:text-white hover:bg-gray-800",
-                            "group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
+                            "flex justify-end items-center grow gap-1"
                           )}
                         >
-                          <ChatBubbleOvalLeftIcon
-                            className="h-5 w-5 shrink-0"
-                            aria-hidden="true"
-                          />
+                          <div
+                            onClick={handleEditClick}
+                            className="transition-colors duration-150 cursor-pointer rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
+                          >
+                            <PencilSquareIcon className="w-5 h-5" />
+                          </div>
+                          <TrashIcon
+                            className="h-5 w-5 shrink-0 cursor-pointer"
+                            onClick={() => deleteConversation(conversation.id)}
+                          ></TrashIcon>
+                        </div>
+                      )}
+                    </Link>
+                  ) : (
+                    <div
+                      className={classNames(
+                        conversation.id === params.conversationId
+                          ? "bg-gray-700 text-white"
+                          : "text-gray-400 hover:text-white hover:bg-gray-800",
+                        "group flex gap-x-3 rounded-md px-3 py-2 text-md leading-6 items-center text-md transition-all duration-150 cursor-pointer"
+                      )}
+                    >
+                      <ChatBubbleOvalLeftIcon
+                        className="h-5 w-5 shrink-0"
+                        aria-hidden="true"
+                      />
 
-                          {/* Show input field when editing and chat selected */}
-                          {conversation.id === params.conversationId ? (
-                            <input
-                              type="text"
-                              value={editedName}
-                              onChange={handleNameChange}
-                              onKeyDown={handleKeyPress}
-                              onBlur={handleSaveClick}
-                              autoFocus
-                              className="flex-none max-w-[70%] h-6 text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-gray-300 pl-1"
-                            />
-                          ) : (
-                            <div className="flex flex-col overflow-hidden">
-                              <span className="text-ellipsis overflow-hidden whitespace-nowrap">
-                                {conversation.name}
+                      {/* Show input field when editing and chat selected */}
+                      {conversation.id === params.conversationId ? (
+                        <input
+                          type="text"
+                          value={editedName}
+                          onChange={handleNameChange}
+                          onKeyDown={handleKeyPress}
+                          onBlur={handleSaveClick}
+                          autoFocus
+                          className="flex-none max-w-[70%] h-6 text-md font-medium leading-6 text-white bg-gray-800 focus:outline-none outline-none border-none ring-gray-300 pl-1"
+                        />
+                      ) : (
+                        <div className="flex flex-col overflow-hidden">
+                          <span className="text-ellipsis overflow-hidden whitespace-nowrap">
+                            {conversation.name}
+                          </span>
+                          {conversation.connection && (
+                            <div className="pl-1 flex flex-row items-center gap-1 text-gray-500">
+                              <div className="pb-px">{LShapedChar}</div>
+                              <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
+                                {conversation.connection.name}
                               </span>
-                              {conversation.connection && (
-                                <div className="pl-1 flex flex-row items-center gap-1 text-gray-500">
-                                  <div className="pb-px">{LShapedChar}</div>
-                                  <span className="text-xs text-ellipsis overflow-hidden whitespace-nowrap">
-                                    {conversation.connection.name}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Show check icon when editing to save */}
-                          {conversation.id === params.conversationId && (
-                            <div
-                              onClick={handleSaveClick}
-                              className="transition-colors duration-150 cursor-pointer rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
-                            >
-                              <CheckIcon className="w-5 h-5 [&>path]:stroke-[2]" />
                             </div>
                           )}
                         </div>
                       )}
-                    </li>
-                  ))}
-                </ul>
-              </li>
-              <hr className="border-gray-800 mt-1" />
-              {/* Section for saved queries and dashboards */}
-              {/* <ul role="list" className="-mx-4 space-y-1">
+
+                      {/* Show check icon when editing to save */}
+                      {conversation.id === params.conversationId && (
+                        <div
+                          onClick={handleSaveClick}
+                          className="transition-colors duration-150 cursor-pointer rounded-md hover:text-white hover:bg-gray-700 text-gray-300"
+                        >
+                          <CheckIcon className="w-5 h-5 [&>path]:stroke-[2]" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* Section for saved queries and dashboards */}
+          {/* <ul role="list" className="-mx-4 space-y-1">
                 <li key="saved-queries">
                   <Link
                     to="/queries"
@@ -440,13 +438,12 @@ export const Sidebar = () => {
                   </div>
                 </li>
               </ul> */}
-              <li className="-mx-6 mt-auto">
-                <div className="flex items-center gap-x-4 px-4 py-4 text-md font-medium leading-6 text-white cursor-pointer">
-                  <ProfileDropdown />
-                </div>
-              </li>
-            </ul>
-          </nav>
+        </nav>
+        {/* Separator */}
+        <hr className="border-gray-800 mt-1 mx-6" />
+        {/* User Settings */}
+        <div className="flex items-center px-2 gap-x-4 py-4 text-md font-medium leading-6 text-white cursor-pointer">
+          <ProfileDropdown />
         </div>
       </div>
 
