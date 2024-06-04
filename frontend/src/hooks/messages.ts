@@ -32,6 +32,11 @@ export function getMessagesQuery({
   });
 }
 
+type QueryOut = {
+  human_message: IMessageOut;
+  ai_message: IMessageWithResultsOut;
+};
+
 export function useSendMessageStreaming({
   onAddResult,
   onSettled,
@@ -52,14 +57,11 @@ export function useSendMessageStreaming({
       message: string;
       conversationId: string;
       execute?: boolean;
-    }) => {
+    }): Promise<QueryOut | null> => {
       const messageOptions = await queryClient.fetchQuery(
         getMessageOptions(current_connection?.id)
       );
-      let queryOut: {
-        human_message: IMessageOut;
-        ai_message: IMessageWithResultsOut;
-      };
+      let queryOut: QueryOut | null = null;
       await api.streamingQuery({
         conversationId,
         query: message,
@@ -67,17 +69,17 @@ export function useSendMessageStreaming({
         message_options: messageOptions,
         onMessage(event, data) {
           if (event === QueryStreamingEvent.QUERY_OUT.valueOf()) {
-            queryOut = JSON.parse(data);
+            queryOut = JSON.parse(data) as QueryOut;
           } else if (event === QueryStreamingEvent.ADD_RESULT.valueOf()) {
             onAddResult(JSON.parse(data));
           }
         },
       });
 
-      // TODO: ugly error
       return queryOut;
     },
     onSuccess: (data, variables) => {
+      if (data === null) return;
       // Update the cached value for the messages query for the given conversation.
       // Basically appends the human message and ai message with results to the list of cached messages
       queryClient.setQueryData(
