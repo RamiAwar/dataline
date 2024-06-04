@@ -1,4 +1,4 @@
-from typing import Sequence, Type
+from typing import AsyncGenerator, Sequence, Type
 
 from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -50,9 +50,9 @@ class QueryGraphService:
         self.tool_executor = ToolExecutor(tools=all_tools)
         self.tracer = None  # no tracing by default
 
-    def query(
+    async def query(
         self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
-    ) -> tuple[Sequence[BaseMessage], Sequence[ResultType]]:
+    ) -> AsyncGenerator[tuple[Sequence[BaseMessage] | None, Sequence[ResultType] | None], None]:
         # Setup tracing with langsmith if api key is provided
         if options.langsmith_api_key:
             self.tracer = LangChainTracer(client=Client(api_key=options.langsmith_api_key.get_secret_value()))
@@ -76,20 +76,14 @@ class QueryGraphService:
             "tool_executor": self.tool_executor,
         }
 
-        chunks = []
-        messages: list[BaseMessage] = []
-        results: list[ResultType] = []
         config: RunnableConfig | None = {"callbacks": [self.tracer]} if self.tracer is not None else None
-        for chunk in app.stream(initial_state, config=config):
-            chunks.append(chunk)
+        current_results: Sequence[ResultType] | None
+        current_messages: Sequence[BaseMessage] | None
+        async for chunk in app.astream(initial_state, config=config):
             for tool, tool_chunk in chunk.items():
-                if tool_chunk.get("results"):
-                    results.extend(tool_chunk["results"])
-
-                if tool_chunk.get("messages"):
-                    messages.extend(tool_chunk["messages"])
-
-        return messages, results
+                current_results = tool_chunk.get("results")
+                current_messages = tool_chunk.get("messages")
+                yield (current_messages, current_results)
 
     def build_graph(self) -> StateGraph:
         # Create the graph

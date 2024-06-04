@@ -1,20 +1,26 @@
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  // useState
+} from "react";
 import { Message } from "./Message";
 import { Navigate, useParams } from "react-router-dom";
 import ExpandingInput from "./ExpandingInput";
 
 import { Transition } from "@headlessui/react";
-import { generateUUID } from "../Library/utils";
 import { Routes } from "@/router";
 import MessageTemplate from "./MessageTemplate";
 import {
   getMessagesQuery,
   useGetConnections,
   useGetConversations,
-  useSendMessage,
+  useSendMessageStreaming,
 } from "@/hooks";
 import { Spinner } from "../Spinner/Spinner";
 import { useQuery } from "@tanstack/react-query";
+import { IResultType } from "@components/Library/types";
+import { generateUUID } from "@components/Library/utils";
 
 const templateMessages = [
   {
@@ -35,11 +41,22 @@ export const Conversation = () => {
   const { data: connectionsData } = useGetConnections();
   const { data: conversationsData } = useGetConversations();
 
+  const [streamedResults, setStreamedResults] = useState<IResultType[]>([]);
+
   const {
     mutate: sendMessageMutation,
     isPending: isPendingSendMessage,
     variables: newMessageVariable,
-  } = useSendMessage();
+  } = useSendMessageStreaming({
+    onAddResult: (result) =>
+      setStreamedResults((prev) => [
+        ...prev,
+        // ok to use generateUUID() here because these are temporary, once the stream ends the state is set to an
+        // empty array and the mutation's onSuccess properly populates the new messages + results
+        { ...result, result_id: generateUUID() },
+      ]),
+    onSettled: () => setStreamedResults([]),
+  });
 
   const {
     data: messages,
@@ -59,15 +76,31 @@ export const Conversation = () => {
     (conn) => conn.id === currConversation?.connection_id
   );
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (behavior: ScrollBehavior = "instant") => {
     if (messageListRef.current !== null) {
-      window.scrollTo({ top: messageListRef.current?.offsetTop });
+      window.scrollTo({ top: messageListRef.current?.offsetTop, behavior });
     }
   };
+  useEffect(() => {
+    // Wait for charts to render, otherwise the scroll will happen and stop before it reaches the bottom
+    const animationFrameId = requestAnimationFrame(() => scrollToBottom());
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isPendingGetMessages, messageListRef, params, isPendingSendMessage]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [isPendingGetMessages, messageListRef, params, isPendingSendMessage]);
+    if (streamedResults.length > 0) {
+      scrollToBottom("smooth");
+    }
+  }, [streamedResults]);
+
+  // Checks if the current conversation has an ongoing query
+  // Edge case: if there are two or more ongoing queries in different conversations, the variable below
+  // will only be true for the last query - but the others will still take effect
+  // e.g. if the user queries, jumps to another conv, queries there, jumps back.
+  const currentConversationIsQuerying =
+    isPendingSendMessage &&
+    newMessageVariable.conversationId === currConversation?.id;
 
   if (isPendingGetMessages) {
     return (
@@ -109,30 +142,32 @@ export const Conversation = () => {
               message={message}
             />
           ))}
-          {isPendingSendMessage &&
-            newMessageVariable.conversationId === currConversation?.id && (
-              <>
-                <Message
-                  message={{
-                    message: {
-                      content: newMessageVariable.message,
-                      role: "human",
-                      id: generateUUID(),
-                    },
-                  }}
-                  className="dark:text-gray-400"
-                />
-                <Message
-                  message={{
-                    message: {
-                      content: "Loading...",
-                      role: "ai",
-                      id: generateUUID(),
-                    },
-                  }}
-                />
-              </>
-            )}
+          {currentConversationIsQuerying && (
+            <>
+              <Message
+                message={{
+                  message: {
+                    content: newMessageVariable.message,
+                    role: "human",
+                    id: generateUUID(),
+                  },
+                }}
+                className="dark:text-gray-400"
+              />
+              <Message
+                key={new Date().toJSON()}
+                message={{
+                  message: {
+                    content: "Generating Results...",
+                    role: "ai",
+                    id: generateUUID(),
+                  },
+                  results: streamedResults,
+                }}
+                className="animate-pulse"
+              />
+            </>
+          )}
         </div>
         <div ref={messageListRef}></div>
       </Transition>
@@ -163,7 +198,7 @@ export const Conversation = () => {
                 conversationId: params.conversationId ?? "",
               })
             }
-            disabled={false}
+            disabled={currentConversationIsQuerying}
           />
           <p className="text-gray-400 text-sm">
             Current Connection: {currConnection?.name}

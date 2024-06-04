@@ -1,5 +1,5 @@
 import logging
-from typing import cast
+from typing import AsyncGenerator, cast
 from uuid import UUID
 
 from fastapi import Depends
@@ -12,6 +12,7 @@ from dataline.models.conversation.schema import (
 from dataline.models.llm_flow.schema import (
     QueryOptions,
     RenderableResultMixin,
+    ResultType,
     SQLQueryStringResultContent,
     StorableResultMixin,
 )
@@ -36,6 +37,8 @@ from dataline.repositories.result import ResultRepository
 from dataline.services.connection import ConnectionService
 from dataline.services.llm_flow.graph import QueryGraphService
 from dataline.services.settings import SettingsService
+from dataline.models.llm_flow.enums import QueryStreamingEventType
+from dataline.utils.utils import stream_event_str
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +108,7 @@ class ConversationService:
         conversation_id: UUID,
         query: str,
         secure_data: bool = True,
-    ) -> QueryOut:
+    ) -> AsyncGenerator[str, None]:
         # Get conversation, connection, user settings
         conversation = await self.get_conversation(session, conversation_id=conversation_id)
         connection = await self.connection_service.get_connection(session, connection_id=conversation.connection_id)
@@ -129,9 +132,12 @@ class ConversationService:
             flush=False,
         )
 
+        messages: list[BaseMessage] = []
+        results: list[ResultType] = []
         # Perform query and execute graph
         langsmith_api_key = user_with_model_details.langsmith_api_key
-        messages, results = query_graph.query(
+
+        async for chunk in query_graph.query(
             query=query,
             options=QueryOptions(
                 secure_data=secure_data,
@@ -140,7 +146,19 @@ class ConversationService:
                 model_name=user_with_model_details.preferred_openai_model,
             ),
             history=history,
-        )
+        ):
+            (chunk_messages, chunk_results) = chunk
+            if chunk_messages is not None:
+                messages.extend(chunk_messages)
+
+            if chunk_results is not None:
+                results.extend(chunk_results)
+                for result in chunk_results:
+                    if isinstance(result, RenderableResultMixin):
+                        yield stream_event_str(
+                            event=QueryStreamingEventType.ADD_RESULT.value,
+                            data=result.serialize_result().model_dump_json(),
+                        )
 
         # Find first AI message from the back
         last_ai_message = None
@@ -196,13 +214,13 @@ class ConversationService:
             result.serialize_result() for result in results if isinstance(result, RenderableResultMixin)
         ]
 
-        return QueryOut(
+        query_out = QueryOut(
             human_message=MessageOut.model_validate(human_message),
             ai_message=MessageWithResultsOut(
-                message=MessageOut.model_validate(stored_ai_message),
-                results=serialized_results,
+                message=MessageOut.model_validate(stored_ai_message), results=serialized_results
             ),
         )
+        yield stream_event_str(event=QueryStreamingEventType.STORED_MESSAGES.value, data=query_out.model_dump_json())
 
     async def get_conversation_history(self, session: AsyncSession, conversation_id: UUID) -> list[BaseMessage]:
         """

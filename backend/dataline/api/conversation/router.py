@@ -3,6 +3,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends
+from fastapi.responses import StreamingResponse
 
 from dataline.models.conversation.schema import (
     ConversationOut,
@@ -10,7 +11,7 @@ from dataline.models.conversation.schema import (
     CreateConversationIn,
     UpdateConversationRequest,
 )
-from dataline.models.message.schema import MessageOptions, MessageWithResultsOut, QueryOut
+from dataline.models.message.schema import MessageOptions, MessageWithResultsOut
 from dataline.old_models import SuccessListResponse, SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.conversation import ConversationService
@@ -89,13 +90,14 @@ async def delete_conversation(
 
 
 @router.post("/conversation/{conversation_id}/query")
-async def query(
+def query(
     conversation_id: UUID,
     query: str,
     message_options: Annotated[MessageOptions, Body(embed=True)],
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(),
-) -> SuccessResponse[QueryOut]:
-    return SuccessResponse(
-        data=await conversation_service.query(session, conversation_id, query, secure_data=message_options.secure_data)
+):
+    return StreamingResponse(
+        conversation_service.query(session, conversation_id, query, secure_data=message_options.secure_data),
+        media_type="text/event-stream",
     )

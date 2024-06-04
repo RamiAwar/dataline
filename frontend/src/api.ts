@@ -1,17 +1,14 @@
-// import axios from "axios";
 import {
   IConversationWithMessagesWithResultsOut,
   IMessageOptions,
   IMessageOut,
   IMessageWithResultsOut,
   IResult,
-  ISelectedTablesResult,
-  ISQLQueryRunResult,
-  ISQLQueryStringResult,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
-import { backendApi } from "./services/api_client";
+import { apiURL, backendApi } from "./services/api_client";
 import { decodeBase64Data } from "./utils";
+import { fetchEventSource } from "@microsoft/fetch-event-source";
 
 type SuccessResponse<T> = {
   data: T;
@@ -193,17 +190,10 @@ const createMessage = async (conversationId: number, content: string) => {
 };
 
 export const DEFAULT_OPTIONS = { secure_data: true };
-type MessageWithResultsOut = {
-  message: IMessageOut;
-  results: (
-    | ISelectedTablesResult
-    | ISQLQueryRunResult
-    | ISQLQueryStringResult
-  )[];
-};
+
 export type QueryOut = ApiResponse<{
   human_message: IMessageOut;
-  ai_message: MessageWithResultsOut;
+  ai_message: IMessageWithResultsOut;
 }>;
 const query = async (
   conversationId: string,
@@ -219,6 +209,46 @@ const query = async (
       method: "POST",
     })
   ).data;
+};
+
+const streamingQuery = async ({
+  conversationId,
+  query,
+  execute = true,
+  message_options = DEFAULT_OPTIONS,
+  onMessage,
+  onClose,
+}: {
+  conversationId: string;
+  query: string;
+  execute?: boolean;
+  message_options: IMessageOptions;
+  onMessage: (event: string, data: string) => void;
+  onClose?: () => void;
+}): Promise<void> => {
+  return fetchEventSource(
+    `${apiURL}/conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      body: JSON.stringify({ message_options }),
+      onmessage(ev) {
+        onMessage(ev.event, ev.data);
+      },
+      onclose() {
+        onClose && onClose();
+      },
+      onerror(err) {
+        onClose && onClose();
+        // I tried using a AbortController witgh ctrl.abort, but doesn't work, see issue below
+        // https://github.com/Azure/fetch-event-source/issues/24#issuecomment-1470332423
+        throw new Error();
+      },
+      openWhenHidden: true,
+    }
+  );
 };
 
 export type RunSQLResult = ApiResponse<IResult>;
@@ -339,6 +369,7 @@ export const api = {
   getMessages,
   createMessage,
   query,
+  streamingQuery,
   runSQL,
   updateSQLQueryString,
   getAvatar,
