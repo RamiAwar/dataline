@@ -24,14 +24,14 @@ import { generateUUID } from "@components/Library/utils";
 
 const templateMessages = [
   {
-    title: "What are some example questions",
-    text: "I can ask about this data source?",
-    message: "What are some example questions I can ask about this data source?",
+    title: "What questions can I ask",
+    text: "about this dataset?",
+    message: "What questions can I ask about this dataset?",
   },
   {
-    title: "What are some interesting",
-    text: "tables in this data source?",
-    message: "What are some interesting tables in this data source?",
+    title: "What can you tell me",
+    text: "about this database?",
+    message: "What can you tell me about this database?",
   },
 ];
 
@@ -173,7 +173,7 @@ export const Conversation = () => {
       </Transition>
 
       <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center backdrop-blur-md pt-0">
-        {messages.length === 0 && (
+        {messages.length === 0 && currConnection?.is_sample && (
           <div className="w-full md:max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-2 justify-between px-2 sm:px-3 my-4">
             {templateMessages.map((template) => (
               <MessageTemplate

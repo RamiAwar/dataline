@@ -92,8 +92,6 @@ export const CodeBlock = ({
     formattedCodeOrInitial(code)
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const syntaxHighlighterId = `syntax-highlighter-${resultId}`;
-
   const [lastChar, setLastChar] = useState<string>("");
   // let BookmarkIcon = isSaved ? BookmarkIconSolid : BookmarkIconOutline;
   const BookmarkIcon = BookmarkIconOutline;
@@ -209,18 +207,6 @@ export const CodeBlock = ({
     }
   };
 
-  // Mirror textarea horizontal and vertical scroll to syntax highlighter
-  const mirrorScroll = () => {
-    if (textareaRef.current !== null) {
-      const { scrollLeft, scrollTop } = textareaRef.current;
-      const syntaxHighlighter = document.getElementById(syntaxHighlighterId);
-      if (syntaxHighlighter !== null) {
-        syntaxHighlighter.scrollLeft = scrollLeft;
-        syntaxHighlighter.scrollTop = scrollTop;
-      }
-    }
-  }
-
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const openSQLForChartHelp = () => {
     setIsHelpOpen(true);
@@ -237,22 +223,17 @@ export const CodeBlock = ({
       <textarea
         spellCheck={false}
         ref={textareaRef}
-        className="absolute h-full w-full border-0 inset-0 resize-none bg-transparent overflow-y-hidden overflow-x-scroll text-transparent p-2 font-mono caret-white outline-none focus:outline-none focus:rounded-xl whitespace-pre"
+        className="absolute h-full w-full border-0 inset-0 resize-none bg-transparent overflow-hidden text-transparent p-2 font-mono caret-white outline-none focus:outline-none focus:rounded-xl"
         onChange={handleTextUpdate}
         onKeyDown={handleKeyboardInput}
-        onScroll={mirrorScroll}
       />
       <SyntaxHighlighter
-        // add dynamic ID based on resultId
-        id={syntaxHighlighterId}
         children={formattedCode}
         language={language === "SQL_QUERY_STRING_RESULT" ? "sql" : language}
         style={monokai}
         wrapLines={true}
         customStyle={{
           flex: "1",
-          overflow: "scroll",
-          scrollbarWidth: "none",
           background: "transparent",
         }}
       />
