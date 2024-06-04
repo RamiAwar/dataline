@@ -20,6 +20,7 @@ import {
 import { Spinner } from "../Spinner/Spinner";
 import { useQuery } from "@tanstack/react-query";
 import { IResultType } from "@components/Library/types";
+import { generateUUID } from "@components/Library/utils";
 
 const templateMessages = [
   {
@@ -50,9 +51,9 @@ export const Conversation = () => {
     onAddResult: (result) =>
       setStreamedResults((prev) => [
         ...prev,
-        // ok to use String(prev.length) here because these are temporary, once the stream ends the state is set to an
+        // ok to use generateUUID() here because these are temporary, once the stream ends the state is set to an
         // empty array and the mutation's onSuccess properly populates the new messages + results
-        { ...result, result_id: String(prev.length) },
+        { ...result, result_id: generateUUID() },
       ]),
     onSettled: () => setStreamedResults([]),
   });
@@ -148,7 +149,7 @@ export const Conversation = () => {
                   message: {
                     content: newMessageVariable.message,
                     role: "human",
-                    id: `temp-human-message`,
+                    id: generateUUID(),
                   },
                 }}
                 className="dark:text-gray-400"
@@ -159,7 +160,7 @@ export const Conversation = () => {
                   message: {
                     content: "Generating Results...",
                     role: "ai",
-                    id: `${currConversation.id}-temp-ai-message`,
+                    id: generateUUID(),
                   },
                   results: streamedResults,
                 }}
