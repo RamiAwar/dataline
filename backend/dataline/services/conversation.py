@@ -220,7 +220,7 @@ class ConversationService:
                 message=MessageOut.model_validate(stored_ai_message), results=serialized_results
             ),
         )
-        yield stream_event_str(event=QueryStreamingEventType.QUERY_OUT.value, data=query_out.model_dump_json())
+        yield stream_event_str(event=QueryStreamingEventType.STORED_MESSAGES.value, data=query_out.model_dump_json())
 
     async def get_conversation_history(self, session: AsyncSession, conversation_id: UUID) -> list[BaseMessage]:
         """

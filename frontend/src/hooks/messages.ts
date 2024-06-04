@@ -68,7 +68,7 @@ export function useSendMessageStreaming({
         execute,
         message_options: messageOptions,
         onMessage(event, data) {
-          if (event === QueryStreamingEvent.QUERY_OUT.valueOf()) {
+          if (event === QueryStreamingEvent.STORED_MESSAGES.valueOf()) {
             queryOut = JSON.parse(data) as QueryOut;
           } else if (event === QueryStreamingEvent.ADD_RESULT.valueOf()) {
             onAddResult(JSON.parse(data));

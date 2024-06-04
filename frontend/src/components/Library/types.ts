@@ -76,7 +76,7 @@ export interface IMessageOut {
 }
 
 export enum QueryStreamingEvent {
-  QUERY_OUT = "QUERY_OUT_EVENT",
+  STORED_MESSAGES = "STORED_MESSAGES_EVENT",
   ADD_RESULT = "ADD_RESULT_EVENT",
 }
 

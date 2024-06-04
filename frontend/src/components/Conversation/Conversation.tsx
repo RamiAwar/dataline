@@ -9,7 +9,6 @@ import { Navigate, useParams } from "react-router-dom";
 import ExpandingInput from "./ExpandingInput";
 
 import { Transition } from "@headlessui/react";
-import { generateUUID } from "../Library/utils";
 import { Routes } from "@/router";
 import MessageTemplate from "./MessageTemplate";
 import {
@@ -51,9 +50,9 @@ export const Conversation = () => {
     onAddResult: (result) =>
       setStreamedResults((prev) => [
         ...prev,
-        // ok to use generateUUID here because these are temporary, once the stream ends the state is set to an empty
-        // array and the mutation's onSuccess properly populates the new messages + results
-        { ...result, result_id: generateUUID() },
+        // ok to use String(prev.length) here because these are temporary, once the stream ends the state is set to an
+        // empty array and the mutation's onSuccess properly populates the new messages + results
+        { ...result, result_id: String(prev.length) },
       ]),
     onSettled: () => setStreamedResults([]),
   });
@@ -149,7 +148,7 @@ export const Conversation = () => {
                   message: {
                     content: newMessageVariable.message,
                     role: "human",
-                    id: generateUUID(),
+                    id: `temp-human-message`,
                   },
                 }}
                 className="dark:text-gray-400"
@@ -160,7 +159,7 @@ export const Conversation = () => {
                   message: {
                     content: "Generating Results...",
                     role: "ai",
-                    id: generateUUID(),
+                    id: `${currConversation.id}-temp-ai-message`,
                   },
                   results: streamedResults,
                 }}
