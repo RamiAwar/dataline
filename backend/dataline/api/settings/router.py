@@ -2,7 +2,7 @@ import base64
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
-from dataline.models.user.schema import AvatarOut, UserOut, UserUpdateIn
+from dataline.models.user.schema import AllowedModels, AvatarOut, UserOut, UserUpdateIn
 from dataline.old_models import SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.settings import SettingsService
@@ -49,3 +49,11 @@ async def get_info(
 ) -> SuccessResponse[UserOut]:
     user_info = await settings_service.get_user_info(session)
     return SuccessResponse(data=user_info)
+
+
+@router.get("/allowed_models")
+async def get_allowed_models(
+    settings_service: SettingsService = Depends(SettingsService), session: AsyncSession = Depends(get_session)
+) -> SuccessResponse[AllowedModels]:
+    allowed_modes = await settings_service.get_user_allowed_models(session)
+    return SuccessResponse(data=AllowedModels(models=allowed_modes))
