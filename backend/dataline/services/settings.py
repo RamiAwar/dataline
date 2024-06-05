@@ -130,7 +130,7 @@ class SettingsService:
 
         return UserOut.model_validate(user_info)
 
-    async def get_user_allowed_models(self, session: AsyncSession):
+    async def get_user_allowed_models(self, session: AsyncSession) -> Sequence[str]:
         user_info = await self.user_repo.get_one_or_none(session)
         if user_info is None:
             raise NotFoundError("No user or multiple users found")
