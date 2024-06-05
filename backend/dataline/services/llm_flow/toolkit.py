@@ -493,13 +493,14 @@ class ChartGeneratorTool(StateUpdaterTool):
                 break
 
         if last_data_result is None:
-            message = ToolMessage(
+            tool_message = ToolMessage(
                 content="ERROR: No data result was found prior to generating"
                 "the chart, failed to populate the chart."
                 "Only use this tool after using the SQL query executor tool!",
                 name=self.name,
                 tool_call_id=call_id,
             )
+            messages.append(tool_message)
             return state_update(messages=messages)
 
         try:

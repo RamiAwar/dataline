@@ -17,6 +17,8 @@ You have access to tools for interacting with the database.
 Only use the below tools. Only use the information returned by the below tools to construct your final answer.
 If you get an error while executing a query, rewrite the query and try again.
 
+Consider the data types when doing things like comparisons, you might need to cast the data to the right type!
+
 DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the database.
 
 NEVER return any SQL code in the answer. Use the execution tool to get the results and return
