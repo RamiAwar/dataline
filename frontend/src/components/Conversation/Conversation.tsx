@@ -26,7 +26,8 @@ const templateMessages = [
   {
     title: "What are some example questions",
     text: "I can ask about this data source?",
-    message: "What are some example questions I can ask about this data source?",
+    message:
+      "What are some example questions I can ask about this data source?",
   },
   {
     title: "What are some interesting",
@@ -45,7 +46,7 @@ export const Conversation = () => {
 
   const {
     mutate: sendMessageMutation,
-    isPending: isPendingSendMessage,
+    isPending: isStreamingResults,
     variables: newMessageVariable,
   } = useSendMessageStreaming({
     onAddResult: (result) =>
@@ -76,7 +77,9 @@ export const Conversation = () => {
     (conn) => conn.id === currConversation?.connection_id
   );
 
-  const scrollToBottom = (behavior: ScrollBehavior = "instant" as ScrollBehavior) => {
+  const scrollToBottom = (
+    behavior: ScrollBehavior = "instant" as ScrollBehavior
+  ) => {
     if (messageListRef.current !== null) {
       window.scrollTo({ top: messageListRef.current?.offsetTop, behavior });
     }
@@ -86,7 +89,7 @@ export const Conversation = () => {
     const animationFrameId = requestAnimationFrame(() => scrollToBottom());
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isPendingGetMessages, messageListRef, params, isPendingSendMessage]);
+  }, [isPendingGetMessages, messageListRef, params, isStreamingResults]);
 
   useEffect(() => {
     if (streamedResults.length > 0) {
@@ -99,7 +102,7 @@ export const Conversation = () => {
   // will only be true for the last query - but the others will still take effect
   // e.g. if the user queries, jumps to another conv, queries there, jumps back.
   const currentConversationIsQuerying =
-    isPendingSendMessage &&
+    isStreamingResults &&
     newMessageVariable.conversationId === currConversation?.id;
 
   if (isPendingGetMessages) {
@@ -158,7 +161,7 @@ export const Conversation = () => {
                 key={new Date().toJSON()}
                 message={{
                   message: {
-                    content: "Generating Results...",
+                    content: "Generating results...",
                     role: "ai",
                     id: generateUUID(),
                   },

@@ -94,18 +94,6 @@ class CallToolNode(Node):
         return state_update(messages=output_messages, results=results)
 
 
-class CallListTablesToolNode(Node):
-    __name__ = "get_tables"
-
-    @classmethod
-    def run(cls, state: QueryGraphState) -> QueryGraphStateUpdate:
-        # action = ToolInvocation(tool=SQLToolNames.LIST_SQL_TABLES, tool_input={})
-        tool = cast(ListSQLTablesTool, state.tool_executor.tool_map[ToolNames.LIST_SQL_TABLES])
-        response: list[str] = tool.run(tool_input={})
-        tool_message = FunctionMessage(content=str(", ".join(response)), name=tool.name)
-        return state_update(messages=[tool_message])
-
-
 class ShouldCallToolCondition(Condition):
     @classmethod
     def run(cls, state: QueryGraphState) -> NodeName:

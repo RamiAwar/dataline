@@ -10,7 +10,6 @@ from langsmith import Client
 
 from dataline.models.llm_flow.schema import QueryOptions, ResultType
 from dataline.services.llm_flow.nodes import (
-    CallListTablesToolNode,
     CallModelNode,
     CallToolNode,
     Condition,
@@ -88,14 +87,12 @@ class QueryGraphService:
     def build_graph(self) -> StateGraph:
         # Create the graph
         graph = StateGraph(QueryGraphState)
-        add_node(graph, CallListTablesToolNode)
         add_node(graph, CallModelNode)
         add_node(graph, CallToolNode)
 
-        add_edge(graph, CallListTablesToolNode, CallModelNode)
         add_conditional_edge(graph, CallModelNode, ShouldCallToolCondition)
         add_edge(graph, CallToolNode, CallModelNode)
-        graph.set_entry_point(CallListTablesToolNode.__name__)
+        graph.set_entry_point(CallModelNode.__name__)
 
         return graph
 
