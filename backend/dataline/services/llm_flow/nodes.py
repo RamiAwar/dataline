@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import cast
 
-from langchain_core.messages import AIMessage, BaseMessage, FunctionMessage, ToolMessage
+from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from langchain_core.utils.function_calling import convert_to_openai_function
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END
@@ -9,11 +9,9 @@ from langgraph.graph import END
 from dataline.models.llm_flow.schema import QueryResultSchema
 from dataline.services.llm_flow.toolkit import (
     ChartGeneratorTool,
-    ListSQLTablesTool,
     QueryGraphState,
     QueryGraphStateUpdate,
     StateUpdaterTool,
-    ToolNames,
     state_update,
 )
 
