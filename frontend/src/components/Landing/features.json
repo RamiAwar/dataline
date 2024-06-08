@@ -11,11 +11,6 @@
       "chatgpt": true
     },
     {
-      "feature": "Allows query edits, re-runs",
-      "dataline": true,
-      "chatgpt": false
-    },
-    {
       "feature": "Data never leaves your machine",
       "dataline": true,
       "chatgpt": false
@@ -31,8 +26,18 @@
       "chatgpt": true
     },
     {
+      "feature": "Query & chart edits, data refreshes",
+      "dataline": true,
+      "chatgpt": false
+    },
+    {
       "feature": "Open Source",
       "dataline": true,
+      "chatgpt": false
+    },
+    {
+      "feature": "Local LLM support",
+      "dataline": "Coming soon",
       "chatgpt": false
     }
   ]

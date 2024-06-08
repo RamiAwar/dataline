@@ -27,7 +27,11 @@ const MessageIcon = ({ message }: { message: IMessageWithResultsOut }) => {
       )}
     </div>
   ) : avatarUrl ? (
-    <img className="h-8 w-8 rounded-md mt-2" src={avatarUrl} alt="" />
+    <img
+      className="h-8 w-8 rounded-md mt-2 object-cover"
+      src={avatarUrl}
+      alt=""
+    />
   ) : (
     <UserCircleIcon className="text-gray-300 h-8 w-8 mt-1 rounded-full" />
   );
