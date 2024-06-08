@@ -65,6 +65,7 @@ ENV PATH="/home/dataline/backend/venv/bin:$PATH"
 # Copy in backend files
 WORKDIR /home/dataline/backend
 COPY backend/*.py .
+COPY backend/samples ./samples
 COPY backend/dataline ./dataline
 COPY backend/alembic ./alembic
 COPY backend/alembic.ini .
