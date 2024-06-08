@@ -8,7 +8,6 @@
     - [Windows](#windows)
     - [Mac](#mac)
     - [Linux](#linux)
-    - [Docker](#docker)
     - [Running manually](#running-manually)
   - [Startup Quest](#startup-quest)
 
@@ -73,25 +72,6 @@ You can use Homebrew, see the [Mac](#mac) section.
 
 You may also wish to use the binary instead, to do so, follow the instructions in the [Windows](#windows) section, and use the `dataline-linux.tar.zip` file instead.
 
-#### Docker
-
-You can also use our official docker image and get started in one command. This is more suitable for business use:
-
-```bash
-docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest
-```
-
-You can manage this as you would any other container. `docker start dataline`, `docker stop dataline`
-
-For updating to a new version, just remove the container and rerun the command. This way the volume is persisted across updates.
-
-```bash
-docker rm dataline
-docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest
-```
-
-To connect to the frontend, you can then visit:
-[http://localhost:2222](http://localhost:2222)
 
 #### Running manually
 
