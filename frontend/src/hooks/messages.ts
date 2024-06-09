@@ -177,14 +177,17 @@ export function useRunSql(
   {
     conversationId,
     sql,
+    linkedId,
   }: {
     conversationId: string;
     sql: string;
+    linkedId: string;
   },
   options: UseMutationOptions<IResult> = {}
 ) {
   return useMutation({
-    mutationFn: async () => (await api.runSQL(conversationId, sql)).data,
+    mutationFn: async () =>
+      (await api.runSQL(conversationId, sql, linkedId)).data,
     onError() {
       enqueueSnackbar({ variant: "error", message: "Error running query" });
     },

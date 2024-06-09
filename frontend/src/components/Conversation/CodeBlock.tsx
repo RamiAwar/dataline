@@ -13,7 +13,12 @@ import { Dialect } from "../Library/types";
 import { useEffect, useRef, useState } from "react";
 import { useRunSql, useUpdateSqlQuery } from "@/hooks";
 import { useParams } from "react-router-dom";
-import { Alert, AlertActions, AlertDescription, AlertTitle } from "../Catalyst/alert";
+import {
+  Alert,
+  AlertActions,
+  AlertDescription,
+  AlertTitle,
+} from "../Catalyst/alert";
 import { Button } from "../Catalyst/button";
 
 function copyToClipboard(text: string) {
@@ -80,7 +85,11 @@ export const CodeBlock = ({
   resultId: string;
   language: IResultTypeName;
   updateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
-  updateChartResult: (sql_string_result_id: string, newJson: string, newCreatedAt: string) => void;
+  updateChartResult: (
+    sql_string_result_id: string,
+    newJson: string,
+    newCreatedAt: string
+  ) => void;
   forChart: boolean;
 }) => {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -99,37 +108,40 @@ export const CodeBlock = ({
   const BookmarkIcon = BookmarkIconOutline;
   const extraSpace = "";
 
-  const {
-    isPending,
-    mutate: runSql,
-  } = useRunSql({
-    conversationId: conversationId || "",
-    sql: savedCode.replace(/\s+/g, " "),
-  }, {
-    onSettled: (data, error) => {
-      if (error) {
-        console.error("onsettled error in: ", error);
-      } else {
-        if (data?.content) {
-          updateSQLRunResult(resultId, data.content as string);
+  const { isPending, mutate: runSql } = useRunSql(
+    {
+      conversationId: conversationId || "",
+      sql: savedCode.replace(/\s+/g, " "),
+      linkedId: resultId,
+    },
+    {
+      onSettled: (data, error) => {
+        if (error) {
+          console.error("onsettled error in: ", error);
+        } else {
+          if (data?.content) {
+            updateSQLRunResult(resultId, data.content as string);
+          }
         }
-      }
+      },
     }
-  });
+  );
 
-  const {
-    mutate: updateSQL
-  } = useUpdateSqlQuery({
+  const { mutate: updateSQL } = useUpdateSqlQuery({
     onSettled: (data, error) => {
       if (error) {
         console.error("onsettled error in: ", error);
       } else {
         // Check if data not undefined then we have chart response
         if (data && data.data && data.data.chartjs_json) {
-          updateChartResult(resultId, data.data.chartjs_json, data.data.created_at)
+          updateChartResult(
+            resultId,
+            data.data.chartjs_json,
+            data.data.created_at
+          );
         }
       }
-    }
+    },
   });
 
   function saveNewSQLString() {
@@ -219,7 +231,7 @@ export const CodeBlock = ({
         syntaxHighlighter.scrollTop = scrollTop;
       }
     }
-  }
+  };
 
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const openSQLForChartHelp = () => {
@@ -282,13 +294,23 @@ export const CodeBlock = ({
           <button tabIndex={-1} onClick={() => copyToClipboard(savedCode)}>
             <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
-
         </CustomTooltip>
 
         {/* Run Icon */}
         <CustomTooltip hoverText="Run">
-          <button tabIndex={-1} onClick={() => { runSql() }} disabled={isPending}>
-            <PlayIcon className={classNames(isPending ? "animate-spin" : "group-hover:-rotate-12", "w-6 h-6 [&>path]:stroke-[2]")} />
+          <button
+            tabIndex={-1}
+            onClick={() => {
+              runSql();
+            }}
+            disabled={isPending}
+          >
+            <PlayIcon
+              className={classNames(
+                isPending ? "animate-spin" : "group-hover:-rotate-12",
+                "w-6 h-6 [&>path]:stroke-[2]"
+              )}
+            />
           </button>
         </CustomTooltip>
       </div>
@@ -296,13 +318,22 @@ export const CodeBlock = ({
       {/* Help for editing queries when codeblock is linked to a chart */}
       {forChart && (
         <Alert className="lg:ml-72" open={isHelpOpen} onClose={setIsHelpOpen}>
-          <AlertTitle>Quick overview of how you can edit chart-linked queries</AlertTitle>
+          <AlertTitle>
+            Quick overview of how you can edit chart-linked queries
+          </AlertTitle>
           <AlertDescription>
-            Charts are generated from the SQL results automatically. <br /><br />
-            The first column returned by the query is used as the x-axis, and the second column is used as the y-axis.
-            <br /><br />
-            You can edit the query to change the chart type, add filters, or change the x-axis and y-axis columns.<br /><br />
-            But the query must return at least two columns for the basic chart types to work (labels and values respectively).
+            Charts are generated from the SQL results automatically. <br />
+            <br />
+            The first column returned by the query is used as the x-axis, and
+            the second column is used as the y-axis.
+            <br />
+            <br />
+            You can edit the query to change the chart type, add filters, or
+            change the x-axis and y-axis columns.
+            <br />
+            <br />
+            But the query must return at least two columns for the basic chart
+            types to work (labels and values respectively).
           </AlertDescription>
           <AlertActions>
             <Button plain onClick={() => setIsHelpOpen(false)}>
@@ -311,7 +342,6 @@ export const CodeBlock = ({
           </AlertActions>
         </Alert>
       )}
-
     </div>
   );
 };
