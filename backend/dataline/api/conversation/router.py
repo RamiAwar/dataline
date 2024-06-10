@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends
 from fastapi.responses import StreamingResponse
+from langchain_community.utilities.sql_database import SQLDatabase
 
 from dataline.models.conversation.schema import (
     ConversationOut,
@@ -11,10 +12,14 @@ from dataline.models.conversation.schema import (
     CreateConversationIn,
     UpdateConversationRequest,
 )
+from dataline.models.llm_flow.schema import SQLQueryRunResult
 from dataline.models.message.schema import MessageOptions, MessageWithResultsOut
+from dataline.models.result.schema import ResultOut
 from dataline.old_models import SuccessListResponse, SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
+from dataline.services.connection import ConnectionService
 from dataline.services.conversation import ConversationService
+from dataline.services.llm_flow.toolkit import execute_sql_query
 
 logger = logging.getLogger(__name__)
 
@@ -101,3 +106,40 @@ def query(
         conversation_service.query(session, conversation_id, query, secure_data=message_options.secure_data),
         media_type="text/event-stream",
     )
+
+
+@router.get("/conversation/{conversation_id}/run-sql")
+async def execute_sql(
+    conversation_id: UUID,
+    sql: str,
+    linked_id: UUID,
+    limit: int = 10,
+    execute: bool = True,
+    session: AsyncSession = Depends(get_session),
+    conversation_service: ConversationService = Depends(ConversationService),
+    connection_service: ConnectionService = Depends(ConnectionService),
+) -> SuccessResponse[ResultOut]:
+    # Get conversation
+    # Will raise error that's auto captured by middleware if not exists
+    conversation = await conversation_service.get_conversation(session, conversation_id=conversation_id)
+
+    # Get connection
+    connection_id = conversation.connection_id
+    connection = await connection_service.get_connection(session, connection_id)
+
+    # Refresh chart data
+    db = SQLDatabase.from_uri(connection.dsn)
+    query_run_data = execute_sql_query(
+        db,
+        sql,
+    )
+
+    # Execute query
+    result = SQLQueryRunResult(
+        columns=query_run_data.columns,
+        rows=query_run_data.rows,
+        for_chart=False,
+        linked_id=linked_id,
+    )
+
+    return SuccessResponse(data=result.serialize_result())

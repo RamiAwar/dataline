@@ -252,11 +252,15 @@ const streamingQuery = async ({
 };
 
 export type RunSQLResult = ApiResponse<IResult>;
-const runSQL = async (conversationId: string, code: string) => {
+const runSQL = async (
+  conversationId: string,
+  code: string,
+  linkedId: string
+) => {
   return (
     await backendApi<RunSQLResult>({
-      url: "/execute-sql",
-      params: { conversation_id: conversationId, sql: code },
+      url: `/conversation/${conversationId}/run-sql`,
+      params: { sql: code, linked_id: linkedId },
     })
   ).data;
 };

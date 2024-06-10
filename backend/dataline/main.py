@@ -19,7 +19,6 @@ from alembic.config import Config
 from dataline.app import App
 from dataline.config import IS_BUNDLED, config
 from dataline.old_models import SuccessResponse, UnsavedResult
-from dataline.old_services import TempQueryService, request_execute, request_limit
 from dataline.repositories.base import AsyncSession, NotFoundError, get_session
 from dataline.sentry import maybe_init_sentry
 from dataline.services.connection import ConnectionService
@@ -49,7 +48,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # On startup
     # Create data directory if not exists
     Path(config.data_directory).mkdir(parents=True, exist_ok=True)
-
     if IS_BUNDLED:
         run_migrations()
         webbrowser.open("http://localhost:7377", new=2)
@@ -65,60 +63,6 @@ app = App(lifespan=lifespan)
 @app.get("/healthcheck", response_model_exclude_none=True)
 async def healthcheck() -> SuccessResponse[None]:
     return SuccessResponse()
-
-
-@app.get("/execute-sql", response_model=UnsavedResult)
-async def execute_sql(
-    conversation_id: UUID,
-    # TODO: Add query_string_id to support linking result to query here
-    # query_string_id: UUID,
-    sql: str,
-    limit: int = 10,
-    execute: bool = True,
-    session: AsyncSession = Depends(get_session),
-    conversation_service: ConversationService = Depends(ConversationService),
-    connection_service: ConnectionService = Depends(ConnectionService),
-) -> Response:
-    request_limit.set(limit)
-    request_execute.set(execute)
-
-    # Get conversation
-    # Will raise error that's auto captured by middleware if not exists
-    conversation = await conversation_service.get_conversation(session, conversation_id=conversation_id)
-    connection_id = conversation.connection_id
-    try:
-        connection = await connection_service.get_connection(session, connection_id)
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail="Invalid connection_id")
-
-    query_service = TempQueryService(connection)
-
-    # Execute query
-    data = query_service.run_sql(sql)
-    if data.get("result"):
-        # Convert data to list of rows
-        rows = []
-        rows.extend([x for x in r] for r in data["result"])
-
-        # TODO: Try to remove custom encoding from here
-        return Response(
-            content=json.dumps(
-                {
-                    "data": {
-                        "type": "SQL_QUERY_RUN_RESULT",
-                        "content": {
-                            "columns": data["columns"],
-                            "rows": rows,
-                        },
-                    }
-                },
-                default=pydantic_encoder,
-                indent=4,
-            ),
-            media_type="application/json",
-        )
-    else:
-        raise HTTPException(status_code=404, detail="No results found")
 
 
 if IS_BUNDLED:

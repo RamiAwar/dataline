@@ -5,6 +5,7 @@ import { useGetAvatar } from "@/hooks";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { InfoTooltip } from "@components/Library/Tooltip";
 import { MessageResultRenderer } from "./MessageResultRenderer";
+import { Spinner } from "../Spinner/Spinner";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -40,9 +41,11 @@ const MessageIcon = ({ message }: { message: IMessageWithResultsOut }) => {
 export const Message = ({
   message,
   className = "",
+  streaming = false,
 }: {
   message: IMessageWithResultsOut;
   className?: string;
+  streaming?: boolean;
 }) => {
   return (
     <div
@@ -64,7 +67,16 @@ export const Message = ({
               <div className="flex flex-grow">
                 <div className="min-h-[20px] flex whitespace-pre-wrap break-words">
                   <div className="markdown prose w-full break-words dark:prose-invert dark">
-                    <p className=" leading-loose">{message.message.content}</p>
+                    <div className="flex gap-2">
+                      {streaming && (
+                        <div className="flex items-center">
+                          <Spinner />
+                        </div>
+                      )}
+                      <p className=" leading-loose">
+                        {message.message.content}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

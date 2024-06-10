@@ -9,6 +9,7 @@ import {
 } from "@/hooks";
 import { Switch } from "@components/Catalyst/switch";
 import _ from "lodash";
+import { Button } from "../Catalyst/button";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -246,9 +247,9 @@ export default function Account() {
                   </div>
                 </div>
                 <div className="mt-8 flex">
-                  <button
+                  <Button
+                    color="green"
                     disabled={!settingsChanged}
-                    type="submit"
                     className={classNames(
                       "rounded-md px-3 py-2 text-sm font-semibold shadow-sm",
                       settingsChanged
@@ -258,7 +259,7 @@ export default function Account() {
                     onClick={updateUserInfoWithKeys}
                   >
                     Save
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

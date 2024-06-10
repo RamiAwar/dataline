@@ -159,6 +159,7 @@ export const Conversation = () => {
               />
               <Message
                 key={new Date().toJSON()}
+                streaming={true}
                 message={{
                   message: {
                     content: "Generating results...",

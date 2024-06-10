@@ -9,7 +9,7 @@ import { Link } from "./link";
 const styles = {
   base: [
     // Base
-    "relative isolate inline-flex items-center justify-center gap-x-2 rounded-lg border text-base/6 font-semibold",
+    "relative isolate inline-flex items-center justify-center gap-x-2 rounded-lg border text-base/6 font-semibold cursor-pointer",
 
     // Sizing
     "px-[calc(theme(spacing[3.5])-1px)] py-[calc(theme(spacing[2.5])-1px)] sm:px-[calc(theme(spacing.3)-1px)] sm:py-[calc(theme(spacing[1.5])-1px)] sm:text-sm/6",
@@ -69,7 +69,7 @@ const styles = {
   ],
   plain: [
     // Base
-    "border-transparent text-gray-950 data-[active]:bg-gray-950/5 data-[hover]:bg-gray-950/5",
+    "border-transparent text-gray-950 data-[active]:bg-gray-950/5 data-[hover]:bg-gray-950/5 transition-colors duration-150",
 
     // Dark mode
     "dark:text-white dark:data-[active]:bg-white/10 dark:data-[hover]:bg-white/10",
@@ -80,8 +80,13 @@ const styles = {
   colors: {
     "dark/zinc": [
       "text-white [--btn-bg:theme(colors.zinc.900)] [--btn-border:theme(colors.zinc.950/90%)] [--btn-hover-overlay:theme(colors.white/10%)]",
-      "dark:text-white dark:[--btn-bg:theme(colors.zinc.600)] dark:[--btn-hover-overlay:theme(colors.white/5%)]",
+      "dark:text-white dark:[--btn-bg:theme(colors.zinc.700)] dark:[--btn-hover-overlay:theme(colors.white/5%)]",
       "[--btn-icon:theme(colors.zinc.400)] data-[active]:[--btn-icon:theme(colors.zinc.300)] data-[hover]:[--btn-icon:theme(colors.zinc.300)]",
+    ],
+    "dark/zinc/red": [
+      "text-white [--btn-bg:theme(colors.zinc.900)] [--btn-border:theme(colors.zinc.950/90%)] [--btn-hover-overlay:theme(colors.white/10%)]",
+      "dark:text-red-500 dark:hover:text-white dark:[--btn-bg:theme(colors.zinc.700)] dark:[--btn-hover-overlay:theme(colors.red.700)] ",
+      "[--btn-icon:theme(colors.zinc.400)] data-[active]:[--btn-icon:theme(colors.red.300)] data-[hover]:[--btn-icon:theme(colors.red.300)]",
     ],
     light: [
       "text-gray-950 [--btn-bg:white] [--btn-border:theme(colors.zinc.950/10%)] [--btn-hover-overlay:theme(colors.zinc.950/2.5%)] data-[active]:[--btn-border:theme(colors.zinc.950/15%)] data-[hover]:[--btn-border:theme(colors.zinc.950/15%)]",
@@ -104,7 +109,7 @@ const styles = {
       "[--btn-icon:theme(colors.zinc.400)] data-[active]:[--btn-icon:theme(colors.zinc.500)] data-[hover]:[--btn-icon:theme(colors.zinc.500)]",
     ],
     zinc: [
-      "text-white [--btn-hover-overlay:theme(colors.white/10%)] [--btn-bg:theme(colors.zinc.600)] [--btn-border:theme(colors.zinc.700/90%)]",
+      "text-white [--btn-hover-overlay:theme(colors.white/10%)] [--btn-bg:theme(colors.zinc.700)] [--btn-border:theme(colors.zinc.700/90%)]",
       "dark:[--btn-hover-overlay:theme(colors.white/5%)]",
       "[--btn-icon:theme(colors.zinc.400)] data-[active]:[--btn-icon:theme(colors.zinc.300)] data-[hover]:[--btn-icon:theme(colors.zinc.300)]",
     ],

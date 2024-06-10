@@ -9,6 +9,7 @@ from dataline.models.conversation.schema import (
     ConversationOut,
     ConversationWithMessagesWithResultsOut,
 )
+from dataline.models.llm_flow.enums import QueryStreamingEventType
 from dataline.models.llm_flow.schema import (
     QueryOptions,
     RenderableResultMixin,
@@ -37,7 +38,6 @@ from dataline.repositories.result import ResultRepository
 from dataline.services.connection import ConnectionService
 from dataline.services.llm_flow.graph import QueryGraphService
 from dataline.services.settings import SettingsService
-from dataline.models.llm_flow.enums import QueryStreamingEventType
 from dataline.utils.utils import stream_event_str
 
 logger = logging.getLogger(__name__)
