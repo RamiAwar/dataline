@@ -71,6 +71,7 @@ def execute_sql_query(
         truncated_row = tuple(truncate_word(column, length=db._max_string_length) for column in row)
         truncated_rows.append(truncated_row)
 
+    columns = list(result.keys())
     if for_chart:
         if chart_type in [ChartType.bar, ChartType.line, ChartType.doughnut]:
             # These chart types take in single dimensional data for labels and values
@@ -82,13 +83,12 @@ def execute_sql_query(
             if len(row) != 2:
                 raise ChartValidationRunException(
                     f"Validation of results output format failed. You chose {len(row)} columns in the select statement."
-                    f"You selected: {row}\n"
+                    f"You selected: {columns}\n"
                     "Please select only two of them for the chart X and Y axes (labels and values respectively)."
                 )
         else:
             raise RunException(f"Chart type {chart_type} is not supported.")
 
-    columns = list(result.keys())
     return QueryRunData(columns=columns, rows=truncated_rows)
 
 
