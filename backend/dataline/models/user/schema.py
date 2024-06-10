@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Sequence
 
 import openai
 from pydantic import (
@@ -65,3 +65,7 @@ class UserWithKeys(BaseModel):
 
 class AvatarOut(BaseModel):
     blob: str
+
+
+class AllowedModels(BaseModel):
+    models: Sequence[str]

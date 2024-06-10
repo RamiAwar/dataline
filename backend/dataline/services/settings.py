@@ -1,6 +1,6 @@
 import logging
 import mimetypes
-from typing import Optional
+from typing import Optional, Sequence
 from uuid import uuid4
 
 import openai
@@ -18,11 +18,20 @@ from dataline.sentry import opt_out_of_sentry, setup_sentry
 
 logger = logging.getLogger(__name__)
 
+STANDARD_MODELS = {"gpt-4o": "a", "gpt-4-turbo": "b", "gpt-3.5-turbo": "c"}
+
+
+def get_allowed_models(openai_api_key: SecretStr | str) -> Sequence[str]:
+    api_key = openai_api_key.get_secret_value() if isinstance(openai_api_key, SecretStr) else openai_api_key
+    return sorted(
+        [model.id for model in openai.OpenAI(api_key=api_key).models.list() if model.id.startswith("gpt")],
+        key=lambda x: STANDARD_MODELS.get(x, x),
+    )
+
 
 def model_exists(openai_api_key: SecretStr | str, model: str) -> bool:
-    api_key = openai_api_key.get_secret_value() if isinstance(openai_api_key, SecretStr) else openai_api_key
-    models = openai.OpenAI(api_key=api_key).models.list()
-    return model in {model.id for model in models}
+    models = get_allowed_models(openai_api_key)
+    return model in models
 
 
 class SettingsService:
@@ -120,6 +129,15 @@ class SettingsService:
             raise NotFoundError("No user or multiple users found")
 
         return UserOut.model_validate(user_info)
+
+    async def get_user_allowed_models(self, session: AsyncSession) -> Sequence[str]:
+        user_info = await self.user_repo.get_one_or_none(session)
+        if user_info is None:
+            raise NotFoundError("No user or multiple users found")
+        if user_info.openai_api_key is None:
+            raise NotFoundError("OpenAI key not set")
+
+        return get_allowed_models(user_info.openai_api_key)
 
     async def get_model_details(self, session: AsyncSession) -> UserWithKeys:
         user_info = await self.user_repo.get_one_or_none(session)

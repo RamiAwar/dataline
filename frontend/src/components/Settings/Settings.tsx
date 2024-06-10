@@ -6,9 +6,16 @@ import {
   useGetUserProfile,
   useUpdateUserInfo,
   useUpdateUserAvatar,
+  useGetAllowedModels,
 } from "@/hooks";
+import {
+  Listbox,
+  ListboxLabel,
+  ListboxOption,
+} from "@components/Catalyst/listbox";
 import { Switch } from "@components/Catalyst/switch";
 import _ from "lodash";
+import { Spinner } from "../Spinner/Spinner";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -17,7 +24,9 @@ function classNames(...classes: string[]) {
 export default function Account() {
   const { data: profile } = useGetUserProfile();
   const { data: avatarUrl } = useGetAvatar();
-  const { mutate: updateUserInfo } = useUpdateUserInfo();
+  const { data: allowed_models } = useGetAllowedModels();
+  const { mutate: updateUserInfo, isPending: isUpdatingUserInfo } =
+    useUpdateUserInfo();
   const { mutate: updateAvatar, isPending } = useUpdateUserAvatar();
 
   const avatarUploadRef = useRef<HTMLInputElement>(null);
@@ -46,6 +55,10 @@ export default function Account() {
         userInfo.langsmith_api_key === "**********"
           ? undefined
           : userInfo.langsmith_api_key,
+      preferred_openai_model:
+        userInfo.preferred_openai_model === profile?.preferred_openai_model
+          ? undefined
+          : userInfo.preferred_openai_model,
     };
     updateUserInfo(updatedUserInfo);
   }
@@ -209,7 +222,7 @@ export default function Account() {
               </div>
             </div>
 
-            {/* Sentry Preference */}
+            {/* Preferences */}
             <div className="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
               <div>
                 <h2 className="text-base font-semibold leading-7 text-white">
@@ -219,6 +232,46 @@ export default function Account() {
 
               <div className="md:col-span-2">
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
+                  {/* Preferred Model */}
+                  <div className="sm:col-span-3">
+                    <label
+                      htmlFor="preferred-model"
+                      className="block text-md font-medium leading-6 text-white"
+                    >
+                      Preferred Model
+                    </label>
+                    <div className="mt-2">
+                      <Listbox
+                        name="preferred-model"
+                        defaultValue={profile?.preferred_openai_model}
+                        onChange={(value) =>
+                          setUserInfo((prevUserInfo) => ({
+                            ...prevUserInfo!,
+                            preferred_openai_model: value,
+                          }))
+                        }
+                      >
+                        {allowed_models ? (
+                          allowed_models.models.map((model) => (
+                            <ListboxOption value={model} key={model}>
+                              <ListboxLabel>{model}</ListboxLabel>
+                            </ListboxOption>
+                          ))
+                        ) : (
+                          <ListboxOption
+                            value={profile?.preferred_openai_model}
+                            key={profile?.preferred_openai_model}
+                          >
+                            <ListboxLabel>
+                              {profile?.preferred_openai_model}
+                            </ListboxLabel>
+                          </ListboxOption>
+                        )}
+                      </Listbox>
+                    </div>
+                  </div>
+
+                  {/* Sentry settings */}
                   <div className="col-span-full">
                     <div className="flex items-center gap-x-6">
                       <label
@@ -245,13 +298,13 @@ export default function Account() {
                     </p>
                   </div>
                 </div>
-                <div className="mt-8 flex">
+                <div className="mt-8 flex gap-x-3 items-center">
                   <button
-                    disabled={!settingsChanged}
+                    disabled={!settingsChanged || isUpdatingUserInfo}
                     type="submit"
                     className={classNames(
-                      "rounded-md px-3 py-2 text-sm font-semibold shadow-sm",
-                      settingsChanged
+                      "rounded-md px-6 py-2 text-sm font-semibold shadow-sm",
+                      settingsChanged && !isUpdatingUserInfo
                         ? "bg-indigo-500 text-white hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
                         : "text-gray-300 bg-indigo-700"
                     )}
@@ -259,13 +312,13 @@ export default function Account() {
                   >
                     Save
                   </button>
+                  {isUpdatingUserInfo && <Spinner />}
                 </div>
               </div>
             </div>
 
             <div className="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
-              <div></div>
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 md:col-start-2">
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
                   <div className="col-span-full">
                     <div className="max-w-2xl text-white">

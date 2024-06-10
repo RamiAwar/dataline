@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 const HEALTH_CHECK_QUERY_KEY = ["HEALTH_CHECK"];
 const USER_INFO_QUERY_KEY = ["USER_INFO"];
 const AVATAR_QUERY_KEY = ["AVATAR"];
+const ALLOWED_MODELS_QUERY_KEY = ["ALLOWED_MODELS"];
 
 export function getBackendStatusQuery(options = {}) {
   return queryOptions({
@@ -164,9 +165,22 @@ export function useUpdateUserInfo(options = {}) {
         message: "Error updating user info",
       });
     },
-    onSettled() {
+    onSettled(_, error, variables) {
       queryClient.invalidateQueries({ queryKey: USER_INFO_QUERY_KEY });
+      if (error === null && variables.openai_api_key) {
+        queryClient.invalidateQueries({ queryKey: ALLOWED_MODELS_QUERY_KEY });
+      }
     },
     ...options,
   });
+}
+
+export function useGetAllowedModels() {
+  const result = useQuery({
+    queryKey: ALLOWED_MODELS_QUERY_KEY,
+    queryFn: async () => (await api.getAllowedModels()).data,
+    staleTime: Infinity,
+  });
+
+  return result;
 }

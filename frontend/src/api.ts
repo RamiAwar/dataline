@@ -291,14 +291,22 @@ const updateUserInfo = async (options: {
   openai_api_key?: string;
   langsmith_api_key?: string;
   sentry_enabled?: boolean;
+  preferred_openai_model?: string;
 }) => {
-  const { name, openai_api_key, langsmith_api_key, sentry_enabled } = options;
+  const {
+    name,
+    openai_api_key,
+    langsmith_api_key,
+    sentry_enabled,
+    preferred_openai_model,
+  } = options;
   // send only the filled in fields
   const data = {
     ...(name && { name }),
     ...(openai_api_key && { openai_api_key }),
     ...(langsmith_api_key && { langsmith_api_key }),
     ...(sentry_enabled != null && { sentry_enabled }),
+    ...(preferred_openai_model && { preferred_openai_model }),
   };
   const response = await backendApi<UpdateUserInfoResult>({
     url: `/settings/info`,
@@ -313,9 +321,19 @@ export type GetUserInfoResult = ApiResponse<{
   openai_api_key: string;
   langsmith_api_key?: string;
   sentry_enabled: boolean;
+  preferred_openai_model: string;
 }>;
 const getUserInfo = async () => {
   return (await backendApi<GetUserInfoResult>({ url: `/settings/info` })).data;
+};
+
+export type GetAllowedModelsResult = ApiResponse<{ models: string[] }>;
+const getAllowedModels = async () => {
+  return (
+    await backendApi<GetAllowedModelsResult>({
+      url: `/settings/allowed_models`,
+    })
+  ).data;
 };
 
 export type RefreshChartResult = ApiResponse<{
@@ -376,5 +394,6 @@ export const api = {
   updateAvatar,
   updateUserInfo,
   getUserInfo,
+  getAllowedModels,
   refreshChart,
 };
