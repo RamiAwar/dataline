@@ -11,6 +11,7 @@ import {
   useGetConversations,
   useUpdateConnection,
 } from "@/hooks";
+import { Button } from "../Catalyst/button";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -211,7 +212,9 @@ export const ConnectionEditor = () => {
           </div>
 
           <div className="sm:col-span-6 flex items-center justify-end gap-x-6">
-            <div
+            <Button
+              color="dark/zinc/red"
+              // className=" hover:bg-red-700 px-3 py-2 text-sm font-medium text-red-400 hover:text-white border border-gray-600 hover:border-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
               onClick={() => {
                 if (relatedConversations.length > 0) {
                   setShowDeleteAlert(true);
@@ -219,22 +222,23 @@ export const ConnectionEditor = () => {
                   handleDelete();
                 }
               }}
-              className="rounded-md bg-gray-700 hover:bg-red-700 px-3 py-2 text-sm font-medium text-red-500 hover:text-white border border-gray-600 hover:border-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
             >
               Delete this connection
-            </div>
-            <div
+            </Button>
+            <Button
               onClick={handleBack}
-              className="rounded-md bg-gray-600 px-3 py-2 text-sm font-medium text-white border border-gray-500 hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
+              color="dark/zinc"
+              // className="rounded-md bg-gray-600 px-3 py-2 text-sm font-medium text-white border border-gray-500 hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 transition-colors duration-150"
             >
               Cancel
-            </div>
-            <div
+            </Button>
+            <Button
               onClick={handleSubmit}
-              className="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm border bg-green-600 border-green-500 hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-colors duration-150"
+              color="green"
+              // className="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm border bg-green-600 border-green-500 hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-colors duration-150"
             >
               Save
-            </div>
+            </Button>
           </div>
         </div>
       </div>

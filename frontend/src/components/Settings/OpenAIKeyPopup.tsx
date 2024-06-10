@@ -12,6 +12,7 @@ import { useState } from "react";
 import MaskedInput from "@components/Settings/MaskedInput";
 import { enqueueSnackbar } from "notistack";
 import { useUpdateUserInfo } from "@/hooks";
+import { Spinner } from "../Spinner/Spinner";
 
 export function OpenAIKeyPopup() {
   const [isOpen, setIsOpen] = useState(true);
@@ -104,7 +105,10 @@ export function OpenAIKeyPopup() {
       </AlertDescription>
       <AlertActions>
         <Button disabled={isPending} onClick={saveApiKey}>
-          Continue
+          <div className="flex gap-2 items-center">
+            Continue
+            {isPending && <Spinner />}
+          </div>
         </Button>
       </AlertActions>
     </Alert>

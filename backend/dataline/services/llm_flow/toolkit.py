@@ -42,6 +42,9 @@ class RunException(Exception):
         super().__init__(message)
 
 
+class ChartValidationRunException(RunException): ...
+
+
 def truncate_word(content: Any, *, length: int, suffix: str = "...") -> str:  # type: ignore[misc]
     """
     Truncate a string to a certain number of words, based on the max string
@@ -77,7 +80,7 @@ def execute_sql_query(
 
             row = truncated_rows[0]
             if len(row) != 2:
-                raise RunException(
+                raise ChartValidationRunException(
                     f"Validation of results output format failed. You chose {len(row)} columns in the select statement."
                     f"You selected: {row}\n"
                     "Please select only two of them for the chart X and Y axes (labels and values respectively)."
@@ -152,7 +155,7 @@ class _InfoSQLDatabaseToolInput(BaseModel):
         description=(
             "A comma-separated list of the table names for which to return the schema. "
             "Example input: 'table1, table2, table3'"
-            "Try to pass in all the tables in one go to avoid multiple calls to this tool."
+            "This is very important: Pass in all the tables in one tool call."
         ),
     )
 
@@ -288,7 +291,12 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
             )
             response.is_secure = state.options.secure_data  # return whether or not generated securely
             results.append(response)
-
+        except ChartValidationRunException as e:
+            # If chart data validation error encountered, remove sql query results from streamed results
+            results = [result for result in results if not isinstance(result, SQLQueryStringResult)]
+            tool_message = ToolMessage(content=f"ERROR: {e.message}", name=self.name, tool_call_id=call_id)
+            messages.append(tool_message)
+            return state_update(messages=messages)
         except RunException as e:
             tool_message = ToolMessage(content=f"ERROR: {e.message}", name=self.name, tool_call_id=call_id)
             messages.append(tool_message)
