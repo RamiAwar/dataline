@@ -28,6 +28,13 @@ SessionCreator = async_sessionmaker(autocommit=False, autoflush=False, bind=engi
 AsyncSession = _AsyncSession
 
 
+async def get_session_no_commit() -> AsyncGenerator[AsyncSession, None]:
+    """FastAPI dependency to get a db session without committing or closing"""
+    session = SessionCreator()
+    await session.execute(text("PRAGMA foreign_keys=ON"))
+    yield session
+
+
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency to get a db session"""
     session = SessionCreator()
