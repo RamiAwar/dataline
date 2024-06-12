@@ -1,4 +1,19 @@
-# DataLine
+<p align="center">
+  <a href="https://dataline.app"><img src="https://github.com/RamiAwar/dataline/assets/8523191/97e3a26c-e064-4e4e-b804-4e739986dbe9" alt="DataLine logo"></a>
+</p>
+
+<p align="center">
+    <strong>Chat with your data using natural language</strong>
+</p>
+<p align="center">
+    <em>Gone are the days of time-consuming querying! Generate charts, tables, reports in seconds.</em>
+</p>
+<div align="center">
+<img src="https://img.shields.io/github/downloads/ramiawar/dataline/total?style=flat&color=%2322c55e">
+<img src="https://img.shields.io/docker/pulls/ramiawar/dataline?color=%2338bdf8">
+</div>
+
+---
 
 - [Who is this for](#who-is-this-for)
 - [What is it](#what-is-it)
