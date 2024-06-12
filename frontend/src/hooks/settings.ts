@@ -146,12 +146,12 @@ export function useUpdateUserAvatar(options = {}) {
 export function useUpdateUserInfo(options = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: {
+    mutationFn: async (payload: {
       openai_api_key?: string;
       name?: string;
       langsmith_api_key?: string;
       sentry_enabled?: boolean;
-    }) => api.updateUserInfo(payload),
+    }) => (await api.updateUserInfo(payload)).data,
     onSuccess() {
       enqueueSnackbar({
         variant: "success",

@@ -295,7 +295,7 @@ class BaseRepository(ABC, Generic[Model, TCreate, TUpdate]):
         query = (
             update(self.model)
             .filter_by(id=record_id)
-            .values(**data.model_dump(exclude_defaults=True))
+            .values(**data.model_dump(exclude_unset=True))
             .returning(self.model)
         )
         return await self.update_one(session, query)

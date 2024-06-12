@@ -79,7 +79,7 @@ class SettingsService:
         user_info = await self.user_repo.get_one_or_none(session)
         if user_info is None:
             # Create user with data
-            user_create = UserCreate.model_construct(**data.model_dump(exclude_none=True))
+            user_create = UserCreate.model_construct(**data.model_dump(exclude_unset=True))
             if user_create.openai_api_key and user_create.preferred_openai_model is None:
                 user_create.preferred_openai_model = (
                     config.default_model
@@ -91,7 +91,7 @@ class SettingsService:
                 setup_sentry()
         else:
             # Update user with data
-            user_update = UserUpdate.model_construct(**data.model_dump(exclude_none=True))
+            user_update = UserUpdate.model_construct(**data.model_dump(exclude_unset=True))
             if user_update.openai_api_key:
                 key_to_check = user_update.openai_api_key
                 model_to_check = (

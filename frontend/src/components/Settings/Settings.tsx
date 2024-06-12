@@ -7,9 +7,11 @@ import {
   useUpdateUserInfo,
   useUpdateUserAvatar,
 } from "@/hooks";
+import { enqueueSnackbar } from "notistack";
 import { Switch } from "@components/Catalyst/switch";
 import _ from "lodash";
 import { Button } from "../Catalyst/button";
+import { IUserInfo } from "../Library/types";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -17,14 +19,22 @@ function classNames(...classes: string[]) {
 
 export default function Account() {
   const { data: profile } = useGetUserProfile();
+  const [userInfo, setUserInfo] = useState(profile);
   const { data: avatarUrl } = useGetAvatar();
-  const { mutate: updateUserInfo } = useUpdateUserInfo();
+  const { mutate: updateUserInfo } = useUpdateUserInfo({
+    onSuccess(data: IUserInfo) {
+      enqueueSnackbar({
+        variant: "success",
+        message: "User info updated",
+      });
+      setUserInfo(data);
+    },
+  });
   const { mutate: updateAvatar, isPending } = useUpdateUserAvatar();
 
   const avatarUploadRef = useRef<HTMLInputElement>(null);
 
   // Store values from inputs
-  const [userInfo, setUserInfo] = useState(profile);
 
   function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
     if (!event.target.files || event.target.files.length === 0) {
@@ -36,18 +46,14 @@ export default function Account() {
   const settingsChanged = !_.isEqual(userInfo, profile);
 
   function updateUserInfoWithKeys() {
-    if (userInfo == null) return;
-    const updatedUserInfo = {
-      ...userInfo,
-      openai_api_key:
-        userInfo.openai_api_key === "**********"
-          ? undefined
-          : userInfo.openai_api_key,
-      langsmith_api_key:
-        userInfo.langsmith_api_key === "**********"
-          ? undefined
-          : userInfo.langsmith_api_key,
-    };
+    if (userInfo == null || profile == null) return;
+    // filter out values that are unchanged between userInfo state and profile tanstack state
+    const updatedUserInfo = Object.fromEntries(
+      Object.entries(userInfo).filter(
+        // @ts-expect-error, we don't care that profile[key] is "any". It's not.
+        ([key, value]) => profile[key] !== value
+      )
+    );
     updateUserInfo(updatedUserInfo);
   }
 
