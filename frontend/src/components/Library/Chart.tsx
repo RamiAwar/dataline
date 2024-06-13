@@ -202,6 +202,21 @@ const Chart = ({
         }
       }
     }
+    if (oldType === "doughnut" || newType === "doughnut") {
+      updatedData = {
+        ...updatedData,
+        options: {
+          ...updatedData.options,
+          plugins: {
+            ...updatedData.options?.plugins,
+            legend: {
+              ...updatedData.options?.plugins?.legend,
+              display: newType === "doughnut", // show legend if new type is doughnut, hide if not
+            },
+          },
+        },
+      };
+    }
 
     setChartData(updatedData);
   };
