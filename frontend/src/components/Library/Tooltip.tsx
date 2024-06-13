@@ -20,7 +20,7 @@ const CustomTooltip: React.FC<TooltipProps> = ({
       setTooltipText(clickText);
       setTimeout(() => {
         setShowTooltip(false);
-        setTooltipText(hoverText);  // reset the tooltip text
+        setTooltipText(hoverText); // reset the tooltip text
       }, 2000);
     }
   };
@@ -89,7 +89,7 @@ const InfoTooltip: React.FC<TooltipProps> = ({
       setTooltipText(clickText);
       setTimeout(() => {
         setShowTooltip(false);
-        setTooltipText(hoverText);  // reset the tooltip text
+        setTooltipText(hoverText); // reset the tooltip text
       }, 2000);
     }
   };

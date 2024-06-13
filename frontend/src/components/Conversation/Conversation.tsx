@@ -103,7 +103,7 @@ export const Conversation = () => {
 
   if (isPendingGetMessages) {
     return (
-      <div className="w-full h-screen flex justify-center items-center text-white">
+      <div className="w-full h-screen flex gap-2 justify-center items-center text-white">
         <Spinner />
         Loading...
       </div>

@@ -2,8 +2,10 @@
 
 import { clsx } from "clsx";
 import type React from "react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "./link";
+import autoAnimate from "@formkit/auto-animate";
+import SimpleBar from "simplebar-react";
 
 const TableContext = createContext<{
   bleed: boolean;
@@ -22,6 +24,7 @@ export function Table({
   dense = false,
   grid = false,
   striped = false,
+  maxRows = 0,
   className,
   children,
   ...props
@@ -30,7 +33,17 @@ export function Table({
   dense?: boolean;
   grid?: boolean;
   striped?: boolean;
+  maxRows?: number;
 } & React.ComponentPropsWithoutRef<"div">) {
+  const bodyRef = useRef(null);
+
+  useEffect(() => {
+    bodyRef.current &&
+      autoAnimate(bodyRef.current, {
+        duration: 300,
+      });
+  }, [bodyRef]);
+
   return (
     <TableContext.Provider
       value={
@@ -44,17 +57,34 @@ export function Table({
           {...props}
           className={clsx(
             className,
-            "-mx-[--gutter] overflow-x-auto whitespace-nowrap"
+            "-mx-[--gutter] overflow-x-auto whitespace-nowrap overflow-y-scroll scrollbar-hide"
           )}
         >
-          <div
-            className={clsx(
-              "inline-block min-w-full align-middle",
-              !bleed && "sm:px-[--gutter]"
-            )}
+          <SimpleBar
+            autoHide={false}
+            scrollbarMinSize={30}
+            className="z-0"
+            style={
+              maxRows > 0
+                ? {
+                    maxHeight: `calc(${maxRows}*2rem)`,
+                    transition: "max-height 300ms",
+                  }
+                : { transition: "max-height 300ms" }
+            }
           >
-            <table className="min-w-full text-left text-sm/6">{children}</table>
-          </div>
+            <div
+              ref={bodyRef}
+              className={clsx(
+                "inline-block min-w-full align-middle",
+                !bleed && "sm:px-[--gutter]"
+              )}
+            >
+              <table className="min-w-full text-left text-sm/6">
+                {children}
+              </table>
+            </div>
+          </SimpleBar>
         </div>
       </div>
     </TableContext.Provider>

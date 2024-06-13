@@ -13,6 +13,7 @@ import {
   useGetConversations,
   useGetUserProfile,
 } from "@/hooks";
+import "simplebar-react/dist/simplebar.min.css";
 
 export const Home = () => {
   useGetBackendStatus();
@@ -38,7 +39,7 @@ export const Home = () => {
     isPendingConversations ||
     profile === undefined ? (
     <Alert open={true} onClose={() => {}} size="sm">
-      <AlertTitle className="flex">
+      <AlertTitle className="flex gap-4 items-center">
         <Spinner />
         Loading...
       </AlertTitle>
