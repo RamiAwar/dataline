@@ -70,7 +70,7 @@ export const DynamicTable: React.FC<{
             bleed
             striped
             dense
-            maxRows={limitedView ? 5 : data.rows.length}
+            maxRows={limitedView ? 5 : data.rows.length + 10}
             className="ml-0 mr-0 [--gutter:theme(spacing.6)]"
           >
             <TableHead>

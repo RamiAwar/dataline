@@ -67,7 +67,7 @@ export function Table({
             style={
               maxRows > 0
                 ? {
-                    maxHeight: `calc(${maxRows}*2rem)`,
+                    maxHeight: `calc(${maxRows}*2.7rem)`,
                     transition: "max-height 300ms",
                   }
                 : { transition: "max-height 300ms" }
