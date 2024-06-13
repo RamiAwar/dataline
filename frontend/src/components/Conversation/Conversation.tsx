@@ -1,9 +1,5 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  // useState
-} from "react";
+import { useEffect, useRef, useState } from "react";
+import { isAxiosError } from "axios";
 import { Message } from "./Message";
 import { Navigate, useParams } from "react-router-dom";
 import ExpandingInput from "./ExpandingInput";
@@ -113,19 +109,21 @@ export const Conversation = () => {
       </div>
     );
   }
+
+  if (
+    (isAxiosError(getMessagesError) &&
+      getMessagesError.response?.status === 404) ||
+    !connectionsData?.connections?.length
+  ) {
+    return <Navigate to={Routes.Root} />;
+  }
+
   if (!isSuccessGetMessages) {
     return (
       <div className="w-full h-screen flex justify-center items-center text-white">
         Something went wrong!
       </div>
     );
-  }
-  if (
-    // @ts-expect-error, status is not known
-    getMessagesError?.status === 404 ||
-    !connectionsData?.connections?.length
-  ) {
-    return <Navigate to={Routes.Root} />;
   }
 
   return (
