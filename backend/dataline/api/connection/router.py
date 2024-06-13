@@ -29,6 +29,17 @@ async def connect_db(
     session: AsyncSession = Depends(get_session),
     connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ConnectionOut]:
+    connection = await connection_service.create_connection(session, dsn=req.dsn, name=req.name, is_sample=False)
+    return SuccessResponse(data=connection)
+
+
+@router.post("/connect/sample", response_model_exclude_none=True)
+async def connect_sample_db(
+    req: ConnectRequest,
+    session: AsyncSession = Depends(get_session),
+    connection_service: ConnectionService = Depends(ConnectionService),
+) -> SuccessResponse[ConnectionOut]:
+    # TODO: Identify sample, copy file in, then create connection
     connection = await connection_service.create_connection(
         session, dsn=req.dsn, name=req.name, is_sample=req.is_sample
     )
@@ -48,7 +59,7 @@ async def connect_db_from_file(
         if not is_valid_sqlite_file(file):
             raise HTTPException(status_code=400, detail="File provided must be a valid SQLite file.")
 
-        connection = await connection_service.create_sqlite_connection(session, file, name)
+        connection = await connection_service.create_sqlite_connection(session, file.file, name)
         return SuccessResponse(data=connection)
 
     elif type == FileConnectionType.csv:
