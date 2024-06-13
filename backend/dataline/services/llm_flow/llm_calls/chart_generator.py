@@ -102,7 +102,7 @@ TEMPLATES: dict[ChartType, str] = {
     options: {
       plugins: {
         legend: {
-          display: false
+          display: true
         },
         title: {
           display: true,
@@ -186,7 +186,7 @@ class ShouldGenerateChartCall(OpenAIExtractor[ShouldGenerateChart]):
     prompt_template = """
     Determine if a chart should be generated for this query.
 
-    If a chart should be generated, determine the type of chart that should be generated and come up 
+    If a chart should be generated, determine the type of chart that should be generated and come up
     with a query specifying technical requirements.
     If a chart should not be generated, set should_generate_chart to False.
     """
@@ -203,7 +203,7 @@ class GenerateChartCall(OpenAIExtractor[GeneratedChart]):
     api_key: str | None
 
     prompt_template = """
-    Create a chartjs.org chart of type {chart_type} that would be appropriate for this data. 
+    Create a chartjs.org chart of type {chart_type} that would be appropriate for this data.
     Create a valid ChartJS config for this chart. Only return the valid JSON config.
     Don't use more than 5 colours.
     Make sure to avoid this error: Give the chart a relevant title, based on this request: {request}.
