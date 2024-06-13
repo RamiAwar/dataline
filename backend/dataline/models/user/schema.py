@@ -38,8 +38,8 @@ class UserUpdateIn(BaseModel):
         return v.get_secret_value()
 
     @field_serializer("langsmith_api_key")
-    def dump_langsmith_api_key(self, v: SecretStr) -> str:
-        return v.get_secret_value()
+    def dump_langsmith_api_key(self, v: SecretStr | None) -> str | None:
+        return v.get_secret_value() if v else None
 
 
 class UserOut(BaseModel):

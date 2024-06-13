@@ -4,6 +4,7 @@ import {
   IMessageOut,
   IMessageWithResultsOut,
   IResult,
+  IUserInfo,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
 import { apiURL, backendApi } from "./services/api_client";
@@ -289,7 +290,7 @@ const updateAvatar = async (file: File) => {
 };
 
 // Optional name or openai_api_key
-export type UpdateUserInfoResult = ApiResponse<void>;
+export type UpdateUserInfoResult = ApiResponse<IUserInfo>;
 const updateUserInfo = async (options: {
   name?: string;
   openai_api_key?: string;
@@ -298,26 +299,24 @@ const updateUserInfo = async (options: {
 }) => {
   const { name, openai_api_key, langsmith_api_key, sentry_enabled } = options;
   // send only the filled in fields
-  const data = {
+  const data: Partial<IUserInfo> = {
     ...(name && { name }),
     ...(openai_api_key && { openai_api_key }),
-    ...(langsmith_api_key && { langsmith_api_key }),
     ...(sentry_enabled != null && { sentry_enabled }),
   };
+  if (langsmith_api_key !== undefined) {
+    data.langsmith_api_key =
+      langsmith_api_key === "" ? null : langsmith_api_key;
+  }
   const response = await backendApi<UpdateUserInfoResult>({
-    url: `/settings/info`,
+    url: "/settings/info",
     method: "patch",
     data,
   });
   return response.data;
 };
 
-export type GetUserInfoResult = ApiResponse<{
-  name: string;
-  openai_api_key: string;
-  langsmith_api_key?: string;
-  sentry_enabled: boolean;
-}>;
+export type GetUserInfoResult = ApiResponse<IUserInfo>;
 const getUserInfo = async () => {
   return (await backendApi<GetUserInfoResult>({ url: `/settings/info` })).data;
 };
