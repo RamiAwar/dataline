@@ -11,6 +11,11 @@ IS_BUNDLED = bool(getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"))
 USER_DATA_DIR = user_data_dir(appname="DataLine")
 
 
+class EnvironmentType(str):
+    development = "development"
+    production = "production"
+
+
 class Config(BaseSettings):
     # SQLite database will be mounted in the configuration directory
     # This is where all DataLine data is stored
@@ -28,6 +33,9 @@ class Config(BaseSettings):
     default_model: str = "gpt-3.5-turbo"
     templates_path: Path = Path(__file__).parent.parent / "templates"
     assets_path: Path = Path(__file__).parent.parent / "assets"
+
+    environment: str = EnvironmentType.development if not IS_BUNDLED else EnvironmentType.production
+    release: str | None = None
 
 
 config = Config()
