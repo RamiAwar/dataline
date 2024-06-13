@@ -46,13 +46,8 @@
 
 .simplebar-scrollbar::before {
   background-color: rgba(255, 255, 255, 0.3);
-  width: 7px;
 }
 
 .simplebar-track {
-  background-color: #11182788;
-  border-radius: 8px;
-  margin-right: 10px;
-  margin-top: 10px;
-  margin-bottom: 50px;
+  margin: 2px;
 }

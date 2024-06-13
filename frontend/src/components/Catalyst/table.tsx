@@ -57,13 +57,13 @@ export function Table({
           {...props}
           className={clsx(
             className,
-            "-mx-[--gutter] overflow-x-auto whitespace-nowrap overflow-y-scroll scrollbar-hide"
+            "-mx-[--gutter] overflow-x-auto whitespace-nowrap overflow-scroll scrollbar-hide"
           )}
         >
           <SimpleBar
             autoHide={false}
             scrollbarMinSize={30}
-            className="z-0 overflow-x-hidden"
+            className="z-0"
             style={
               maxRows > 0
                 ? {
@@ -76,7 +76,7 @@ export function Table({
             <div
               ref={bodyRef}
               className={clsx(
-                "inline-block min-w-full align-middle",
+                "inline-block min-w-full align-middle overflow-x-scroll",
                 !bleed && "sm:px-[--gutter]"
               )}
             >
