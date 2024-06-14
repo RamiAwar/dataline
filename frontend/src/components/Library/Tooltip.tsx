@@ -67,7 +67,7 @@ const CustomTooltip: React.FC<TooltipProps> = ({
             </span>
           </span>
         )}
-        <div className="group flex ml-auto gap-2 rounded-md p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50 transition-all duration-150 ease-in-out border border-gray-950/10 data-[hover]:border-gray-950/20 dark:border-white/10 dark:data-[hover]:border-white/20">
+        <div className="group flex ml-auto gap-2 rounded-md bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50 transition-all duration-150 ease-in-out border border-gray-950/10 data-[hover]:border-gray-950/20 dark:border-white/10 dark:data-[hover]:border-white/20">
           {children}
         </div>
       </div>

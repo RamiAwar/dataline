@@ -56,8 +56,8 @@ export const DynamicTable: React.FC<{
             onClick={() => setMinimized(false)}
           >
             <div className="ml-2">Data results</div>
-            <CustomTooltip>
-              <button tabIndex={-1}>
+            <CustomTooltip hoverText="Expand">
+              <button tabIndex={-1} className="p-1">
                 <ArrowsPointingOutIcon className="w-6 h-6 [&>path]:stroke-[2]" />
               </button>
             </CustomTooltip>
@@ -97,10 +97,9 @@ export const DynamicTable: React.FC<{
         )}
       </div>
 
-      <div className="absolute bottom-0 right-0 m-2 flex gap-1">
-        {/* Minimize Icon */}
-
-        {!minimized && (
+      {!minimized && (
+        <div className="absolute bottom-0 right-0 m-2 flex gap-1">
+          {/* Minimize Icon */}
           <CustomTooltip hoverText="Minimize">
             {/* On minimize, also collapse if already expanded */}
             <button
@@ -109,30 +108,33 @@ export const DynamicTable: React.FC<{
                 setMinimized(true);
                 setLimitedView(true);
               }}
+              className="p-1"
             >
               <MinusIcon className="w-6 h-6 [&>path]:stroke-[2]" />
             </button>
           </CustomTooltip>
-        )}
-
-        {/* Expand Icon */}
-        {(limitedView || minimized) && (
-          <CustomTooltip hoverText="Expand">
-            <button tabIndex={-1} onClick={handleExpand}>
-              <ArrowsPointingOutIcon className="w-6 h-6 [&>path]:stroke-[2]" />
-            </button>
-          </CustomTooltip>
-        )}
-
-        {/* Contract Icon */}
-        {!limitedView && !minimized && (
-          <CustomTooltip hoverText="Collapse">
-            <button tabIndex={-1} onClick={() => setLimitedView(true)}>
-              <ArrowsPointingInIcon className="w-6 h-6 [&>path]:stroke-[2]" />
-            </button>
-          </CustomTooltip>
-        )}
-      </div>
+          {data.rows.length > 4 && // 4 data rows + 1 header (columns) row
+            (limitedView ? (
+              /* Expand Icon */
+              <CustomTooltip hoverText="Expand">
+                <button tabIndex={-1} onClick={handleExpand} className="p-1">
+                  <ArrowsPointingOutIcon className="w-6 h-6 [&>path]:stroke-[2]" />
+                </button>
+              </CustomTooltip>
+            ) : (
+              /* Contract Icon */
+              <CustomTooltip hoverText="Collapse">
+                <button
+                  tabIndex={-1}
+                  onClick={() => setLimitedView(true)}
+                  className="p-1"
+                >
+                  <ArrowsPointingInIcon className="w-6 h-6 [&>path]:stroke-[2]" />
+                </button>
+              </CustomTooltip>
+            ))}
+        </div>
+      )}
     </div>
   );
 };

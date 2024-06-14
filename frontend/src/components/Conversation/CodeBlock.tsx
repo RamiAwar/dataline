@@ -274,7 +274,7 @@ export const CodeBlock = ({
         {/* Help Icon */}
         {forChart && (
           <CustomTooltip hoverText="Help">
-            <button tabIndex={-1} onClick={openSQLForChartHelp}>
+            <button tabIndex={-1} onClick={openSQLForChartHelp} className="p-1">
               <QuestionMarkCircleIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-12" />
             </button>
           </CustomTooltip>
@@ -284,14 +284,18 @@ export const CodeBlock = ({
       <div className="absolute bottom-0 right-0 m-2 flex gap-1">
         {/* Save Icon */}
         <CustomTooltip hoverText="Save">
-          <button tabIndex={-1} onClick={saveNewSQLString}>
+          <button tabIndex={-1} onClick={saveNewSQLString} className="p-1">
             <BookmarkIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
 
         {/* Copy Icon */}
         <CustomTooltip clickText="COPIED!" hoverText="Copy">
-          <button tabIndex={-1} onClick={() => copyToClipboard(savedCode)}>
+          <button
+            tabIndex={-1}
+            onClick={() => copyToClipboard(savedCode)}
+            className="p-1"
+          >
             <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
@@ -304,6 +308,7 @@ export const CodeBlock = ({
               runSql();
             }}
             disabled={isPending}
+            className="p-1"
           >
             <PlayIcon
               className={classNames(
