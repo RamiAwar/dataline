@@ -150,6 +150,7 @@ class SampleName(Enum):
 
 class ConnectSampleIn(BaseModel):
     sample_name: SampleName
+    connection_name: str
 
 
 DB_SAMPLES = {

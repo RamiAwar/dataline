@@ -47,7 +47,9 @@ async def connect_sample_db(
     # Copy file to user data directory and create connection
     sample_path = sample[1]
     with open(sample_path, "rb") as f:
-        connection = await connection_service.create_sqlite_connection(session, file=f, name=sample[0], is_sample=True)
+        connection = await connection_service.create_sqlite_connection(
+            session, file=f, name=req.connection_name, is_sample=True
+        )
     return SuccessResponse(data=connection)
 
 
