@@ -30,5 +30,5 @@ jobs:
         run: poetry install --with dev --no-interaction --no-root
       - name: Run the automated tests (for example)
         env:
-          DATA_DIRECTORY: ./data
+          DATA_DIRECTORY: ./
         run: PYTHONPATH=. poetry run pytest .
