@@ -56,7 +56,12 @@ export function useGetConnection(id?: string) {
 }
 
 const defaultCreateErrorHandler = (err: Error) => {
-  if (!isAxiosError(err)) {
+  if (isAxiosError(err) && err.response?.status === 404) {
+    enqueueSnackbar({
+      variant: "error",
+      message: "Sample not found",
+    });
+  } else if (!isAxiosError(err)) {
     enqueueSnackbar({
       variant: "error",
       message: "Error creating connection.",
@@ -104,6 +109,21 @@ export function useCreateConnection(options = {}) {
       name: string;
       isSample: boolean;
     }) => api.createConnection(dsn, name, isSample),
+    onSettled() {
+      queryClient.invalidateQueries({
+        queryKey: getConnectionsQuery().queryKey,
+      });
+    },
+    onError: defaultCreateErrorHandler,
+    ...options,
+  });
+}
+
+export function useCreateSampleConnection(options = {}) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ key, name }: { key: string; name: string }) =>
+      api.createSampleConnection(key, name),
     onSettled() {
       queryClient.invalidateQueries({
         queryKey: getConnectionsQuery().queryKey,

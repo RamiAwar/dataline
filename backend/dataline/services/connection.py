@@ -1,6 +1,7 @@
 import logging
 import sqlite3
 from pathlib import Path
+from typing import BinaryIO
 from uuid import UUID
 
 import pandas as pd
@@ -128,16 +129,17 @@ class ConnectionService:
         updated_connection = await self.connection_repo.update_by_uuid(session, connection_uuid, update)
         return ConnectionOut.model_validate(updated_connection)
 
-    async def create_sqlite_connection(self, session: AsyncSession, file: UploadFile, name: str) -> ConnectionOut:
-        # Store file in data directory
+    async def create_sqlite_connection(
+        self, session: AsyncSession, file: BinaryIO, name: str, is_sample: bool = False
+    ) -> ConnectionOut:
         generated_name = generate_short_uuid() + ".sqlite"
         file_path = Path(config.data_directory) / generated_name
         with file_path.open("wb") as f:
-            f.write(file.file.read())
+            f.write(file.read())
 
         # Create connection with the locally copied file
         dsn = get_sqlite_dsn(str(file_path.absolute()))
-        return await self.create_connection(session, dsn=dsn, name=name, is_sample=False)
+        return await self.create_connection(session, dsn=dsn, name=name, is_sample=is_sample)
 
     async def create_csv_connection(self, session: AsyncSession, file: UploadFile, name: str) -> ConnectionOut:
         generated_name = generate_short_uuid() + ".sqlite"

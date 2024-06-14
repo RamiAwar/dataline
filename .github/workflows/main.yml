@@ -29,4 +29,6 @@ jobs:
       - name: Install the project dependencies
         run: poetry install --with dev --no-interaction --no-root
       - name: Run the automated tests (for example)
+        env:
+          DATA_DIRECTORY: ./
         run: PYTHONPATH=. poetry run pytest .

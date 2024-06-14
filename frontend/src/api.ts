@@ -48,6 +48,18 @@ const createConnection = async (
   return response.data;
 };
 
+const createSampleConnection = async (
+  sampleName: string,
+  connectionName: string
+): Promise<ConnectResult> => {
+  const response = await backendApi<ConnectResult>({
+    url: "/connect/sample",
+    method: "post",
+    data: { sample_name: sampleName, connection_name: connectionName },
+  });
+  return response.data;
+};
+
 const createFileConnection = async (
   file: File,
   name: string,
@@ -85,6 +97,7 @@ const getConnection = async (
 };
 
 export type SampleResult = {
+  key: string;
   title: string;
   file: string;
   link: string;
@@ -361,6 +374,7 @@ export const api = {
   getConnection,
   getSamples,
   createConnection,
+  createSampleConnection,
   createFileConnection,
   updateConnection,
   deleteConnection,
