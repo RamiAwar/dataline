@@ -6,9 +6,11 @@ from pydantic import BaseModel
 
 from dataline.config import config
 from dataline.models.connection.schema import (
+    DB_SAMPLES,
     ConnectionOut,
     ConnectionUpdateIn,
     ConnectRequest,
+    ConnectSampleIn,
     FileConnectionType,
     GetConnectionOut,
     SampleOut,
@@ -35,14 +37,17 @@ async def connect_db(
 
 @router.post("/connect/sample", response_model_exclude_none=True)
 async def connect_sample_db(
-    req: ConnectRequest,
+    req: ConnectSampleIn,
     session: AsyncSession = Depends(get_session),
     connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ConnectionOut]:
-    # TODO: Identify sample, copy file in, then create connection
-    connection = await connection_service.create_connection(
-        session, dsn=req.dsn, name=req.name, is_sample=req.is_sample
-    )
+    # Identify sample, copy file in, then create connection
+    sample = DB_SAMPLES[req.sample_name.value]
+
+    # Copy file to user data directory and create connection
+    sample_path = sample[1]
+    with open(sample_path, "rb") as f:
+        connection = await connection_service.create_sqlite_connection(session, file=f, name=sample[0], is_sample=True)
     return SuccessResponse(data=connection)
 
 
@@ -128,15 +133,9 @@ async def update_connection(
 
 @router.get("/samples")
 async def get_sample_connections() -> SuccessListResponse[SampleOut]:
-    samples = [
-        (
-            "Dvd Rental",
-            config.sample_dvdrental_path,
-            "https://www.postgresqltutorial.com/postgresql-getting-started/postgresql-sample-database/",
-        ),
-        ("Netflix Shows", config.sample_netflix_path, "https://www.kaggle.com/datasets/shivamb/netflix-shows"),
-        ("Titanic", config.sample_titanic_path, "https://www.kaggle.com/datasets/ibrahimelsayed182/titanic-dataset"),
-    ]
     return SuccessListResponse(
-        data=[SampleOut(title=sample[0], file=get_sqlite_dsn(sample[1]), link=sample[2]) for sample in samples]
+        data=[
+            SampleOut(key=key, title=sample[0], file=get_sqlite_dsn(sample[1]), link=sample[2])
+            for key, sample in DB_SAMPLES.items()
+        ]
     )

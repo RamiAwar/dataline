@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from dataline.config import config
+
 
 class Connection(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -70,6 +72,7 @@ class TableSchemasOut(BaseModel):
 
 
 class SampleOut(BaseModel):
+    key: str
     title: str
     file: str
     link: str
@@ -137,3 +140,28 @@ class ConnectionUpdateIn(BaseModel):
 class FileConnectionType(Enum):
     sqlite = "sqlite"
     csv = "csv"
+
+
+class SampleName(Enum):
+    dvdrental = "dvdrental"
+    netflix = "netflix"
+    titanic = "titanic"
+
+
+class ConnectSampleIn(BaseModel):
+    sample_name: SampleName
+
+
+DB_SAMPLES = {
+    "dvdrental": (
+        "Dvd Rental",
+        config.sample_dvdrental_path,
+        "https://www.postgresqltutorial.com/postgresql-getting-started/postgresql-sample-database/",
+    ),
+    "netflix": ("Netflix Shows", config.sample_netflix_path, "https://www.kaggle.com/datasets/shivamb/netflix-shows"),
+    "titanic": (
+        "Titanic",
+        config.sample_titanic_path,
+        "https://www.kaggle.com/datasets/ibrahimelsayed182/titanic-dataset",
+    ),
+}

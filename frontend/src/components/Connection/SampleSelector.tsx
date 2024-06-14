@@ -5,7 +5,7 @@ import { useState } from "react";
 import { SampleResult } from "../../api";
 import { enqueueSnackbar } from "notistack";
 import { Button } from "@catalyst/button";
-import { useCreateConnection, useGetSamples } from "@/hooks";
+import { useCreateSampleConnection, useGetSamples } from "@/hooks";
 import { useNavigate } from "react-router-dom";
 import { Routes } from "@/router";
 
@@ -14,7 +14,7 @@ export const SampleSelector = ({ name = null }: { name: string | null }) => {
 
   const { data } = useGetSamples();
   const samples = data || [];
-  const { mutate } = useCreateConnection({
+  const { mutate } = useCreateSampleConnection({
     onSuccess: () => {
       enqueueSnackbar({
         variant: "success",
@@ -35,7 +35,7 @@ export const SampleSelector = ({ name = null }: { name: string | null }) => {
       } else {
         name = name + " (Sample)";
       }
-      mutate({ dsn: selectedSample.file, name, isSample: true });
+      mutate({ key: selectedSample.key, name });
     } else {
       enqueueSnackbar("Please select a sample dataset.", { variant: "info" });
     }
@@ -44,7 +44,7 @@ export const SampleSelector = ({ name = null }: { name: string | null }) => {
   const handleRadioChange = (selection: string) => {
     const selectedValue = selection as string;
     const selectedSample = samples.find(
-      (sample) => sample.file === selectedValue
+      (sample) => sample.key === selectedValue
     );
     setSelectedSample(selectedSample || null);
   };
@@ -56,7 +56,7 @@ export const SampleSelector = ({ name = null }: { name: string | null }) => {
       <RadioGroup name="sample" defaultValue="" onChange={handleRadioChange}>
         {samples.map((sample, index) => (
           <RadioField key={index}>
-            <Radio value={sample.file} color="white" />
+            <Radio value={sample.key} color="white" />
             <Label className="cursor-pointer">{sample.title}</Label>
             <Description>{sample.link}</Description>
           </RadioField>
