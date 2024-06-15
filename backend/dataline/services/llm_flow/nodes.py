@@ -71,12 +71,14 @@ class CallToolNode(Node):
         last_message = cast(AIMessage, messages[-1])
 
         output_messages: list[BaseMessage] = []
+        tool_messages: list[ToolMessage] = []
         results: list[QueryResultSchema] = []
         for tool_call in last_message.tool_calls:
             tool = state.tool_executor.tool_map[tool_call["name"]]
             if isinstance(tool, StateUpdaterTool):
                 updates = tool.get_response(state, tool_call["args"], str(tool_call["id"]))
                 output_messages.extend(updates["messages"])
+                tool_messages.extend(updates["tool_messages"])
                 results.extend(updates["results"])
 
             else:
@@ -89,7 +91,7 @@ class CallToolNode(Node):
                 output_messages.append(tool_message)
 
         # We return a list, because this will get added to the existing list
-        return state_update(messages=output_messages, results=results)
+        return state_update(messages=tool_messages + output_messages, results=results)
 
 
 class ShouldCallToolCondition(Condition):

@@ -32,6 +32,7 @@ from dataline.services.llm_flow.llm_calls.chart_generator import (
 
 class QueryGraphStateUpdate(TypedDict):
     messages: Sequence[BaseMessage]
+    tool_messages: Sequence[ToolMessage]
     results: Sequence[QueryResultSchema]
 
 
@@ -172,7 +173,7 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
     """Tool for getting metadata about tables in a SQL database."""
 
     name: str = ToolNames.INFO_SQL_DATABASE
-    description: str = "Get the schema and sample rows for the specified SQL tables."
+    description: str = "Get the schema and sample rows for one or multiple specified SQL tables."
 
     table_names: Optional[list[str]] = None
 
@@ -208,23 +209,21 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         args: dict[str, Any],
         call_id: str,
     ) -> QueryGraphStateUpdate:
-        messages: list[BaseMessage] = []
         results: list[QueryResultSchema] = []
 
         # We call the tool_executor and get back a response
         response = self.run(args)
         # We use the response to create a ToolMessage
         tool_message = ToolMessage(content=str(response), name=self.name, tool_call_id=call_id)
-        messages.append(tool_message)
 
         # Add selected tables result if successful
         if self.table_names:
             results.append(SelectedTablesResult(tables=self.table_names))
 
-        return {
-            "messages": messages,
-            "results": results,
-        }
+        return state_update(
+            tool_messages=[tool_message],
+            results=results,
+        )
 
 
 class _QuerySQLDataBaseToolInput(BaseModel):
@@ -272,6 +271,7 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         call_id: str,
     ) -> QueryGraphStateUpdate:  # type: ignore[misc]
         messages = []
+        tool_messages = []
         results: list[QueryResultSchema] = []
 
         # Add SQL query to results
@@ -303,15 +303,15 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
             # If chart data validation error encountered, remove sql query results from streamed results
             results = [result for result in results if not isinstance(result, SQLQueryStringResult)]
             tool_message = ToolMessage(content=f"ERROR: {e.message}", name=self.name, tool_call_id=call_id)
-            messages.append(tool_message)
-            return state_update(messages=messages)
+            tool_messages.append(tool_message)
+            return state_update(tool_messages=tool_messages)
         except RunException as e:
             tool_message = ToolMessage(content=f"ERROR: {e.message}", name=self.name, tool_call_id=call_id)
-            messages.append(tool_message)
-            return state_update(messages=messages)
+            tool_messages.append(tool_message)
+            return state_update(tool_messages=tool_messages)
         except Exception as e:
             tool_message = ToolMessage(content=f"ERROR: {str(e)}", name=self.name, tool_call_id=call_id)
-            messages.append(tool_message)
+            tool_messages.append(tool_message)
             return state_update(messages=messages)
 
         # Create ToolMessages
@@ -329,7 +329,7 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
                 name=self.name,
                 tool_call_id=call_id,
             )
-            messages.append(tool_message)
+            tool_messages.append(tool_message)
         else:
             # If secure, need to hide the actual data
             # Get data description from results
@@ -354,7 +354,7 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
                 name=self.name,
                 tool_call_id=call_id,
             )
-            messages.append(tool_message)
+            tool_messages.append(tool_message)
 
         ai_message = AIMessage(
             content=(
@@ -368,10 +368,11 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
             ai_message.content += "If the results look good, I should now generate a chart."
         messages.append(ai_message)
 
-        return {
-            "messages": messages,
-            "results": results,
-        }
+        return state_update(
+            messages=messages,
+            tool_messages=tool_messages,
+            results=results,
+        )
 
 
 class _ListSQLTablesToolInput(BaseModel):
@@ -459,9 +460,11 @@ class QueryGraphState(BaseModelV1):
 
 
 def state_update(
-    messages: Sequence[BaseMessage] = [], results: Sequence[QueryResultSchema] = []
+    messages: Sequence[BaseMessage] = [],
+    results: Sequence[QueryResultSchema] = [],
+    tool_messages: Sequence[ToolMessage] = [],
 ) -> QueryGraphStateUpdate:
-    return {"messages": messages, "results": results}
+    return {"messages": messages, "results": results, "tool_messages": tool_messages}
 
 
 class _ChartGeneratorToolInput(BaseModel):
@@ -489,7 +492,7 @@ class ChartGeneratorTool(StateUpdaterTool):
         args: dict[str, Any],
         call_id: str,
     ) -> QueryGraphStateUpdate:
-        messages: list[BaseMessage] = []
+        tool_messages: list[ToolMessage] = []
         results: list[QueryResultSchema] = []
 
         chart_type = ChartType[args["chart_type"]]
@@ -516,8 +519,8 @@ class ChartGeneratorTool(StateUpdaterTool):
                 name=self.name,
                 tool_call_id=call_id,
             )
-            messages.append(tool_message)
-            return state_update(messages=messages)
+            tool_messages.append(tool_message)
+            return state_update(tool_messages=tool_messages)
 
         try:
             chart_json = query_run_result_to_chart_json(
@@ -545,16 +548,16 @@ class ChartGeneratorTool(StateUpdaterTool):
                 name=self.name,
                 tool_call_id=call_id,
             )
-            messages.append(tool_message)
+            tool_messages.append(tool_message)
         except json.JSONDecodeError as e:
-            message = ToolMessage(
+            tool_message = ToolMessage(
                 content=f"ERROR: Failed to decode chart json. Plese try regenerating the chart: {e.msg}",
                 name=self.name,
                 tool_call_id=call_id,
             )
-            messages.append(message)
+            tool_messages.append(tool_message)
 
-        return {
-            "messages": messages,
-            "results": results,
-        }
+        return state_update(
+            tool_messages=tool_messages,
+            results=results,
+        )
