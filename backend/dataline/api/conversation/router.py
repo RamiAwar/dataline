@@ -5,7 +5,6 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends
 from fastapi.responses import StreamingResponse
 from langchain_community.utilities.sql_database import SQLDatabase
-from starlette.background import BackgroundTask
 
 from dataline.models.conversation.schema import (
     ConversationOut,
@@ -17,7 +16,7 @@ from dataline.models.llm_flow.schema import SQLQueryRunResult
 from dataline.models.message.schema import MessageOptions, MessageWithResultsOut
 from dataline.models.result.schema import ResultOut
 from dataline.old_models import SuccessListResponse, SuccessResponse
-from dataline.repositories.base import AsyncSession, get_session, get_session_no_commit
+from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.connection import ConnectionService
 from dataline.services.conversation import ConversationService
 from dataline.services.llm_flow.toolkit import execute_sql_query
@@ -100,24 +99,12 @@ def query(
     conversation_id: UUID,
     query: str,
     message_options: Annotated[MessageOptions, Body(embed=True)],
-    session: AsyncSession = Depends(get_session_no_commit),
+    session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(),
 ):
-    async def commit_and_close_session():
-        try:
-            # Commit only if no exception occurs
-            await session.commit()
-        except Exception:
-            # If any exception encountered, rollback all changes
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
-
     return StreamingResponse(
         conversation_service.query(session, conversation_id, query, secure_data=message_options.secure_data),
         media_type="text/event-stream",
-        background=BackgroundTask(commit_and_close_session),  # this only runs after the query is finished
     )
 
 
