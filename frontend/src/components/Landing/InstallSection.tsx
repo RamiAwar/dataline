@@ -13,24 +13,28 @@ export const InstallSection = () => {
   const installationSections = [
     {
       title: "All",
-      code: "https://github.com/RamiAwar/dataline/releases/latest",
+      code: "https://github.com/RamiAwar/dataline/releases",
     },
     {
       title: "Homebrew",
       code: "brew tap ramiawar/dataline && brew install dataline",
+    },
+    {
+      title: "Docker",
+      code: "docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest",
     },
   ];
 
   return (
     <div id="install" className="isolate mt-32 sm:mt-48">
       <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-4xl flex-col gap-16 bg-white/5 px-6 py-16 ring-1 ring-white/10 sm:rounded-3xl sm:p-8 lg:mx-20 lg:max-w-none lg:flex-row lg:items-center lg:py-20 xl:gap-x-20 xl:px-20 bg-teal-200">
+        <div className="mx-auto flex max-w-4xl flex-col gap-16 bg-white/5 px-6 py-16 ring-1 ring-white/10 sm:rounded-3xl sm:p-8 lg:mx-20 lg:max-w-none lg:flex-row lg:items-center lg:py-20 xl:gap-x-20 xl:px-20">
           <img
             className="hidden lg:block h-32 w-full flex-none rounded-2xl object-contain lg:aspect-square lg:h-auto lg:max-w-[20vw]"
             src={logo_w_border}
             alt=""
           />
-          <div className="mt-4 lg:mt-0 flex w-full flex-col items-center lg:flex-auto lg:items-start bg-red-200">
+          <div className="mt-4 lg:mt-0 flex w-full flex-col items-center lg:flex-auto lg:items-start">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl text-center md:text-left">
               <span className="text-indigo-600">Heard enough?</span> Install
               DataLine.
@@ -50,10 +54,10 @@ export const InstallSection = () => {
                 <>
                   {selectedTab === item.title && (
                     <div className="bg-gray-900 p-8 rounded-xl text-white flex items-center gap-5">
-                      <code className="flex gap-2 text-wrap">
+                      <p className="flex font-mono gap-2 max-w-sm break-all">
                         <pre>$</pre>
                         {item.code}
-                      </code>
+                      </p>
                       <CustomTooltip clickText="COPIED!" hoverText="Copy">
                         <button
                           tabIndex={-1}
