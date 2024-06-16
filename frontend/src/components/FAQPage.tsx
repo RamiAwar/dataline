@@ -1,6 +1,5 @@
 // Create component that shows how privacy works + privacy policy
 
-import { BackgroundLayout } from "./Layouts/BackgroundLayout";
 import Header from "@components/Layouts/Header";
 
 const FAQPage = () => {
@@ -26,9 +25,8 @@ const FAQPage = () => {
     <>
       <Header></Header>
 
-      <BackgroundLayout></BackgroundLayout>
-      <div className="relative isolate pt-40 h-full lg:-mt-20">
-        <div className="mx-auto max-w-7xl px-6 h-full lg:px-8 flex items-center">
+      <div className="pt-40 h-full lg:-mt-20">
+        <div className="mx-auto max-w-7xl px-6 h-full lg:px-8 lg:flex lg:items-center">
           <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
             <p className="text-base font-semibold leading-7 text-indigo-600">
               FAQs

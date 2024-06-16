@@ -1,59 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-
 export const BackgroundLayout = () => {
-  const circleSize = 300;
-  const [circlePosition, setCirclePosition] = useState({ x: 0, y: 0 });
-  const targetPosition = useRef({ x: 0, y: 0 });
-  const animationFrameId = useRef<number | null>(null);
-
-  const handleMouseMove = (event: { clientX: any; clientY: any }) => {
-    targetPosition.current = { x: event.clientX, y: event.clientY };
-  };
-
-  useEffect(() => {
-    const updatePosition = () => {
-      const { x, y } = circlePosition;
-      const { x: targetX, y: targetY } = targetPosition.current;
-      const delay = 0.08;
-      const newX = x + (targetX - x) * delay;
-      const newY = y + (targetY - y) * delay;
-
-      setCirclePosition({ x: newX, y: newY });
-
-      animationFrameId.current = requestAnimationFrame(updatePosition);
-    };
-
-    animationFrameId.current = requestAnimationFrame(updatePosition);
-    document.addEventListener("mousemove", handleMouseMove);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId.current as number);
-      document.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, [circlePosition]);
-
-  const circleStyle = {
-    top: `${circlePosition.y - circleSize / 2}px`,
-    left: `${circlePosition.x - circleSize / 2}px`,
-  };
-
   return (
     <div className="">
-      <div className="relative invisible sm:visible">
-        <svg
-          className="absolute pointer-events-none -z-10 transform-gpu blur-7xl opacity-20"
-          style={circleStyle}
-          width={circleSize}
-          height={circleSize}
-        >
-          <circle
-            cx={circleSize / 2}
-            cy={circleSize / 2}
-            r={circleSize / 2}
-            fill="#FFEA80"
-          />
-        </svg>
-      </div>
       <svg
         className="absolute inset-0 -z-10 h-full w-full stroke-white/10 [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]"
         aria-hidden="true"
