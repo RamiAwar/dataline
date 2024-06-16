@@ -88,7 +88,7 @@ class CallToolNode(Node):
                 tool_message = ToolMessage(
                     content=str(response), name=tool_call["name"], tool_call_id=str(tool_call["id"])
                 )
-                output_messages.append(tool_message)
+                tool_messages.append(tool_message)
 
         # We return a list, because this will get added to the existing list
         return state_update(messages=tool_messages + output_messages, results=results)

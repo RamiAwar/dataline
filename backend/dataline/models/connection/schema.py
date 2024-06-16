@@ -153,7 +153,7 @@ class ConnectSampleIn(BaseModel):
     connection_name: str
 
 
-DB_SAMPLES = {
+DB_SAMPLES: dict[str, tuple[str, str, str]] = {
     "dvdrental": (
         "Dvd Rental",
         config.sample_dvdrental_path,
