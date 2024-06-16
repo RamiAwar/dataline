@@ -19,13 +19,13 @@ const FeatureComparisonTable = () => {
   };
   return (
     <div className="flex justify-center">
-      <div className="bg-gray-800 w-fit rounded-xl border border-gray-700 overflow-x-scroll sm:overflow-hidden">
+      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-x-scroll sm:overflow-hidden grow">
         <Table
           dense
           bleed
           grid
           striped
-          className="[--gutter:theme(spacing.4)] w-fit pl-4 sm:px-4"
+          className="ml-0 mr-0 [--gutter:theme(spacing.6)]"
         >
           <TableHead>
             <TableRow>
@@ -37,7 +37,9 @@ const FeatureComparisonTable = () => {
           <TableBody>
             {features.features.map(({ feature, dataline, chatgpt }) => (
               <TableRow key={feature}>
-                <TableCell className="text-zinc-400">{feature}</TableCell>
+                <TableCell className="text-zinc-400 text-wrap">
+                  {feature}
+                </TableCell>
                 <TableCell className="text-zinc-400">
                   {dataline && renderEntry(dataline)}
                 </TableCell>
