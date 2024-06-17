@@ -6,7 +6,7 @@ from typing import Annotated, Any, List, Optional, Sequence, Type, TypedDict, ca
 
 from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_core.callbacks import CallbackManagerForToolRun
-from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
+from langchain_core.messages import BaseMessage, ToolMessage
 from langchain_core.pydantic_v1 import BaseModel
 from langchain_core.pydantic_v1 import BaseModel as BaseModelV1
 from langchain_core.pydantic_v1 import Field
@@ -322,14 +322,13 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
             tool_message = ToolMessage(
                 content=(
                     "Returned data:\n"
-                    f"Columns: {str(response.columns)}"
-                    f"Truncated rows: {str(truncated_rows)}"
-                    f"Number of rows: {len(response.rows)}"
+                    f"Columns: {str(response.columns)}\n"
+                    f"Truncated rows: {str(truncated_rows)}\n"
+                    f"Number of rows: {len(response.rows)}\n"
                 ),
                 name=self.name,
                 tool_call_id=call_id,
             )
-            messages.append(tool_message)
         else:
             # If secure, need to hide the actual data
             # Get data description from results
@@ -339,13 +338,13 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
                     "Returned data description:\n"
                     f"Columns:{response.columns}\n"
                     f"First row: {data_types}\n"
-                    f"Number of rows: {len(response.rows)}"
+                    f"Number of rows: {len(response.rows)}\n"
                 )
             elif len(response.rows) == 1:
                 data_types = [type(cell).__name__ for cell in response.rows[0]]
-                data_description = f"Returned data description:\nOnly one row: {data_types}"
+                data_description = f"Returned data description:\nOnly one row: {data_types}\n"
             else:
-                data_description = "No data returned"
+                data_description = "No data returned\n"
 
             tool_message = ToolMessage(
                 content="Query executed successfully - here is the returned data description. "
@@ -354,19 +353,18 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
                 name=self.name,
                 tool_call_id=call_id,
             )
-            messages.append(tool_message)
 
-        ai_message = AIMessage(
-            content=(
-                "Now that I have the data, I can analyze it and consider regenerating the query."
-                "I should think about things like: If the user wanted buckets, do the buckets make sense"
-                "given the length of results? Or should I suggest different bucket ranges?"
-                "I should think critically about what the user might want to see."
-            )
+        tool_message.content += (
+            "Now that I have the data, I can analyze it and consider regenerating the query. "
+            "I should think about things like: If the user wanted buckets, do the buckets make sense "
+            "given the length of results? Or should I suggest different bucket ranges? "
+            "I should think critically about what the user might want to see.\n"
         )
+
         if args["for_chart"]:
-            ai_message.content += "If the results look good, I should now generate a chart."
-        messages.append(ai_message)
+            tool_message.content += "If the results look good, I should now generate a chart."
+
+        messages.append(tool_message)
 
         return {
             "messages": messages,
