@@ -141,7 +141,7 @@ export const Landing = () => {
         </BackgroundHighlight>
 
         <SquareBackground>
-          <div className="pt-16 lg:pt-0">
+          <div className="pt-16 lg:pt-8">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
               <div className="mx-auto max-w-2xl sm:text-center">
                 {/* <h2 className="text-base font-semibold leading-7 text-indigo-400">Everything you need</h2> */}
