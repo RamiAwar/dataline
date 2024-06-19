@@ -319,15 +319,11 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
             # If not secure, just put results in tool message
             # Limit number of rows sent in message to 10 (avoid token overflow)
             truncated_rows = response.rows[:10]
-            tool_message = ToolMessage(
-                content=(
-                    "Returned data:\n"
-                    f"Columns: {str(response.columns)}\n"
-                    f"Truncated rows: {str(truncated_rows)}\n"
-                    f"Number of rows: {len(response.rows)}\n"
-                ),
-                name=self.name,
-                tool_call_id=call_id,
+            content = (
+                "Returned data:\n"
+                f"Columns: {str(response.columns)}\n"
+                f"Truncated rows: {str(truncated_rows)}\n"
+                f"Number of rows: {len(response.rows)}\n"
             )
         else:
             # If secure, need to hide the actual data
@@ -345,25 +341,22 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
                 data_description = f"Returned data description:\nOnly one row: {data_types}\n"
             else:
                 data_description = "No data returned\n"
-
-            tool_message = ToolMessage(
-                content="Query executed successfully - here is the returned data description. "
+            content = (
+                "Query executed successfully - here is the returned data description. "
                 "I cannot view the data for security reasons but the user should be able to see the results!\n"
-                f"{data_description}",
-                name=self.name,
-                tool_call_id=call_id,
+                f"{data_description}"
             )
 
-        tool_message.content += (
-            "Now that I have the data, I can analyze it and consider regenerating the query. "
-            "I should think about things like: If the user wanted buckets, do the buckets make sense "
+        content += (
+            "Given this data, analyze it and consider regenerating the query. "
+            "Think about things like: If the user wanted buckets, do the buckets make sense "
             "given the length of results? Or should I suggest different bucket ranges? "
-            "I should think critically about what the user might want to see.\n"
+            "Think critically about what the user might want to see.\n"
         )
 
         if args["for_chart"]:
-            tool_message.content += "If the results look good, I should now generate a chart."
-
+            content += "If the results look good, you should now generate a chart."
+        tool_message = ToolMessage(content=content, name=self.name, tool_call_id=call_id)
         messages.append(tool_message)
 
         return {
