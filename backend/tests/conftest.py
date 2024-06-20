@@ -18,6 +18,20 @@ from dataline.repositories.base import AsyncSession, get_session
 logging.basicConfig(level=logging.INFO)
 
 
+def pytest_addoption(parser):
+    parser.addoption("--run-expensive", action="store_true", default=False, help="run expensive tests")
+
+
+# https://docs.pytest.org/en/stable/example/simple.html#control-skipping-of-tests-according-to-command-line-option
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]):
+    if not config.getoption("--run-expensive"):
+        # --run-expensive not passed in cli: skip expensive tests
+        skip_expensive = pytest.mark.skip(reason="need --run-expensive option to run")
+        for item in items:
+            if "expensive" in item.keywords:
+                item.add_marker(skip_expensive)
+
+
 @pytest_asyncio.fixture(scope="session")
 async def engine() -> AsyncGenerator[AsyncEngine, None]:
     engine = create_async_engine("sqlite+aiosqlite:///test.sqlite3")
@@ -48,6 +62,7 @@ async def session(engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch) -> Async
 def apply_migrations() -> None:
     config = Config((pathlib.Path(__file__).parent.parent / "alembic.ini").resolve())
     config.set_main_option("sqlalchemy.url", "sqlite+aiosqlite:///test.sqlite3")
+    config.config_file_name = None  # to prevent alembic from overriding the logs
     upgrade(config, "head")
 
 
