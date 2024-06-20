@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "title": "DataLine vs Vanna.AI",
+    "href": "https://ramiawar.medium.com/vanna-ai-vs-dataline-4829b1d2fad5",
+    "description": "DataLine and Vanna are open source platforms to query data with natural language. This article explores their quality, security, and technical differences.",
+    "imageUrl": "https://miro.medium.com/v2/resize:fit:1400/format:webp/1*owgGXvs0Z8h1cuw95HHETA.png",
+    "date": "Jun 20, 2024",
+    "datetime": "2024-06-20",
+    "category": { "title": "Comparison", "href": "#" },
+    "author": {
+      "name": "Rami Awar",
+      "role": "Founder @ DataLine",
+      "href": "https://ramiawar.medium.com/",
+      "imageUrl": "https://miro.medium.com/v2/resize:fill:64:64/2*WeXvsSk5yZPqGEZzqOkzNg.png"
+    }
+  }
+]

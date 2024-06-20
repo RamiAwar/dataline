@@ -2,8 +2,9 @@ import { Dialog } from "@headlessui/react";
 import logo from "../../assets/images/logo_xl.png";
 import logomd from "../../assets/images/logo_md.png";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
-import { Link as ScrollLink } from "react-scroll";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { scroller } from "react-scroll";
 
 const Header = () => {
   type NavigationItem = {
@@ -15,10 +16,29 @@ const Header = () => {
   const navigation: NavigationItem[] = [
     { name: "Home", href: "/", id: "home" },
     { name: "Install", id: "install", href: "/#install" },
+    { name: "Blog", id: "blog", href: "/blog" },
     { name: "FAQ", href: "/faq", id: "faq" },
   ];
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      const elemId = location.hash.substring(1);
+      setTimeout(() => {
+        scroller.scrollTo(elemId, {
+          duration: 500,
+          delay: 100,
+          offset: -150,
+          smooth: "easeInOutQuart",
+        });
+      }, 100);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [location]);
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 backdrop-blur-sm ">
@@ -55,13 +75,13 @@ const Header = () => {
         <div className="hidden lg:flex lg:flex-1 lg:gap-x-12 lg:justify-end lg:mr-12">
           {navigation.map((item) => {
             return (
-              <a
+              <Link
                 key={item.name}
-                href={item.href}
+                to={item.href}
                 className="text-md font-medium leading-6 text-white"
               >
                 {item.name}
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -93,32 +113,15 @@ const Header = () => {
             <div className="-my-6 divide-y divide-gray-500/25">
               <div className="space-y-2 py-6">
                 {navigation.map((item) => {
-                  if (item.href.startsWith("/") || item.href.startsWith("#")) {
-                    return (
-                      <a
-                        key={item.name}
-                        href={item.href}
-                        className="text-md -mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-white hover:bg-gray-800"
-                      >
-                        {item.name}
-                      </a>
-                    );
-                  } else {
-                    return (
-                      <ScrollLink
-                        activeClass="active"
-                        key={item.name}
-                        to={item.href}
-                        spy={true}
-                        duration={500}
-                        smooth={true}
-                        offset={-100}
-                        className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-white hover:bg-gray-800 cursor-pointer"
-                      >
-                        {item.name}
-                      </ScrollLink>
-                    );
-                  }
+                  return (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      className="text-md -mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-white hover:bg-gray-800"
+                    >
+                      {item.name}
+                    </a>
+                  );
                 })}
               </div>
               {/* <div className="py-6">
