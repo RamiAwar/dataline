@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import cast
+from typing import Callable, cast
 
 import pytest
 import pytest_asyncio
@@ -21,13 +21,12 @@ logger = logging.getLogger(__name__)
 @pytest_asyncio.fixture
 @patch.object(OpenAIModels, "list")
 async def user_info(mock_openai_model_list: MagicMock, client: TestClient) -> dict[str, str]:
-    mock_model = MagicMock()
-    mock_model.id = "gpt-3.5-turbo"
-    mock_openai_model_list.return_value = [mock_model]
-    user_in = {
-        "name": "John",
-        "openai_api_key": os.environ["OPENAI_API_KEY"],
-    }
+    user_in = {"name": "Farid", "openai_api_key": os.environ["OPENAI_API_KEY"]}
+    if langsmith_api_key := os.environ.get("LANGCHAIN_API_KEY", None):
+        user_in["langsmith_api_key"] = langsmith_api_key
+    if preferred_openai_model := os.environ.get("PREFERRED_OPENAI_MODEL", None):
+        user_in["preferred_openai_model"] = preferred_openai_model
+
     client.patch("/settings/info", json=user_in)
     return user_in
 
@@ -62,9 +61,36 @@ def filter_results(results: list[ResultOut], type: QueryResultType):
 
 @pytest.mark.asyncio
 @pytest.mark.expensive
-async def test_sample_rows(client: TestClient, sample_conversation: ConversationOut, user_info: dict[str, str]) -> None:
-    query = "Show me some sample rows from one of the tables"
-    # query = "Show me some sample rows from two of the tables"
+@pytest.mark.parametrize(
+    "query,expected_results",
+    [
+        (
+            "Show me some sample rows from one of the tables",
+            {
+                QueryResultType.SELECTED_TABLES: lambda x: len(x) == 1,
+                QueryResultType.SQL_QUERY_STRING_RESULT: lambda x: len(x) == 1,
+                QueryResultType.SQL_QUERY_RUN_RESULT: lambda x: len(x) == 1,
+                QueryResultType.CHART_GENERATION_RESULT: lambda x: len(x) == 0,
+            },
+        ),
+        (
+            "Show me some sample rows from only two of the tables",
+            {
+                QueryResultType.SELECTED_TABLES: lambda x: len(x) >= 1,
+                QueryResultType.SQL_QUERY_STRING_RESULT: lambda x: len(x) == 2,
+                QueryResultType.SQL_QUERY_RUN_RESULT: lambda x: len(x) == 2,
+                QueryResultType.CHART_GENERATION_RESULT: lambda x: len(x) == 0,
+            },
+        ),
+    ],
+)
+async def test_sample_rows(
+    client: TestClient,
+    sample_conversation: ConversationOut,
+    user_info: dict[str, str],
+    query: str,
+    expected_results: dict[QueryResultType, Callable[[list[ResultOut]], bool]],
+) -> None:
     body = {"message_options": {"secure_data": True}}
     with client.stream(
         method="post", url=f"/conversation/{sample_conversation.id}/query", params={"query": query}, json=body
@@ -83,31 +109,28 @@ async def test_sample_rows(client: TestClient, sample_conversation: Conversation
     logger.info(f"{score=}, {reason=}")
 
     assert len(results) > 0
-    expected_results = {
-        QueryResultType.SELECTED_TABLES: 1,
-        QueryResultType.SQL_QUERY_STRING_RESULT: 1,
-        QueryResultType.SQL_QUERY_RUN_RESULT: 1,
-        QueryResultType.CHART_GENERATION_RESULT: 0,
-    }
     results_map: dict[QueryResultType, list[ResultOut]] = {}
-    for result_type, expected_results_count in expected_results.items():
+    for result_type, expected_results_check in expected_results.items():
         filtered_results = filter_results(results, result_type)
-        assert len(filtered_results) == expected_results_count
+        assert expected_results_check(filtered_results)
         results_map[result_type] = filtered_results
 
-    # SQL query string result
-    sql_string_result = results_map[QueryResultType.SQL_QUERY_STRING_RESULT][0]
-    generated_sql = cast(str, sql_string_result.content["sql"])
-    sql_string_test_case = LLMTestCase(input=query, actual_output=generated_sql)
-    sql_correctness_metric = GEval(
-        name="Correctness",
-        evaluation_steps=[
-            "Determine whether the actual output is an sql statement that, if executed, shows some rows from a single table with a few columns"
-        ],
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-    )
+    # Evaluate SQL query string result(s)
+    for sql_string_result in results_map[QueryResultType.SQL_QUERY_STRING_RESULT]:
+        generated_sql = cast(str, sql_string_result.content["sql"])
+        sql_string_test_case = LLMTestCase(input=query, actual_output=generated_sql)
+        sql_correctness_metric = GEval(
+            name="Correctness",
+            evaluation_steps=[
+                (
+                    "Determine whether the actual output is an sql statement that, if executed, "
+                    "shows some rows from a single table with a few columns"
+                )
+            ],
+            evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+        )
 
-    sql_correctness_metric.measure(sql_string_test_case)
-    assert sql_correctness_metric.score is not None and sql_correctness_metric.reason is not None
-    assert sql_correctness_metric.score > 0.5, f"{sql_correctness_metric.reason=}\n{sql_string_result=}\n{query=}"
-    logger.info(f"{sql_correctness_metric.score=}, {sql_correctness_metric.reason=}")
+        sql_correctness_metric.measure(sql_string_test_case)
+        assert sql_correctness_metric.score is not None and sql_correctness_metric.reason is not None
+        assert sql_correctness_metric.score > 0.5, f"{sql_correctness_metric.reason=}\n{sql_string_result=}\n{query=}"
+        logger.info(f"{sql_correctness_metric.score=}, {sql_correctness_metric.reason=}")
