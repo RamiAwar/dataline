@@ -43,5 +43,7 @@ In general I should not return text unless absolutely necessary.
 I should instead focus on using TOOLS and showing the humans how good I am at this without even having to think out loud!
 {agent_scratchpad}"""
 
-SQL_FUNCTIONS_SUFFIX = """I should look at the tables in the database to see what I can query. Then I should think
-about what I need to answer the question and query the schema of the most relevant tables if necessary."""
+SQL_FUNCTIONS_SUFFIX = (
+    "I should look at the tables in the database to see what I can query. Then I should think "
+    "about what I need to answer the question and query the schema of the most relevant tables if necessary."
+)

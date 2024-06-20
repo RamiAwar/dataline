@@ -1,11 +1,13 @@
 # Running Tests
 
 currently: `OPENAI_API_KEY="<your_key>" pytest tests/api/conversation/test_query.py --run-expensive`
+
 # About Tests
 
 ## Query
 
 Different types of queries:
+
 - explorative questsions: tests content and `selected tables` results. "What can I ask about this database?"
 - questions that require data extraction:
   - statistical questions (eg. average rent time per language. good for aggregations)
@@ -13,13 +15,13 @@ Different types of queries:
 - in addition to the above, questions fit for charting
   - time series eg. avg per year, good for line charts
   - ratios; good for doughnut charts or bar charts
-- follow-up questions: good for testing history. eg. "top movies in the US ... what are the top tv shows *there*."
+- follow-up questions: good for testing history. eg. "top movies in the US ... what are the top tv shows _there_."
 - questions with multiple requirements eg. "plot this and also show me something else". "Show me sample rows from two different tables"
 
 ### Content
 
 My top idea here is to have another LLM rate the generated message compared to the baseline OR based on a checklist.
-"Is friendly" "Contains column names" "Is coherent"  "Is concise" ...
+"Is friendly" "Contains column names" "Is coherent" "Is concise" ...
 
 ### SQL
 
