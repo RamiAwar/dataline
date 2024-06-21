@@ -21,19 +21,9 @@ export const DynamicTable: React.FC<{
   data: { columns: string[]; rows: any[][] };
   minimize?: boolean;
 }> = ({ data, minimize }) => {
-  const page = 0;
-  const rowsPerPage = 25;
   const parent = useRef<HTMLDivElement>(null);
-  const [dataSubset, setDataSubset] = useState(data.rows.slice(0, rowsPerPage));
   const [minimized, setMinimized] = useState(minimize || false);
   const [limitedView, setLimitedView] = useState(true);
-
-  // Create data working subset
-  useEffect(() => {
-    setDataSubset(
-      data.rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-    );
-  }, [page, rowsPerPage, data]);
 
   useEffect(() => {
     parent.current &&
@@ -81,7 +71,7 @@ export const DynamicTable: React.FC<{
               </TableRow>
             </TableHead>
             <TableBody>
-              {dataSubset.map((row: string[] | number[], index: number) => {
+              {data.rows.map((row: string[] | number[], index: number) => {
                 return (
                   <TableRow key={index}>
                     {row.map((item: string | number, cellIndex: number) => (

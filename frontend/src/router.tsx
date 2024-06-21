@@ -8,6 +8,8 @@ import Account from "@components/Settings/Settings";
 import { NewConnection } from "@components/Connection/NewConnection";
 import FAQPage from "@/components/Landing/FAQPage";
 import Blog from "@components/Landing/Blog";
+import Privacy from "@components/Landing/Privacy";
+import About from "./components/Landing/About";
 
 export enum Routes {
   Root = "/",
@@ -18,6 +20,8 @@ export enum Routes {
   NewConnection = "/connection/new",
   Connection = "/connection/:connectionId",
   Chat = "/chat/:conversationId",
+  Privacy = "/privacy",
+  About = "/about",
 }
 
 let routes: RouteObject[] = [
@@ -32,6 +36,14 @@ let routes: RouteObject[] = [
   {
     path: Routes.Blog,
     element: <Blog />,
+  },
+  {
+    path: Routes.Privacy,
+    element: <Privacy />,
+  },
+  {
+    path: Routes.About,
+    element: <About />,
   },
 ];
 

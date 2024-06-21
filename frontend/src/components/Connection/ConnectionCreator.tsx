@@ -133,7 +133,8 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
   const [dsn, setDsn] = useState<string | null>(null);
   const [file, setFile] = useState<File>();
   const { mutate: createConnection, isPending } = useCreateConnection();
-  const { mutate: createFileConnection, isPending: isFilePending } = useCreateFileConnection();
+  const { mutate: createFileConnection, isPending: isFilePending } =
+    useCreateFileConnection();
 
   const navigate = useNavigate();
 
@@ -212,7 +213,9 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
         >
           <RadioField>
             <Radio value="database" color="white" />
-            <Label className="cursor-pointer">Postgres, MySQL connection</Label>
+            <Label className="cursor-pointer">
+              Postgres, MySQL, Snowflake connection string
+            </Label>
           </RadioField>
           <RadioField>
             <Radio value="sqlite" color="white" />
@@ -250,7 +253,11 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
               <Label>SQLite data file</Label>
               <FileDragAndDrop setFile={setFile} currentFile={file} />
             </Field>
-            <Button className="cursor-pointer mt-4" onClick={() => handleFileCreate(selectedRadio)} disabled={isFilePending}>
+            <Button
+              className="cursor-pointer mt-4"
+              onClick={() => handleFileCreate(selectedRadio)}
+              disabled={isFilePending}
+            >
               Create connection
             </Button>
           </div>
@@ -261,13 +268,16 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
               <Label>CSV file</Label>
               <FileDragAndDrop setFile={setFile} currentFile={file} />
             </Field>
-            <Button className="cursor-pointer mt-4" onClick={() => handleFileCreate(selectedRadio)} disabled={isFilePending}>
+            <Button
+              className="cursor-pointer mt-4"
+              onClick={() => handleFileCreate(selectedRadio)}
+              disabled={isFilePending}
+            >
               Create connection
             </Button>
           </div>
         )}
       </div>
-
     </>
   );
 };

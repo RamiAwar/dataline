@@ -1,6 +1,7 @@
 import React from "react";
 import postgresImage from "../../assets/images/postgres.png";
 import sqliteImage from "../../assets/images/sqlite.png";
+import snowflakeImage from "../../assets/images/snowflake.png";
 import { CircleStackIcon } from "@heroicons/react/24/outline";
 
 interface DatabaseDialectImageProps {
@@ -13,6 +14,7 @@ const DatabaseDialectImage: React.FC<DatabaseDialectImageProps> = ({
   const imageMap: { [key: string]: string } = {
     postgresql: postgresImage,
     sqlite: sqliteImage,
+    snowflake: snowflakeImage,
     // You can add more mappings here as needed
   };
 
