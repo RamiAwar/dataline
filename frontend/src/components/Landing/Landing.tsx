@@ -1,4 +1,4 @@
-import { SVGProps, useEffect } from "react";
+import { useEffect } from "react";
 
 import { BackgroundLayout } from "@components/Layouts/BackgroundLayout";
 

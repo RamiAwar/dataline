@@ -1,6 +1,6 @@
 const navigation = {
   solutions: [
-    { name: "PostgreSQL", href: "/blog" },
+    // { name: "Snowflake", href: "/blog" },
     // { name: "Analytics", href: "#" },
     // { name: "Commerce", href: "#" },
     // { name: "Insights", href: "#" },
@@ -26,6 +26,7 @@ const navigation = {
   ],
 };
 
+import { SVGProps } from "react";
 import logomd from "../../assets/images/logo_md.png";
 
 const socials = [
@@ -45,7 +46,7 @@ const socials = [
   {
     name: "X",
     href: "https://x.com/iamramiawar",
-    icon: (props) => (
+    icon: (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) => (
       <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
         <path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5685 21H20.8131L13.6819 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
       </svg>
@@ -54,7 +55,7 @@ const socials = [
   {
     name: "Youtube",
     href: "https://www.youtube.com/channel/UCm_LnFWz93XdNHdP89e69Rw",
-    icon: (props) => (
+    icon: (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) => (
       <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
         <path
           fillRule="evenodd"
@@ -94,7 +95,7 @@ export default function Footer() {
           </div>
           <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
-              {navigation.solutions.length > 0 && (
+              {/* {navigation.solutions.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold leading-6 text-white">
                     Solutions
@@ -112,7 +113,7 @@ export default function Footer() {
                     ))}
                   </ul>
                 </div>
-              )}
+              )} */}
 
               {navigation.support.length > 0 && (
                 <div className="mt-10 md:mt-0">

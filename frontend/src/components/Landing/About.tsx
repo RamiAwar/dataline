@@ -1,17 +1,12 @@
-import { useState } from "react";
 import anthony from "../../assets/images/anthony.jpg";
 import rami from "../../assets/images/rami.jpeg";
 import {
-  AcademicCapIcon,
-  HandRaisedIcon,
   LockClosedIcon,
   SparklesIcon,
-  SunIcon,
   UserGroupIcon,
 } from "@heroicons/react/20/solid";
 import Footer from "./Footer";
 import Header from "../Layouts/Header";
-
 
 const stats = [
   { label: "First prototype", value: "Apr 2023" },
@@ -71,8 +66,6 @@ const team = [
 ];
 
 export default function About() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <div className="bg-gray-900">
       {/* Header */}
@@ -100,7 +93,9 @@ export default function About() {
               We love data. We want to make it accessible.
             </h2>
             <p className="mt-6 text-lg leading-8 text-gray-300">
-              Gone are the days of waiting for your data team to get back to you. Or rustling through hundreds of table schemas and column names to find knowledge you need to draft a query.
+              Gone are the days of waiting for your data team to get back to
+              you. Or rustling through hundreds of table schemas and column
+              names to find knowledge you need to draft a query.
             </p>
           </div>
         </div>
@@ -111,18 +106,31 @@ export default function About() {
             <div className="grid max-w-xl grid-cols-1 gap-8 text-base leading-7 text-gray-300 lg:max-w-none lg:grid-cols-2">
               <div>
                 <p>
-                  We really believe in focusing on what matters. And when it comes to data, the question is what matters most. Not how we get to the answer.
+                  We really believe in focusing on what matters. And when it
+                  comes to data, the question is what matters most. Not how we
+                  get to the answer.
                 </p>
                 <p className="mt-8">
-                  We're here to make data accessible to everyone. By doing so, we'll be saving you time and lots of money. Need a table? Get it in seconds. Need a chart? Great. Need to build a report? A dashboard? You can do it all without writing a single query.
+                  We're here to make data accessible to everyone. By doing so,
+                  we'll be saving you time and lots of money. Need a table? Get
+                  it in seconds. Need a chart? Great. Need to build a report? A
+                  dashboard? You can do it all without writing a single query.
                 </p>
               </div>
               <div>
                 <p>
-                  Our committment to privacy is unwavering. We don't like the direction the big corps are leading us in. DataLine and all our future products will definitely be privacy-first as well, so you can sign up for our journey if you appreciate that kind of thing.
+                  Our committment to privacy is unwavering. We don't like the
+                  direction the big corps are leading us in. DataLine and all
+                  our future products will definitely be privacy-first as well,
+                  so you can sign up for our journey if you appreciate that kind
+                  of thing.
                 </p>
                 <p className="mt-8">
-                  We're far from done working on this product, but we already have something that works for a large majority of users. It fuels us to see the impact DataLine is having on our first few users, and we wish we could build even faster to get it in the hands of more people and cover more usecases.
+                  We're far from done working on this product, but we already
+                  have something that works for a large majority of users. It
+                  fuels us to see the impact DataLine is having on our first few
+                  users, and we wish we could build even faster to get it in the
+                  hands of more people and cover more usecases.
                 </p>
               </div>
             </div>
@@ -160,7 +168,9 @@ export default function About() {
               Our values
             </h2>
             <p className="mt-6 text-lg leading-8 text-gray-300">
-              More important than a roadmap, our values will tell you everything you need to know about where we're headed and what we're trying to build here.
+              More important than a roadmap, our values will tell you everything
+              you need to know about where we're headed and what we're trying to
+              build here.
             </p>
           </div>
           <dl className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 text-base leading-7 text-gray-300 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:gap-x-16">
@@ -213,8 +223,6 @@ export default function About() {
             ))}
           </ul>
         </div>
-
-
       </main>
 
       <Footer />
