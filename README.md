@@ -30,7 +30,9 @@
 
 ## Who is this for?
 
-People who want to explore data, fast. It's specially well-suited for businesses given it's security-first and open-source nature.
+Technical or non-technical people who want to explore data, fast. 
+It also works for backend developers to speed up drafting SQL queries and explore new DBs.
+It's specially well-suited for businesses given it's security-first and open-source nature.
 
 ## What is it?
 
