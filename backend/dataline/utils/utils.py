@@ -2,6 +2,9 @@ import base64
 import random
 
 from fastapi import UploadFile
+from sqlalchemy.exc import ProgrammingError
+
+from dataline.errors import ValidationError
 
 
 def get_sqlite_dsn_async(path: str) -> str:
@@ -36,3 +39,14 @@ def stream_event_str(event: str, data: str) -> str:
     data_str = f"data: {data}"
 
     return f"{event_str}\n{data_str}\n\n"
+
+
+def forward_connection_errors(error: Exception) -> None:
+    if isinstance(error, ProgrammingError):
+        if "Must specify the full search path starting from database" in str(error):
+            raise ValidationError(
+                (
+                    "Invalid DSN. Please specify the full search path starting from the database"
+                    "ex. 'SNOWFLAKE_SAMPLE_DATA/TPCH_SF1'"
+                )
+            )

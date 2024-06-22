@@ -19,7 +19,11 @@ from dataline.repositories.connection import (
     ConnectionRepository,
     ConnectionUpdate,
 )
-from dataline.utils.utils import generate_short_uuid, get_sqlite_dsn
+from dataline.utils.utils import (
+    forward_connection_errors,
+    generate_short_uuid,
+    get_sqlite_dsn,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -89,8 +93,15 @@ class ConnectionService:
                 except OperationalError as e:
                     logger.error(e)
                     raise ValidationError("Failed to connect to database, please check your DSN.")
+                except Exception as e:
+                    forward_connection_errors(e)
 
             logger.error(exc)
+            raise ValidationError("Failed to connect to database, please check your DSN.")
+
+        except Exception as e:
+            forward_connection_errors(e)
+            logger.error(e)
             raise ValidationError("Failed to connect to database, please check your DSN.")
 
     async def check_dsn_already_exists(self, session: AsyncSession, dsn: str) -> None:
