@@ -1,4 +1,8 @@
-import { IResultType, ISQLQueryStringResult } from "@components/Library/types";
+import {
+  IResultType,
+  ISQLQueryStringResult,
+  ISelectedTablesResult,
+} from "@components/Library/types";
 import { useMemo, useState } from "react";
 import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
 import { DynamicTable } from "../Library/DynamicTable";
@@ -44,16 +48,35 @@ function getResultGroups(results: IResultType[]) {
   // Every group is identified by the first SQL Query String Result result_id
   // Other results are grouped with it if they have a linked_id that matches that result_id
   const unlinkedGroup: IResultType[] = [];
-  const groups: IResultType[][] = results
+  // separate selected_tables results from other results
+  const selected_tables_results = results?.filter(
+    (result) => result.type === "SELECTED_TABLES"
+  ) as ISelectedTablesResult[];
+  const filtered_results = results?.filter(
+    (result) => result.type !== "SELECTED_TABLES"
+  );
+  // merge selected_tables results into one
+  if (selected_tables_results.length > 0) {
+    const squashed_selected_tables_results = selected_tables_results.reduce(
+      (prev, curr) => {
+        prev.content.tables = [
+          ...new Set([...prev.content.tables, ...curr.content.tables]),
+        ];
+        return prev;
+      }
+    );
+    unlinkedGroup.push(squashed_selected_tables_results);
+  }
+
+  const groups: IResultType[][] = filtered_results
     ?.filter((result) => result.type === "SQL_QUERY_STRING_RESULT")
     .map((result) => [result]);
 
   // Loop over results again and loop over groups to add linked results to proper group
-  results?.forEach((result) => {
+  filtered_results?.forEach((result) => {
     if (
       result.type === "SQL_QUERY_RUN_RESULT" ||
-      result.type === "CHART_GENERATION_RESULT" ||
-      result.type === "SELECTED_TABLES"
+      result.type === "CHART_GENERATION_RESULT"
     ) {
       const groupIndex = groups.findIndex(
         (group) =>
@@ -61,8 +84,6 @@ function getResultGroups(results: IResultType[]) {
       );
       if (groupIndex !== -1) {
         groups[groupIndex].push(result);
-      } else if (result.type === "SELECTED_TABLES") {
-        unlinkedGroup.push(result);
       } else {
         console.log("Could not find group for result", result);
       }
