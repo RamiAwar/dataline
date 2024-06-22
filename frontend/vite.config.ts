@@ -4,6 +4,8 @@ import path from "path";
 import viteImagemin from "@vheemstra/vite-plugin-imagemin";
 import imageminMozjpeg from "imagemin-mozjpeg";
 import imageminWebp from "imagemin-webp";
+import imageminGif from "imagemin-gifsicle";
+import imageminPng from "imagemin-pngquant";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -39,6 +41,8 @@ export default defineConfig({
     viteImagemin({
       plugins: {
         jpg: imageminMozjpeg(),
+        png: imageminPng(),
+        gif: imageminGif(),
       },
       makeWebp: {
         plugins: {
