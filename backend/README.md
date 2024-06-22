@@ -17,21 +17,13 @@ poetry config virtualenvs.in-project true
 poetry install --no-root
 ```
 
-
-Optional for Snowflake support until branch is merged:
-
-```bash
-poetry shell
-# Install snowflake sqlalchemy with 2.0 support - doesn't work with poetry
-pip install git+https://github.com/snowflakedb/snowflake-sqlalchemy.git@SNOW-1058245-sqlalchemy-20-support
-```
-
-
 # Define a custom SQLITE_PATH
-SQLITE_PATH="."  # Define where sqlite DB will be stored
 
-poetry shell  # Active python environment (makes alembic command available)
-alembic upgrade head  # Run migrations
+```
+SQLITE_PATH="." # Define where sqlite DB will be stored
+
+poetry shell # Active python environment (makes alembic command available)
+alembic upgrade head # Run migrations
 ```
 
 ## Environment setup

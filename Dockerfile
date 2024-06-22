@@ -57,8 +57,6 @@ RUN apt update && \
 COPY backend/pyproject.toml backend/poetry.lock ./
 RUN poetry config virtualenvs.in-project true && poetry install --only main --no-root
 
-# Install snowflake sqlalchemy with 2.0 support - doesn't work with poetry
-RUN poetry run pip install git+https://github.com/snowflakedb/snowflake-sqlalchemy.git@SNOW-1058245-sqlalchemy-20-support
 
 # -------------------------------
 # BASE BUILD

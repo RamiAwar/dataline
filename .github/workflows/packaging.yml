@@ -59,12 +59,12 @@ jobs:
           poetry self add poetry-plugin-export
           poetry export --without-hashes -f requirements.txt --output requirements.txt
           pip install -r requirements.txt pyinstaller==5.13.2
-          pip install git+https://github.com/snowflakedb/snowflake-sqlalchemy.git@SNOW-1058245-sqlalchemy-20-support
       - name: Run pyinstaller
         run: |
           pyinstaller --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
             --add-data alembic:alembic --add-data alembic.ini:. --add-data samples:samples --add-data templates:templates --add-data assets:assets \
-            --distpath linux_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 dataline/main.py -y
+            --distpath linux_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 \
+            --collect-all=snowflake-sqlalchemy --hidden-import=snowflake.sqlalchemy --collect-all=snowflake-connector-python dataline/main.py -y
           tar -cvf ../dataline.tar linux_dist
       - uses: actions/upload-artifact@v4
         with:
@@ -97,12 +97,12 @@ jobs:
           poetry self add poetry-plugin-export
           poetry export --without-hashes -f requirements.txt --output requirements.txt
           pip install -r requirements.txt pyinstaller==5.13.2
-          pip install git+https://github.com/snowflakedb/snowflake-sqlalchemy.git@SNOW-1058245-sqlalchemy-20-support
       - name: Run pyinstaller
         run: |
           pyinstaller --windowed -i ../images/logo.ico --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite `
             --add-data "alembic;alembic" --add-data "alembic.ini;." --add-data "samples;samples" --add-data "templates;templates" --add-data "assets;assets" `
-            --distpath ../win64_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 dataline/main.py -y
+            --distpath ../win64_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 `
+            --collect-all=snowflake-sqlalchemy --hidden-import=snowflake.sqlalchemy --collect-all=snowflake-connector-python dataline/main.py -y
       - uses: actions/upload-artifact@v4
         with:
           name: windows-artifact
@@ -137,7 +137,6 @@ jobs:
           poetry self add poetry-plugin-export
           poetry export --without-hashes -f requirements.txt --output requirements.txt
           pip install -r requirements.txt pyinstaller==5.13.2
-          pip install git+https://github.com/snowflakedb/snowflake-sqlalchemy.git@SNOW-1058245-sqlalchemy-20-support
       - name: Run pyinstaller
         run: |
           pyinstaller --clean --distpath macos_dist -y macos.spec
