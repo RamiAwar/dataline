@@ -1,5 +1,13 @@
 # as production
 FROM node:21-alpine
+RUN apk --update --no-cache add \
+    libc6-compat \
+    automake \
+    libtool \
+    autoconf \
+    build-base \
+    zlib \
+    zlib-dev
 
 WORKDIR /app
 

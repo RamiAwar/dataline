@@ -1,9 +1,9 @@
 import abc
 import json
 import operator
-from decimal import Decimal
 from typing import Annotated, Any, List, Optional, Sequence, Type, TypedDict, cast
 
+from fastapi.encoders import jsonable_encoder
 from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_core.callbacks import CallbackManagerForToolRun
 from langchain_core.messages import BaseMessage, ToolMessage
@@ -61,13 +61,6 @@ def truncate_word(content: Any, *, length: int, suffix: str = "...") -> str:  # 
     return content[: length - len(suffix)].rsplit(" ", 1)[0] + suffix
 
 
-class DecimalEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, Decimal):
-            return str(o)
-        return json.JSONEncoder.default(self, o)
-
-
 def execute_sql_query(
     db: SQLDatabase, query: str, for_chart: bool = False, chart_type: Optional[ChartType] = None
 ) -> QueryRunData:
@@ -118,7 +111,8 @@ def query_run_result_to_chart_json(chart_json: str, chart_type: ChartType, query
         formatted_json = json.loads(chart_json)
         formatted_json["data"]["labels"] = flattened_labels
         formatted_json["data"]["datasets"][0]["data"] = flattened_values
-        return json.dumps(formatted_json, cls=DecimalEncoder)
+        formatted_json_compatible = jsonable_encoder(formatted_json)
+        return json.dumps(formatted_json_compatible)
     else:
         raise NotImplementedError(f"Chart type {chart_type} is not supported.")
 
