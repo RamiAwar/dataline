@@ -5,7 +5,16 @@
 
 FROM node:21-alpine as temp-frontend
 # Need python for node-gyp in building
-RUN apk add --no-cache python3 make gcc g++
+RUN apk --update --no-cache add \
+    libc6-compat \
+    automake \
+    libtool \
+    autoconf \
+    build-base \
+    zlib \
+    zlib-dev \
+    python3 make gcc g++
+
 WORKDIR /home/dataline/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm install
@@ -46,10 +55,10 @@ RUN apt update && \
 
 # Copy in poetry files only - this allows us to cache the layer if no new dependencies were added and install base deps
 COPY backend/pyproject.toml backend/poetry.lock ./
-RUN poetry config virtualenvs.create false && poetry install --only main --no-root
+RUN poetry config virtualenvs.in-project true && poetry install --only main --no-root
 
 # Install snowflake sqlalchemy with 2.0 support - doesn't work with poetry
-RUN pip install git+https://github.com/snowflakedb/snowflake-sqlalchemy.git@SNOW-1058245-sqlalchemy-20-support
+RUN poetry run pip install git+https://github.com/snowflakedb/snowflake-sqlalchemy.git@SNOW-1058245-sqlalchemy-20-support
 
 # -------------------------------
 # BASE BUILD
