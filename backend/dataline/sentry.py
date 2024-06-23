@@ -1,11 +1,12 @@
 import logging
 
 import sentry_sdk
+from sentry_sdk.hub import GLOBAL_HUB
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+
 from dataline.config import config
 from dataline.repositories.base import SessionCreator
 from dataline.repositories.user import UserRepository
-from sentry_sdk.hub import GLOBAL_HUB
-from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ def setup_sentry() -> None:
     sentry_sdk.init(
         dsn="https://eb866cebe8c8378fd689c1ad3d39bcb5@o4507329853915136.ingest.de.sentry.io/4507335339278416",
         environment=config.environment,
-        release="v1.0.5",
+        release="v1.0.6",
         enable_tracing=True,
         integrations=[FastApiIntegration()],
         traces_sample_rate=1.0,
