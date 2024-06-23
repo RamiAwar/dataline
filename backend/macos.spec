@@ -1,9 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_data_files
+from PyInstaller.utils.hooks import collect_data_files, collect_all
 
 datas = [('alembic', 'alembic'), ('alembic.ini', '.'), ('samples', 'samples'), ('templates', 'templates'), ('assets', 'assets')]
+binaries = []
 datas += collect_data_files('jinja2')
-
+tmp_ret = collect_all('snowflake-sqlalchemy')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+tmp_ret = collect_all('snowflake-connector-python')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 block_cipher = None
 
@@ -13,7 +17,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=datas,
-    hiddenimports=['asyncpg.pgproto.pgproto', 'uuid', 'ipaddress', 'aiosqlite', 'tiktoken_ext.openai_public', 'tiktoken_ext'],
+    hiddenimports=['asyncpg.pgproto.pgproto', 'uuid', 'ipaddress', 'aiosqlite', 'tiktoken_ext.openai_public', 'tiktoken_ext', 'snowflake.sqlalchemy'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

@@ -55,7 +55,6 @@ export const ConnectionSelector = () => {
                     <div className="text-base leading-tight xxl:text-xl font-normal">
                       {connection.name}
                     </div>
-
                   </div>
 
                   {/** ------ Connection Settings ------ */}
@@ -75,11 +74,11 @@ export const ConnectionSelector = () => {
             ))}
 
             <div
-              className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border border-gray-700 sm:aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-full"
+              className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border px-2 py-2 border-gray-700 sm:aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-full sm:w-auto sm:max-w-xs"
               onClick={createConnection}
             >
               {/* Item to add new connection */}
-              <div className="hidden sm:flex overflow-hidden w-full h-full justify-center items-center sm:mt-6 md:mt-8">
+              <div className="hidden sm:flex overflow-hidden w-full justify-center items-center sm:mt-4">
                 <svg
                   className="h-full w-full text-gray-200"
                   stroke="currentColor"
@@ -95,12 +94,14 @@ export const ConnectionSelector = () => {
                   />
                 </svg>
               </div>
-              <div className="lg:h-fit text-gray-50  flex flex-col justify-end items-start px-2 py-2">
-                <div className="text-xs md:text-sm xxl:text-md font-normal text-gray-400">
-                  Add
-                </div>
-                <div className="text-base md:text-base xxl:text-xl font-medium md:-mt-1 overflow-ellipsis whitespace-nowrap">
-                  New Connection
+              <div className="w-full flex justify-center items-center gap-2 text-gray-50  sm:-mt-2 ">
+                <div className="h-full lg:h-fit flex flex-col justify-center md:items-start w-full">
+                  <div className="text-xs md:text-sm xxl:text-md font-normal text-gray-400">
+                    Add
+                  </div>
+                  <div className="text-base leading-tight xxl:text-xl font-normal">
+                    New Connection
+                  </div>
                 </div>
               </div>
             </div>
