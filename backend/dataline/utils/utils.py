@@ -4,7 +4,7 @@ import random
 from typing import AsyncGenerator
 
 from fastapi import UploadFile
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import NoSuchModuleError, ProgrammingError
 
 from dataline.errors import UserFacingError, ValidationError
 from dataline.models.llm_flow.enums import QueryStreamingEventType
@@ -58,9 +58,11 @@ async def generate_with_errors(generator: AsyncGenerator[str, None]) -> AsyncGen
 def forward_connection_errors(error: Exception) -> None:
     if isinstance(error, ProgrammingError):
         if "Must specify the full search path starting from database" in str(error):
-            raise ValidationError(
+            raise UserFacingError(
                 (
                     "Invalid DSN. Please specify the full search path starting from the database"
                     "ex. 'SNOWFLAKE_SAMPLE_DATA/TPCH_SF1'"
                 )
             )
+    if isinstance(error, NoSuchModuleError):
+        raise UserFacingError(f"Your version of DataLine does not support this database yet - {str(error)}")

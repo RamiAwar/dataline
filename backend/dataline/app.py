@@ -10,7 +10,7 @@ from dataline.api.connection.router import router as connection_router
 from dataline.api.conversation.router import router as conversation_router
 from dataline.api.result.router import router as result_router
 from dataline.api.settings.router import router as settings_router
-from dataline.errors import ValidationError
+from dataline.errors import UserFacingError, ValidationError
 from dataline.repositories.base import NotFoundError, NotUniqueError
 
 logger = logging.getLogger(__name__)
@@ -22,6 +22,8 @@ def handle_exceptions(request: Request, e: Exception) -> JSONResponse:
     elif isinstance(e, NotUniqueError):
         return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"message": e.message})
     elif isinstance(e, ValidationError):
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)})
+    elif isinstance(e, UserFacingError):
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)})
 
     logger.exception(e)
@@ -51,4 +53,5 @@ class App(fastapi.FastAPI):
         self.add_exception_handler(NotFoundError, handle_exceptions)
         self.add_exception_handler(NotUniqueError, handle_exceptions)
         self.add_exception_handler(ValidationError, handle_exceptions)
+        self.add_exception_handler(UserFacingError, handle_exceptions)
         self.add_exception_handler(Exception, handle_exceptions)
