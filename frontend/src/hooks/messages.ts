@@ -72,6 +72,13 @@ export function useSendMessageStreaming({
             queryOut = JSON.parse(data) as QueryOut;
           } else if (event === QueryStreamingEvent.ADD_RESULT.valueOf()) {
             onAddResult(JSON.parse(data));
+          } else if (event === QueryStreamingEvent.ERROR.valueOf()) {
+            console.log(event, data);
+            enqueueSnackbar({
+              variant: "error",
+              message: data,
+              persist: true,
+            });
           }
         },
       });

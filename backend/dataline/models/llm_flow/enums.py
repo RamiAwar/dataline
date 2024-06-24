@@ -11,3 +11,4 @@ class QueryResultType(Enum):
 class QueryStreamingEventType(str, Enum):
     STORED_MESSAGES = "stored_messages_event"
     ADD_RESULT = "add_result_event"
+    ERROR = "error_event"
