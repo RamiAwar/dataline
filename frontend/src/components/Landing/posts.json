@@ -14,5 +14,20 @@
       "href": "https://ramiawar.medium.com/",
       "imageUrl": "https://miro.medium.com/v2/resize:fill:64:64/2*WeXvsSk5yZPqGEZzqOkzNg.png"
     }
+  },
+  {
+    "id": 2,
+    "title": "Chat with your Snowflake database",
+    "href": "https://ramiawar.medium.com/chat-with-your-snowflake-database-27bfd5c50d48",
+    "imageUrl": "https://miro.medium.com/v2/resize:fit:1400/format:webp/1*0_hNYS4wRqf2ignP2QgbzQ.jpeg",
+    "date": "Jun 24, 2024",
+    "datetime": "2024-06-24",
+    "category": { "title": "Integration", "href": "#" },
+    "author": {
+      "name": "Rami Awar",
+      "role": "Founder @ DataLine",
+      "href": "https://ramiawar.medium.com/",
+      "imageUrl": "https://miro.medium.com/v2/resize:fill:64:64/2*WeXvsSk5yZPqGEZzqOkzNg.png"
+    }
   }
 ]
