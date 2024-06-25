@@ -38,7 +38,7 @@ snowflake-sqlalchemy = {git = "https://github.com/snowflakedb/snowflake-sqlalche
 
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
+black = "^24.3.0"
 pre-commit = "^3.4.0"
 pyinstaller = "^5.10.1"
 pytest = "^8.0.2"
