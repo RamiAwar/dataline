@@ -5,7 +5,9 @@ from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from langchain_core.utils.function_calling import convert_to_openai_function
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END
+from openai import AuthenticationError, RateLimitError
 
+from dataline.errors import UserFacingError
 from dataline.models.llm_flow.schema import QueryResultSchema
 from dataline.services.llm_flow.toolkit import (
     ChartGeneratorTool,
@@ -58,7 +60,17 @@ class CallModelNode(Node):
         # This includes tool messages and ai messages at this point
         # Useful to limit tokens when graph recursion is very deep
         last_n_messages = state.messages[-20:]
-        response = model.invoke(last_n_messages)
+        try:
+            response = model.invoke(last_n_messages)
+        except RateLimitError as e:
+            body = cast(dict, e.body)
+            raise UserFacingError(body.get("message", "OpenAI API rate limit exceeded"))
+        except AuthenticationError as e:
+            body = cast(dict, e.body)
+            raise UserFacingError(body.get("message", "OpenAI API key rejected"))
+        except Exception as e:
+            raise UserFacingError(str(e))
+
         return state_update(messages=[response])
 
 

@@ -1,10 +1,15 @@
 import base64
+import logging
 import random
+from typing import AsyncGenerator
 
 from fastapi import UploadFile
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import NoSuchModuleError, ProgrammingError
 
-from dataline.errors import ValidationError
+from dataline.errors import UserFacingError, ValidationError
+from dataline.models.llm_flow.enums import QueryStreamingEventType
+
+logger = logging.getLogger(__name__)
 
 
 def get_sqlite_dsn_async(path: str) -> str:
@@ -41,12 +46,23 @@ def stream_event_str(event: str, data: str) -> str:
     return f"{event_str}\n{data_str}\n\n"
 
 
+async def generate_with_errors(generator: AsyncGenerator[str, None]) -> AsyncGenerator[str, None]:
+    try:
+        async for chunk in generator:
+            yield chunk
+    except UserFacingError as e:
+        logger.exception("Error in conversation query generator")
+        yield stream_event_str(QueryStreamingEventType.ERROR.value, str(e))
+
+
 def forward_connection_errors(error: Exception) -> None:
     if isinstance(error, ProgrammingError):
         if "Must specify the full search path starting from database" in str(error):
-            raise ValidationError(
+            raise UserFacingError(
                 (
                     "Invalid DSN. Please specify the full search path starting from the database"
                     "ex. 'SNOWFLAKE_SAMPLE_DATA/TPCH_SF1'"
                 )
             )
+    if isinstance(error, NoSuchModuleError):
+        raise UserFacingError(f"Your version of DataLine does not support this database yet - {str(error)}")

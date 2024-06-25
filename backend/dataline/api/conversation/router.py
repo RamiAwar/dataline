@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated
+from typing import Annotated, AsyncGenerator
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends
@@ -20,6 +20,7 @@ from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.connection import ConnectionService
 from dataline.services.conversation import ConversationService
 from dataline.services.llm_flow.toolkit import execute_sql_query
+from dataline.utils.utils import generate_with_errors
 
 logger = logging.getLogger(__name__)
 
@@ -102,8 +103,11 @@ def query(
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(),
 ):
+    response_generator = conversation_service.query(
+        session, conversation_id, query, secure_data=message_options.secure_data
+    )
     return StreamingResponse(
-        conversation_service.query(session, conversation_id, query, secure_data=message_options.secure_data),
+        generate_with_errors(response_generator),
         media_type="text/event-stream",
     )
 

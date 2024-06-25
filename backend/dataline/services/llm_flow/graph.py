@@ -1,3 +1,4 @@
+import logging
 from typing import AsyncGenerator, Sequence, Type
 
 from langchain_community.utilities.sql_database import SQLDatabase
@@ -22,6 +23,9 @@ from dataline.services.llm_flow.toolkit import (
     QueryGraphState,
     SQLDatabaseToolkit,
 )
+from dataline.utils.utils import forward_connection_errors
+
+logger = logging.getLogger(__name__)
 
 
 def add_node(graph: StateGraph, node: Type[Node]) -> None:
@@ -41,7 +45,12 @@ class QueryGraphService:
         self,
         dsn: str,
     ) -> None:
-        self.db = SQLDatabase.from_uri(dsn)
+        # Enable this try catch once we support errors with streaming responses
+        try:
+            self.db = SQLDatabase.from_uri(dsn)
+        except Exception as e:
+            forward_connection_errors(e)
+            raise e
 
         self.db._sample_rows_in_table_info = 0  # Preventative security
         self.toolkit = SQLDatabaseToolkit(db=self.db)

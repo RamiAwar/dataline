@@ -72,6 +72,12 @@ export function useSendMessageStreaming({
             queryOut = JSON.parse(data) as QueryOut;
           } else if (event === QueryStreamingEvent.ADD_RESULT.valueOf()) {
             onAddResult(JSON.parse(data));
+          } else if (event === QueryStreamingEvent.ERROR.valueOf()) {
+            enqueueSnackbar({
+              variant: "error",
+              message: data,
+              persist: true,
+            });
           }
         },
       });
@@ -220,7 +226,6 @@ export function useUpdateSqlQuery(
       forChart: boolean;
     }) => api.updateSQLQueryString(id, code, forChart),
     onError(error) {
-      console.log("in onerror: ", error);
       if (isAxiosError(error) && error.response?.status === 400) {
         enqueueSnackbar({
           variant: "error",
