@@ -23,7 +23,7 @@ export default function Blog() {
               </div>
               <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
                 {posts.map((post) => (
-                  <a href={post.category.href}>
+                  <a href={post.href}>
                     <article
                       key={post.id}
                       className="group flex flex-col items-start justify-between bg-gray-500/10 transition-colors duration-300 hover:bg-gray-200/10 rounded-2xl backdrop-blur-xs p-4"

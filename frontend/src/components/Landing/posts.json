@@ -19,6 +19,7 @@
     "id": 2,
     "title": "Chat with your Snowflake database",
     "href": "https://ramiawar.medium.com/chat-with-your-snowflake-database-27bfd5c50d48",
+    "description": "Data analysis is changing fast. Tools like Snowflake make it easier to handle large amounts of data. Learn how to query Snowflake using natural language.",
     "imageUrl": "https://miro.medium.com/v2/resize:fit:1400/format:webp/1*0_hNYS4wRqf2ignP2QgbzQ.jpeg",
     "date": "Jun 24, 2024",
     "datetime": "2024-06-24",
