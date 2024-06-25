@@ -23,10 +23,10 @@ export default function Blog() {
               </div>
               <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
                 {posts.map((post) => (
-                  <a href={post.category.href}>
+                  <a href={post.category.href} className="h-full" key={post.id}>
                     <article
                       key={post.id}
-                      className="group flex flex-col items-start justify-between bg-gray-500/10 transition-colors duration-300 hover:bg-gray-200/10 rounded-2xl backdrop-blur-xs p-4"
+                      className="group h-full flex flex-col items-start justify-between bg-gray-500/10 transition-colors duration-300 hover:bg-gray-200/10 rounded-2xl backdrop-blur-xs p-4"
                     >
                       <div className="relative w-full">
                         <img
@@ -36,7 +36,7 @@ export default function Blog() {
                         />
                         <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10" />
                       </div>
-                      <div className="max-w-xl">
+                      <div className="max-w-xl grow flex flex-col">
                         <div className="mt-8 flex items-center gap-x-4 text-xs">
                           <time
                             dateTime={post.datetime}
@@ -48,7 +48,7 @@ export default function Blog() {
                             {post.category.title}
                           </div> */}
                         </div>
-                        <div className=" relative">
+                        <div className=" relative grow">
                           <h3 className="mt-3 text-lg font-semibold leading-6 text-white">
                             <a href={post.href}>
                               <span className="absolute inset-0" />
