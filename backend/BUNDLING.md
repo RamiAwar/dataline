@@ -16,22 +16,23 @@ cp dist/manifest.json ../backend/assets/manifest.json
 
 ```bash
 cd backend
-pyinstaller --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
+pyinstaller --clean --distpath ../linux_dist -y linux.spec
+```
+
+<!-- CLI COMMAND - NOT MAINTAINED
+pyinstaller --name dataline --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
     --add-data alembic:alembic --add-data alembic.ini:. --add-data samples:samples --add-data templates:templates --add-data assets:assets \
     --distpath ../linux_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 \
     --collect-all=snowflake-sqlalchemy --hidden-import=snowflake.sqlalchemy --collect-all=snowflake-connector-python dataline/main.py -y
-```
+ -->
 
-You can find the executable under `linux_dist/main/main`. Once run, go to localhost:7377
+You can find the executable under `linux_dist/dataline/dataline`. Once run, go to localhost:7377
 
 ## MacOS
 
 ```bash
 cd backend
-pyinstaller --windowed -i ../images/logo.icns --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
-    --add-data alembic:alembic --add-data alembic.ini:. --add-data samples:samples --add-data templates:templates --add-data assets:assets \
-    --distpath ../macos_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 \
-    --collect-all=snowflake-sqlalchemy --hidden-import=snowflake.sqlalchemy --collect-all=snowflake-connector-python dataline/main.py -y
+pyinstaller --clean --distpath ../macos_dist -y macos.spec
 ```
 
 You can find the executable under `macos_dist/main/main`. Once run, go to localhost:7377

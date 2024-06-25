@@ -37,6 +37,7 @@ MANIFEST
 *.manifest
 *.spec
 !macos.spec
+!linux.spec
 
 # Installer logs
 pip-log.txt
