@@ -73,7 +73,6 @@ export function useSendMessageStreaming({
           } else if (event === QueryStreamingEvent.ADD_RESULT.valueOf()) {
             onAddResult(JSON.parse(data));
           } else if (event === QueryStreamingEvent.ERROR.valueOf()) {
-            console.log(event, data);
             enqueueSnackbar({
               variant: "error",
               message: data,
@@ -227,7 +226,6 @@ export function useUpdateSqlQuery(
       forChart: boolean;
     }) => api.updateSQLQueryString(id, code, forChart),
     onError(error) {
-      console.log("in onerror: ", error);
       if (isAxiosError(error) && error.response?.status === 400) {
         enqueueSnackbar({
           variant: "error",
