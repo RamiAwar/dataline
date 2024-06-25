@@ -86,7 +86,7 @@ def validate_dsn(value: str) -> str:
         return value
 
     dsn_pattern = (
-        r"^(?P<driver>[\w+]+):\/\/(?:(?P<username>\w+):(?P<password>[^\s]+)@)?(?P<host>[\w\.-]+)"
+        r"^(?P<driver>[\w+]+):\/\/(?:(?P<username>\w+):(?P<password>\S+)@)?(?P<host>[\w\.-]+)"
         r"(?::(?P<port>\d+))?(?:\/(?P<database>[\w\.\/-]+))?$"
     )
     match = re.match(dsn_pattern, value)
