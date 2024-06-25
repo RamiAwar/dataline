@@ -66,7 +66,13 @@ class QueryRunData(BaseModel):  # type: ignore[misc]
     rows: list[list[Any] | Any]  # type: ignore[misc]
 
 
-class SQLQueryRunResult(QueryRunData, QueryResultSchema, RenderableResultMixin):  # type: ignore[misc]
+class SQLQueryRunResultContent(BaseModel):
+    data: QueryRunData
+    is_secure: bool
+    for_chart: bool
+
+
+class SQLQueryRunResult(QueryRunData, QueryResultSchema, RenderableResultMixin, StorableResultMixin):  # type: ignore[misc]
     result_type: ClassVar[QueryResultType] = QueryResultType.SQL_QUERY_RUN_RESULT
     linked_id: UUID  # Links this result to it's parent query result.
 
@@ -80,6 +86,40 @@ class SQLQueryRunResult(QueryRunData, QueryResultSchema, RenderableResultMixin):
             type=self.result_type.value,
             linked_id=self.linked_id,
             created_at=datetime.now(),
+        )
+
+    async def store_result(
+        self, session: AsyncSession, result_repo: ResultRepository, message_id: UUID, linked_id: UUID | None = None
+    ) -> ResultModel:
+        create = ResultCreate(
+            content=SQLQueryRunResultContent(
+                data=QueryRunData(columns=self.columns, rows=self.rows),
+                is_secure=self.is_secure,
+                for_chart=self.for_chart,
+            ).model_dump_json(),
+            type=self.result_type.value,
+            linked_id=linked_id,
+            message_id=message_id,
+        )
+
+        stored_result = await result_repo.create(session, create)
+        self.result_id = stored_result.id
+        self.created_at = stored_result.created_at
+        return stored_result
+
+    @classmethod
+    def deserialize(cls, result: ResultModel) -> Self:
+        if not result.linked_id:
+            raise ValueError("Attempting to deserialize a SQL query run result without a linked_id")
+        content = SQLQueryRunResultContent.model_validate_json(result.content)
+        return cls(
+            columns=content.data.columns,
+            rows=content.data.rows,
+            is_secure=content.is_secure,
+            for_chart=content.for_chart,
+            result_id=result.id,
+            linked_id=result.linked_id,
+            created_at=result.created_at,
         )
 
 

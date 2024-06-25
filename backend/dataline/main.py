@@ -6,23 +6,18 @@ import webbrowser
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
-from uuid import UUID
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic.json import pydantic_encoder
 
 from alembic import command
 from alembic.config import Config
 from dataline.app import App
 from dataline.config import IS_BUNDLED, config
-from dataline.old_models import SuccessResponse, UnsavedResult
-from dataline.repositories.base import AsyncSession, NotFoundError, get_session
+from dataline.old_models import SuccessResponse
 from dataline.sentry import maybe_init_sentry
-from dataline.services.connection import ConnectionService
-from dataline.services.conversation import ConversationService
 
 logging.basicConfig(level=logging.DEBUG)
 
