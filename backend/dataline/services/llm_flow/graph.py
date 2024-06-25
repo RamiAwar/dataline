@@ -50,6 +50,7 @@ class QueryGraphService:
             self.db = SQLDatabase.from_uri(dsn)
         except Exception as e:
             forward_connection_errors(e)
+            raise e
 
         self.db._sample_rows_in_table_info = 0  # Preventative security
         self.toolkit = SQLDatabaseToolkit(db=self.db)
