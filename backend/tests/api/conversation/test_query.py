@@ -1,6 +1,7 @@
 import logging
 import os
 from typing import Callable, cast
+from uuid import UUID
 
 import pytest
 import pytest_asyncio
@@ -39,6 +40,9 @@ def get_query_out_from_stream(lines: list[str]):
 
 
 def evaluate_ai_message_content(generated_message: str, query: str, additional_eval_steps: list[str] | None = None):
+    """
+    Fails if the output is not relevant to the input. Accepts additional evaluation steps if needed.
+    """
     test_case = LLMTestCase(input=query, actual_output=generated_message)
     correctness_metric = GEval(
         name="Relevance",
@@ -50,12 +54,30 @@ def evaluate_ai_message_content(generated_message: str, query: str, additional_e
     )
 
     correctness_metric.measure(test_case)
-    assert correctness_metric.score is not None and correctness_metric.reason is not None
-    return correctness_metric.score, correctness_metric.reason
+    assert correctness_metric.is_successful(), "\n".join(
+        [
+            f"score={correctness_metric.score}",
+            f"reason={correctness_metric.reason}",
+            f"{query=}",
+            f"{generated_message=}",
+        ]
+    )
 
 
 def filter_results(results: list[ResultOut], type: QueryResultType):
     return [result for result in results if result.type == type.value]
+
+
+def call_query_endpoint(client: TestClient, conversation_id: UUID, query: str) -> QueryOut:
+    body = {"message_options": {"secure_data": True}}
+    with client.stream(
+        method="post", url=f"/conversation/{conversation_id}/query", params={"query": query}, json=body
+    ) as response:
+        assert response.status_code == 200
+        q_out = get_query_out_from_stream(list(response.iter_lines()))
+
+    assert q_out.human_message.content == query
+    return q_out
 
 
 @pytest.mark.asyncio
@@ -91,22 +113,14 @@ async def test_sample_rows(
     expected_results: dict[QueryResultType, Callable[[list[ResultOut]], bool]],
 ) -> None:
     """Tests getting sample rows from one table, then from two tables"""
-    body = {"message_options": {"secure_data": True}}
-    with client.stream(
-        method="post", url=f"/conversation/{sample_conversation.id}/query", params={"query": query}, json=body
-    ) as response:
-        assert response.status_code == 200
-        q_out = get_query_out_from_stream(list(response.iter_lines()))
+    q_out = call_query_endpoint(client, conversation_id=sample_conversation.id, query=query)
 
-    assert q_out.human_message.content == query
     ai_message, results = q_out.ai_message.message.content, q_out.ai_message.results
-    score, reason = evaluate_ai_message_content(
+    evaluate_ai_message_content(
         ai_message,
         query,
         additional_eval_steps=["The output may mention that it has obtained sample rows but it should not show them."],
     )
-    assert score > 0.5, f"{reason=}\n{ai_message=}\n{query=}"
-    logger.info(f"{score=}, {reason=}")
 
     assert len(results) > 0
     results_map: dict[QueryResultType, list[ResultOut]] = {}
@@ -169,24 +183,13 @@ async def test_explorative(
     expected_results: dict[QueryResultType, Callable[[list[ResultOut]], bool]],
 ) -> None:
     """Tests explorative questions"""
-    body = {"message_options": {"secure_data": True}}
-    with client.stream(
-        method="post", url=f"/conversation/{sample_conversation.id}/query", params={"query": query}, json=body
-    ) as response:
-        assert response.status_code == 200
-        q_out = get_query_out_from_stream(list(response.iter_lines()))
+    q_out = call_query_endpoint(client, conversation_id=sample_conversation.id, query=query)
 
-    assert q_out.human_message.content == query
     ai_message, results = q_out.ai_message.message.content, q_out.ai_message.results
-    score, reason = evaluate_ai_message_content(ai_message, query)
-    assert score > 0.5, f"{reason=}\n{ai_message=}\n{query=}"
-    logger.info(f"{score=}, {reason=}")
-
-    results_map: dict[QueryResultType, list[ResultOut]] = {}
+    evaluate_ai_message_content(ai_message, query)
     for result_type, expected_results_check in expected_results.items():
         filtered_results = filter_results(results, result_type)
         assert expected_results_check(filtered_results), f"{result_type=}, {filtered_results=}"
-        results_map[result_type] = filtered_results
 
 
 @pytest.mark.asyncio
@@ -197,17 +200,10 @@ async def test_followup_question(client: TestClient, sample_conversation: Conver
     Asks a specific question about a movie, then asks a followup question about the movie without specifying the movie
     name in the second question
     """
-    body = {"message_options": {"secure_data": True}}
-    first_query = 'Who are the actors in the film "ZORRO ARK"?'  # IAN TANDY - NICK DEGENERES -LISA MONROE
-    with client.stream(
-        method="post", url=f"/conversation/{sample_conversation.id}/query", params={"query": first_query}, json=body
-    ) as response:
-        assert response.status_code == 200
-        q_out = get_query_out_from_stream(list(response.iter_lines()))
-
-    assert q_out.human_message.content == first_query
+    first_query = 'Who are the actors in the film "ZORRO ARK"?'  # IAN TANDY - NICK DEGENERES - LISA MONROE
+    q_out = call_query_endpoint(client, conversation_id=sample_conversation.id, query=first_query)
     ai_message, results = q_out.ai_message.message.content, q_out.ai_message.results
-    score, reason = evaluate_ai_message_content(
+    evaluate_ai_message_content(
         ai_message,
         first_query,
         additional_eval_steps=[
@@ -215,8 +211,6 @@ async def test_followup_question(client: TestClient, sample_conversation: Conver
             "Vagueness is OK.",
         ],
     )
-    assert score > 0.5, f"{reason=}\n{ai_message=}\n{first_query=}"
-    logger.info(f"{score=}, {reason=}")
 
     expected_results = {
         QueryResultType.SELECTED_TABLES: lambda x: len(x) <= 3,
@@ -252,15 +246,9 @@ async def test_followup_question(client: TestClient, sample_conversation: Conver
     # Follow up question #
     ######################
     second_query = "How much revenue did that movie generate?"  # 214.69
-    with client.stream(
-        method="post", url=f"/conversation/{sample_conversation.id}/query", params={"query": second_query}, json=body
-    ) as response:
-        assert response.status_code == 200
-        q_out = get_query_out_from_stream(list(response.iter_lines()))
-
-    assert q_out.human_message.content == second_query
+    q_out = call_query_endpoint(client, conversation_id=sample_conversation.id, query=second_query)
     ai_message, results = q_out.ai_message.message.content, q_out.ai_message.results
-    score, reason = evaluate_ai_message_content(
+    evaluate_ai_message_content(
         ai_message,
         second_query,
         additional_eval_steps=[
@@ -269,8 +257,6 @@ async def test_followup_question(client: TestClient, sample_conversation: Conver
             "Vagueness is OK.",
         ],
     )
-    assert score > 0.5, f"{reason=}\n{ai_message=}\n{second_query=}"
-    logger.info(f"{score=}, {reason=}")
 
     expected_results = {
         QueryResultType.SELECTED_TABLES: lambda x: len(x) <= 3,
