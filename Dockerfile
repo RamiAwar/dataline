@@ -24,6 +24,9 @@ COPY frontend/ .
 
 # Temporary setup - need local env as the 'production' build is landing page only
 ENV NODE_ENV=local
+
+ARG RAILWAY_PUBLIC_DOMAIN="http://localhost:7377"
+ENV VITE_API_URL=$RAILWAY_PUBLIC_DOMAIN
 RUN npm run build
 # -------------------------------
 
