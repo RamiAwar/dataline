@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import {
   IConversationWithMessagesWithResultsOut,
   IMessageOptions,
@@ -21,6 +22,20 @@ type HealthcheckResult = ApiResponse<void>;
 const healthcheck = async (): Promise<HealthcheckResult> => {
   return (await backendApi<HealthcheckResult>({ url: "/healthcheck" })).data;
 };
+
+
+
+const hasAuth = async (): Promise<boolean> => {
+  try {
+    await backendApi({ url: "/auth/login", method: "HEAD", skipAuth: true });
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.status === 404) {
+      return false;
+    }
+    return true; // any other error means auth enabled
+  }
+  return true;
+}
 
 export type ConnectionResult = {
   id: string;
@@ -371,6 +386,7 @@ const updateSQLQueryString = async (
 
 export const api = {
   healthcheck,
+  hasAuth,
   getConnection,
   getSamples,
   createConnection,

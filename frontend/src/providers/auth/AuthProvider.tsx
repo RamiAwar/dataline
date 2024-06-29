@@ -1,23 +1,31 @@
 import React, { useState, ReactNode, useEffect } from "react";
 import {
+  backendApi,
+} from "@/services/api_client";
+import {
   setCredentials,
   clearCredentials,
   isAuthenticated as checkAuth,
-  backendApi,
-} from "@/services/api_client";
+} from "@/services/auth";
+
 import { AuthContext } from "./AuthContext";
 import { enqueueSnackbar } from "notistack";
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => checkAuth());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     // Check authentication status on mount and when localStorage changes
-    const checkAuthStatus = () => setIsAuthenticated(checkAuth());
-    window.addEventListener("storage", checkAuthStatus);
-    return () => window.removeEventListener("storage", checkAuthStatus);
+    const checkAuthentication = async () => {
+      const authStatus = await checkAuth();
+      setIsAuthenticated(authStatus);
+    };
+    checkAuthentication();
+
+    window.addEventListener("storage", checkAuthentication);
+    return () => window.removeEventListener("storage", checkAuthentication);
   }, []);
 
   const login = async (username: string, password: string) => {
