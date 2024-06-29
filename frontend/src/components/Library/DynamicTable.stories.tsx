@@ -6,7 +6,9 @@ const meta: Meta<typeof DynamicTable> = {
   decorators: [
     (Story: React.ComponentType) => (
       <div className="dark bg-gray-800 w-full flex flex-col max-w-screen-sm">
-        <Story />
+        <div>
+          <Story />
+        </div>
       </div>
     ),
   ],
