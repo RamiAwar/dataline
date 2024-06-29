@@ -3,6 +3,7 @@ import { RouterProvider } from "react-router-dom";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { closeSnackbar, SnackbarKey, SnackbarProvider } from "notistack";
+import { AuthProvider } from "./providers/auth/AuthProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
@@ -10,7 +11,12 @@ const queryClient = new QueryClient({
 
 const action = (snackbarId: SnackbarKey | undefined) => (
   <>
-    <button className="px-2" onClick={() => { closeSnackbar(snackbarId) }}>
+    <button
+      className="px-2"
+      onClick={() => {
+        closeSnackbar(snackbarId);
+      }}
+    >
       Dismiss
     </button>
   </>
@@ -19,14 +25,16 @@ const action = (snackbarId: SnackbarKey | undefined) => (
 export const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <SnackbarProvider
-        autoHideDuration={5000}
-        maxSnack={5}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-        action={action}
-      >
-        <RouterProvider router={router} />
-      </SnackbarProvider>
+      <AuthProvider>
+        <SnackbarProvider
+          autoHideDuration={5000}
+          maxSnack={5}
+          anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+          action={action}
+        >
+          <RouterProvider router={router} />
+        </SnackbarProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

@@ -1,5 +1,4 @@
 import { RouteObject, createBrowserRouter } from "react-router-dom";
-import { Home } from "@components/Home/Home";
 import { Landing } from "@components/Landing/Landing";
 import { Conversation } from "@components/Conversation/Conversation";
 import { ConnectionSelector } from "@components/Connection/ConnectionSelector";
@@ -10,21 +9,24 @@ import FAQPage from "@/components/Landing/FAQPage";
 import Blog from "@components/Landing/Blog";
 import Privacy from "@components/Landing/Privacy";
 import About from "./components/Landing/About";
+import Login from "./components/Library/Login";
+import { AuthWrapper } from "./components/Library/AuthWrapper";
+import { Main } from "./components/Home/Main";
 
 export enum Routes {
   Root = "/",
   Faq = "/faq",
   Blog = "/blog",
-  SignIn = "/login",
   UserProfile = "/user",
   NewConnection = "/connection/new",
   Connection = "/connection/:connectionId",
   Chat = "/chat/:conversationId",
   Privacy = "/privacy",
   About = "/about",
+  Login = "/login",
 }
 
-let routes: RouteObject[] = [
+const landing_routes: RouteObject[] = [
   {
     path: Routes.Root,
     element: <Landing />,
@@ -47,10 +49,18 @@ let routes: RouteObject[] = [
   },
 ];
 
-const private_routes: RouteObject[] = [
+const app_routes: RouteObject[] = [
+  {
+    path: Routes.Login,
+    element: <Login />,
+  },
   {
     path: Routes.Root,
-    element: <Home />,
+    element: (
+      <AuthWrapper>
+        <Main />
+      </AuthWrapper>
+    ),
     children: [
       {
         element: <ConnectionSelector />,
@@ -76,9 +86,10 @@ const private_routes: RouteObject[] = [
   },
 ];
 
+let routes = landing_routes;
 if (process.env.NODE_ENV === "local") {
   // Replace public with private
-  routes = private_routes;
+  routes = app_routes;
 }
 
 export const router = createBrowserRouter(routes);
