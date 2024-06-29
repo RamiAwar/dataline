@@ -19,7 +19,7 @@ function classNames(...classes: string[]) {
 // Create component with prop topRight boolean
 export const ProfileDropdown = ({ topRight }: { topRight?: boolean }) => {
   const { data: avatarUrl } = useGetAvatar();
-  const { logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
   const userNavigation = [{ name: "Settings", href: Routes.UserProfile }];
 
@@ -68,14 +68,16 @@ export const ProfileDropdown = ({ topRight }: { topRight?: boolean }) => {
             ))}
 
             {/* Add logout */}
-            <MenuItem key="logout">
-              <div
-                onClick={logout}
-                className="cursor-pointer block px-3 py-2 m-1 rounded-md text-sm leading-6 text-white overflow-hidden transition-colors duration-100 data-[focus]:bg-gray-600"
-              >
-                Logout
-              </div>
-            </MenuItem>
+            {isAuthenticated && (
+              <MenuItem key="logout">
+                <div
+                  onClick={logout}
+                  className="cursor-pointer block px-3 py-2 m-1 rounded-md text-sm leading-6 text-white overflow-hidden transition-colors duration-100 data-[focus]:bg-gray-600"
+                >
+                  Logout
+                </div>
+              </MenuItem>
+            )}
           </MenuItems>
         </Transition>
       </Menu>
