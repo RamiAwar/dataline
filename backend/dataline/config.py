@@ -37,5 +37,13 @@ class Config(BaseSettings):
     environment: str = EnvironmentType.development if not IS_BUNDLED else EnvironmentType.production
     release: str | None = None
 
+    # HTTP Basic Authentication
+    auth_username: str | None = None
+    auth_password: str | None = None
+
+    @property
+    def has_auth(self) -> bool:
+        return bool(self.auth_username and self.auth_password)
+
 
 config = Config()
