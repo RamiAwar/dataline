@@ -8,7 +8,7 @@ import {
   IUserInfo,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
-import { apiURL, backendApi } from "./services/api_client";
+import { backendApi } from "./services/api_client";
 import { decodeBase64Data } from "./utils";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 
