@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import {
   IConversationWithMessagesWithResultsOut,
   IMessageOptions,
@@ -20,6 +21,18 @@ type ApiResponse<T> = SuccessResponse<T>;
 type HealthcheckResult = ApiResponse<void>;
 const healthcheck = async (): Promise<HealthcheckResult> => {
   return (await backendApi<HealthcheckResult>({ url: "/healthcheck" })).data;
+};
+
+const hasAuth = async (): Promise<boolean> => {
+  try {
+    await backendApi({ url: "/auth/login", method: "HEAD" });
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.status === 405) {
+      return false;
+    }
+    return true; // any other error means auth enabled
+  }
+  return true;
 };
 
 export type ConnectionResult = {
@@ -240,29 +253,39 @@ const streamingQuery = async ({
   onMessage: (event: string, data: string) => void;
   onClose?: () => void;
 }): Promise<void> => {
-  return fetchEventSource(
-    `${apiURL}/conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-      body: JSON.stringify({ message_options }),
-      onmessage(ev) {
-        onMessage(ev.event, ev.data);
-      },
-      onclose() {
-        onClose && onClose();
-      },
-      onerror(err) {
-        onClose && onClose();
-        // I tried using a AbortController witgh ctrl.abort, but doesn't work, see issue below
-        // https://github.com/Azure/fetch-event-source/issues/24#issuecomment-1470332423
-        throw new Error(err);
-      },
-      openWhenHidden: true,
-    }
-  );
+  const auth = localStorage.getItem("auth");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (auth) {
+    headers.Authorization = `Basic ${auth}`;
+  }
+  let baseURL = apiURL;
+  if (!apiURL.endsWith("/")) {
+    baseURL = baseURL + "/";
+  }
+
+  const url = `${baseURL}conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`;
+
+  return fetchEventSource(url, {
+    headers: headers,
+    method: "POST",
+    body: JSON.stringify({ message_options }),
+    onmessage(ev) {
+      onMessage(ev.event, ev.data);
+    },
+    onclose() {
+      onClose && onClose();
+    },
+    onerror(err) {
+      onClose && onClose();
+      // I tried using a AbortController witgh ctrl.abort, but doesn't work, see issue below
+      // https://github.com/Azure/fetch-event-source/issues/24#issuecomment-1470332423
+      throw new Error(err);
+    },
+    openWhenHidden: true,
+  });
 };
 
 export type RunSQLResult = ApiResponse<IResult>;
@@ -371,6 +394,7 @@ const updateSQLQueryString = async (
 
 export const api = {
   healthcheck,
+  hasAuth,
   getConnection,
   getSamples,
   createConnection,

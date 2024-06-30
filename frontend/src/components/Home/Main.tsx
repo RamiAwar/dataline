@@ -13,9 +13,8 @@ import {
   useGetConversations,
   useGetUserProfile,
 } from "@/hooks";
-import "simplebar-react/dist/simplebar.min.css";
 
-export const Home = () => {
+export const Main = () => {
   useGetBackendStatus();
   const { data: profile, isLoading } = useGetUserProfile();
   const { isPending: isPendingConnections, isError: isErrorConnections } =
@@ -34,26 +33,38 @@ export const Home = () => {
     );
   }
 
-  return isLoading ||
+  /** If the user information is not loaded yet, show a loading spinner */
+  if (
+    isLoading ||
     isPendingConnections ||
     isPendingConversations ||
-    profile === undefined ? (
-    <Alert open={true} onClose={() => {}} size="sm">
-      <AlertTitle className="flex gap-4 items-center">
-        <Spinner />
-        Loading...
-      </AlertTitle>
-    </Alert>
-  ) : profile?.openai_api_key ? (
-    <div className="w-full bg-gray-900">
-      <Sidebar></Sidebar>
-      <main className="lg:pl-72 w-full mt-16 lg:mt-0">
-        <Outlet></Outlet>
-      </main>
-    </div>
-  ) : (
-    <div>
-      <OpenAIKeyPopup />
-    </div>
-  );
+    profile === undefined
+  ) {
+    return (
+      <Alert open={true} onClose={() => {}} size="sm">
+        <AlertTitle className="flex gap-4 items-center">
+          <Spinner />
+          Loading...
+        </AlertTitle>
+      </Alert>
+    );
+  }
+
+  /** If the user has not set up their OpenAI API key, show a popup to do that */
+  if (profile?.openai_api_key) {
+    return (
+      <div className="w-full bg-gray-900">
+        <Sidebar></Sidebar>
+        <main className="lg:pl-72 w-full mt-16 lg:mt-0">
+          <Outlet></Outlet>
+        </main>
+      </div>
+    );
+  } else {
+    return (
+      <div>
+        <OpenAIKeyPopup />
+      </div>
+    );
+  }
 };

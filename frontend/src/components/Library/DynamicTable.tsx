@@ -16,9 +16,10 @@ import {
 import autoAnimate from "@formkit/auto-animate";
 
 // TODO: Remove after defining this better on backend
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const DynamicTable: React.FC<{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: { columns: string[]; rows: any[][] };
+  initialCreatedAt?: Date;
   minimize?: boolean;
 }> = ({ data, minimize }) => {
   const parent = useRef<HTMLDivElement>(null);

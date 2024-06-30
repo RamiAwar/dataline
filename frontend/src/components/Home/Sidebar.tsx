@@ -276,7 +276,7 @@ export const Sidebar = () => {
         </Dialog>
       </Transition.Root>
 
-      {/* Static sidebar for large screens */}
+      {/* BIG SCREENS */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col border-r border-gray-600">
         {/* Dataline logo */}
         <Link to="/" className="flex h-16 shrink-0 items-center px-6">
@@ -442,12 +442,12 @@ export const Sidebar = () => {
         {/* Separator */}
         <hr className="border-gray-800 mt-1 mx-6" />
         {/* User Settings */}
-        <div className="flex items-center px-2 gap-x-4 py-4 text-md font-medium leading-6 text-white cursor-pointer">
+        <div className="flex items-center px-2 gap-x-4 py-4 text-md font-medium leading-6 text-white">
           <ProfileDropdown />
         </div>
       </div>
 
-      {/* Top navbar */}
+      {/* SMALL SCREENS */}
       <div className="fixed w-full h-16 top-0 z-40 flex items-center justify-between gap-x-6 px-4 py-4 shadow-sm sm:px-6 lg:hidden backdrop-filter backdrop-blur-lg">
         <button
           type="button"
@@ -489,7 +489,7 @@ export const Sidebar = () => {
           )
         )}
 
-        <ProfileDropdown />
+        <ProfileDropdown topRight={true} />
       </div>
     </div>
   );

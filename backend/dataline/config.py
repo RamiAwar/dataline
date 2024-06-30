@@ -1,9 +1,8 @@
 import sys
 from pathlib import Path
 
-from pydantic_settings import BaseSettings
-
 from dataline.utils.appdirs import user_data_dir
+from pydantic_settings import BaseSettings
 
 # https://pyinstaller.org/en/v6.6.0/runtime-information.html
 IS_BUNDLED = bool(getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"))
@@ -36,6 +35,16 @@ class Config(BaseSettings):
 
     environment: str = EnvironmentType.development if not IS_BUNDLED else EnvironmentType.production
     release: str | None = None
+
+    # HTTP Basic Authentication
+    auth_username: str | None = None
+    auth_password: str | None = None
+
+    spa_mode: bool = False
+
+    @property
+    def has_auth(self) -> bool:
+        return bool(self.auth_username and self.auth_password)
 
 
 config = Config()

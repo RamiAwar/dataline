@@ -23,6 +23,9 @@ RUN npm install
 COPY frontend/ .
 
 # Temporary setup - need local env as the 'production' build is landing page only
+ARG API_URL="http://localhost:7377"
+
+ENV VITE_API_URL=$API_URL
 ENV NODE_ENV=local
 RUN npm run build
 # -------------------------------
@@ -31,7 +34,7 @@ RUN npm run build
 # -------------------------------
 # BASE-BUILD IMAGE WITH BACKEND
 # Build backend dependencies and install them
-# ------------------------------
+# -------------------------------
 FROM python:3.11.6-slim-bookworm as temp-backend
 
 # Set working directory
@@ -49,7 +52,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 RUN pip install --no-cache-dir poetry
 
 # Install build dependencies, install dependencies, remove build dependencies
-RUN apt update && \
+RUN apt-get clean && apt update --fix-missing && \
     apt upgrade -y && \
     apt-get install git libpq-dev build-essential -y
 
@@ -78,6 +81,7 @@ COPY backend/*.py .
 COPY backend/samples ./samples
 COPY backend/dataline ./dataline
 COPY backend/alembic ./alembic
+COPY backend/templates ./templates
 COPY backend/alembic.ini .
 
 WORKDIR /home/dataline
@@ -89,37 +93,26 @@ ENV SQLITE_PATH="/home/.dataline/db.sqlite3"
 ENV DATA_DIRECTORY="/home/.dataline/data"
 
 # -------------------------------
-# DEV BUILD WITH MINIMAL DEPS
+# SPA BUILD WITH MINIMAL DEPS
 # -------------------------------
-FROM base as dev
+FROM base as spa
 
 WORKDIR /home/dataline/backend
 
-# Running alembic and uvicorn without combining them in a bash -c command won't work
-CMD ["bash", "-c", "python -m alembic upgrade head && python -m uvicorn dataline.main:app --port=7377 --host=0.0.0.0 --reload"]
-
-
-# -------------------------------
-# PROD BUILD WITH MINIMAL DEPS
-# -------------------------------
-# FROM python:3.11.8-alpine as prod
-FROM base as prod
-
-# Setup supervisor and caddy
-WORKDIR /home/dataline
-
-# Install supervisor to manage be/fe processes
-RUN pip install --no-cache-dir supervisor
-
-# Install Caddy server
-# RUN apk update && apk add caddy
-RUN apt update && apt install caddy -y
-
-
-# Copy in supervisor config, frontend build, backend source
-COPY supervisord.conf .
+# Copy in frontend build so we can serve it from FastAPI
 COPY --from=temp-frontend /home/dataline/frontend/dist /home/dataline/frontend/dist
-COPY frontend/Caddyfile /home/dataline/frontend/Caddyfile
+RUN \
+    cp -r /home/dataline/frontend/dist/assets /home/dataline/backend && \
+    cp /home/dataline/frontend/dist/favicon.ico /home/dataline/backend/assets && \
+    cp /home/dataline/frontend/dist/manifest.json /home/dataline/backend/assets
 
+# This stage is meant to be used as an SPA server with FastAPI serving a React build
+ENV SPA_MODE=1
+ARG AUTH_USERNAME
+ENV AUTH_USERNAME=$AUTH_USERNAME
+ARG AUTH_PASSWORD
+ENV AUTH_PASSWORD=$AUTH_PASSWORD
 
-CMD ["supervisord", "-n"]
+# Running alembic and uvicorn without combining them in a bash -c command won't work
+CMD ["bash", "-c", "python -m dataline.main"]
+

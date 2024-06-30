@@ -2,14 +2,17 @@ import logging
 from typing import Any, AsyncContextManager, Callable, Mapping, Self
 
 import fastapi
-from fastapi import Request, status
+from fastapi import Depends, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from dataline.api.auth.router import router as auth_router
 from dataline.api.connection.router import router as connection_router
 from dataline.api.conversation.router import router as conversation_router
 from dataline.api.result.router import router as result_router
 from dataline.api.settings.router import router as settings_router
+from dataline.auth import authenticate
+from dataline.config import config
 from dataline.errors import UserFacingError, ValidationError
 from dataline.repositories.base import NotFoundError, NotUniqueError
 
@@ -44,10 +47,17 @@ class App(fastapi.FastAPI):
             allow_headers=["*"],
         )
 
-        self.include_router(settings_router)
-        self.include_router(connection_router)
-        self.include_router(conversation_router)
-        self.include_router(result_router)
+        common_dependencies = []
+        if config.has_auth:
+            common_dependencies = [Depends(authenticate)]
+
+            # Add route for login
+            self.include_router(auth_router)
+
+        self.include_router(settings_router, dependencies=common_dependencies)
+        self.include_router(connection_router, dependencies=common_dependencies)
+        self.include_router(conversation_router, dependencies=common_dependencies)
+        self.include_router(result_router, dependencies=common_dependencies)
 
         # Handle 500s separately to play well with TestClient and allow re-raising in tests
         self.add_exception_handler(NotFoundError, handle_exceptions)
