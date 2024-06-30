@@ -10,13 +10,14 @@ from typing import AsyncGenerator
 import uvicorn
 from alembic import command
 from alembic.config import Config
+from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
 from dataline.app import App
 from dataline.config import IS_BUNDLED, config
 from dataline.old_models import SuccessResponse
 from dataline.sentry import maybe_init_sentry
-from fastapi import FastAPI, HTTPException, Request, Response
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
 logging.basicConfig(level=logging.INFO)
 
@@ -51,7 +52,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Path(config.data_directory).mkdir(parents=True, exist_ok=True)
     if IS_BUNDLED or config.spa_mode:
         run_migrations()
-        webbrowser.open("http://127.0.0.1:7377", new=2)
+        webbrowser.open("http://localhost:7377", new=2)
 
     await maybe_init_sentry()
     yield

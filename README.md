@@ -3,10 +3,10 @@
 </p>
 
 <p align="center">
-    <strong>Chat with your data using natural language</strong>
+    <strong>💬 Chat with your data using natural language 📊</strong>
 </p>
 <p align="center">
-    <em>Gone are the days of time-consuming querying! Generate charts, tables, reports in seconds.</em>
+    <em>Gone are the days of time-consuming querying!</em>⚡️<em>Generate charts, tables, reports in seconds with DataLine: An AI-driven data analysis and visualization tool</em>🤓
 </p>
 <div align="center">
 <img src="https://img.shields.io/github/downloads/ramiawar/dataline/total?style=flat&color=%2322c55e">
@@ -25,43 +25,54 @@
     - [Linux](#linux)
     - [Docker](#docker)
     - [Running manually](#running-manually)
-  - [Startup Quest](#startup-quest)
+- [Authentication](#authentication)
+- [Startup Quest](#startup-quest)
 
 
 ## Who is this for?
 
-Technical or non-technical people who want to explore data, fast. 
-It also works for backend developers to speed up drafting SQL queries and explore new DBs.
-It's specially well-suited for businesses given it's security-first and open-source nature.
+Technical or non-technical people who want to explore data, fast. ⚡️⚡️
+
+It also works for backend developers to speed up drafting queries and explore new DBs with ease. 😎
+
+It's especially well-suited for businesses given its security-first 🔒 and open-source 📖 nature.
 
 ## What is it?
 
-DataLine is a simple tool for chatting with your data. It's privacy-focused, running only locally and storing everything on your device. It hides your data from the LLMs used by default, but this can be disabled if the data is not deemed sensitive.
+DataLine is an AI-driven data analysis and visualization tool.
 
-It can connect to a variety of data sources (Postgres, MySQL, SQLite, CSV, and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
+It's privacy-focused, storing everything on your device. No  ☁️, only ☀️!
+
+It hides your data from the LLMs used by default, but this can be disabled if the data is not deemed sensitive.
+
+It can connect to a variety of data sources (Postgres, Snowflake, MySQL, SQLite, CSV, and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
 
 ## Where is it going?
 
 For now, we're trying to help people get insights out of their data, fast.
+
 This is meant to enable non-technical folks to query data and aid data analysts in getting their jobs done 10x as fast.
 
+But you can still influence the direction we go in. We're building this for you, so you have the biggest say.
+
 ## Feature Support
-- [x] Connecting to Postgres, MySQL databases
+- [x] Broad DB support: Postgres, MySQL, Snowflake, CSV, SQLite, and more
 - [x] Generating and executing SQL from natural language
 - [x] Ability to modify SQL results, save them, and re-run
 - [x] Better support for explorative questions
 - [x] Querying data files like CSV, SQLite (more connection types)
 - [x] Charting via natural language
 - [x] Modifying chart queries and re-rendering/refreshing charts
-- [ ] Reporting tools (copy tables, copy charts)
-- [ ] Storing copies of queries and labelling and searching them
-- [ ] Creating dashboards
-- [ ] Increasing connection support (NoSQL, Elasticsearch, ...)
+
+With a lot more coming soon. You can still influence what we build, so if you're a user and you're down for it, we'd love to interview you! Book some time with one of us here:
+- [Rami](https://calendly.com/ramiawar/quick)
 
 
 ## Getting started
 
-### Setup
+There are multiple ways of setting up DataLine, simplest being using a binary executable. This allows you to download a file and run it to get started.
+
+A more flexible option is using our hosted Docker image. This allows you to setup authentication and other features if you need them.
 
 #### Windows
 
@@ -95,7 +106,7 @@ You may also wish to use the binary instead, to do so, follow the instructions i
 You can also use our official docker image and get started in one command. This is more suitable for business use:
 
 ```bash
-docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest
+docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest
 ```
 
 You can manage this as you would any other container. `docker start dataline`, `docker stop dataline`
@@ -104,7 +115,7 @@ For updating to a new version, just remove the container and rerun the command. 
 
 ```bash
 docker rm dataline
-docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest
+docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest
 ```
 
 To connect to the frontend, you can then visit:
@@ -113,6 +124,22 @@ To connect to the frontend, you can then visit:
 #### Running manually
 
 Check the [backend](./backend/README.md) and [frontend](./frontend/README.md) readmes.
+
+## Authentication
+
+DataLine also supports basic auth 🔒 in self-hosted mode 🥳 in case you're hosting it and would like to secure it with a username/password. 
+
+Auth is NOT supported ❌ when running the DataLine executable.
+
+To enable authentication on the self-hosted version, add the environment variables AUTH_USERNAME and AUTH_PASSWORD while launching the service. ✅
+
+### With Docker
+
+Inject the env vars with the docker run command as follows:
+```docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline -e AUTH_USERNAME=admin -e AUTH_PASSWORD=admin ramiawar/dataline:latest```
+
+We plan on supporting multiple user auth in the future, but for now it supports a single user by default.
+
 
 ### Startup Quest
 
