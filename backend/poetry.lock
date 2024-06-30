@@ -2257,6 +2257,47 @@ files = [
 ]
 
 [[package]]
+name = "mysql-connector-python"
+version = "8.4.0"
+description = "MySQL driver written in Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "mysql-connector-python-8.4.0.tar.gz", hash = "sha256:42542d131d63c78416d410fdc9e84b9acb960d715c2e7b28c57ac9577c6d8165"},
+    {file = "mysql_connector_python-8.4.0-cp310-cp310-macosx_13_0_arm64.whl", hash = "sha256:c0a2688d95d53cfbea9352ed61926b47bc9042570570fb8fe0a8d19b1e20f1c4"},
+    {file = "mysql_connector_python-8.4.0-cp310-cp310-macosx_13_0_x86_64.whl", hash = "sha256:276bae0d5d44abb7ba1205003b55628e4e6f1d399f1825d518bc607320997b1f"},
+    {file = "mysql_connector_python-8.4.0-cp310-cp310-manylinux_2_17_aarch64.whl", hash = "sha256:a6d24ea29b3c2bdbba6861590de557665420bfb938f74b5cecc630bac5457d35"},
+    {file = "mysql_connector_python-8.4.0-cp310-cp310-manylinux_2_17_x86_64.whl", hash = "sha256:b7876358d9e51f25edc492088c4ce16cd14c2db87c279a965b0f9c327723359c"},
+    {file = "mysql_connector_python-8.4.0-cp310-cp310-win_amd64.whl", hash = "sha256:085024bf12d15f9b428938fdbeb50bd9b15dda9c4d3a474e6df061cb08713e6a"},
+    {file = "mysql_connector_python-8.4.0-cp311-cp311-macosx_13_0_arm64.whl", hash = "sha256:4e83fc8ed95005b171ffa36a289dac48625048263b09b56718e8395539ea07d9"},
+    {file = "mysql_connector_python-8.4.0-cp311-cp311-macosx_13_0_x86_64.whl", hash = "sha256:cd89d1c8c2d1e33e5ac2d4eac5813422c150a8427fb60a16c59be18c29dd9a94"},
+    {file = "mysql_connector_python-8.4.0-cp311-cp311-manylinux_2_17_aarch64.whl", hash = "sha256:76c13fde35a038afe50550a9af7b31b28ca3a04cce06f3030980afb20460d28c"},
+    {file = "mysql_connector_python-8.4.0-cp311-cp311-manylinux_2_17_x86_64.whl", hash = "sha256:accf10425c6af39a9595a47e7119ebcbcd7351f7df28755dbee01bca5a605b7c"},
+    {file = "mysql_connector_python-8.4.0-cp311-cp311-win_amd64.whl", hash = "sha256:cda868bb4e1641362d148f5b0d2a86188cffa2f7188831589781b13f2df6f51a"},
+    {file = "mysql_connector_python-8.4.0-cp312-cp312-macosx_13_0_arm64.whl", hash = "sha256:3ae951f2e16d089975cb9f05b3f3e58807dc33a2e5a627047bba1c8ad5439d82"},
+    {file = "mysql_connector_python-8.4.0-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:af40b5bdd91547d3dbf5fa62bde37e9e840bd7cba3b9246b55c09e6a1cde536f"},
+    {file = "mysql_connector_python-8.4.0-cp312-cp312-manylinux_2_17_aarch64.whl", hash = "sha256:bb4f3edab78f3fd6f80c6c0a9e5a533704044fc01bfb9e8736e1a993f74aa42d"},
+    {file = "mysql_connector_python-8.4.0-cp312-cp312-manylinux_2_17_x86_64.whl", hash = "sha256:e549674c72b596a7386f4a76bbac2ee9581f6632e6713618a70468713b162964"},
+    {file = "mysql_connector_python-8.4.0-cp312-cp312-win_amd64.whl", hash = "sha256:aed505adc76b58282c76e6cbf3da195be0f84029a41f05c470be977481896074"},
+    {file = "mysql_connector_python-8.4.0-cp38-cp38-macosx_13_0_x86_64.whl", hash = "sha256:d343a4a8133ae9561bd537fc8cdbcab74a0607a5f40698569010fa3c7d4a048f"},
+    {file = "mysql_connector_python-8.4.0-cp38-cp38-manylinux_2_17_aarch64.whl", hash = "sha256:74b1759d8bd9ccd4296dc2e5abe22ec7efbd1ad12a9032c2cb4d17fa5d0ca6e0"},
+    {file = "mysql_connector_python-8.4.0-cp38-cp38-manylinux_2_17_x86_64.whl", hash = "sha256:e6d5a418ef124dd1b18a73fd89431a1862ce7bf68f61275c7d006e8e2f8afcd2"},
+    {file = "mysql_connector_python-8.4.0-cp38-cp38-win_amd64.whl", hash = "sha256:427a84027b8314c73f5ff3eb1abdc709a8201b44a491d7b580bdf430b4820a16"},
+    {file = "mysql_connector_python-8.4.0-cp39-cp39-macosx_13_0_arm64.whl", hash = "sha256:44a99d44a925ea29c2e423e6d8b1d97ce740c3078d8b41923a81bbcd0a821972"},
+    {file = "mysql_connector_python-8.4.0-cp39-cp39-macosx_13_0_x86_64.whl", hash = "sha256:ed276c4e7907da0ad95a9ad122004294d6fb425127064af2ae880033b8e72166"},
+    {file = "mysql_connector_python-8.4.0-cp39-cp39-manylinux_2_17_aarch64.whl", hash = "sha256:2b5c6fea6513cf208c7116a4a5e36b3ae54e0d37f324a7cfe43fb01cfdf03be6"},
+    {file = "mysql_connector_python-8.4.0-cp39-cp39-manylinux_2_17_x86_64.whl", hash = "sha256:651c7824af57eb50f4a79ea04bf6f453b24381e1bb56eee45c0035b4c0c624c0"},
+    {file = "mysql_connector_python-8.4.0-cp39-cp39-win_amd64.whl", hash = "sha256:655dccbdc0e2943e62cf69e10a024329248b17b58bfac59c60fd2103db3ba0b0"},
+    {file = "mysql_connector_python-8.4.0-py2.py3-none-any.whl", hash = "sha256:35939c4ff28f395a5550bae67bafa4d1658ea72ea3206f457fff64a0fbec17e4"},
+]
+
+[package.extras]
+dns-srv = ["dnspython (>=1.16.0,<=2.3.0)"]
+fido2 = ["fido2 (==1.1.2)"]
+gssapi = ["gssapi (>=1.6.9,<=1.8.2)"]
+opentelemetry = ["Deprecated (>=1.2.6)", "typing-extensions (>=3.7.4)", "zipp (>=0.5)"]
+
+[[package]]
 name = "nbclient"
 version = "0.10.0"
 description = "A client library for executing notebooks. Formerly nbconvert's ExecutePreprocessor."
@@ -3367,7 +3408,6 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
-    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -4910,4 +4950,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "dad14768abf01bf093610f4655949ddbb302fa799f1a2122a0a9adeb0f1d9fd8"
+content-hash = "35ea3a1fa342ea85503d9e7c583de5f8c2b5aa63121960810150309df6541497"

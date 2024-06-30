@@ -41,6 +41,8 @@ class ConnectionService:
         name: str,
         is_sample: bool = False,
     ) -> ConnectionOut:
+        if dsn.startswith("mysql://"):
+            dsn = dsn.replace("mysql://", "mysql+mysqlconnector://")
         # Check if connection can be established before saving it
         dialect, database = await self.get_connection_details(dsn)
 
