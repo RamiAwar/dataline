@@ -115,6 +115,9 @@ def validate_dsn(value: str) -> str:
         # Only replace first occurrence
         value = value.replace("postgres", "postgresql", 1)
 
+    if value.startswith("mysql://"):
+        value = value.replace("mysql://", "mysql+pymysql://")
+
     return value
 
 
