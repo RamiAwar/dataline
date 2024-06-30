@@ -12,7 +12,7 @@ fastapi = "0.105.0"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
 psycopg2-binary = "^2.9.9"
 pymysql = "^1.1.1"
-cryptography = "^40.0.2"
+cryptography = "^42.0.4"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.27"}
 rapidfuzz = "^3.0.0"
 psycopg = {extras = ["pool"], version = "^3.1.9"}
