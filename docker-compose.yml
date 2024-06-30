@@ -11,9 +11,11 @@ services:
   backend:
     build:
       context: .
-      target: dev
+      target: base
     ports:
       - "7377:7377"
+    working_dir: /home/dataline/backend
+    command: ["bash", "-c", "python -m alembic upgrade head && python -m uvicorn dataline.main:app --port=7377 --host=0.0.0.0 --reload"]
     volumes:
       - dataline_dev:/home/.dataline # persist local sqlite db
       - ./backend/dataline:/home/dataline/backend/dataline
