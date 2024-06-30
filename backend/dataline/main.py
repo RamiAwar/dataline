@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Path(config.data_directory).mkdir(parents=True, exist_ok=True)
     if IS_BUNDLED or config.spa_mode:
         run_migrations()
-        webbrowser.open("http://0.0.0.0:7377", new=2)
+        webbrowser.open("http://127.0.0.1:7377", new=2)
 
     await maybe_init_sentry()
     yield

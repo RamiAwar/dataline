@@ -261,9 +261,13 @@ const streamingQuery = async ({
   if (auth) {
     headers.Authorization = `Basic ${auth}`;
   }
-  const url = `${apiURL}conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`;
-  console.log("url", url);
-  console.log("api url", apiURL);
+  let baseURL = apiURL;
+  if (!apiURL.endsWith("/")) {
+    baseURL = baseURL + "/";
+  }
+
+  const url = `${baseURL}conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`;
+
   return fetchEventSource(url, {
     headers: headers,
     method: "POST",
