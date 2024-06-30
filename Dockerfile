@@ -23,10 +23,10 @@ RUN npm install
 COPY frontend/ .
 
 # Temporary setup - need local env as the 'production' build is landing page only
-ENV NODE_ENV=local
+ARG API_URL="http://localhost:7377"
 
-ARG VITE_API_URL="http://localhost:7377"
-ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_API_URL=$API_URL
+ENV NODE_ENV=local
 RUN npm run build
 # -------------------------------
 
@@ -34,7 +34,7 @@ RUN npm run build
 # -------------------------------
 # BASE-BUILD IMAGE WITH BACKEND
 # Build backend dependencies and install them
-# ------------------------------
+# -------------------------------
 FROM python:3.11.6-slim-bookworm as temp-backend
 
 # Set working directory

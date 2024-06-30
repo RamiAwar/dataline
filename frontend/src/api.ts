@@ -8,7 +8,7 @@ import {
   IUserInfo,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
-import { backendApi } from "./services/api_client";
+import { apiURL, backendApi } from "./services/api_client";
 import { decodeBase64Data } from "./utils";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 
@@ -261,28 +261,27 @@ const streamingQuery = async ({
   if (auth) {
     headers.Authorization = `Basic ${auth}`;
   }
-
-  return fetchEventSource(
-    `/conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`,
-    {
-      headers: headers,
-      method: "POST",
-      body: JSON.stringify({ message_options }),
-      onmessage(ev) {
-        onMessage(ev.event, ev.data);
-      },
-      onclose() {
-        onClose && onClose();
-      },
-      onerror(err) {
-        onClose && onClose();
-        // I tried using a AbortController witgh ctrl.abort, but doesn't work, see issue below
-        // https://github.com/Azure/fetch-event-source/issues/24#issuecomment-1470332423
-        throw new Error(err);
-      },
-      openWhenHidden: true,
-    }
-  );
+  const url = `${apiURL}conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`;
+  console.log("url", url);
+  console.log("api url", apiURL);
+  return fetchEventSource(url, {
+    headers: headers,
+    method: "POST",
+    body: JSON.stringify({ message_options }),
+    onmessage(ev) {
+      onMessage(ev.event, ev.data);
+    },
+    onclose() {
+      onClose && onClose();
+    },
+    onerror(err) {
+      onClose && onClose();
+      // I tried using a AbortController witgh ctrl.abort, but doesn't work, see issue below
+      // https://github.com/Azure/fetch-event-source/issues/24#issuecomment-1470332423
+      throw new Error(err);
+    },
+    openWhenHidden: true,
+  });
 };
 
 export type RunSQLResult = ApiResponse<IResult>;
