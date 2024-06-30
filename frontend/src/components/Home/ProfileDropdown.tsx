@@ -19,7 +19,7 @@ function classNames(...classes: string[]) {
 // Create component with prop topRight boolean
 export const ProfileDropdown = ({ topRight }: { topRight?: boolean }) => {
   const { data: avatarUrl } = useGetAvatar();
-  const { isAuthenticated, logout } = useAuth();
+  const { hasAuthEnabled, logout } = useAuth();
 
   const userNavigation = [{ name: "Settings", href: Routes.UserProfile }];
 
@@ -68,7 +68,7 @@ export const ProfileDropdown = ({ topRight }: { topRight?: boolean }) => {
             ))}
 
             {/* Add logout */}
-            {isAuthenticated && (
+            {hasAuthEnabled && (
               <MenuItem key="logout">
                 <div
                   onClick={logout}

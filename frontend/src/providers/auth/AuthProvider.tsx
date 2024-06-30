@@ -1,7 +1,5 @@
 import React, { useState, ReactNode, useEffect } from "react";
-import {
-  backendApi,
-} from "@/services/api_client";
+import { backendApi } from "@/services/api_client";
 import {
   setCredentials,
   clearCredentials,
@@ -10,16 +8,21 @@ import {
 
 import { AuthContext } from "./AuthContext";
 import { enqueueSnackbar } from "notistack";
+import { api } from "@/api";
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasAuthEnabled, setHasAuthEnabled] = useState(true);
 
   useEffect(() => {
     // Check authentication status on mount and when localStorage changes
     const checkAuthentication = async () => {
-      const authStatus = await checkAuth();
+      const hasAuth = await api.hasAuth();
+      setHasAuthEnabled(hasAuth);
+
+      const authStatus = await checkAuth(hasAuth);
       setIsAuthenticated(authStatus);
     };
     checkAuthentication();
@@ -63,7 +66,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, login, logout, hasAuthEnabled }}
+    >
       {children}
     </AuthContext.Provider>
   );

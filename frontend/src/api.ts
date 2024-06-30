@@ -23,19 +23,17 @@ const healthcheck = async (): Promise<HealthcheckResult> => {
   return (await backendApi<HealthcheckResult>({ url: "/healthcheck" })).data;
 };
 
-
-
 const hasAuth = async (): Promise<boolean> => {
   try {
     await backendApi({ url: "/auth/login", method: "HEAD", skipAuth: true });
   } catch (error) {
-    if (isAxiosError(error) && error.response?.status === 404) {
+    if (isAxiosError(error) && error.response?.status === 405) {
       return false;
     }
     return true; // any other error means auth enabled
   }
   return true;
-}
+};
 
 export type ConnectionResult = {
   id: string;
@@ -255,12 +253,19 @@ const streamingQuery = async ({
   onMessage: (event: string, data: string) => void;
   onClose?: () => void;
 }): Promise<void> => {
+  const auth = localStorage.getItem("auth");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (auth) {
+    headers.Authorization = `Basic ${auth}`;
+  }
+
   return fetchEventSource(
     `${apiURL}/conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`,
     {
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: headers,
       method: "POST",
       body: JSON.stringify({ message_options }),
       onmessage(ev) {
