@@ -263,7 +263,7 @@ const streamingQuery = async ({
   }
 
   return fetchEventSource(
-    `${apiURL}conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`,
+    `/conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`,
     {
       headers: headers,
       method: "POST",
