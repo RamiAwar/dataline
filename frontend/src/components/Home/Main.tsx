@@ -14,6 +14,8 @@ import {
   useGetUserProfile,
 } from "@/hooks";
 
+import "simplebar-react/dist/simplebar.min.css";
+
 export const Main = () => {
   useGetBackendStatus();
   const { data: profile, isLoading } = useGetUserProfile();
