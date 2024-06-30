@@ -38,7 +38,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         method: "POST",
         url: "/auth/login",
         data: { username, password },
-        skipAuth: true, // Skip authentication for this request
       });
 
       if (response.status === 200) {

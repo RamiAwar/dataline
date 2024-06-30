@@ -24,13 +24,20 @@ logger = logging.getLogger(__name__)
 
 
 def run_migrations() -> None:
-    path = Path(__file__).parent.parent / "alembic.ini"
+    if IS_BUNDLED:
+        path = Path(__file__).parent / "alembic.ini"
+    else:
+        path = Path(__file__).parent.parent / "alembic.ini"
+
     alembic_cfg = Config(path)
     loc = alembic_cfg.get_main_option("script_location")
     if loc:
         loc = loc.removeprefix("./")
     else:
         raise Exception("Something went wrong - alembic config is None")
+
+    if IS_BUNDLED:
+        loc = Path(__file__).parent / loc
 
     alembic_cfg.set_main_option("script_location", str(loc))
     alembic_cfg.config_file_name = None  # to prevent alembic from overriding the logs

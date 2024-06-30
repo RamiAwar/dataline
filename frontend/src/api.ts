@@ -25,7 +25,7 @@ const healthcheck = async (): Promise<HealthcheckResult> => {
 
 const hasAuth = async (): Promise<boolean> => {
   try {
-    await backendApi({ url: "/auth/login", method: "HEAD", skipAuth: true });
+    await backendApi({ url: "/auth/login", method: "HEAD" });
   } catch (error) {
     if (isAxiosError(error) && error.response?.status === 405) {
       return false;
