@@ -27,10 +27,13 @@ const hasAuth = async (): Promise<boolean> => {
   try {
     await backendApi({ url: "/auth/login", method: "HEAD" });
   } catch (error) {
-    if (isAxiosError(error) && error.response?.status === 405) {
+    if (
+      isAxiosError(error) &&
+      (error.response?.status === 405 || error.response?.status === 404)
+    ) {
       return false;
     }
-    return true; // any other error means auth enabled
+    return true; // any other error means auth enabled (does it?)
   }
   return true;
 };
@@ -253,14 +256,10 @@ const streamingQuery = async ({
   onMessage: (event: string, data: string) => void;
   onClose?: () => void;
 }): Promise<void> => {
-  const auth = localStorage.getItem("auth");
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
-  if (auth) {
-    headers.Authorization = `Basic ${auth}`;
-  }
   let baseURL = apiURL;
   if (!apiURL.endsWith("/")) {
     baseURL = baseURL + "/";
@@ -285,6 +284,7 @@ const streamingQuery = async ({
       throw new Error(err);
     },
     openWhenHidden: true,
+    credentials: "include",
   });
 };
 
@@ -392,6 +392,25 @@ const updateSQLQueryString = async (
   return response.data as ApiResponse<void>;
 };
 
+export type LoginResponse = ApiResponse<void>;
+const login = async (username: string, password: string) => {
+  const response = await backendApi<LoginResponse>({
+    method: "POST",
+    url: "/auth/login",
+    data: { username, password },
+  });
+  return response;
+};
+
+export type LogoutResponse = ApiResponse<void>;
+const logout = async () => {
+  const response = await backendApi<LogoutResponse>({
+    method: "POST",
+    url: "/auth/logout",
+  });
+  return response;
+};
+
 export const api = {
   healthcheck,
   hasAuth,
@@ -404,6 +423,8 @@ export const api = {
   deleteConnection,
   listConnections,
   listConversations,
+  login,
+  logout,
   createConversation,
   updateConversation,
   deleteConversation,

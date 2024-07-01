@@ -55,13 +55,17 @@ export function useGetBackendStatus() {
   return result;
 }
 
-export function useGetUserProfile() {
-  const { isSuccess } = useQuery(getBackendStatusQuery());
-  const result = useQuery({
+export function userProfileQuery(enabled = true) {
+  return queryOptions({
     queryKey: USER_INFO_QUERY_KEY,
     queryFn: async () => (await api.getUserInfo()).data,
-    enabled: isSuccess,
+    enabled,
   });
+}
+
+export function useGetUserProfile() {
+  const { isSuccess } = useQuery(getBackendStatusQuery());
+  const result = useQuery(userProfileQuery(isSuccess));
 
   if (
     result.isError &&

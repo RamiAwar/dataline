@@ -1,4 +1,4 @@
-import { RouteObject, createBrowserRouter } from "react-router-dom";
+import { RouteObject, createBrowserRouter, redirect } from "react-router-dom";
 import { Landing } from "@components/Landing/Landing";
 import { Conversation } from "@components/Conversation/Conversation";
 import { ConnectionSelector } from "@components/Connection/ConnectionSelector";
@@ -10,8 +10,8 @@ import Blog from "@components/Landing/Blog";
 import Privacy from "@components/Landing/Privacy";
 import About from "./components/Landing/About";
 import Login from "./components/Library/Login";
-import { AuthWrapper } from "./components/Library/AuthWrapper";
 import { Main } from "./components/Home/Main";
+import { ensureLoggedIn, fetchAuthenticated } from "./hooks/auth";
 
 export enum Routes {
   Root = "/",
@@ -53,14 +53,12 @@ const app_routes: RouteObject[] = [
   {
     path: Routes.Login,
     element: <Login />,
+    loader: async () => (await fetchAuthenticated()) && redirect("/"),
   },
   {
     path: Routes.Root,
-    element: (
-      <AuthWrapper>
-        <Main />
-      </AuthWrapper>
-    ),
+    element: <Main />,
+    loader: async () => await ensureLoggedIn(),
     children: [
       {
         element: <ConnectionSelector />,
