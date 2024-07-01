@@ -21,7 +21,7 @@ export function hasAuthQuery() {
 }
 
 export function isAuthenticatedQuery() {
-  // Query function calls api.getUserInfo:
+  // Query function checks if auth enabled. If it is, calls api.getUserInfo:
   // ==> If successful, we are logged in (also cache the value of UserInfo)
   // ==> Otherwise, we are not logged in
   // Used by Router once the app is loaded to check if we should redirect to "/login"
@@ -29,6 +29,8 @@ export function isAuthenticatedQuery() {
     queryKey: ["isAuthenticated"],
     queryFn: async () => {
       try {
+        const hasAuth = await queryClient.fetchQuery(hasAuthQuery());
+        if (!hasAuth) return true;
         const userInfo = (await api.getUserInfo()).data;
         queryClient.setQueryData(userProfileQuery().queryKey, userInfo);
         return true;
