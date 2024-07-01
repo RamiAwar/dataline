@@ -6,11 +6,12 @@ import {
   Transition,
 } from "@headlessui/react";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Routes } from "../../router";
 import { useGetAvatar } from "@/hooks";
 import { Fragment } from "react";
-import { useAuth } from "@/providers/auth/useAuth";
+import { hasAuthQuery, useLogout } from "@/hooks/auth";
+import { useQuery } from "@tanstack/react-query";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -19,7 +20,11 @@ function classNames(...classes: string[]) {
 // Create component with prop topRight boolean
 export const ProfileDropdown = ({ topRight }: { topRight?: boolean }) => {
   const { data: avatarUrl } = useGetAvatar();
-  const { hasAuthEnabled, logout } = useAuth();
+  const navigate = useNavigate();
+  const { mutate: logout } = useLogout({
+    onLogout: () => navigate(Routes.Login),
+  });
+  const { data: hasAuthEnabled } = useQuery(hasAuthQuery());
 
   const userNavigation = [{ name: "Settings", href: Routes.UserProfile }];
 
@@ -71,7 +76,7 @@ export const ProfileDropdown = ({ topRight }: { topRight?: boolean }) => {
             {hasAuthEnabled && (
               <MenuItem key="logout">
                 <div
-                  onClick={logout}
+                  onClick={async () => await logout()}
                   className="cursor-pointer block px-3 py-2 m-1 rounded-md text-sm leading-6 text-white overflow-hidden transition-colors duration-100 data-[focus]:bg-gray-600"
                 >
                   Logout

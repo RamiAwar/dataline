@@ -1,4 +1,5 @@
 import binascii
+import logging
 import secrets
 from base64 import b64decode
 from typing import Optional
@@ -11,11 +12,13 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from dataline.config import config
 
+logger = logging.getLogger(__name__)
+
 
 class HTTPBasicCustomized(HTTPBasic):
     # Override __call__ method to not send www-authenticate header back
     async def __call__(self, request: Request) -> Optional[HTTPBasicCredentials]:  # type: ignore
-        authorization = request.headers.get("Authorization")
+        authorization = request.cookies.get("Authorization")
         scheme, param = get_authorization_scheme_param(authorization)
         if not authorization or scheme.lower() != "basic":
             if self.auto_error:
