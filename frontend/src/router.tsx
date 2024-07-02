@@ -11,7 +11,7 @@ import Privacy from "@components/Landing/Privacy";
 import About from "./components/Landing/About";
 import Login from "./components/Library/Login";
 import { Main } from "./components/Home/Main";
-import { ensureLoggedIn, fetchAuthenticated } from "./hooks/auth";
+import { fetchAuthenticated } from "./hooks/auth";
 
 export enum Routes {
   Root = "/",
@@ -53,12 +53,12 @@ const app_routes: RouteObject[] = [
   {
     path: Routes.Login,
     element: <Login />,
-    loader: async () => (await fetchAuthenticated()) && redirect("/"),
+    loader: async () => (await fetchAuthenticated()) && redirect(Routes.Root),
   },
   {
     path: Routes.Root,
     element: <Main />,
-    loader: async () => await ensureLoggedIn(),
+    loader: async () => !(await fetchAuthenticated()) && redirect(Routes.Login),
     children: [
       {
         element: <ConnectionSelector />,

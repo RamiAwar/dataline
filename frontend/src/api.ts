@@ -33,7 +33,7 @@ const hasAuth = async (): Promise<boolean> => {
     ) {
       return false;
     }
-    return true; // any other error means auth enabled (does it?)
+    return true; // any other error means auth enabled
   }
   return true;
 };

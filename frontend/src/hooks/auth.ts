@@ -38,7 +38,6 @@ export function isAuthenticatedQuery() {
         return false;
       }
     },
-    staleTime: 1000 * 60 * 5, // Expire after 5 minutes
   });
 }
 
@@ -82,16 +81,7 @@ export function useLogout({ onLogout }: { onLogout: () => void }) {
   });
 }
 
-// fetchAuthenticated and ensureLoggedIn are both used by the Router loaders,
-// which are run before even rendering the page
+// fetchAuthenticated is used by the Router loaders, which is run before rendering the page
 export async function fetchAuthenticated() {
   return queryClient.fetchQuery(isAuthenticatedQuery());
-}
-
-export async function ensureLoggedIn() {
-  const isAuthenticated = await fetchAuthenticated();
-  if (!isAuthenticated) {
-    throw redirect(Routes.Login);
-  }
-  return isAuthenticated;
 }

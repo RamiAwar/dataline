@@ -27,10 +27,7 @@ async def login(
 @router.post("/logout")
 async def logout(response: fastapi.Response) -> fastapi.Response:
     response.status_code = 200
-    # delete cookie
-    response.set_cookie(
-        key="Authorization", value="", secure=True, httponly=True, expires="expires=Thu, 01 Jan 1970 00:00:00 GMT; "
-    )
+    response.delete_cookie(key="Authorization", secure=True, httponly=True)
     return response
 
 
