@@ -1,8 +1,11 @@
+from abc import ABC, abstractmethod
 import logging
+import operator
 import os
-from typing import Callable, cast
+from typing import Any, Callable, ClassVar, Self, cast
 from uuid import UUID
 
+from pydantic import BaseModel, model_validator
 import pytest
 import pytest_asyncio
 from deepeval.metrics import GEval
@@ -16,6 +19,187 @@ from dataline.models.llm_flow.enums import QueryResultType
 from dataline.models.llm_flow.schema import SQLQueryRunResult
 
 logger = logging.getLogger(__name__)
+
+
+def evaluate_message_content(
+    generated_message: str,
+    query: str,
+    eval_steps: list[str],
+    raise_if_fail: bool = False,
+    metric_name: str = "Relevance",
+    eval_params: list[LLMTestCaseParams] = [LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+) -> GEval:
+    """
+    Args:
+    - generated_message: string message from the AI
+    - query: human message
+    - eval_steps: an explanation of how to evaluate the output
+    - raise_if_fail: if True, runs an assertion that the evaluation is successful
+    - metric_name: Name of the evaluation metric. I think this affects the score, need to double check
+    - eval_params: the parameters that are relevant for evaluation
+    """
+    test_case = LLMTestCase(input=query, actual_output=generated_message)
+    correctness_metric = GEval(name=metric_name, evaluation_steps=eval_steps, evaluation_params=eval_params)
+
+    correctness_metric.measure(test_case)
+    if raise_if_fail:
+        assert correctness_metric.is_successful(), "\n".join(
+            [
+                f"score={correctness_metric.score}",
+                f"reason={correctness_metric.reason}",
+                f"{query=}",
+                f"{generated_message=}",
+            ]
+        )
+    return correctness_metric
+
+
+EvalName = str
+
+
+class EvalBlockBase(ABC, BaseModel):
+    # https://github.com/pydantic/pydantic/discussions/2410#discussioncomment-408613
+    @property
+    @abstractmethod
+    def name(self) -> EvalName:
+        """The name of the test"""
+
+    @abstractmethod
+    def evaluate(self, response: QueryOut) -> float:
+        raise NotImplementedError
+
+
+def get_results_of_type(result_type: QueryResultType, response: QueryOut):
+    return [result for result in response.ai_message.results if result.type == result_type.value]
+
+
+class EvalAIText(EvalBlockBase):
+    name: ClassVar[str] = "ai_text_evaluation"
+    eval_steps: list[str]
+
+    def evaluate(self, response: QueryOut) -> float:
+        ai_text = response.ai_message.message.content
+        evaluation = evaluate_message_content(ai_text, response.human_message.content, self.eval_steps)
+        return evaluation.score or 0.0  # score: float | None is annoying
+
+
+class Comparator(BaseModel):
+    operator: Callable[[int, int], bool]
+    number: int
+
+    def compare(self, results_list: list[ResultOut]) -> bool:
+        return self.operator(len(results_list), self.number)
+
+
+class EvalCountResult(EvalBlockBase):
+    name: ClassVar[str] = "result_count_evaluation"
+    results_evals: dict[QueryResultType, Comparator]
+
+    def evaluate(self, response: QueryOut) -> float:
+        total_comparisons = len(self.results_evals) or 1
+        checks_passed = 0
+        for result_type, comparator in self.results_evals.items():
+            filtered_results = get_results_of_type(result_type, response)
+            if comparator.compare(filtered_results):
+                checks_passed += 1
+        return checks_passed * 1.0 / total_comparisons
+
+
+class EvalSQLString(EvalBlockBase):
+    name: ClassVar[str] = "sql_string_evaluation"
+    metric_name: str
+    eval_steps: list[str]
+    eval_params: list[LLMTestCaseParams] = [LLMTestCaseParams.ACTUAL_OUTPUT]
+
+    def evaluate(self, response: QueryOut) -> float:
+        sql_string_results = get_results_of_type(QueryResultType.SQL_QUERY_STRING_RESULT, response)
+        if len(sql_string_results) == 0:
+            return 0.0  # we'd expect there to be an sql string if we use this eval block
+        sum_scores = 0.0
+        for sql_str_res in sql_string_results:
+            generated_sql = cast(str, sql_str_res.content["sql"])
+            evaluation = evaluate_message_content(
+                generated_sql,
+                response.human_message.content,
+                self.eval_steps,
+                metric_name=self.metric_name,
+                eval_params=self.eval_params,
+            )
+            sum_scores += evaluation.score or 0.0
+        return sum_scores / len(sql_string_results)
+
+
+class EvalSQLRun(EvalBlockBase):
+    # TODO: currently assumes we expect one SQLRun
+    name: ClassVar[str] = "sql_run_evaluation"
+    expected_row_count: int | None = None
+    expected_col_names: list[str] | None = None
+    expected_row_values: list[list[Any]] | None = None
+
+    @staticmethod
+    def result_out_to_sql_run_result(result_out: ResultOut) -> SQLQueryRunResult:
+        assert result_out.linked_id is not None
+        return SQLQueryRunResult(
+            columns=result_out.content.get("columns"),
+            rows=result_out.content.get("rows"),
+            result_id=result_out.result_id,
+            linked_id=result_out.linked_id,
+            created_at=result_out.created_at,
+        )
+
+    def evaluate(self, response: QueryOut) -> float:
+        scores: dict[str, float] = {}
+        sql_run_results = get_results_of_type(QueryResultType.SQL_QUERY_RUN_RESULT, response)
+        if len(sql_run_results) == 0:
+            return 0.0
+        sql_run_result_out = sql_run_results[0]
+        sql_run_result = self.result_out_to_sql_run_result(sql_run_result_out)
+
+        if self.expected_row_count is not None:
+            scores["expected_row_count"] = float(len(sql_run_result.rows) == self.expected_row_count)
+
+        if self.expected_col_names:
+            cols_present = len([col in sql_run_result.columns for col in self.expected_col_names])
+            scores["expected_col_names"] = cols_present * 1.0 / len(self.expected_col_names)
+
+        if self.expected_row_values:
+            rows_present = 0
+            for expected_row in self.expected_row_values:
+                expected_row_set = set(expected_row)
+                for row in sql_run_result.rows:
+                    row_set = set(row)
+                    if expected_row_set.issubset(row_set):
+                        rows_present += 1
+                        break
+            scores["expected_row_values"] = rows_present * 1.0 / len(self.expected_row_values)
+
+        return sum(val for val in scores.values()) / len(scores)
+
+    @model_validator(mode="after")
+    def check_any_evaluation_present(self) -> Self:
+        has_evaluation_present = (
+            bool(self.expected_col_names) or self.expected_row_count is not None or bool(self.expected_row_values)
+        )
+        if not has_evaluation_present:
+            raise ValueError("Must have at least one of expected_col_names, expected_row_count, expected_row_values")
+        return self
+
+
+class TestCase(BaseModel):
+    __test__ = False  # so pytest doesn't collect this as a test
+    test_name: str
+    query: str
+    evaluations: list[EvalBlockBase]
+
+    def run(self, client: TestClient, conversation_id: UUID):
+        evaluation_results: list[tuple[str, float]] = []
+        response = call_query_endpoint(client, conversation_id, self.query)
+        for evaluation in self.evaluations:
+            eval_score = evaluation.evaluate(response)
+            evaluation_results.append((evaluation.name, eval_score))
+        logger.warning(f"Scores for test '{self.test_name}':")
+        logger.warning(evaluation_results)
+        return evaluation_results
 
 
 @pytest_asyncio.fixture
@@ -39,35 +223,6 @@ def get_query_out_from_stream(lines: list[str]):
     return QueryOut.model_validate_json(lines[-2].lstrip("data: "))
 
 
-def evaluate_ai_message_content(generated_message: str, query: str, additional_eval_steps: list[str] | None = None):
-    """
-    Fails if the output is not relevant to the input. Accepts additional evaluation steps if needed.
-    """
-    test_case = LLMTestCase(input=query, actual_output=generated_message)
-    correctness_metric = GEval(
-        name="Relevance",
-        evaluation_steps=[
-            "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
-            *(additional_eval_steps or []),
-        ],
-        evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-    )
-
-    correctness_metric.measure(test_case)
-    assert correctness_metric.is_successful(), "\n".join(
-        [
-            f"score={correctness_metric.score}",
-            f"reason={correctness_metric.reason}",
-            f"{query=}",
-            f"{generated_message=}",
-        ]
-    )
-
-
-def filter_results(results: list[ResultOut], type: QueryResultType):
-    return [result for result in results if result.type == type.value]
-
-
 def call_query_endpoint(client: TestClient, conversation_id: UUID, query: str) -> QueryOut:
     body = {"message_options": {"secure_data": True}}
     with client.stream(
@@ -80,208 +235,195 @@ def call_query_endpoint(client: TestClient, conversation_id: UUID, query: str) -
     return q_out
 
 
-@pytest.mark.asyncio
-@pytest.mark.expensive
-@pytest.mark.usefixtures("user_info")  # to have a valid user in the db
-@pytest.mark.parametrize(
-    "query,expected_results",
-    [
-        (
-            "Show me some sample rows from one of the tables",
-            {
-                QueryResultType.SELECTED_TABLES: lambda x: len(x) == 1,
-                QueryResultType.SQL_QUERY_STRING_RESULT: lambda x: len(x) == 1,
-                QueryResultType.SQL_QUERY_RUN_RESULT: lambda x: len(x) == 1,
-                QueryResultType.CHART_GENERATION_RESULT: lambda x: len(x) == 0,
+sample_rows_test_case_1 = TestCase(
+    test_name="Sample Rows Test 1",
+    query="Show me some sample rows from one of the tables",
+    evaluations=[
+        EvalAIText(
+            eval_steps=[
+                "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
+                "The output may mention that it has obtained sample rows but it should not show them.",
+            ]
+        ),
+        EvalCountResult(
+            results_evals={
+                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.eq, number=1),
+                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=1),
+                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=1),
+                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
             },
         ),
-        (
-            "Show me some sample rows from only two of the tables",
-            {
-                QueryResultType.SELECTED_TABLES: lambda x: len(x) >= 1,
-                QueryResultType.SQL_QUERY_STRING_RESULT: lambda x: len(x) == 2,
-                QueryResultType.SQL_QUERY_RUN_RESULT: lambda x: len(x) == 2,
-                QueryResultType.CHART_GENERATION_RESULT: lambda x: len(x) == 0,
-            },
-        ),
-    ],
-)
-async def test_sample_rows(
-    client: TestClient,
-    sample_conversation: ConversationOut,
-    query: str,
-    expected_results: dict[QueryResultType, Callable[[list[ResultOut]], bool]],
-) -> None:
-    """Tests getting sample rows from one table, then from two tables"""
-    q_out = call_query_endpoint(client, conversation_id=sample_conversation.id, query=query)
-
-    ai_message, results = q_out.ai_message.message.content, q_out.ai_message.results
-    evaluate_ai_message_content(
-        ai_message,
-        query,
-        additional_eval_steps=["The output may mention that it has obtained sample rows but it should not show them."],
-    )
-
-    assert len(results) > 0
-    results_map: dict[QueryResultType, list[ResultOut]] = {}
-    for result_type, expected_results_check in expected_results.items():
-        filtered_results = filter_results(results, result_type)
-        assert expected_results_check(filtered_results), f"{result_type=}, {filtered_results=}"
-        results_map[result_type] = filtered_results
-
-    # Evaluate SQL query string result(s)
-    for sql_string_result in results_map[QueryResultType.SQL_QUERY_STRING_RESULT]:
-        generated_sql = cast(str, sql_string_result.content["sql"])
-        sql_string_test_case = LLMTestCase(input=query, actual_output=generated_sql)
-        sql_correctness_metric = GEval(
-            name="Correctness",
-            evaluation_steps=[
+        EvalSQLString(
+            metric_name="Correctness",
+            eval_steps=[
                 (
                     "Determine whether the actual output is an sql statement that, if executed, "
                     "shows some rows from a single table with a few columns"
                 )
             ],
-            evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-        )
+        ),
+    ],
+)
 
-        sql_correctness_metric.measure(sql_string_test_case)
-        assert sql_correctness_metric.score is not None and sql_correctness_metric.reason is not None
-        assert sql_correctness_metric.score > 0.5, f"{sql_correctness_metric.reason=}\n{sql_string_result=}\n{query=}"
-        logger.info(f"{sql_correctness_metric.score=}, {sql_correctness_metric.reason=}")
+sample_rows_test_case_2 = TestCase(
+    test_name="Sample Rows Test 2",
+    query="Show me some sample rows from only two of the tables",
+    evaluations=[
+        EvalAIText(
+            eval_steps=[
+                "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
+                "The output may mention that it has obtained sample rows but it should not show them.",
+            ]
+        ),
+        EvalCountResult(
+            results_evals={
+                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.ge, number=1),
+                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=2),
+                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=2),
+                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
+            },
+        ),
+        EvalSQLString(
+            metric_name="Correctness",
+            eval_steps=[
+                (
+                    "Determine whether the actual output is an sql statement that, if executed, "
+                    "shows some rows from a single table with a few columns"
+                )
+            ],
+        ),
+    ],
+)
 
 
 @pytest.mark.asyncio
 @pytest.mark.expensive
 @pytest.mark.usefixtures("user_info")  # to have a valid user in the db
-@pytest.mark.parametrize(
-    "query,expected_results",
-    [
-        (
-            "What are some example questions I can ask about this data source?",
-            {
-                QueryResultType.SELECTED_TABLES: lambda x: len(x) <= 2,  # shouldn't exceed 2 for this simple question
-                QueryResultType.SQL_QUERY_STRING_RESULT: lambda x: len(x) == 0,
-                QueryResultType.SQL_QUERY_RUN_RESULT: lambda x: len(x) == 0,
-                QueryResultType.CHART_GENERATION_RESULT: lambda x: len(x) == 0,
-            },
+@pytest.mark.parametrize("test_cases", [[sample_rows_test_case_1], [sample_rows_test_case_2]])
+async def test_sample_rows(client: TestClient, sample_conversation: ConversationOut, test_cases: list[TestCase]):
+    """Tests getting sample rows from one table, then from two tables"""
+    for test_case in test_cases:
+        test_case.run(client, sample_conversation.id)
+
+
+explorative_test_case_1 = TestCase(
+    test_name="Explorative Test 1",
+    query="What are some example questions I can ask about this data source?",
+    evaluations=[
+        EvalAIText(
+            eval_steps=[
+                "Determine whether the actual output is relevant to the input, while staying friendly and helpful."
+            ]
         ),
-        (
-            "What are some interesting tables in this data source?",
-            {
-                QueryResultType.SELECTED_TABLES: lambda x: len(x) <= 2,
-                QueryResultType.SQL_QUERY_STRING_RESULT: lambda x: len(x) == 0,
-                QueryResultType.SQL_QUERY_RUN_RESULT: lambda x: len(x) == 0,
-                QueryResultType.CHART_GENERATION_RESULT: lambda x: len(x) == 0,
+        EvalCountResult(
+            results_evals={
+                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.le, number=2),
+                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=0),
+                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=0),
+                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
             },
         ),
     ],
 )
-async def test_explorative(
-    client: TestClient,
-    sample_conversation: ConversationOut,
-    query: str,
-    expected_results: dict[QueryResultType, Callable[[list[ResultOut]], bool]],
-) -> None:
-    """Tests explorative questions"""
-    q_out = call_query_endpoint(client, conversation_id=sample_conversation.id, query=query)
 
-    ai_message, results = q_out.ai_message.message.content, q_out.ai_message.results
-    evaluate_ai_message_content(ai_message, query)
-    for result_type, expected_results_check in expected_results.items():
-        filtered_results = filter_results(results, result_type)
-        assert expected_results_check(filtered_results), f"{result_type=}, {filtered_results=}"
+explorative_test_case_2 = TestCase(
+    test_name="Explorative Test 2",
+    query="What are some interesting tables in this data source?",
+    evaluations=[
+        EvalAIText(
+            eval_steps=[
+                "Determine whether the actual output is relevant to the input, while staying friendly and helpful."
+            ]
+        ),
+        EvalCountResult(
+            results_evals={
+                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.le, number=2),
+                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=0),
+                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=0),
+                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
+            },
+        ),
+    ],
+)
 
 
 @pytest.mark.asyncio
 @pytest.mark.expensive
 @pytest.mark.usefixtures("user_info")  # to have a valid user in the db
-async def test_followup_question(client: TestClient, sample_conversation: ConversationOut) -> None:
+@pytest.mark.parametrize("test_cases", [[explorative_test_case_1], [explorative_test_case_2]])
+async def test_explorative(
+    client: TestClient, sample_conversation: ConversationOut, test_cases: list[TestCase]
+) -> None:
+    """Tests explorative questions"""
+    for test_case in test_cases:
+        test_case.run(client, sample_conversation.id)
+
+
+followup_question_test_case_part_1 = TestCase(
+    test_name="Followup Question Test Part 1",
+    query='Who are the actors in the film "ZORRO ARK"?',
+    evaluations=[
+        EvalAIText(
+            eval_steps=[
+                "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
+                "The output may mention that it has obtained actor names and that they can be viewed, but it should not actually show them.",
+                "Vagueness is OK.",
+            ]
+        ),
+        EvalCountResult(
+            results_evals={
+                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.le, number=3),
+                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=1),
+                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=1),
+                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
+            },
+        ),
+        EvalSQLRun(
+            expected_row_count=3,
+            expected_col_names=["first_name", "last_name"],
+            expected_row_values=[["IAN", "TANDY"], ["NICK", "DEGENERES"], ["LISA", "MONROE"]],
+        ),
+    ],
+)
+
+followup_question_test_case_part_2 = TestCase(
+    test_name="Followup Question Test Part 2",
+    query="How much revenue did that movie generate?",
+    evaluations=[
+        EvalAIText(
+            eval_steps=[
+                "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
+                "If the exact revenue is not shown, then the output has done well.",
+                "The output may mention that it has calculated the revenue and that it can be viewed in the results.",
+                "Vagueness is OK.",
+            ]
+        ),
+        EvalCountResult(
+            results_evals={
+                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.le, number=3),
+                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=1),
+                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=1),
+                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
+            },
+        ),
+        EvalSQLRun(
+            expected_row_count=1,
+            expected_row_values=[[214.69]],
+        ),
+    ],
+)
+
+
+@pytest.mark.asyncio
+@pytest.mark.expensive
+@pytest.mark.usefixtures("user_info")  # to have a valid user in the db
+@pytest.mark.parametrize("test_cases", [[followup_question_test_case_part_1, followup_question_test_case_part_2]])
+async def test_followup_question(
+    client: TestClient, sample_conversation: ConversationOut, test_cases: list[TestCase]
+) -> None:
     """
     Asks a specific question about a movie, then asks a followup question about the movie without specifying the movie
     name in the second question
     """
-    first_query = 'Who are the actors in the film "ZORRO ARK"?'  # IAN TANDY - NICK DEGENERES - LISA MONROE
-    q_out = call_query_endpoint(client, conversation_id=sample_conversation.id, query=first_query)
-    ai_message, results = q_out.ai_message.message.content, q_out.ai_message.results
-    evaluate_ai_message_content(
-        ai_message,
-        first_query,
-        additional_eval_steps=[
-            "The output may mention that it has obtained actor names and that they can be viewed, but it should not actually show them.",
-            "Vagueness is OK.",
-        ],
-    )
-
-    expected_results = {
-        QueryResultType.SELECTED_TABLES: lambda x: len(x) <= 3,
-        QueryResultType.SQL_QUERY_STRING_RESULT: lambda x: len(x) == 1,
-        QueryResultType.SQL_QUERY_RUN_RESULT: lambda x: len(x) == 1,
-        QueryResultType.CHART_GENERATION_RESULT: lambda x: len(x) == 0,
-    }
-    results_map: dict[QueryResultType, list[ResultOut]] = {}
-    for result_type, expected_results_check in expected_results.items():
-        filtered_results = filter_results(results, result_type)
-        assert expected_results_check(filtered_results), f"{result_type=}, {filtered_results=}"
-        results_map[result_type] = filtered_results
-
-    sql_run_result_out = results_map[QueryResultType.SQL_QUERY_RUN_RESULT][0]
-    assert sql_run_result_out.linked_id is not None
-
-    sql_run_result = SQLQueryRunResult(
-        columns=sql_run_result_out.content.get("columns"),
-        rows=sql_run_result_out.content.get("rows"),
-        result_id=sql_run_result_out.result_id,
-        linked_id=sql_run_result_out.linked_id,
-        created_at=sql_run_result_out.created_at,
-    )
-
-    assert len(sql_run_result.rows) == 3, f"{sql_run_result.rows=}"
-    assert all(col in ["first_name", "last_name"] for col in sql_run_result.columns), f"{sql_run_result.columns=}"
-    expected_rows = [["IAN", "TANDY"], ["NICK", "DEGENERES"], ["LISA", "MONROE"]]
-    assert all(
-        row in expected_rows or reversed(row) in expected_rows for row in sql_run_result.rows
-    ), f"{sql_run_result.rows=}"
-
-    ######################
-    # Follow up question #
-    ######################
-    second_query = "How much revenue did that movie generate?"  # 214.69
-    q_out = call_query_endpoint(client, conversation_id=sample_conversation.id, query=second_query)
-    ai_message, results = q_out.ai_message.message.content, q_out.ai_message.results
-    evaluate_ai_message_content(
-        ai_message,
-        second_query,
-        additional_eval_steps=[
-            "If the exact revenue is not shown, then the output has done well.",
-            "The output may mention that it has calculated the revenue and that it can be viewed in the results.",
-            "Vagueness is OK.",
-        ],
-    )
-
-    expected_results = {
-        QueryResultType.SELECTED_TABLES: lambda x: len(x) <= 3,
-        QueryResultType.SQL_QUERY_STRING_RESULT: lambda x: len(x) == 1,
-        QueryResultType.SQL_QUERY_RUN_RESULT: lambda x: len(x) == 1,
-        QueryResultType.CHART_GENERATION_RESULT: lambda x: len(x) == 0,
-    }
-    results_map: dict[QueryResultType, list[ResultOut]] = {}
-    for result_type, expected_results_check in expected_results.items():
-        filtered_results = filter_results(results, result_type)
-        assert expected_results_check(filtered_results), f"{result_type=}, {filtered_results=}"
-        results_map[result_type] = filtered_results
-
-    sql_run_result_out = results_map[QueryResultType.SQL_QUERY_RUN_RESULT][0]
-    assert sql_run_result_out.linked_id is not None
-
-    sql_run_result = SQLQueryRunResult(
-        columns=sql_run_result_out.content.get("columns"),
-        rows=sql_run_result_out.content.get("rows"),
-        result_id=sql_run_result_out.result_id,
-        linked_id=sql_run_result_out.linked_id,
-        created_at=sql_run_result_out.created_at,
-    )
-
-    assert len(sql_run_result.rows) == 1, f"{sql_run_result.rows=}"
-    assert any(
-        entry == "214.69" or entry == 214.69 for row in sql_run_result.rows for entry in row
-    ), f"{sql_run_result.rows=}"
+    for test_case in test_cases:
+        test_case.run(client, sample_conversation.id)
