@@ -57,7 +57,6 @@ export function useLogin({ onLogin }: { onLogin: () => void }) {
       enqueueSnackbar("Authentication failed", { variant: "error" });
     },
     onSuccess() {
-      queryClient.clear();
       queryClient.setQueryData(isAuthenticatedQuery().queryKey, true);
       onLogin();
     },
@@ -74,7 +73,6 @@ export function useLogout({ onLogout }: { onLogout: () => void }) {
       enqueueSnackbar("Something went wrong", { variant: "error" });
     },
     onSuccess() {
-      queryClient.clear();
       queryClient.setQueryData(isAuthenticatedQuery().queryKey, false);
       onLogout();
     },
