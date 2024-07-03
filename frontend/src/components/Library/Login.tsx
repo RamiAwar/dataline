@@ -1,22 +1,20 @@
 import { useState } from "react";
 import logo from "@/assets/images/logo_rounded_sm.png";
-import { useAuth } from "@/providers/auth/useAuth";
 import { useNavigate } from "react-router";
 import { Routes } from "@/router";
+import { useLogin } from "@/hooks/auth";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-
-  if (isAuthenticated) {
-    navigate(Routes.Root);
-  }
+  const { mutate: login } = useLogin({
+    onLogin: () => navigate(Routes.Root),
+  });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(username, password);
+    await login({ username, password });
   };
 
   return (
@@ -72,6 +70,7 @@ export default function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
                   autoComplete="current-password"
                   required
                   className="block w-full rounded-md border-0 bg-white/5 py-1.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
