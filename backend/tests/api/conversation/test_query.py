@@ -27,7 +27,7 @@ def evaluate_message_content(
     eval_steps: list[str],
     raise_if_fail: bool = False,
     metric_name: str = "Relevance",
-    eval_params: list[LLMTestCaseParams] = [LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    eval_params: list[LLMTestCaseParams] | None = None,
 ) -> GEval:
     """
     Args:
@@ -38,6 +38,8 @@ def evaluate_message_content(
     - metric_name: Name of the evaluation metric. I think this affects the score, need to double check
     - eval_params: the parameters that are relevant for evaluation
     """
+    if eval_params is None:
+        eval_params = [LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT]
     test_case = LLMTestCase(input=query, actual_output=generated_message)
     correctness_metric = GEval(name=metric_name, evaluation_steps=eval_steps, evaluation_params=eval_params)
 
@@ -54,6 +56,30 @@ def evaluate_message_content(
     return correctness_metric
 
 
+def get_results_of_type(result_type: QueryResultType, response: QueryOut):
+    return [result for result in response.ai_message.results if result.type == result_type.value]
+
+
+def get_query_out_from_stream(lines: list[str]):
+    assert len(lines) >= 3
+    assert lines[-3] == "event: stored_messages_event"
+    assert lines[-2].startswith("data: ")
+
+    return QueryOut.model_validate_json(lines[-2].lstrip("data: "))
+
+
+def call_query_endpoint(client: TestClient, conversation_id: UUID, query: str) -> QueryOut:
+    body = {"message_options": {"secure_data": True}}
+    with client.stream(
+        method="post", url=f"/conversation/{conversation_id}/query", params={"query": query}, json=body
+    ) as response:
+        assert response.status_code == 200
+        q_out = get_query_out_from_stream(list(response.iter_lines()))
+
+    assert q_out.human_message.content == query
+    return q_out
+
+
 EvalName = str
 
 
@@ -67,10 +93,6 @@ class EvalBlockBase(ABC, BaseModel):
     @abstractmethod
     def evaluate(self, response: QueryOut) -> float:
         raise NotImplementedError
-
-
-def get_results_of_type(result_type: QueryResultType, response: QueryOut):
-    return [result for result in response.ai_message.results if result.type == result_type.value]
 
 
 class EvalAIText(EvalBlockBase):
@@ -215,25 +237,8 @@ async def user_info(client: TestClient) -> dict[str, str]:
     return user_in
 
 
-def get_query_out_from_stream(lines: list[str]):
-    assert len(lines) >= 3
-    assert lines[-3] == "event: stored_messages_event"
-    assert lines[-2].startswith("data: ")
-
-    return QueryOut.model_validate_json(lines[-2].lstrip("data: "))
-
-
-def call_query_endpoint(client: TestClient, conversation_id: UUID, query: str) -> QueryOut:
-    body = {"message_options": {"secure_data": True}}
-    with client.stream(
-        method="post", url=f"/conversation/{conversation_id}/query", params={"query": query}, json=body
-    ) as response:
-        assert response.status_code == 200
-        q_out = get_query_out_from_stream(list(response.iter_lines()))
-
-    assert q_out.human_message.content == query
-    return q_out
-
+###################################### testing sample rows ######################################
+### Tests getting sample rows from one table, then from two tables
 
 sample_rows_test_case_1 = TestCase(
     test_name="Sample Rows Test 1",
@@ -295,16 +300,8 @@ sample_rows_test_case_2 = TestCase(
     ],
 )
 
-
-@pytest.mark.asyncio
-@pytest.mark.expensive
-@pytest.mark.usefixtures("user_info")  # to have a valid user in the db
-@pytest.mark.parametrize("test_cases", [[sample_rows_test_case_1], [sample_rows_test_case_2]])
-async def test_sample_rows(client: TestClient, sample_conversation: ConversationOut, test_cases: list[TestCase]):
-    """Tests getting sample rows from one table, then from two tables"""
-    for test_case in test_cases:
-        test_case.run(client, sample_conversation.id)
-
+###################################### test explorative questions ######################################
+### Tests explorative questions
 
 explorative_test_case_1 = TestCase(
     test_name="Explorative Test 1",
@@ -346,18 +343,9 @@ explorative_test_case_2 = TestCase(
     ],
 )
 
-
-@pytest.mark.asyncio
-@pytest.mark.expensive
-@pytest.mark.usefixtures("user_info")  # to have a valid user in the db
-@pytest.mark.parametrize("test_cases", [[explorative_test_case_1], [explorative_test_case_2]])
-async def test_explorative(
-    client: TestClient, sample_conversation: ConversationOut, test_cases: list[TestCase]
-) -> None:
-    """Tests explorative questions"""
-    for test_case in test_cases:
-        test_case.run(client, sample_conversation.id)
-
+###################################### test followup question ######################################
+### Asks a specific question about a movie, then asks a followup question about the movie without specifying the movie
+### name in the second question
 
 followup_question_test_case_part_1 = TestCase(
     test_name="Followup Question Test Part 1",
@@ -417,13 +405,16 @@ followup_question_test_case_part_2 = TestCase(
 @pytest.mark.asyncio
 @pytest.mark.expensive
 @pytest.mark.usefixtures("user_info")  # to have a valid user in the db
-@pytest.mark.parametrize("test_cases", [[followup_question_test_case_part_1, followup_question_test_case_part_2]])
-async def test_followup_question(
-    client: TestClient, sample_conversation: ConversationOut, test_cases: list[TestCase]
-) -> None:
-    """
-    Asks a specific question about a movie, then asks a followup question about the movie without specifying the movie
-    name in the second question
-    """
+@pytest.mark.parametrize(
+    "test_cases",
+    [
+        [sample_rows_test_case_1],
+        [sample_rows_test_case_2],
+        [explorative_test_case_1],
+        [explorative_test_case_2],
+        [followup_question_test_case_part_1, followup_question_test_case_part_2],
+    ],
+)
+async def test_llm(client: TestClient, sample_conversation: ConversationOut, test_cases: list[TestCase]):
     for test_case in test_cases:
         test_case.run(client, sample_conversation.id)
