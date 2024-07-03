@@ -3,17 +3,6 @@ import json
 import operator
 from typing import Annotated, Any, List, Optional, Sequence, Type, TypedDict, cast
 
-from fastapi.encoders import jsonable_encoder
-from langchain_community.utilities.sql_database import SQLDatabase
-from langchain_core.callbacks import CallbackManagerForToolRun
-from langchain_core.messages import BaseMessage, ToolMessage
-from langchain_core.pydantic_v1 import BaseModel
-from langchain_core.pydantic_v1 import BaseModel as BaseModelV1
-from langchain_core.pydantic_v1 import Field
-from langchain_core.tools import BaseTool, BaseToolkit
-from langgraph.prebuilt import ToolExecutor
-from sqlalchemy import Result
-
 from dataline.models.llm_flow.schema import (
     ChartGenerationResult,
     QueryOptions,
@@ -28,6 +17,16 @@ from dataline.services.llm_flow.llm_calls.chart_generator import (
     ChartType,
     GenerateChartCall,
 )
+from fastapi.encoders import jsonable_encoder
+from langchain_community.utilities.sql_database import SQLDatabase
+from langchain_core.callbacks import CallbackManagerForToolRun
+from langchain_core.messages import BaseMessage, ToolMessage
+from langchain_core.pydantic_v1 import BaseModel
+from langchain_core.pydantic_v1 import BaseModel as BaseModelV1
+from langchain_core.pydantic_v1 import Field
+from langchain_core.tools import BaseTool, BaseToolkit
+from langgraph.prebuilt import ToolExecutor
+from sqlalchemy import Result
 
 
 class QueryGraphStateUpdate(TypedDict):
@@ -293,9 +292,12 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
             )
             response.is_secure = state.options.secure_data  # return whether or not generated securely
             results.append(response)
+
+        # If errors occur, don't want to send bad results
+        # TODO: Might be good to send SQL result with error status?
+        # That would help users debug things and know how to correct their query
+        # Imagine an SQL query result with a warning symbol that gets overwritten if corrected
         except ChartValidationRunException as e:
-            # If chart data validation error encountered, remove sql query results from streamed results
-            results = [result for result in results if not isinstance(result, SQLQueryStringResult)]
             tool_message = ToolMessage(content=f"ERROR: {e.message}", name=self.name, tool_call_id=call_id)
             messages.append(tool_message)
             return state_update(messages=messages)
@@ -487,6 +489,7 @@ class ChartGeneratorTool(StateUpdaterTool):
         res = generate_chart_call.extract()
 
         # Find the last data result
+        # TODO: WHY IS THIS NOT TRIGGERING?
         last_data_result = None
         for result in reversed(state.results):
             if isinstance(result, SQLQueryRunResult) and result.for_chart:

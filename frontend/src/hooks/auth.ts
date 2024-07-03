@@ -7,8 +7,6 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { queryClient } from "@/queryClient";
 import { userProfileQuery } from "./settings";
-import { Routes } from "@/router";
-import { redirect } from "react-router-dom";
 
 export function hasAuthQuery() {
   // to check if authentication is enabled on the app
