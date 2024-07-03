@@ -53,11 +53,13 @@ const app_routes: RouteObject[] = [
   {
     path: Routes.Login,
     element: <Login />,
+    // loader runs before rendering components. if the user is logged in, redirect to root
     loader: async () => (await fetchAuthenticated()) && redirect(Routes.Root),
   },
   {
     path: Routes.Root,
     element: <Main />,
+    // loader runs before rendering components. if the user isnt logged in, redirect to login
     loader: async () => !(await fetchAuthenticated()) && redirect(Routes.Login),
     children: [
       {
