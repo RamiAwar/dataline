@@ -1,8 +1,9 @@
 import sys
 from pathlib import Path
 
-from dataline.utils.appdirs import user_data_dir
 from pydantic_settings import BaseSettings
+
+from dataline.utils.appdirs import user_data_dir
 
 # https://pyinstaller.org/en/v6.6.0/runtime-information.html
 IS_BUNDLED = bool(getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"))
@@ -28,6 +29,7 @@ class Config(BaseSettings):
     sample_dvdrental_path: str = str(Path(__file__).parent.parent / "samples" / "dvd_rental.sqlite3")
     sample_netflix_path: str = str(Path(__file__).parent.parent / "samples" / "netflix.sqlite3")
     sample_titanic_path: str = str(Path(__file__).parent.parent / "samples" / "titanic.sqlite3")
+    sample_spotify_path: str = str(Path(__file__).parent.parent / "samples" / "spotify.sqlite3")
 
     default_model: str = "gpt-3.5-turbo"
     templates_path: Path = Path(__file__).parent.parent / "templates"

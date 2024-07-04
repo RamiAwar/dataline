@@ -85,7 +85,7 @@ function getResultGroups(results: IResultType[]) {
       if (groupIndex !== -1) {
         groups[groupIndex].push(result);
       } else {
-        console.log("Could not find group for result", result);
+        unlinkedGroup.push(result);
       }
     }
   });
@@ -181,12 +181,19 @@ export const MessageResultRenderer = ({
         <div className="flex flex-col gap-1 md:gap-3">
           {unlinkedGroup.map(
             (result) =>
-              result.type === "SELECTED_TABLES" && (
+              (result.type === "SELECTED_TABLES" && (
                 <SelectedTablesDisplay
                   tables={result.content.tables}
                   key={`message-${messageId}-selectedtables-${result.result_id}`}
                 />
-              )
+              )) ||
+              (result.type === "SQL_QUERY_RUN_RESULT" && (
+                <DynamicTable
+                  key={`message-${messageId}-table-${result.linked_id}`}
+                  data={result.content}
+                  initialCreatedAt={new Date(result.created_at as string)}
+                />
+              ))
           )}
         </div>
       )}
