@@ -1,4 +1,4 @@
-import DatabaseDialectImage from "./DatabaseDialectImage";
+import ConnectionImage from "./DatabaseDialectImage";
 import { useState } from "react";
 import { IConnection, IConversation } from "../Library/types";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
@@ -42,10 +42,13 @@ export const ConnectionSelector = () => {
                 className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border px-2 py-2 border-gray-700 sm:aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-full sm:w-auto sm:max-w-xs"
                 onClick={() => selectConnection(connection)}
               >
-                <div className="hidden sm:flex overflow-hidden w-full justify-center items-center sm:mt-4">
-                  <DatabaseDialectImage databaseDialect={connection.dialect} />
+                <div className="hidden sm:flex overflow-hidden w-full h-full justify-center items-center sm:mt-4">
+                  <ConnectionImage
+                    databaseDialect={connection.dialect}
+                    name={connection.name}
+                  />
                 </div>
-                <div className="w-full flex justify-center items-center gap-2 text-gray-50  sm:-mt-2 ">
+                <div className="w-full flex justify-center items-center gap-2 text-gray-50  sm:-mt-2">
                   <div className="h-full lg:h-fit flex flex-col justify-center md:items-start w-full ">
                     <div className="text-xs md:text-sm xxl:text-md font-normal text-gray-400">
                       {connection.dialect.charAt(0).toUpperCase() +
