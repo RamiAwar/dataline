@@ -65,6 +65,8 @@ export const Conversation = () => {
   );
 
   const messageListRef = useRef<HTMLDivElement | null>(null);
+  const expandingInputRef = useRef<HTMLTextAreaElement | null>(null);
+
   const currConversation = conversationsData?.find(
     (conv) => conv.id === params.conversationId
   );
@@ -175,32 +177,35 @@ export const Conversation = () => {
       </Transition>
 
       <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center backdrop-blur-md pt-0">
-        {messages.length === 0 && (
+        {messages.length === 0 && !currentConversationIsQuerying && (
           <div className="w-full md:max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-2 justify-between px-2 sm:px-3 my-4">
             {templateMessages.map((template) => (
               <MessageTemplate
                 key={template.title}
                 title={template.title}
                 text={template.text}
-                onClick={() =>
+                onClick={() => {
                   sendMessageMutation({
                     message: template.message,
                     conversationId: params.conversationId ?? "",
-                  })
-                }
+                  });
+                  expandingInputRef.current?.focus();
+                }}
               />
             ))}
           </div>
         )}
         <div className="w-full md:max-w-3xl flex flex-col justify-center items-center pb-4 ml-2 mr-2 mb-2 pl-2 pr-2">
           <ExpandingInput
-            onSubmit={(message: string) =>
+            onSubmit={(message: string) => {
               sendMessageMutation({
                 message,
                 conversationId: params.conversationId ?? "",
-              })
-            }
+              });
+              expandingInputRef.current?.focus();
+            }}
             disabled={currentConversationIsQuerying}
+            ref={expandingInputRef}
           />
           <p className="text-gray-400 text-sm">
             Current Connection: {currConnection?.name}
