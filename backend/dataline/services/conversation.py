@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import Depends
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from sqlalchemy import text
 
 from dataline.models.conversation.schema import (
     ConversationOut,
@@ -25,9 +26,8 @@ from dataline.models.message.schema import (
     MessageWithResultsOut,
     QueryOut,
 )
-from dataline.models.result.model import ResultModel
 from dataline.models.result.schema import ResultUpdate
-from dataline.repositories.base import AsyncSession
+from dataline.repositories.base import AsyncSession, SessionCreator
 from dataline.repositories.conversation import (
     ConversationCreate,
     ConversationRepository,
@@ -120,18 +120,6 @@ class ConversationService:
         )
         history = await self.get_conversation_history(session, conversation_id)
 
-        # Store human message and final AI message without flushing
-        human_message = await self.message_repo.create(
-            session,
-            MessageCreate(
-                role=BaseMessageType.HUMAN.value,
-                content=query,
-                conversation_id=conversation_id,
-                options=MessageOptions(secure_data=secure_data),
-            ),
-            flush=False,
-        )
-
         messages: list[BaseMessage] = []
         results: list[ResultType] = []
         # Perform query and execute graph
@@ -169,45 +157,65 @@ class ConversationService:
         else:
             raise Exception("No AI message found in conversation")
 
-        # Store final AI message in history
-        stored_ai_message = await self.message_repo.create(
-            session,
-            MessageCreate(
-                role=BaseMessageType.AI.value,
-                content=str(last_ai_message.content),
-                conversation_id=conversation_id,
-                options=MessageOptions(secure_data=secure_data),
-            ),
-            flush=True,
-        )
-
-        # Store results and final message in database
-        stored_results: list[ResultModel] = []
-        for result in results:
-            if isinstance(result, StorableResultMixin):
-                stored_result = await result.store_result(session, self.result_repo, stored_ai_message.id)
-                stored_results.append(stored_result)
-
-        # Go over stored results, replace linked_id with the stored result_id
-        for result in results:
-            if hasattr(result, "linked_id"):
-                # Find corresponding result with this ephemeral ID
-                linked_result = cast(
-                    StorableResultMixin,
-                    next(
-                        (r for r in results if r.ephemeral_id == getattr(result, "linked_id")),
-                        None,
+        # To make db locks less frequent
+        async with SessionCreator.begin() as write_session:
+            await write_session.execute(text("PRAGMA foreign_keys=ON"))
+            try:
+                # Store human message and final AI message without flushing
+                human_message = await self.message_repo.create(
+                    write_session,
+                    MessageCreate(
+                        role=BaseMessageType.HUMAN.value,
+                        content=query,
+                        conversation_id=conversation_id,
+                        options=MessageOptions(secure_data=secure_data),
                     ),
+                    flush=False,
                 )
-                # Update linked_id with the stored result_id
-                if linked_result:
-                    # Update result
-                    setattr(result, "linked_id", linked_result.result_id)
 
-                    if isinstance(result, StorableResultMixin) and result.result_id:
-                        await self.result_repo.update_by_uuid(
-                            session, result.result_id, ResultUpdate(linked_id=linked_result.result_id)
+                # Store final AI message in history
+                stored_ai_message = await self.message_repo.create(
+                    write_session,
+                    MessageCreate(
+                        role=BaseMessageType.AI.value,
+                        content=str(last_ai_message.content),
+                        conversation_id=conversation_id,
+                        options=MessageOptions(secure_data=secure_data),
+                    ),
+                    flush=True,
+                )
+
+                # Store results and final message in database
+                for result in results:
+                    if isinstance(result, StorableResultMixin):
+                        await result.store_result(write_session, self.result_repo, stored_ai_message.id)
+
+                # Go over stored results, replace linked_id with the stored result_id
+                for result in results:
+                    if hasattr(result, "linked_id"):
+                        # Find corresponding result with this ephemeral ID
+                        linked_result = cast(
+                            StorableResultMixin,
+                            next(
+                                (r for r in results if r.ephemeral_id == getattr(result, "linked_id")),
+                                None,
+                            ),
                         )
+                        # Update linked_id with the stored result_id
+                        if linked_result:
+                            # Update result
+                            setattr(result, "linked_id", linked_result.result_id)
+
+                            if isinstance(result, StorableResultMixin) and result.result_id:
+                                await self.result_repo.update_by_uuid(
+                                    write_session, result.result_id, ResultUpdate(linked_id=linked_result.result_id)
+                                )
+                # Commit only if no exception occurs
+                await write_session.commit()
+            except Exception:
+                # If any exception encountered, rollback all changes
+                await write_session.rollback()
+                raise
 
         # Render renderable results
         serialized_results = [
