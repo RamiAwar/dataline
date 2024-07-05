@@ -66,7 +66,7 @@ But you can still influence the direction we go in. We're building this for you,
 
 With a lot more coming soon. You can still influence what we build, so if you're a user and you're down for it, we'd love to interview you! Book some time with one of us here:
 - [Rami](https://calendly.com/ramiawar/quick)
-
+- [Anthony](https://calendly.com/anthonymalkoun)
 
 ## Getting started
 
