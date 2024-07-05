@@ -31,18 +31,18 @@ export const ConnectionSelector = () => {
   return (
     <div className="bg-gray-900 w-full h-screen relative flex flex-col sm:-mt-16 lg:mt-0 sm:justify-center">
       <div className="flex flex-col justify-center items-center lg:mt-0">
-        <div className="w-full sm:w-1/2 md:w-3/4 rounded-xl p-6">
+        <div className="w-full sm:w-3/4 md:w-3/4 rounded-xl p-6">
           <div className="text-gray-50 text-md md:text-2xl font-semibold">
             Select a connection
           </div>
-          <div className="w-full grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 mt-4">
+          <div className="w-full grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 mt-4">
             {data?.connections?.map((connection) => (
               <div
                 key={connection.id}
-                className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border px-2 py-2 border-gray-700 sm:aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-full sm:w-auto sm:max-w-xs"
+                className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border px-2 py-2 border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-auto max-w-xs"
                 onClick={() => selectConnection(connection)}
               >
-                <div className="hidden sm:flex overflow-hidden w-full h-full justify-center items-center sm:mt-4">
+                <div className="flex overflow-hidden w-full h-full justify-center items-center sm:mt-4">
                   <ConnectionImage
                     databaseDialect={connection.dialect}
                     name={connection.name}
@@ -77,11 +77,11 @@ export const ConnectionSelector = () => {
             ))}
 
             <div
-              className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border px-2 py-2 border-gray-700 sm:aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-full sm:w-auto sm:max-w-xs"
+              className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border px-2 py-2 border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-full sm:w-auto sm:max-w-xs"
               onClick={createConnection}
             >
               {/* Item to add new connection */}
-              <div className="hidden sm:flex overflow-hidden w-full justify-center items-center sm:mt-4">
+              <div className="flex overflow-hidden w-full justify-center items-center sm:mt-4">
                 <svg
                   className="h-full w-full text-gray-200"
                   stroke="currentColor"
