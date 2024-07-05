@@ -158,7 +158,7 @@ class ConversationService:
 
         # Store human message and final AI message without flushing
         human_message = await self.message_repo.create(
-            write_session,
+            session,
             MessageCreate(
                 role=BaseMessageType.HUMAN.value,
                 content=query,
@@ -170,7 +170,7 @@ class ConversationService:
 
         # Store final AI message in history
         stored_ai_message = await self.message_repo.create(
-            write_session,
+            session,
             MessageCreate(
                 role=BaseMessageType.AI.value,
                 content=str(last_ai_message.content),
@@ -183,7 +183,7 @@ class ConversationService:
         # Store results and final message in database
         for result in results:
             if isinstance(result, StorableResultMixin):
-                await result.store_result(write_session, self.result_repo, stored_ai_message.id)
+                await result.store_result(session, self.result_repo, stored_ai_message.id)
 
         # Go over stored results, replace linked_id with the stored result_id
         for result in results:
@@ -203,7 +203,7 @@ class ConversationService:
 
                     if isinstance(result, StorableResultMixin) and result.result_id:
                         await self.result_repo.update_by_uuid(
-                            write_session, result.result_id, ResultUpdate(linked_id=linked_result.result_id)
+                            session, result.result_id, ResultUpdate(linked_id=linked_result.result_id)
                         )
 
         # Render renderable results
