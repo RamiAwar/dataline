@@ -25,7 +25,6 @@ from dataline.models.message.schema import (
     MessageWithResultsOut,
     QueryOut,
 )
-from dataline.models.result.model import ResultModel
 from dataline.models.result.schema import ResultUpdate
 from dataline.repositories.base import AsyncSession
 from dataline.repositories.conversation import (
@@ -120,18 +119,6 @@ class ConversationService:
         )
         history = await self.get_conversation_history(session, conversation_id)
 
-        # Store human message and final AI message without flushing
-        human_message = await self.message_repo.create(
-            session,
-            MessageCreate(
-                role=BaseMessageType.HUMAN.value,
-                content=query,
-                conversation_id=conversation_id,
-                options=MessageOptions(secure_data=secure_data),
-            ),
-            flush=False,
-        )
-
         messages: list[BaseMessage] = []
         results: list[ResultType] = []
         # Perform query and execute graph
@@ -169,6 +156,18 @@ class ConversationService:
         else:
             raise Exception("No AI message found in conversation")
 
+        # Store human message and final AI message without flushing
+        human_message = await self.message_repo.create(
+            session,
+            MessageCreate(
+                role=BaseMessageType.HUMAN.value,
+                content=query,
+                conversation_id=conversation_id,
+                options=MessageOptions(secure_data=secure_data),
+            ),
+            flush=False,
+        )
+
         # Store final AI message in history
         stored_ai_message = await self.message_repo.create(
             session,
@@ -182,11 +181,9 @@ class ConversationService:
         )
 
         # Store results and final message in database
-        stored_results: list[ResultModel] = []
         for result in results:
             if isinstance(result, StorableResultMixin):
-                stored_result = await result.store_result(session, self.result_repo, stored_ai_message.id)
-                stored_results.append(stored_result)
+                await result.store_result(session, self.result_repo, stored_ai_message.id)
 
         # Go over stored results, replace linked_id with the stored result_id
         for result in results:
