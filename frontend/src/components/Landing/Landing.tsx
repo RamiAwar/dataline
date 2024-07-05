@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { BackgroundLayout } from "@components/Layouts/BackgroundLayout";
 
-import headline_image from "@/assets/images/headline_image.avif";
+import headline_image from "@/assets/images/headline_image.png";
 import demo_gif from "@/assets/images/demo.gif";
 import data_security_image from "@/assets/images/data_security.avif";
 import ReactGA from "react-ga4";
