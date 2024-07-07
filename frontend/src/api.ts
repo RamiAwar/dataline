@@ -79,7 +79,7 @@ const createSampleConnection = async (
 const createFileConnection = async (
   file: File,
   name: string,
-  type: "sqlite" | "csv"
+  type: "sqlite" | "csv" | "sas7bdat"
 ): Promise<ConnectResult> => {
   const formData = new FormData();
   formData.append("file", file);

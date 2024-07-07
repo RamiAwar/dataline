@@ -1,5 +1,5 @@
 files: ^backend/
-exclude: 'docs|scripts|node_modules|\.git|\.tox|\.idea|min\.css|.*\.js|.*\.csv|.*\.svg|^frontend/packages/old|pnpm-lock\.yaml'
+exclude: 'docs|scripts|node_modules|\.git|\.tox|\.idea|min\.css|.*\.js|.*\.csv|.*\.sas7bdat|.*\.svg|^frontend/packages/old|pnpm-lock\.yaml'
 default_stages: [commit]
 fail_fast: false
 

@@ -75,6 +75,11 @@ async def connect_db_from_file(
         connection = await connection_service.create_csv_connection(session, file, name)
         return SuccessResponse(data=connection)
 
+    elif type == FileConnectionType.sas7bdat:
+        # Convert sas7bdat to SQLite and create connection
+        # TODO: Handle pandas invalid sas7bdat error and forward to user
+        connection = await connection_service.create_sas7bdat_connection(session, file, name)
+        return SuccessResponse(data=connection)
 
 @router.get("/connection/{connection_id}")
 async def get_connection(

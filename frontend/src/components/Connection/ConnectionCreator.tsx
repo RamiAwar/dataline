@@ -128,7 +128,7 @@ const FileDragAndDrop = ({
 };
 
 const ConnectionCreator = ({ name = null }: { name: string | null }) => {
-  type RadioValue = "database" | "sqlite" | "csv" | null;
+  type RadioValue = "database" | "sqlite" | "csv" | "sas7bdat" | null;
   const [selectedRadio, setSelectedRadio] = useState<RadioValue>(null);
   const [dsn, setDsn] = useState<string | null>(null);
   const [file, setFile] = useState<File>();
@@ -161,7 +161,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
     );
   };
 
-  const handleFileCreate = async (type: "sqlite" | "csv") => {
+  const handleFileCreate = async (type: "sqlite" | "csv" | "sas7bdat") => {
     if (!file) {
       enqueueSnackbar({
         variant: "info",
@@ -225,6 +225,10 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
             <Radio value="csv" color="white" />
             <Label className="cursor-pointer">CSV file</Label>
           </RadioField>
+          <RadioField>
+            <Radio value="sas7bdat" color="white" />
+            <Label className="cursor-pointer">sas7bdat file</Label>
+          </RadioField>
         </RadioGroup>
       </Fieldset>
       <div className="mt-10 max-w-2xl">
@@ -266,6 +270,21 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
           <div>
             <Field>
               <Label>CSV file</Label>
+              <FileDragAndDrop setFile={setFile} currentFile={file} />
+            </Field>
+            <Button
+              className="cursor-pointer mt-4"
+              onClick={() => handleFileCreate(selectedRadio)}
+              disabled={isFilePending}
+            >
+              Create connection
+            </Button>
+          </div>
+        )}
+        {selectedRadio === "sas7bdat" && (
+          <div>
+            <Field>
+              <Label>sas7bdat file</Label>
               <FileDragAndDrop setFile={setFile} currentFile={file} />
             </Field>
             <Button

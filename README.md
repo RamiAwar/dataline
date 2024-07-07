@@ -15,18 +15,19 @@
 
 ---
 
-- [Who is this for](#who-is-this-for)
-- [What is it](#what-is-it)
-- [Roadmap](#where-is-it-going)
+- [Who is this for?](#who-is-this-for)
+- [What is it?](#what-is-it)
+- [Where is it going?](#where-is-it-going)
+- [Feature Support](#feature-support)
 - [Getting started](#getting-started)
-  - [Setup](#setup)
     - [Windows](#windows)
     - [Mac](#mac)
     - [Linux](#linux)
     - [Docker](#docker)
     - [Running manually](#running-manually)
 - [Authentication](#authentication)
-- [Startup Quest](#startup-quest)
+  - [With Docker](#with-docker)
+  - [Startup Quest](#startup-quest)
 
 
 ## Who is this for?
@@ -45,7 +46,7 @@ It's privacy-focused, storing everything on your device. No  ☁️, only ☀️
 
 It hides your data from the LLMs used by default, but this can be disabled if the data is not deemed sensitive.
 
-It can connect to a variety of data sources (Postgres, Snowflake, MySQL, SQLite, CSV, and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
+It can connect to a variety of data sources (Postgres, Snowflake, MySQL, SQLite, CSV, sas7bdat and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
 
 ## Where is it going?
 
@@ -56,11 +57,11 @@ This is meant to enable non-technical folks to query data and aid data analysts 
 But you can still influence the direction we go in. We're building this for you, so you have the biggest say.
 
 ## Feature Support
-- [x] Broad DB support: Postgres, MySQL, Snowflake, CSV, SQLite, and more
+- [x] Broad DB support: Postgres, MySQL, Snowflake, CSV, SQLite, sas7bdat and more
 - [x] Generating and executing SQL from natural language
 - [x] Ability to modify SQL results, save them, and re-run
 - [x] Better support for explorative questions
-- [x] Querying data files like CSV, SQLite (more connection types)
+- [x] Querying data files like CSV, SQLite, sas7bdat (more connection types)
 - [x] Charting via natural language
 - [x] Modifying chart queries and re-rendering/refreshing charts
 
