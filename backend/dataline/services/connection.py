@@ -174,25 +174,6 @@ class ConnectionService:
         dsn = get_sqlite_dsn(str(file_path.absolute()))
         return await self.create_connection(session, dsn=dsn, name=name, is_sample=False)
 
-    # async def create_sas7bdat_connection(self, session: AsyncSession, file: UploadFile, name: str) -> ConnectionOut:
-    #     generated_name = generate_short_uuid() + ".sqlite"
-    #     file_path = Path(config.data_directory) / generated_name
-
-    #     # Connect to the SQLite database (it will be created if it doesn't exist)
-    #     conn = sqlite3.connect(file_path)
-    #     # Load sas7bdat file into a Pandas dataframe directly from the URL
-    #     data_df, meta = pyreadstat.read_sas7bdat(file.file)
-    #     # Write the dataframe to the SQLite database
-    #     table_name = name.lower().replace(" ", "_")
-    #     data_df.to_sql(table_name, conn, if_exists="replace", index=False)
-    #     # Commit and close connection to new SQLite database
-    #     conn.commit()
-    #     conn.close()
-
-    #     # Create connection with the locally copied file
-    #     dsn = get_sqlite_dsn(str(file_path.absolute()))
-    #     return await self.create_connection(session, dsn=dsn, name=name, is_sample=False)
-
     async def create_sas7bdat_connection(self, session: AsyncSession, file: UploadFile, name: str) -> ConnectionOut:
         generated_name = generate_short_uuid() + ".sqlite"
         file_path = Path(config.data_directory) / generated_name
