@@ -30,5 +30,21 @@
       "href": "https://ramiawar.medium.com/",
       "imageUrl": "https://miro.medium.com/v2/resize:fill:64:64/2*WeXvsSk5yZPqGEZzqOkzNg.png"
     }
+  },
+  {
+    "id": 3,
+    "title": "How DataLine does result streaming",
+    "href": "https://www.softgrade.org/sse-with-fastapi-react-langgraph/",
+    "description": "Learn all you need to implement streaming in production using SSE and how to handle streaming errors.",
+    "imageUrl": "https://www.softgrade.org/content/images/size/w1920/2024/07/Backend-Route-Design--1-.jpg",
+    "date": "Jul 3, 2024",
+    "datetime": "2024-07-3",
+    "category": { "title": "Tutorial", "href": "#" },
+    "author": {
+      "name": "Anthony Malkoun",
+      "role": "Co-founder @ DataLine",
+      "href": "https://www.softgrade.org/author/anthony/",
+      "imageUrl": "https://www.softgrade.org/content/images/size/w150/2024/06/profile_picture.jpg"
+    }
   }
 ]
