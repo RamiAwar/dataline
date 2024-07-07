@@ -26,7 +26,6 @@ def evaluate_message_content(
     query: str,
     eval_steps: list[str],
     raise_if_fail: bool = False,
-    metric_name: str = "Relevance",
     eval_params: list[LLMTestCaseParams] | None = None,
 ) -> GEval:
     """
@@ -35,11 +34,11 @@ def evaluate_message_content(
     - query: human message
     - eval_steps: an explanation of how to evaluate the output
     - raise_if_fail: if True, runs an assertion that the evaluation is successful
-    - metric_name: Name of the evaluation metric. I think this affects the score, need to double check
     - eval_params: the parameters that are relevant for evaluation
     """
     if eval_params is None:
         eval_params = [LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT]
+    metric_name: str = "Relevance"  # TODO: don't care about metric name
     test_case = LLMTestCase(input=query, actual_output=generated_message)
     correctness_metric = GEval(name=metric_name, evaluation_steps=eval_steps, evaluation_params=eval_params)
 
@@ -105,6 +104,7 @@ class EvalAIText(EvalBlockBase):
         return evaluation.score or 0.0  # score: float | None is annoying
 
 
+# TODO: Change this to a function that returns a partial
 class Comparator(BaseModel):
     operator: Callable[[int, int], bool]
     number: int
@@ -113,6 +113,7 @@ class Comparator(BaseModel):
         return self.operator(len(results_list), self.number)
 
 
+# TODO: Add weights to each result type, instead of equal weights
 class EvalCountResult(EvalBlockBase):
     name: ClassVar[str] = "result_count_evaluation"
     results_evals: dict[QueryResultType, Comparator]
@@ -129,7 +130,6 @@ class EvalCountResult(EvalBlockBase):
 
 class EvalSQLString(EvalBlockBase):
     name: ClassVar[str] = "sql_string_evaluation"
-    metric_name: str
     eval_steps: list[str]
     eval_params: list[LLMTestCaseParams] = [LLMTestCaseParams.ACTUAL_OUTPUT]
 
@@ -144,7 +144,6 @@ class EvalSQLString(EvalBlockBase):
                 generated_sql,
                 response.human_message.content,
                 self.eval_steps,
-                metric_name=self.metric_name,
                 eval_params=self.eval_params,
             )
             sum_scores += evaluation.score or 0.0
@@ -207,6 +206,9 @@ class EvalSQLRun(EvalBlockBase):
         return self
 
 
+# TODO: For the two below, use NamedTuple to have EvalBlock, Tags, Weight
+# TODO: Add weights per eval block, sum and divide for entire test
+# TODO: Add tags per eval block
 class TestCase(BaseModel):
     __test__ = False  # so pytest doesn't collect this as a test
     test_name: str
@@ -259,7 +261,6 @@ sample_rows_test_case_1 = TestCase(
             },
         ),
         EvalSQLString(
-            metric_name="Correctness",
             eval_steps=[
                 (
                     "Determine whether the actual output is an sql statement that, if executed, "
@@ -289,7 +290,6 @@ sample_rows_test_case_2 = TestCase(
             },
         ),
         EvalSQLString(
-            metric_name="Correctness",
             eval_steps=[
                 (
                     "Determine whether the actual output is an sql statement that, if executed, "
@@ -402,6 +402,7 @@ followup_question_test_case_part_2 = TestCase(
 )
 
 
+# TODO: Think of message history (look at followup question tests for example)
 @pytest.mark.asyncio
 @pytest.mark.expensive
 @pytest.mark.usefixtures("user_info")  # to have a valid user in the db
