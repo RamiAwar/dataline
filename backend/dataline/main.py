@@ -8,12 +8,12 @@ from pathlib import Path
 from typing import AsyncGenerator
 
 import uvicorn
-from alembic import command
-from alembic.config import Config
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from alembic import command
+from alembic.config import Config
 from dataline.app import App
 from dataline.config import IS_BUNDLED, config
 from dataline.old_models import SuccessResponse
