@@ -26,6 +26,9 @@ poetry shell # Active python environment (makes alembic command available)
 alembic upgrade head # Run migrations
 ```
 
+# CORS settings
+Set the environment variable `ALLOWED_ORIGINS` to a comma-separated list of origins if you're deploying this to a custom domain.
+
 ## Environment setup
 
 Currently, the environment can be setup through the settings page on the frontend.
