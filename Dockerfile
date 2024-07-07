@@ -112,6 +112,8 @@ ARG AUTH_USERNAME
 ENV AUTH_USERNAME=$AUTH_USERNAME
 ARG AUTH_PASSWORD
 ENV AUTH_PASSWORD=$AUTH_PASSWORD
+ARG ALLOWED_ORIGINS
+ENV ALLOWED_ORIGINS=$ALLOWED_ORIGINS
 
 # Running alembic and uvicorn without combining them in a bash -c command won't work
 CMD ["bash", "-c", "python -m dataline.main"]

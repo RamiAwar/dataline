@@ -41,7 +41,7 @@ class App(fastapi.FastAPI):
         super().__init__(title="Dataline API", lifespan=lifespan)
         self.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
+            allow_origins=config.allowed_origins.split(","),
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
