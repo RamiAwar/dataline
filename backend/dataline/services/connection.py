@@ -190,6 +190,19 @@ class ConnectionService:
             # Load sas7bdat file into a Pandas dataframe from the temporary file
             data_df, meta = pyreadstat.read_sas7bdat(temp_file_path)
 
+            new_column_names = {}
+
+            # Loop through the column names and their labels
+            for col, label in meta.column_names_to_labels.items():
+                if label:
+                    # If a label exists, use it as the new column name
+                    new_column_names[col] = label
+                else:
+                    # If no label exists, keep the original column name
+                    new_column_names[col] = col
+            # Rename the columns in the DataFrame
+            data_df.rename(columns=new_column_names, inplace=True)
+
             # Write the dataframe to the SQLite database
             table_name = name.lower().replace(" ", "_")
             data_df.to_sql(table_name, conn, if_exists="replace", index=False)
