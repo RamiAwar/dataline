@@ -15,9 +15,9 @@
 
 ---
 
-- [Who is this for?](#who-is-this-for)
-- [What is it?](#what-is-it)
-- [Where is it going?](#where-is-it-going)
+- [Who is this for](#who-is-this-for)
+- [What is it](#what-is-it)
+- [Roadmap](#where-is-it-going)
 - [Feature Support](#feature-support)
 - [Getting started](#getting-started)
     - [Windows](#windows)
@@ -27,7 +27,7 @@
     - [Running manually](#running-manually)
 - [Authentication](#authentication)
   - [With Docker](#with-docker)
-  - [Startup Quest](#startup-quest)
+- [Startup Quest](#startup-quest)
 
 
 ## Who is this for?
@@ -46,7 +46,7 @@ It's privacy-focused, storing everything on your device. No  ☁️, only ☀️
 
 It hides your data from the LLMs used by default, but this can be disabled if the data is not deemed sensitive.
 
-It can connect to a variety of data sources (Postgres, Snowflake, MySQL, SQLite, CSV, sas7bdat and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
+It can connect to a variety of data sources (Postgres, Snowflake, MySQL, SQLite, CSV, sas7bdat, and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
 
 ## Where is it going?
 
@@ -142,7 +142,7 @@ Inject the env vars with the docker run command as follows:
 We plan on supporting multiple user auth in the future, but for now it supports a single user by default.
 
 
-### Startup Quest
+## Startup Quest
 
 Go through the following checklist to explore DataLine's features!
 

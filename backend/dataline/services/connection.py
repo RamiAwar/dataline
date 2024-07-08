@@ -182,7 +182,7 @@ class ConnectionService:
         conn = sqlite3.connect(file_path)
 
         # Create a temporary file to store the uploaded content
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.sas7bdat') as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".sas7bdat") as temp_file:
             temp_file.write(await file.read())
             temp_file_path = temp_file.name
 

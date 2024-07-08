@@ -1,6 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_data_files
 from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import collect_submodules
 
 datas = [('alembic', 'alembic'), ('alembic.ini', '.'), ('samples', 'samples'), ('templates', 'templates'), ('assets', 'assets')]
 binaries = []
@@ -11,6 +12,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('snowflake-connector-python')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
+hiddenimports += collect_submodules('pyreadstat')
 
 block_cipher = None
 
