@@ -46,7 +46,7 @@ It's privacy-focused, storing everything on your device. No ☁️, only ☀️!
 
 It hides your data from the LLMs used by default, but this can be disabled if the data is not deemed sensitive.
 
-It can connect to a variety of data sources (Postgres, Snowflake, MySQL, SQLite, CSV, and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
+It can connect to a variety of data sources (Postgres, Snowflake, MySQL, SQLite, CSV, sas7bdat, and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
 
 ## Where is it going?
 
@@ -62,7 +62,7 @@ But you can still influence the direction we go in. We're building this for you,
 - [x] Generating and executing SQL from natural language
 - [x] Ability to modify SQL results, save them, and re-run
 - [x] Better support for explorative questions
-- [x] Querying data files like CSV, SQLite (more connection types)
+- [x] Querying data files like CSV, SQLite, sas7bdat (more connection types)
 - [x] Charting via natural language
 - [x] Modifying chart queries and re-rendering/refreshing charts
 
@@ -143,7 +143,7 @@ Inject the env vars with the docker run command as follows:
 
 We plan on supporting multiple user auth in the future, but for now it supports a single user by default.
 
-### Startup Quest
+## Startup Quest
 
 Go through the following checklist to explore DataLine's features!
 

@@ -142,6 +142,7 @@ class ConnectionUpdateIn(BaseModel):
 class FileConnectionType(Enum):
     sqlite = "sqlite"
     csv = "csv"
+    sas7bdat = "sas7bdat"
 
 
 class SampleName(Enum):

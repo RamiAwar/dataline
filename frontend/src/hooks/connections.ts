@@ -144,7 +144,7 @@ export function useCreateFileConnection(options = {}) {
     }: {
       file: File;
       name: string;
-      type: "sqlite" | "csv";
+      type: "sqlite" | "csv" | "sas7bdat";
     }) => api.createFileConnection(file, name, type),
     onSettled() {
       queryClient.invalidateQueries({

@@ -1,10 +1,13 @@
 import logging
 import sqlite3
+import os
+import tempfile
 from pathlib import Path
 from typing import BinaryIO
 from uuid import UUID
 
 import pandas as pd
+import pyreadstat
 from fastapi import Depends, UploadFile
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
@@ -170,3 +173,47 @@ class ConnectionService:
         # Create connection with the locally copied file
         dsn = get_sqlite_dsn(str(file_path.absolute()))
         return await self.create_connection(session, dsn=dsn, name=name, is_sample=False)
+
+    async def create_sas7bdat_connection(self, session: AsyncSession, file: UploadFile, name: str) -> ConnectionOut:
+        generated_name = generate_short_uuid() + ".sqlite"
+        file_path = Path(config.data_directory) / generated_name
+
+        # Connect to the SQLite database (it will be created if it doesn't exist)
+        conn = sqlite3.connect(file_path)
+
+        # Create a temporary file to store the uploaded content
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".sas7bdat") as temp_file:
+            temp_file.write(await file.read())
+            temp_file_path = temp_file.name
+
+        try:
+            # Load sas7bdat file into a Pandas dataframe from the temporary file
+            data_df, meta = pyreadstat.read_sas7bdat(temp_file_path)
+
+            new_column_names = {}
+
+            # Loop through the column names and their labels
+            for col, label in meta.column_names_to_labels.items():
+                if label:
+                    # If a label exists, use it as the new column name
+                    new_column_names[col] = label
+                else:
+                    # If no label exists, keep the original column name
+                    new_column_names[col] = col
+            # Rename the columns in the DataFrame
+            data_df.rename(columns=new_column_names, inplace=True)
+
+            # Write the dataframe to the SQLite database
+            table_name = name.lower().replace(" ", "_")
+            data_df.to_sql(table_name, conn, if_exists="replace", index=False)
+
+            # Commit and close connection to new SQLite database
+            conn.commit()
+            conn.close()
+
+            # Create connection with the locally copied file
+            dsn = get_sqlite_dsn(str(file_path.absolute()))
+            return await self.create_connection(session, dsn=dsn, name=name, is_sample=False)
+        finally:
+            # Clean up the temporary file
+            os.unlink(temp_file_path)
