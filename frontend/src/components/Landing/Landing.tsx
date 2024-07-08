@@ -93,8 +93,8 @@ export const Landing = () => {
         containerClasses="fixed bottom-0 z-50 w-full bg-gray-800/50 backdrop-blur-md text-white p-2 flex flex-row items-center justify-center gap-8 md:gap-12"
         contentClasses="grow-0"
       >
-        We use cookies cause we're hungry for data-driven decisions. We don't
-        store anything that can identify you.
+        We need cookies to feed our data-driven decisions. But we don't store
+        anything that can identify you. Pinky promise.
       </CookieConsent>
       <Header />
 
@@ -108,7 +108,7 @@ export const Landing = () => {
                   {CohortData[selectedCohort].headline}
                 </h1>
                 <p
-                  className="mt-6 text-lg leading-8 text-gray-300 "
+                  className="mt-6 text-lg leading-8 text-gray-300"
                   dangerouslySetInnerHTML={{
                     __html: CohortData[selectedCohort].description,
                   }}

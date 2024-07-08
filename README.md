@@ -20,15 +20,15 @@
 - [Roadmap](#where-is-it-going)
 - [Feature Support](#feature-support)
 - [Getting started](#getting-started)
-    - [Windows](#windows)
-    - [Mac](#mac)
-    - [Linux](#linux)
-    - [Docker](#docker)
-    - [Running manually](#running-manually)
+  - [Windows](#windows)
+  - [Mac](#mac)
+  - [Linux](#linux)
+  - [Docker](#docker)
+  - [Running manually](#running-manually)
 - [Authentication](#authentication)
   - [With Docker](#with-docker)
 - [Startup Quest](#startup-quest)
-
+- [Deployment](#deployment)
 
 ## Who is this for?
 
@@ -42,7 +42,7 @@ It's especially well-suited for businesses given its security-first 🔒 and ope
 
 DataLine is an AI-driven data analysis and visualization tool.
 
-It's privacy-focused, storing everything on your device. No  ☁️, only ☀️!
+It's privacy-focused, storing everything on your device. No ☁️, only ☀️!
 
 It hides your data from the LLMs used by default, but this can be disabled if the data is not deemed sensitive.
 
@@ -57,7 +57,8 @@ This is meant to enable non-technical folks to query data and aid data analysts 
 But you can still influence the direction we go in. We're building this for you, so you have the biggest say.
 
 ## Feature Support
-- [x] Broad DB support: Postgres, MySQL, Snowflake, CSV, SQLite, sas7bdat and more
+
+- [x] Broad DB support: Postgres, MySQL, Snowflake, CSV, SQLite, and more
 - [x] Generating and executing SQL from natural language
 - [x] Ability to modify SQL results, save them, and re-run
 - [x] Better support for explorative questions
@@ -66,6 +67,7 @@ But you can still influence the direction we go in. We're building this for you,
 - [x] Modifying chart queries and re-rendering/refreshing charts
 
 With a lot more coming soon. You can still influence what we build, so if you're a user and you're down for it, we'd love to interview you! Book some time with one of us here:
+
 - [Rami](https://calendly.com/ramiawar/quick)
 - [Anthony](https://calendly.com/anthonymalkoun)
 
@@ -128,7 +130,7 @@ Check the [backend](./backend/README.md) and [frontend](./frontend/README.md) re
 
 ## Authentication
 
-DataLine also supports basic auth 🔒 in self-hosted mode 🥳 in case you're hosting it and would like to secure it with a username/password. 
+DataLine also supports basic auth 🔒 in self-hosted mode 🥳 in case you're hosting it and would like to secure it with a username/password.
 
 Auth is NOT supported ❌ when running the DataLine executable.
 
@@ -137,10 +139,9 @@ To enable authentication on the self-hosted version, add the environment variabl
 ### With Docker
 
 Inject the env vars with the docker run command as follows:
-```docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline -e AUTH_USERNAME=admin -e AUTH_PASSWORD=admin ramiawar/dataline:latest```
+`docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline -e AUTH_USERNAME=admin -e AUTH_PASSWORD=admin ramiawar/dataline:latest`
 
 We plan on supporting multiple user auth in the future, but for now it supports a single user by default.
-
 
 ## Startup Quest
 
@@ -155,3 +156,10 @@ Go through the following checklist to explore DataLine's features!
 - [ ] Try asking for a chart!
 - [ ] To really challenge it, ask a question that is answered with multiple results (charts, tables, etc.) - [example](https://www.youtube.com/watch?v=6ouSok9bOVo)
 - [ ] Add a profile picture
+
+### Deployment
+
+The one thing you must configure when deploying DataLine to a custom domain is CORS allowed origins.
+To do this, add the environment variable `ALLOWED_ORIGINS` (comma separated list of origins) to your domain name(s).
+
+By default, it is set to `http://localhost:7377,http://0.0.0.0:7377` to make it work with local Docker and local binaries.
