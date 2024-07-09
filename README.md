@@ -122,7 +122,7 @@ docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dat
 ```
 
 To connect to the frontend, you can then visit:
-[http://localhost:2222](http://localhost:2222)
+[http://localhost:7377](http://localhost:7377)
 
 #### Running manually
 
