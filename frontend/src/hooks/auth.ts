@@ -7,6 +7,7 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { queryClient } from "@/queryClient";
 import { userProfileQuery } from "./settings";
+import { isAxiosError } from "axios";
 
 export function hasAuthQuery() {
   // to check if authentication is enabled on the app
@@ -33,6 +34,8 @@ export function isAuthenticatedQuery() {
         queryClient.setQueryData(userProfileQuery().queryKey, userInfo);
         return true;
       } catch (error) {
+        // if starting from fresh db, no user exists => api.getUserInfo will return a 404
+        if (isAxiosError(error) && error.response?.status === 404) return true;
         return false;
       }
     },
