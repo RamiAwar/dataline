@@ -166,5 +166,5 @@ By default, it is set to `http://localhost:7377,http://0.0.0.0:7377` to make it 
 
 For example, running the docker image on a remote server with IP 123.123.12.34:
 ```bash
--e ALLOWED_ORIGINS="http://123.123.12.34:7377,https://123.123.12.34:7377"
+docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline -e ALLOWED_ORIGINS="http://123.123.12.34:7377,https://123.123.12.34:7377 ramiawar/dataline:latest"
 ```
