@@ -43,7 +43,7 @@ export const AppLayout: React.FC = () => {
     return (
       <Alert open={true} onClose={() => {}} size="sm">
         <AlertTitle className="flex gap-4 items-center">
-          Could not connect to backend.
+          Could not connect to the backend.
         </AlertTitle>
       </Alert>
     );
