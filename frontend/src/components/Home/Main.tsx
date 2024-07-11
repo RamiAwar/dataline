@@ -3,7 +3,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@components/Catalyst/alert";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "@tanstack/react-router";
 import { Sidebar } from "./Sidebar";
 import { OpenAIKeyPopup } from "../Settings/OpenAIKeyPopup";
 import { Spinner } from "../Spinner/Spinner";

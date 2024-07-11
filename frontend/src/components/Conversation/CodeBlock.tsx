@@ -12,7 +12,7 @@ import { format } from "prettier-sql";
 import { Dialect } from "../Library/types";
 import { useEffect, useRef, useState } from "react";
 import { useRunSql, useUpdateSqlQuery } from "@/hooks";
-import { useParams } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import {
   Alert,
   AlertActions,
@@ -73,6 +73,8 @@ const formattedCodeOrInitial = (code: string) => {
   }
 };
 
+const chatRouteApi = getRouteApi("/_app/chat/$conversationId");
+
 export const CodeBlock = ({
   code,
   language,
@@ -92,7 +94,7 @@ export const CodeBlock = ({
   ) => void;
   forChart: boolean;
 }) => {
-  const { conversationId } = useParams<{ conversationId: string }>();
+  const { conversationId } = chatRouteApi.useParams();
 
   const [savedCode, setSavedCode] = useState<string>(() =>
     formattedCodeOrInitial(code)

@@ -10,9 +10,9 @@ import {
 } from "@heroicons/react/24/outline";
 import logo from "@/assets/images/logo_md.png";
 import { PencilSquareIcon } from "@heroicons/react/20/solid";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "@tanstack/react-router";
 import { ProfileDropdown } from "@components/Home/ProfileDropdown";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import {
   useDeleteConversation,
   useGetConnections,
@@ -46,13 +46,13 @@ function classNames(...classes: string[]) {
 }
 
 export const Sidebar = () => {
-  const params = useParams<{ conversationId: string }>();
+  const params = useParams({ strict: false });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: conversationsData } = useGetConversations();
   const { data: connectionsData } = useGetConnections();
   const { mutate: deleteConversation } = useDeleteConversation({
     onSuccess() {
-      navigate("/");
+      navigate({ to: "/" });
     },
   });
 

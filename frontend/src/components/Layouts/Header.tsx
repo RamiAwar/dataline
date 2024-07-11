@@ -3,7 +3,7 @@ import logo from "../../assets/images/logo_xl.png";
 import logomd from "../../assets/images/logo_md.png";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "@tanstack/react-router";
 import { scroller } from "react-scroll";
 
 const Header = () => {

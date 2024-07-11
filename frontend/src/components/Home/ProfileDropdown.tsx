@@ -6,8 +6,7 @@ import {
   Transition,
 } from "@headlessui/react";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
-import { Link, useNavigate } from "react-router-dom";
-import { Routes } from "../../router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useGetAvatar } from "@/hooks";
 import { Fragment } from "react";
 import { hasAuthQuery, useLogout } from "@/hooks/auth";
@@ -22,11 +21,11 @@ export const ProfileDropdown = ({ topRight }: { topRight?: boolean }) => {
   const { data: avatarUrl } = useGetAvatar();
   const navigate = useNavigate();
   const { mutate: logout } = useLogout({
-    onLogout: () => navigate(Routes.Login),
+    onLogout: () => navigate({ to: "/" }),
   });
   const { data: hasAuthEnabled } = useQuery(hasAuthQuery());
 
-  const userNavigation = [{ name: "Settings", href: Routes.UserProfile }];
+  const userNavigation = [{ name: "Settings", href: "/user" }];
 
   return (
     <>

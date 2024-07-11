@@ -1,15 +1,14 @@
 import { useState } from "react";
 import logo from "@/assets/images/logo_rounded_sm.png";
-import { useNavigate } from "react-router";
-import { Routes } from "@/router";
 import { useLogin } from "@/hooks/auth";
+import { useNavigate } from "@tanstack/react-router";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { mutate: login } = useLogin({
-    onLogin: () => navigate(Routes.Root),
+    onLogin: () => navigate({ to: "/" }),
   });
 
   const handleLogin = async (e: React.FormEvent) => {

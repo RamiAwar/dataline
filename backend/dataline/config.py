@@ -46,7 +46,7 @@ class Config(BaseSettings):
 
     # CORS settings
     allowed_origins: str = (
-        "http://localhost:7377,http://0.0.0.0:7377,http://127.0.0.1:7377"  # comma separated list of origins
+        "http://localhost:7377,http://localhost:5173,http://0.0.0.0:7377,http://0.0.0.0:5173,http://127.0.0.1:7377,http://127.0.0.1:5173"  # comma separated list of origins
     )
 
     @property
