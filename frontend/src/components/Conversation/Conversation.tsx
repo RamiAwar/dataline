@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import { Message } from "./Message";
-import { getRouteApi, Navigate } from "@tanstack/react-router";
+import { Navigate, useParams } from "@tanstack/react-router";
 import ExpandingInput from "./ExpandingInput";
 
 import { Transition } from "@headlessui/react";
@@ -31,10 +31,8 @@ const templateMessages = [
   },
 ];
 
-const chatRouteApi = getRouteApi("/_app/chat/$conversationId");
-
 export const Conversation = () => {
-  const params = chatRouteApi.useParams();
+  const params = useParams({ from: "/_app/chat/$conversationId" });
   // Load messages from conversation via API on load
   const { data: connectionsData } = useGetConnections();
   const { data: conversationsData } = useGetConversations();

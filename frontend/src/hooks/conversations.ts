@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { getBackendStatusQuery } from "@/hooks/settings";
 import { useEffect } from "react";
-import { getRouteApi } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { useGetConnections } from "./connections";
 
 export const CONVERSATIONS_QUERY_KEY = ["CONVERSATIONS"];
@@ -93,10 +93,8 @@ export function useUpdateConversation(options = {}) {
   });
 }
 
-const chatRouteApi = getRouteApi("/_app/chat/$conversationId");
-
 export function useGetRelatedConnection() {
-  const params = chatRouteApi.useParams();
+  const params = useParams({ from: "/_app/chat/$conversationId" });
   const { data: connectionsData } = useGetConnections();
   const { data: conversationsData } = useGetConversations();
   const currConversation = conversationsData?.find(
