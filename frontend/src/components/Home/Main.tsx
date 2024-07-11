@@ -43,7 +43,16 @@ export const AppLayout: React.FC = () => {
     return (
       <Alert open={true} onClose={() => {}} size="sm">
         <AlertTitle className="flex gap-4 items-center">
-          Could not connect to the backend.
+          <span>
+            Could not connect to the backend.{" "}
+            <a
+              className="underline"
+              href="https://github.com/RamiAwar/dataline/blob/main/TROUBLESHOOTING.md"
+              target="_blank"
+            >
+              Troubleshooting
+            </a>
+          </span>
         </AlertTitle>
       </Alert>
     );
