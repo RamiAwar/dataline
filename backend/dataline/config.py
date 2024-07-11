@@ -45,7 +45,9 @@ class Config(BaseSettings):
     spa_mode: bool = False
 
     # CORS settings
-    allowed_origins: str = "http://localhost:7377,http://0.0.0.0:7377"  # comma separated list of origins
+    allowed_origins: str = (
+        "http://localhost:7377,http://0.0.0.0:7377,http://127.0.0.1:7377"  # comma separated list of origins
+    )
 
     @property
     def has_auth(self) -> bool:
