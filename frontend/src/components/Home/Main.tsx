@@ -15,9 +15,52 @@ import {
 } from "@/hooks";
 
 import "simplebar-react/dist/simplebar.min.css";
+import React from "react";
+import Login from "@components/Library/Login";
+import { useQuery } from "@tanstack/react-query";
+import { isAuthenticatedQuery } from "@/hooks/auth";
+
+export const LoadingScreen: React.FC = () => (
+  <Alert open={true} onClose={() => {}} size="sm">
+    <AlertTitle className="flex gap-4 items-center">
+      <Spinner />
+      Loading...
+    </AlertTitle>
+  </Alert>
+);
+
+export const AppLayout: React.FC = () => {
+  const {
+    isSuccess: isHealthy,
+    isPending: isPendingHealthy,
+    isFetched: isFetchedHealthy,
+  } = useGetBackendStatus();
+  const { data: isAuthenticated, isPending: isPendingAuth } = useQuery(
+    isAuthenticatedQuery()
+  );
+
+  if (isFetchedHealthy && !isHealthy) {
+    return (
+      <Alert open={true} onClose={() => {}} size="sm">
+        <AlertTitle className="flex gap-4 items-center">
+          Could not connect to backend.
+        </AlertTitle>
+      </Alert>
+    );
+  }
+
+  if (isPendingHealthy || isPendingAuth) {
+    return <LoadingScreen />;
+  }
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
+  return <Main />;
+};
 
 export const Main = () => {
-  useGetBackendStatus();
   const { data: profile, isLoading } = useGetUserProfile();
   const { isPending: isPendingConnections, isError: isErrorConnections } =
     useGetConnections();
@@ -42,14 +85,7 @@ export const Main = () => {
     isPendingConversations ||
     profile === undefined
   ) {
-    return (
-      <Alert open={true} onClose={() => {}} size="sm">
-        <AlertTitle className="flex gap-4 items-center">
-          <Spinner />
-          Loading...
-        </AlertTitle>
-      </Alert>
-    );
+    return <LoadingScreen />;
   }
 
   /** If the user has not set up their OpenAI API key, show a popup to do that */

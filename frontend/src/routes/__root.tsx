@@ -1,11 +1,11 @@
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { QueryClient } from "@tanstack/react-query";
-import { Main } from "@/components/Home/Main";
+import { AppLayout } from "@/components/Home/Main";
 
-const rootComponent = process.env.NODE_ENV === "local" ? Main : Outlet;
-
+const rootComponent = process.env.NODE_ENV === "local" ? AppLayout : Outlet;
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
+  hasAuth: boolean;
 }>()({
   component: rootComponent,
   notFoundComponent: () => (

@@ -39,12 +39,12 @@ export function isAuthenticatedQuery() {
         return false;
       }
     },
+    staleTime: Infinity,
   });
 }
 
-export function useLogin({ onLogin }: { onLogin: () => void }) {
+export function useLogin() {
   // on successful login, set isAuthenticatedQuery to true
-  // navigates to Router.Root (using the onLogin function)
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -59,7 +59,6 @@ export function useLogin({ onLogin }: { onLogin: () => void }) {
     },
     onSuccess() {
       queryClient.setQueryData(isAuthenticatedQuery().queryKey, true);
-      onLogin();
     },
   });
 }
