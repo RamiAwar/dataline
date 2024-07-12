@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
+import csv
 import logging
 import operator
 import os
-from typing import Any, Callable, ClassVar, Self, cast
+from pathlib import Path
+from typing import Any, Callable, ClassVar, NamedTuple, Self, Sequence, cast
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator
@@ -38,9 +40,9 @@ def evaluate_message_content(
     """
     if eval_params is None:
         eval_params = [LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT]
-    metric_name: str = "Relevance"  # TODO: don't care about metric name
     test_case = LLMTestCase(input=query, actual_output=generated_message)
-    correctness_metric = GEval(name=metric_name, evaluation_steps=eval_steps, evaluation_params=eval_params)
+    # don't really care about eval name
+    correctness_metric = GEval(name="Metric", evaluation_steps=eval_steps, evaluation_params=eval_params)
 
     correctness_metric.measure(test_case)
     if raise_if_fail:
@@ -104,28 +106,28 @@ class EvalAIText(EvalBlockBase):
         return evaluation.score or 0.0  # score: float | None is annoying
 
 
-# TODO: Change this to a function that returns a partial
-class Comparator(BaseModel):
-    operator: Callable[[int, int], bool]
-    number: int
-
-    def compare(self, results_list: list[ResultOut]) -> bool:
-        return self.operator(len(results_list), self.number)
+def comparator(operator: Callable[[int, int], bool], number: int) -> Callable[[int], bool]:
+    return lambda x: operator(x, number)
 
 
-# TODO: Add weights to each result type, instead of equal weights
+class EvalCountResultTuple(NamedTuple):
+    comparator: Callable[[int], bool]
+    weight: float = 1.0
+
+
 class EvalCountResult(EvalBlockBase):
     name: ClassVar[str] = "result_count_evaluation"
-    results_evals: dict[QueryResultType, Comparator]
+    results_evals: dict[QueryResultType, EvalCountResultTuple]
 
     def evaluate(self, response: QueryOut) -> float:
-        total_comparisons = len(self.results_evals) or 1
         checks_passed = 0
-        for result_type, comparator in self.results_evals.items():
+        total_weights: float = 0.0
+        for result_type, result_tuple in self.results_evals.items():
+            total_weights += result_tuple.weight
             filtered_results = get_results_of_type(result_type, response)
-            if comparator.compare(filtered_results):
+            if result_tuple.comparator(len(filtered_results)):
                 checks_passed += 1
-        return checks_passed * 1.0 / total_comparisons
+        return checks_passed / total_weights
 
 
 class EvalSQLString(EvalBlockBase):
@@ -206,23 +208,29 @@ class EvalSQLRun(EvalBlockBase):
         return self
 
 
-# TODO: For the two below, use NamedTuple to have EvalBlock, Tags, Weight
-# TODO: Add weights per eval block, sum and divide for entire test
-# TODO: Add tags per eval block
+class TestBlock(NamedTuple):
+    eval_block: EvalBlockBase
+    weight: float = 1.0
+    tags: Sequence[str] = []
+
+
 class TestCase(BaseModel):
     __test__ = False  # so pytest doesn't collect this as a test
     test_name: str
     query: str
-    evaluations: list[EvalBlockBase]
+    evaluations: list[TestBlock]
+    scores: list[float] = []
+    total_score: float | None = None
 
     def run(self, client: TestClient, conversation_id: UUID):
         evaluation_results: list[tuple[str, float]] = []
         response = call_query_endpoint(client, conversation_id, self.query)
         for evaluation in self.evaluations:
-            eval_score = evaluation.evaluate(response)
-            evaluation_results.append((evaluation.name, eval_score))
-        logger.warning(f"Scores for test '{self.test_name}':")
-        logger.warning(evaluation_results)
+            eval_score = evaluation.eval_block.evaluate(response) * evaluation.weight
+            self.scores.append(eval_score)
+        total_weights = sum(e.weight for e in self.evaluations)
+        total_score = sum([e[1] for e in evaluation_results]) / total_weights
+        self.total_score = total_score
         return evaluation_results
 
 
@@ -246,27 +254,41 @@ sample_rows_test_case_1 = TestCase(
     test_name="Sample Rows Test 1",
     query="Show me some sample rows from one of the tables",
     evaluations=[
-        EvalAIText(
-            eval_steps=[
-                "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
-                "The output may mention that it has obtained sample rows but it should not show them.",
-            ]
+        TestBlock(
+            EvalAIText(
+                eval_steps=[
+                    "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
+                    "The output may mention that it has obtained sample rows but it should not show them.",
+                ]
+            ),
+            tags=["Response Quality"],
         ),
-        EvalCountResult(
-            results_evals={
-                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.eq, number=1),
-                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=1),
-                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=1),
-                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
-            },
+        TestBlock(
+            EvalCountResult(
+                results_evals={
+                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
+                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=1)
+                    ),
+                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=1)
+                    ),
+                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=0)
+                    ),
+                },
+            )
         ),
-        EvalSQLString(
-            eval_steps=[
-                (
-                    "Determine whether the actual output is an sql statement that, if executed, "
-                    "shows some rows from a single table with a few columns"
-                )
-            ],
+        TestBlock(
+            EvalSQLString(
+                eval_steps=[
+                    (
+                        "Determine whether the actual output is an sql statement that, if executed, "
+                        "shows some rows from a single table with a few columns"
+                    )
+                ],
+            ),
+            tags=["SQL Quality"],
         ),
     ],
 )
@@ -275,27 +297,41 @@ sample_rows_test_case_2 = TestCase(
     test_name="Sample Rows Test 2",
     query="Show me some sample rows from only two of the tables",
     evaluations=[
-        EvalAIText(
-            eval_steps=[
-                "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
-                "The output may mention that it has obtained sample rows but it should not show them.",
-            ]
+        TestBlock(
+            EvalAIText(
+                eval_steps=[
+                    "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
+                    "The output may mention that it has obtained sample rows but it should not show them.",
+                ]
+            ),
+            tags=["Response Quality"],
         ),
-        EvalCountResult(
-            results_evals={
-                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.ge, number=1),
-                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=2),
-                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=2),
-                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
-            },
+        TestBlock(
+            EvalCountResult(
+                results_evals={
+                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.ge, number=1)),
+                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=2)
+                    ),
+                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=2)
+                    ),
+                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=0)
+                    ),
+                },
+            )
         ),
-        EvalSQLString(
-            eval_steps=[
-                (
-                    "Determine whether the actual output is an sql statement that, if executed, "
-                    "shows some rows from a single table with a few columns"
-                )
-            ],
+        TestBlock(
+            EvalSQLString(
+                eval_steps=[
+                    (
+                        "Determine whether the actual output is an sql statement that, if executed, "
+                        "shows some rows from a single table with a few columns"
+                    )
+                ],
+            ),
+            tags=["SQL Quality"],
         ),
     ],
 )
@@ -307,18 +343,29 @@ explorative_test_case_1 = TestCase(
     test_name="Explorative Test 1",
     query="What are some example questions I can ask about this data source?",
     evaluations=[
-        EvalAIText(
-            eval_steps=[
-                "Determine whether the actual output is relevant to the input, while staying friendly and helpful."
-            ]
+        TestBlock(
+            EvalAIText(
+                eval_steps=[
+                    "Determine whether the actual output is relevant to the input, while staying friendly and helpful."
+                ]
+            ),
+            tags=["Exploration", "Response Quality"],
         ),
-        EvalCountResult(
-            results_evals={
-                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.le, number=2),
-                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=0),
-                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=0),
-                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
-            },
+        TestBlock(
+            EvalCountResult(
+                results_evals={
+                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.le, number=2)),
+                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=0)
+                    ),
+                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=0)
+                    ),
+                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=0)
+                    ),
+                },
+            )
         ),
     ],
 )
@@ -327,18 +374,29 @@ explorative_test_case_2 = TestCase(
     test_name="Explorative Test 2",
     query="What are some interesting tables in this data source?",
     evaluations=[
-        EvalAIText(
-            eval_steps=[
-                "Determine whether the actual output is relevant to the input, while staying friendly and helpful."
-            ]
+        TestBlock(
+            EvalAIText(
+                eval_steps=[
+                    "Determine whether the actual output is relevant to the input, while staying friendly and helpful."
+                ]
+            ),
+            tags=["Exploration", "Response Quality"],
         ),
-        EvalCountResult(
-            results_evals={
-                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.le, number=2),
-                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=0),
-                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=0),
-                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
-            },
+        TestBlock(
+            EvalCountResult(
+                results_evals={
+                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.le, number=2)),
+                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=0)
+                    ),
+                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=0)
+                    ),
+                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=0)
+                    ),
+                },
+            )
         ),
     ],
 )
@@ -351,25 +409,39 @@ followup_question_test_case_part_1 = TestCase(
     test_name="Followup Question Test Part 1",
     query='Who are the actors in the film "ZORRO ARK"?',
     evaluations=[
-        EvalAIText(
-            eval_steps=[
-                "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
-                "The output may mention that it has obtained actor names and that they can be viewed, but it should not actually show them.",
-                "Vagueness is OK.",
-            ]
+        TestBlock(
+            EvalAIText(
+                eval_steps=[
+                    "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
+                    "The output may mention that it has obtained actor names and that they can be viewed, but it should not actually show them.",
+                    "Vagueness is OK.",
+                ]
+            ),
+            tags=["Response Quality"],
         ),
-        EvalCountResult(
-            results_evals={
-                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.le, number=3),
-                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=1),
-                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=1),
-                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
-            },
+        TestBlock(
+            EvalCountResult(
+                results_evals={
+                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.le, number=3)),
+                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=1)
+                    ),
+                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=1)
+                    ),
+                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=0)
+                    ),
+                },
+            )
         ),
-        EvalSQLRun(
-            expected_row_count=3,
-            expected_col_names=["first_name", "last_name"],
-            expected_row_values=[["IAN", "TANDY"], ["NICK", "DEGENERES"], ["LISA", "MONROE"]],
+        TestBlock(
+            EvalSQLRun(
+                expected_row_count=3,
+                expected_col_names=["first_name", "last_name"],
+                expected_row_values=[["IAN", "TANDY"], ["NICK", "DEGENERES"], ["LISA", "MONROE"]],
+            ),
+            tags=["Data Results Accuracy"],
         ),
     ],
 )
@@ -378,28 +450,71 @@ followup_question_test_case_part_2 = TestCase(
     test_name="Followup Question Test Part 2",
     query="How much revenue did that movie generate?",
     evaluations=[
-        EvalAIText(
-            eval_steps=[
-                "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
-                "If the exact revenue is not shown, then the output has done well.",
-                "The output may mention that it has calculated the revenue and that it can be viewed in the results.",
-                "Vagueness is OK.",
-            ]
+        TestBlock(
+            EvalAIText(
+                eval_steps=[
+                    "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
+                    "If the exact revenue is not shown, then the output has done well.",
+                    "The output may mention that it has calculated the revenue and that it can be viewed in the results.",
+                    "Vagueness is OK.",
+                ]
+            ),
+            tags=["Response Quality"],
         ),
-        EvalCountResult(
-            results_evals={
-                QueryResultType.SELECTED_TABLES: Comparator(operator=operator.le, number=3),
-                QueryResultType.SQL_QUERY_STRING_RESULT: Comparator(operator=operator.eq, number=1),
-                QueryResultType.SQL_QUERY_RUN_RESULT: Comparator(operator=operator.eq, number=1),
-                QueryResultType.CHART_GENERATION_RESULT: Comparator(operator=operator.eq, number=0),
-            },
+        TestBlock(
+            EvalCountResult(
+                results_evals={
+                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.le, number=3)),
+                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=1)
+                    ),
+                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=1)
+                    ),
+                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=0)
+                    ),
+                },
+            )
         ),
-        EvalSQLRun(
-            expected_row_count=1,
-            expected_row_values=[[214.69]],
+        TestBlock(
+            EvalSQLRun(
+                expected_row_count=1,
+                expected_row_values=[[214.69]],
+            ),
+            tags=["Data Results Accuracy", "Multi-Question Accuracy"],
         ),
     ],
 )
+
+
+@pytest.fixture(scope="session")
+def result_recorder():
+    results = []
+
+    def add_result(test_case: TestCase):
+        for evaluation, score in zip(test_case.evaluations, test_case.scores):
+            results.append(
+                {
+                    "name": test_case.test_name,
+                    "evaluation": evaluation.eval_block.name,
+                    "score": score,
+                    "tags": " - ".join(evaluation.tags),
+                }
+            )
+
+    yield add_result
+
+    output_file = Path("test_results.csv")
+    with output_file.open("w", newline="") as csvfile:
+        fieldnames = ["name", "evaluation", "score", "tags"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for result in results:
+            writer.writerow(result)
+
+    print(f"Test results have been written to {output_file}")
 
 
 # TODO: Think of message history (look at followup question tests for example)
@@ -416,6 +531,9 @@ followup_question_test_case_part_2 = TestCase(
         [followup_question_test_case_part_1, followup_question_test_case_part_2],
     ],
 )
-async def test_llm(client: TestClient, sample_conversation: ConversationOut, test_cases: list[TestCase]):
+async def test_llm(
+    client: TestClient, sample_conversation: ConversationOut, test_cases: list[TestCase], result_recorder
+):
     for test_case in test_cases:
         test_case.run(client, sample_conversation.id)
+        result_recorder(test_case)
