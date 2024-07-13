@@ -12,7 +12,7 @@ import { format } from "prettier-sql";
 import { Dialect } from "../Library/types";
 import { useEffect, useRef, useState } from "react";
 import { useRunSql, useUpdateSqlQuery } from "@/hooks";
-import { useParams } from "react-router-dom";
+import { useParams } from "@tanstack/react-router";
 import {
   Alert,
   AlertActions,
@@ -92,7 +92,7 @@ export const CodeBlock = ({
   ) => void;
   forChart: boolean;
 }) => {
-  const { conversationId } = useParams<{ conversationId: string }>();
+  const { conversationId } = useParams({ from: "/_app/chat/$conversationId" });
 
   const [savedCode, setSavedCode] = useState<string>(() =>
     formattedCodeOrInitial(code)

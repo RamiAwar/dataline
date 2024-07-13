@@ -2,16 +2,15 @@ import ConnectionImage from "./DatabaseDialectImage";
 import { useState } from "react";
 import { IConnection, IConversation } from "../Library/types";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { Link, useNavigate } from "react-router-dom";
-import { Routes } from "@/router";
 import { useCreateConversation, useGetConnections } from "@/hooks";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 export const ConnectionSelector = () => {
   const navigate = useNavigate();
   const [, setConversation] = useState<IConversation | null>();
   const { data } = useGetConnections();
   const createConnection = () => {
-    navigate(Routes.NewConnection);
+    navigate({ to: "/connection/new" });
   };
 
   const { mutate } = useCreateConversation({
@@ -20,7 +19,10 @@ export const ConnectionSelector = () => {
         id: resp.data.id,
         name: "Untitled chat",
       });
-      navigate(`/chat/${resp.data.id}`);
+      navigate({
+        to: "/chat/$conversationId",
+        params: { conversationId: resp.data.id },
+      });
     },
   });
 

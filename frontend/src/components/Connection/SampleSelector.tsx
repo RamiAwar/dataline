@@ -6,8 +6,7 @@ import { SampleResult } from "../../api";
 import { enqueueSnackbar } from "notistack";
 import { Button } from "@catalyst/button";
 import { useCreateSampleConnection, useGetSamples } from "@/hooks";
-import { useNavigate } from "react-router-dom";
-import { Routes } from "@/router";
+import { useNavigate } from "@tanstack/react-router";
 
 export const SampleSelector = ({ name = null }: { name: string | null }) => {
   const navigate = useNavigate();
@@ -20,7 +19,7 @@ export const SampleSelector = ({ name = null }: { name: string | null }) => {
         variant: "success",
         message: "Sample connection created",
       });
-      navigate(Routes.Root);
+      navigate({ to: "/" });
     },
   });
 

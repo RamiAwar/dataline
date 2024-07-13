@@ -3,7 +3,7 @@
 # Build frontend build export dist folder 
 # -------------------------------
 
-FROM node:21-alpine as temp-frontend
+FROM node:21-alpine AS temp-frontend
 # Need python for node-gyp in building
 RUN apk --update --no-cache add \
     libc6-compat \
@@ -35,7 +35,7 @@ RUN npm run build
 # BASE-BUILD IMAGE WITH BACKEND
 # Build backend dependencies and install them
 # -------------------------------
-FROM python:3.11.6-slim-bookworm as temp-backend
+FROM python:3.11.6-slim-bookworm AS temp-backend
 
 # Set working directory
 WORKDIR /home/dataline/backend
@@ -64,7 +64,7 @@ RUN poetry config virtualenvs.in-project true && poetry install --only main --no
 # -------------------------------
 # BASE BUILD
 # -------------------------------
-FROM python:3.11.6-slim-bookworm as base
+FROM python:3.11.6-slim-bookworm AS base
 
 WORKDIR /home/dataline
 
@@ -95,7 +95,7 @@ ENV DATA_DIRECTORY="/home/.dataline/data"
 # -------------------------------
 # SPA BUILD WITH MINIMAL DEPS
 # -------------------------------
-FROM base as spa
+FROM base AS spa
 
 WORKDIR /home/dataline/backend
 

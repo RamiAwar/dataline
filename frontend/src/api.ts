@@ -8,7 +8,11 @@ import {
   IUserInfo,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
-import { apiURL, backendApi } from "./services/api_client";
+import {
+  apiURL,
+  backendApi,
+  configureAxiosInstance,
+} from "./services/api_client";
 import { decodeBase64Data } from "./utils";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 
@@ -20,12 +24,22 @@ type ApiResponse<T> = SuccessResponse<T>;
 
 type HealthcheckResult = ApiResponse<void>;
 const healthcheck = async (): Promise<HealthcheckResult> => {
-  return (await backendApi<HealthcheckResult>({ url: "/healthcheck" })).data;
+  return (
+    await backendApi<HealthcheckResult>({
+      url: "/healthcheck",
+      withCredentials: false,
+    })
+  ).data;
 };
 
 const hasAuth = async (): Promise<boolean> => {
   try {
-    await backendApi({ url: "/auth/login", method: "HEAD" });
+    await backendApi({
+      url: "/auth/login",
+      method: "HEAD",
+      withCredentials: false,
+    });
+    configureAxiosInstance(true);
   } catch (error) {
     if (
       isAxiosError(error) &&

@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import path from "path";
 import viteImagemin from "@vheemstra/vite-plugin-imagemin";
 import imageminMozjpeg from "imagemin-mozjpeg";
@@ -37,6 +38,7 @@ export default defineConfig({
     manifest: true,
   },
   plugins: [
+    TanStackRouterVite(),
     react(),
     viteImagemin({
       plugins: {

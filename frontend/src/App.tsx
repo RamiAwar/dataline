@@ -1,5 +1,6 @@
-import { router } from "./router";
-import { RouterProvider } from "react-router-dom";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
+// Import the generated route tree
+import { routeTree } from "./routeTree.gen";
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { closeSnackbar, SnackbarKey, SnackbarProvider } from "notistack";
@@ -13,6 +14,16 @@ const action = (snackbarId: SnackbarKey | undefined) => (
   </>
 );
 
+// Create a new router instance
+const router = createRouter({ routeTree });
+
+// Register the router instance for type safety
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
 export const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -22,7 +33,7 @@ export const App = () => {
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
         action={action}
       >
-        <RouterProvider router={router} />
+        <RouterProvider router={router} context={{ queryClient }} />
       </SnackbarProvider>
     </QueryClientProvider>
   );
