@@ -62,7 +62,7 @@ But you can still influence the direction we go in. We're building this for you,
 - [x] Generating and executing SQL from natural language
 - [x] Ability to modify SQL results, save them, and re-run
 - [x] Better support for explorative questions
-- [x] Querying data files like CSV, SQLite, sas7bdat (more connection types)
+- [x] Querying data files like CSV, Excel, SQLite, sas7bdat (more connection types)
 - [x] Charting via natural language
 - [x] Modifying chart queries and re-rendering/refreshing charts
 
