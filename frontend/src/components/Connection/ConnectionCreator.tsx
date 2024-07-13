@@ -233,6 +233,10 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
             <Label className="cursor-pointer">CSV file</Label>
           </RadioField>
           <RadioField>
+            <Radio value="excel" color="white" />
+            <Label className="cursor-pointer">Excel file</Label>
+          </RadioField>
+          <RadioField>
             <Radio value="sas7bdat" color="white" />
             <Label className="cursor-pointer">sas7bdat file</Label>
           </RadioField>

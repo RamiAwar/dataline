@@ -14,6 +14,7 @@ class ConnectionModel(DBModel, UUIDMixin, kw_only=True):
     dsn: Mapped[str] = mapped_column("dsn", String, nullable=False, unique=True)
     database: Mapped[str] = mapped_column("database", String, nullable=False)
     name: Mapped[str | None] = mapped_column("name", String)
+    type: Mapped[str] = mapped_column("type", String, nullable=False)
     dialect: Mapped[str | None] = mapped_column("dialect", String)
     is_sample: Mapped[bool] = mapped_column("is_sample", Boolean, nullable=False, default=False, server_default="false")
 

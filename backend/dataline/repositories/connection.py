@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Type
 
 from pydantic import BaseModel, ConfigDict
@@ -6,6 +7,14 @@ from sqlalchemy import select
 from dataline.models.connection.model import ConnectionModel
 from dataline.repositories.base import AsyncSession, BaseRepository
 
+class ConnectionType(Enum):
+    csv = "csv"
+    sqlite = "sqlite"
+    excel = "excel"
+    postgres = "postgres"
+    mysql = "mysql"
+    snowflake = "snowflake"
+    sas = "sas"
 
 class ConnectionCreate(BaseModel):
     model_config = ConfigDict(from_attributes=True, extra="ignore")
@@ -14,6 +23,7 @@ class ConnectionCreate(BaseModel):
     database: str
     name: str
     dialect: str
+    type: str
     is_sample: bool = False
 
 
@@ -24,6 +34,7 @@ class ConnectionUpdate(BaseModel):
     database: str | None = None
     name: str | None = None
     dialect: str | None = None
+    type: str | None = None
     is_sample: bool | None = None
 
 
