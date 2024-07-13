@@ -27,7 +27,7 @@ jobs:
         run: |
           cp -r dist/assets/ assets
           cp dist/favicon.ico assets/favicon.ico
-          cp dist/manifest.json assets/manifest.json
+          cp dist/.vite/manifest.json assets/manifest.json
       - uses: actions/upload-artifact@v4
         with:
           name: frontend-artifact
