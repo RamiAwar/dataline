@@ -13,6 +13,10 @@ export function configureAxiosInstance(withCredentials: boolean) {
   axiosInstance.defaults.withCredentials = withCredentials;
 }
 
+export function isAuthEnabled() {
+  return axiosInstance.defaults.withCredentials;
+}
+
 export function backendApi<T>(
   config: AxiosRequestConfigPatch
 ): Promise<AxiosResponse<T>> {

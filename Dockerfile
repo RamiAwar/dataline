@@ -104,7 +104,7 @@ COPY --from=temp-frontend /home/dataline/frontend/dist /home/dataline/frontend/d
 RUN \
     cp -r /home/dataline/frontend/dist/assets /home/dataline/backend && \
     cp /home/dataline/frontend/dist/favicon.ico /home/dataline/backend/assets && \
-    cp /home/dataline/frontend/dist/manifest.json /home/dataline/backend/assets
+    cp /home/dataline/frontend/dist/.vite/manifest.json /home/dataline/backend/assets
 
 # This stage is meant to be used as an SPA server with FastAPI serving a React build
 ENV SPA_MODE=1
