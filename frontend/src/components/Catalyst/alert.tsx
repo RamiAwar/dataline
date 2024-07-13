@@ -51,6 +51,7 @@ export function Alert({
         </HeadlessTransitionChild>
 
         <HeadlessTransitionChild
+          // @ts-expect-error
           className="fixed inset-0 w-screen overflow-y-auto pt-6 sm:pt-0"
           enter="ease-out duration-100"
           enterFrom="opacity-0"

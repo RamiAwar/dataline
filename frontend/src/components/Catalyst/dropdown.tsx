@@ -39,6 +39,7 @@ export function DropdownButton<T extends React.ElementType = typeof Button>(
 export function DropdownMenu({
   anchor = "bottom",
   ...props
+  // @ts-expect-error
 }: { anchor?: NonNullable<HeadlessMenuItemsProps["anchor"]>["to"] } & Omit<
   HeadlessMenuItemsProps,
   "anchor"

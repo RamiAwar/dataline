@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.8.0",
-    "@headlessui/react": "^2.0.0-alpha.4",
+    "@headlessui/react": "^2.1.2",
     "@heroicons/react": "^2.0.17",
     "@microsoft/fetch-event-source": "^2.0.1",
     "@supabase/auth-ui-react": "^0.4.5",
