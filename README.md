@@ -46,7 +46,7 @@ It's privacy-focused, storing everything on your device. No ☁️, only ☀️!
 
 It hides your data from the LLMs used by default, but this can be disabled if the data is not deemed sensitive.
 
-It can connect to a variety of data sources (Postgres, Snowflake, MySQL, SQLite, CSV, sas7bdat, and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
+It can connect to a variety of data sources (Postgres, Snowflake, MySQL, [Excel](#excel-support), SQLite, CSV, sas7bdat, and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
 
 ## Where is it going?
 
@@ -58,11 +58,11 @@ But you can still influence the direction we go in. We're building this for you,
 
 ## Feature Support
 
-- [x] Broad DB support: Postgres, MySQL, Snowflake, CSV, SQLite, and more
+- [x] Broad DB support: Postgres, MySQL, Snowflake, [Excel](#excel-support), CSV, SQLite, and more
 - [x] Generating and executing SQL from natural language
 - [x] Ability to modify SQL results, save them, and re-run
 - [x] Better support for explorative questions
-- [x] Querying data files like CSV, SQLite, sas7bdat (more connection types)
+- [x] Querying data files like CSV, [Excel](#excel-support), SQLite, sas7bdat (more connection types)
 - [x] Charting via natural language
 - [x] Modifying chart queries and re-rendering/refreshing charts
 
@@ -168,3 +168,14 @@ For example, running the docker image on a remote server with IP `123.123.12.34`
 ```bash
 docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline -e ALLOWED_ORIGINS="http://123.123.12.34:7377,https://123.123.12.34:7377" ramiawar/dataline:latest
 ```
+
+
+### Excel Support
+
+We support excel files, but they will have to conform to some structure for the time being. We also support multiple sheets - each sheet will be ingested as a separate table.
+
+Right now, we will try to automatically detect the 'header row' and the first column based on some manual data processing (so as to keep things secure). This means that we might detect the wrong things if you have extra rows on top / logos / branding elements.
+
+To ensure the best quality, make sure your first row is the column names, and remove any padding rows/columns from all the sheets. If any sheet fails, the import will fail.
+
+Future improvements to this include optionally allowing LLMs to figure out what the header row is to reduce user effort.

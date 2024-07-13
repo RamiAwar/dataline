@@ -36,6 +36,7 @@ pyreadstat = "^1.2.7"
 sentry-sdk = {extras = ["fastapi"], version = "^2.3.1"}
 # https://github.com/python-poetry/poetry/issues/9191#issuecomment-2012401279
 snowflake-sqlalchemy = {git = "https://github.com/snowflakedb/snowflake-sqlalchemy.git", rev = "SNOW-1058245-sqlalchemy-20-support"}
+openpyxl = "^3.1.5"
 
 
 [tool.poetry.group.dev.dependencies]
