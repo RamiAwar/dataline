@@ -172,8 +172,9 @@ export const Conversation = () => {
             </>
           )}
         </div>
-        <div ref={messageListRef}></div>
       </Transition>
+
+      <div ref={messageListRef}></div>
 
       <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center backdrop-blur-md pt-0">
         {messages.length === 0 && !currentConversationIsQuerying && (

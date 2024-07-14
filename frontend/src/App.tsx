@@ -15,11 +15,7 @@ const action = (snackbarId: SnackbarKey | undefined) => (
 );
 
 // Create a new router instance
-// TODO: Fix the type error
-// @ts-expect-error
-const router = createRouter({
-  routeTree,
-});
+const router = createRouter({ routeTree, context: { queryClient } });
 
 // Register the router instance for type safety
 declare module "@tanstack/react-router" {
@@ -37,7 +33,7 @@ export const App = () => {
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
         action={action}
       >
-        <RouterProvider router={router} context={{ queryClient }} />
+        <RouterProvider router={router} />
       </SnackbarProvider>
     </QueryClientProvider>
   );
