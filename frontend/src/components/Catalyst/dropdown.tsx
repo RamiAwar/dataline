@@ -39,7 +39,7 @@ export function DropdownButton<T extends React.ElementType = typeof Button>(
 export function DropdownMenu({
   anchor = "bottom",
   ...props
-  // @ts-expect-error
+  // @ts-expect-error strange error after upgrading headlessui
 }: { anchor?: NonNullable<HeadlessMenuItemsProps["anchor"]>["to"] } & Omit<
   HeadlessMenuItemsProps,
   "anchor"
