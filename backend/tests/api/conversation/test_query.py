@@ -5,7 +5,7 @@ import operator
 import os
 from pathlib import Path
 from typing import Any, Callable, ClassVar, NamedTuple, Self, Sequence, cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, model_validator
 import pytest
@@ -15,10 +15,19 @@ from deepeval.test_case import LLMTestCaseParams, LLMTestCase
 from fastapi.testclient import TestClient
 
 from dataline.models.conversation.schema import ConversationOut
-from dataline.models.message.schema import QueryOut
+from dataline.models.message.schema import BaseMessageType, MessageCreate, QueryOut
 from dataline.models.result.schema import ResultOut
 from dataline.models.llm_flow.enums import QueryResultType
-from dataline.models.llm_flow.schema import SQLQueryRunResult
+from dataline.models.llm_flow.schema import (
+    ResultType,
+    SQLQueryRunResult,
+    SQLQueryStringResult,
+    SelectedTablesResult,
+    StorableResultMixin,
+)
+from dataline.repositories.base import AsyncSession
+from dataline.repositories.message import MessageRepository
+from dataline.repositories.result import ResultRepository
 
 logger = logging.getLogger(__name__)
 
@@ -214,9 +223,25 @@ class TestBlock(NamedTuple):
     tags: Sequence[str] = []
 
 
+class Message(BaseModel):
+    content: str
+    # options: Optional[MessageOptions]  # Kept for when we test msg options
+
+
+class MessageWithResults(BaseModel):
+    message: Message
+    results: list[ResultType]
+
+
+class MessagePair(BaseModel):
+    human_message: Message
+    ai_message: MessageWithResults
+
+
 class TestCase(BaseModel):
     __test__ = False  # so pytest doesn't collect this as a test
     test_name: str
+    history: list[MessagePair] = []
     query: str
     evaluations: list[TestBlock]
     scores: list[float] = []
@@ -246,6 +271,50 @@ async def user_info(client: TestClient) -> dict[str, str]:
     assert response.status_code == 200
     return user_in
 
+
+###################################### test simple questions ######################################
+### Tests simple questions
+
+simple_question_test_case = TestCase(
+    test_name="Simple Question Test",
+    query='Who are the actors in the film "ZORRO ARK"?',
+    evaluations=[
+        TestBlock(
+            EvalAIText(
+                eval_steps=[
+                    "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
+                    "The output may mention that it has obtained actor names and that they can be viewed, but it should not actually show them.",
+                    "Vagueness is OK.",
+                ]
+            ),
+            tags=["Response Quality"],
+        ),
+        TestBlock(
+            EvalCountResult(
+                results_evals={
+                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.le, number=3)),
+                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=1)
+                    ),
+                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=1)
+                    ),
+                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
+                        comparator(operator=operator.eq, number=0)
+                    ),
+                },
+            )
+        ),
+        TestBlock(
+            EvalSQLRun(
+                expected_row_count=3,
+                expected_col_names=["first_name", "last_name"],
+                expected_row_values=[["IAN", "TANDY"], ["NICK", "DEGENERES"], ["LISA", "MONROE"]],
+            ),
+            tags=["Data Results Accuracy"],
+        ),
+    ],
+)
 
 ###################################### testing sample rows ######################################
 ### Tests getting sample rows from one table, then from two tables
@@ -405,57 +474,40 @@ explorative_test_case_2 = TestCase(
 ### Asks a specific question about a movie, then asks a followup question about the movie without specifying the movie
 ### name in the second question
 
-followup_question_test_case_part_1 = TestCase(
-    test_name="Followup Question Test Part 1",
-    query='Who are the actors in the film "ZORRO ARK"?',
-    evaluations=[
-        TestBlock(
-            EvalAIText(
-                eval_steps=[
-                    "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
-                    "The output may mention that it has obtained actor names and that they can be viewed, but it should not actually show them.",
-                    "Vagueness is OK.",
-                ]
-            ),
-            tags=["Response Quality"],
-        ),
-        TestBlock(
-            EvalCountResult(
-                results_evals={
-                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.le, number=3)),
-                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=1)
-                    ),
-                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=1)
-                    ),
-                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=0)
-                    ),
-                },
-            )
-        ),
-        TestBlock(
-            EvalSQLRun(
-                expected_row_count=3,
-                expected_col_names=["first_name", "last_name"],
-                expected_row_values=[["IAN", "TANDY"], ["NICK", "DEGENERES"], ["LISA", "MONROE"]],
-            ),
-            tags=["Data Results Accuracy"],
-        ),
-    ],
-)
+str_result_id = uuid4()
 
-followup_question_test_case_part_2 = TestCase(
-    test_name="Followup Question Test Part 2",
+followup_question_test_case = TestCase(
+    test_name="Followup Question",
     query="How much revenue did that movie generate?",
+    history=[
+        MessagePair(
+            human_message=Message(content='Who are the actors in the film "ZORRO ARK"?'),
+            ai_message=MessageWithResults(
+                message=Message(
+                    content='The actors in the film "ZORRO ARK" are listed in the results of the query. You can view their first and last names in the data returned. There are three actors associated with this film.'
+                ),
+                results=[
+                    SelectedTablesResult(tables=["film", "actor", "film_actor"], linked_id=str_result_id),
+                    SQLQueryStringResult(
+                        sql="SELECT actor.first_name, actor.last_name FROM actor JOIN film_actor ON actor.actor_id = film_actor.actor_id JOIN film ON film.film_id = film_actor.film_id WHERE film.title = 'ZORRO ARK'",
+                        result_id=str_result_id,
+                    ),
+                    SQLQueryRunResult(
+                        columns=["first_name", "last_name"],
+                        rows=[["IAN", "TANDY"], ["NICK", "DEGENERES"], ["LISA", "MONROE"]],
+                        linked_id=str_result_id,
+                    ),
+                ],
+            ),
+        )
+    ],
     evaluations=[
         TestBlock(
             EvalAIText(
                 eval_steps=[
                     "Determine whether the actual output is relevant to the input, while staying friendly and helpful.",
                     "If the exact revenue is not shown, then the output has done well.",
-                    "The output may mention that it has calculated the revenue and that it can be viewed in the results.",
+                    "The output may mention that it calculated the revenue and that it can be viewed in the results.",
                     "Vagueness is OK.",
                 ]
             ),
@@ -517,23 +569,60 @@ def result_recorder():
     print(f"Test results have been written to {output_file}")
 
 
+@pytest.fixture
+def populate_conversation_history(session: AsyncSession):
+    msg_repo = MessageRepository()
+    result_repo = ResultRepository()
+
+    async def wraps(history: list[MessagePair], conversation_id: UUID):
+        for message_pair in history:
+            await msg_repo.create(
+                session,
+                MessageCreate(
+                    content=message_pair.human_message.content,
+                    role=BaseMessageType.HUMAN.value,
+                    conversation_id=conversation_id,
+                ),
+                flush=False,
+            )
+            stored_ai_message = await msg_repo.create(
+                session,
+                MessageCreate(
+                    content=message_pair.ai_message.message.content,
+                    role=BaseMessageType.AI.value,
+                    conversation_id=conversation_id,
+                ),
+                flush=True,
+            )
+            for result in message_pair.ai_message.results:
+                if isinstance(result, StorableResultMixin):
+                    await result.store_result(session, result_repo, stored_ai_message.id)
+
+    return wraps
+
+
 # TODO: Think of message history (look at followup question tests for example)
 @pytest.mark.asyncio
 @pytest.mark.expensive
 @pytest.mark.usefixtures("user_info")  # to have a valid user in the db
 @pytest.mark.parametrize(
-    "test_cases",
+    "test_case",
     [
-        [sample_rows_test_case_1],
-        [sample_rows_test_case_2],
-        [explorative_test_case_1],
-        [explorative_test_case_2],
-        [followup_question_test_case_part_1, followup_question_test_case_part_2],
+        simple_question_test_case,
+        sample_rows_test_case_1,
+        sample_rows_test_case_2,
+        explorative_test_case_1,
+        explorative_test_case_2,
+        followup_question_test_case,
     ],
 )
 async def test_llm(
-    client: TestClient, sample_conversation: ConversationOut, test_cases: list[TestCase], result_recorder
+    client: TestClient,
+    sample_conversation: ConversationOut,
+    test_case: TestCase,
+    result_recorder,
+    populate_conversation_history,
 ):
-    for test_case in test_cases:
-        test_case.run(client, sample_conversation.id)
-        result_recorder(test_case)
+    await populate_conversation_history(test_case.history, sample_conversation.id)
+    test_case.run(client, sample_conversation.id)
+    result_recorder(test_case)
