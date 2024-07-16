@@ -61,7 +61,6 @@ def do_run_migrations(connection: Connection) -> None:
     context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
 
     with context.begin_transaction():
-        context.execute(text("PRAGMA foreign_keys=ON;"))
         context.run_migrations()
 
 
@@ -104,7 +103,6 @@ def run_migrations_online() -> None:
         context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
 
         with context.begin_transaction():
-            context.execute(text("PRAGMA foreign_keys=ON;"))
             context.run_migrations()
 
 
