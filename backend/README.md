@@ -3,6 +3,7 @@
 - [Installation](#installation)
 - [Environment setup](#environment-setup)
 - [Running the backend](#running-the-backend)
+- [Alembic Migrations](#alembic-migrations)
 - [Current state](#current-state)
   - [pre-commit](#pre-commit)
 
@@ -54,6 +55,24 @@ uvicorn dataline.main:app --reload --port=7377
 ```
 
 To run tests: `PYTHONPATH=. pytest . -vv`
+
+## Alembic Migrations
+
+When adding new migrations using Alembic, please remember to include the following PRAGMA FK commands if your migration requires foreign key relationship support:
+
+```sql
+PRAGMA foreign_keys=OFF;
+-- Your migration commands here
+PRAGMA foreign_keys=ON;
+```
+
+Alembic:
+```python
+# disable foreign key checking
+op.execute("PRAGMA foreign_keys=OFF;")
+```
+
+This ensures that foreign key constraints are properly handled during the migration process.
 
 ## Current state
 

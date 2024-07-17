@@ -18,9 +18,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # disable foreign key checking to prevent conversation loss
-    op.execute("PRAGMA foreign_keys=OFF;")
-
     # Add 'type' column as nullable
     op.add_column("connections", sa.Column("type", sa.String(), nullable=True))
 
@@ -34,9 +31,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # disable foreign key checking to prevent conversation loss
-    op.execute("PRAGMA foreign_keys=OFF;")
-
     # Drop the 'type' column
     with op.batch_alter_table("connections") as batch_op:
         batch_op.drop_column("type")
