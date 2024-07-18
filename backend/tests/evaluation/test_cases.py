@@ -13,6 +13,7 @@ from tests.evaluation.utils import (
     EvalCountResultTuple,
     EvalSQLRun,
     EvalSQLString,
+    GroupedEvalCountResult,
     Message,
     MessagePair,
     MessageWithResults,
@@ -37,19 +38,33 @@ TEST_CASES = [
                 ],
                 metadata=TestMetadata(tags=[Tag.RESPONSE_QUALITY]),
             ),
-            EvalCountResult(
-                results_evals={
-                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.le, number=3)),
-                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=1)
+            GroupedEvalCountResult(
+                eval_counts=[
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SELECTED_TABLES,
+                            EvalCountResultTuple(comparator(operator=operator.le, number=3)),
+                        )
                     ),
-                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=1)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_STRING_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
+                        )
                     ),
-                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=0)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_RUN_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
+                        )
                     ),
-                },
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.CHART_GENERATION_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
+                        ),
+                    ),
+                ],
             ),
             EvalSQLRun(
                 expected_row_count=3,
@@ -71,19 +86,33 @@ TEST_CASES = [
                 ],
                 metadata=TestMetadata(tags=[Tag.RESPONSE_QUALITY]),
             ),
-            EvalCountResult(
-                results_evals={
-                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
-                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=1)
+            GroupedEvalCountResult(
+                eval_counts=[
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SELECTED_TABLES,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
+                        )
                     ),
-                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=1)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_STRING_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
+                        )
                     ),
-                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=0)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_RUN_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
+                        )
                     ),
-                },
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.CHART_GENERATION_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
+                        )
+                    ),
+                ],
             ),
             EvalSQLString(
                 eval_steps=[
@@ -107,19 +136,33 @@ TEST_CASES = [
                 ],
                 metadata=TestMetadata(tags=[Tag.RESPONSE_QUALITY]),
             ),
-            EvalCountResult(
-                results_evals={
-                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.ge, number=1)),
-                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=2)
+            GroupedEvalCountResult(
+                eval_counts=[
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SELECTED_TABLES,
+                            EvalCountResultTuple(comparator(operator=operator.ge, number=1)),
+                        )
                     ),
-                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=2)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_STRING_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=2)),
+                        )
                     ),
-                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=0)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_RUN_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=2)),
+                        )
                     ),
-                },
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.CHART_GENERATION_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
+                        )
+                    ),
+                ],
             ),
             EvalSQLString(
                 eval_steps=[
@@ -143,19 +186,33 @@ TEST_CASES = [
                 ],
                 metadata=TestMetadata(tags=[Tag.RESPONSE_QUALITY, Tag.EXPLORATION_ABILITY]),
             ),
-            EvalCountResult(
-                results_evals={
-                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.le, number=2)),
-                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=0)
+            GroupedEvalCountResult(
+                eval_counts=[
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SELECTED_TABLES,
+                            EvalCountResultTuple(comparator(operator=operator.le, number=2)),
+                        )
                     ),
-                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=0)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_STRING_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
+                        )
                     ),
-                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=0)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_RUN_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
+                        )
                     ),
-                },
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.CHART_GENERATION_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
+                        )
+                    ),
+                ],
             ),
         ],
     ),
@@ -169,19 +226,33 @@ TEST_CASES = [
                 ],
                 metadata=TestMetadata(tags=[Tag.RESPONSE_QUALITY, Tag.EXPLORATION_ABILITY]),
             ),
-            EvalCountResult(
-                results_evals={
-                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.le, number=2)),
-                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=0)
+            GroupedEvalCountResult(
+                eval_counts=[
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SELECTED_TABLES,
+                            EvalCountResultTuple(comparator(operator=operator.le, number=2)),
+                        )
                     ),
-                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=0)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_STRING_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
+                        )
                     ),
-                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=0)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_RUN_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
+                        )
                     ),
-                },
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.CHART_GENERATION_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
+                        )
+                    ),
+                ],
             ),
         ],
     ),
@@ -231,19 +302,33 @@ TEST_CASES = [
                 ],
                 metadata=TestMetadata(tags=[Tag.RESPONSE_QUALITY]),
             ),
-            EvalCountResult(
-                results_evals={
-                    QueryResultType.SELECTED_TABLES: EvalCountResultTuple(comparator(operator=operator.le, number=3)),
-                    QueryResultType.SQL_QUERY_STRING_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=1)
+            GroupedEvalCountResult(
+                eval_counts=[
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SELECTED_TABLES,
+                            EvalCountResultTuple(comparator(operator=operator.le, number=3)),
+                        )
                     ),
-                    QueryResultType.SQL_QUERY_RUN_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=1)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_STRING_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
+                        )
                     ),
-                    QueryResultType.CHART_GENERATION_RESULT: EvalCountResultTuple(
-                        comparator(operator=operator.eq, number=0)
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_RUN_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
+                        )
                     ),
-                },
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.CHART_GENERATION_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
+                        )
+                    ),
+                ],
             ),
             EvalSQLRun(
                 expected_row_count=1,

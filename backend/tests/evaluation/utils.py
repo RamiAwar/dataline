@@ -6,7 +6,7 @@ from uuid import UUID
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from fastapi.testclient import TestClient
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from dataline.models.llm_flow.enums import QueryResultType
 from dataline.models.llm_flow.schema import ResultType, SQLQueryRunResult
@@ -88,8 +88,8 @@ class Tag(StrEnum):
     FOLLOWUP_ABILITY = "Followup Ability"
 
 
-class TestMetadata(NamedTuple):
-    weight: float = 1.0
+class TestMetadata(BaseModel):
+    weight: float = Field(default=1.0, ge=0.0, le=1.0)
     tags: Sequence[Tag] = []
 
 
@@ -128,17 +128,29 @@ class EvalCountResultTuple(NamedTuple):
 
 class EvalCountResult(EvalBlockBase):
     name: ClassVar[str] = "result_count_evaluation"
-    results_evals: dict[QueryResultType, EvalCountResultTuple]
+    eval_count: tuple[QueryResultType, EvalCountResultTuple]
 
     def evaluate(self, response: QueryOut) -> float:
-        checks_passed = 0
-        total_weights: float = 0.0
-        for result_type, result_tuple in self.results_evals.items():
-            total_weights += result_tuple.weight
-            filtered_results = get_results_of_type(result_type, response)
-            if result_tuple.comparator(len(filtered_results)):
-                checks_passed += 1
-        return checks_passed / total_weights
+        result_type, result_tuple = self.eval_count
+        filtered_results = get_results_of_type(result_type, response)
+        if result_tuple.comparator(len(filtered_results)):
+            return 1
+        return 0
+
+
+class GroupedEvalCountResult(EvalBlockBase):
+    name: ClassVar[str] = "grouped_result_count_evaluation"
+    eval_counts: Sequence[EvalCountResult]
+
+    def evaluate(self, response: QueryOut) -> float:
+        # Return normalized score across all eval counts
+        score = 0.0
+        total_weights = 0.0
+        for eval_count in self.eval_counts:
+            score += eval_count.evaluate(response) * eval_count.metadata.weight
+            total_weights += eval_count.metadata.weight
+
+        return score / total_weights
 
 
 class EvalSQLString(EvalBlockBase):
