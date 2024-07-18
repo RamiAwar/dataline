@@ -1,76 +1,42 @@
-from abc import ABC, abstractmethod
 import csv
 import logging
 import operator
 import os
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Callable, ClassVar, NamedTuple, Self, Sequence, cast
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, model_validator
 import pytest
 import pytest_asyncio
-from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams, LLMTestCase
+from deepeval.test_case import LLMTestCaseParams
 from fastapi.testclient import TestClient
+from pydantic import BaseModel, model_validator
 
 from dataline.models.conversation.schema import ConversationOut
-from dataline.models.message.schema import BaseMessageType, MessageCreate, QueryOut
-from dataline.models.result.schema import ResultOut
 from dataline.models.llm_flow.enums import QueryResultType
 from dataline.models.llm_flow.schema import (
     ResultType,
+    SelectedTablesResult,
     SQLQueryRunResult,
     SQLQueryStringResult,
-    SelectedTablesResult,
     StorableResultMixin,
 )
+from dataline.models.message.schema import BaseMessageType, MessageCreate, QueryOut
+from dataline.models.result.schema import ResultOut
 from dataline.repositories.base import AsyncSession
 from dataline.repositories.message import MessageRepository
 from dataline.repositories.result import ResultRepository
+from tests.evaluation.utils import evaluate_message_content
 
 logger = logging.getLogger(__name__)
 
 
-def evaluate_message_content(
-    generated_message: str,
-    query: str,
-    eval_steps: list[str],
-    raise_if_fail: bool = False,
-    eval_params: list[LLMTestCaseParams] | None = None,
-) -> GEval:
-    """
-    Args:
-    - generated_message: string message from the AI
-    - query: human message
-    - eval_steps: an explanation of how to evaluate the output
-    - raise_if_fail: if True, runs an assertion that the evaluation is successful
-    - eval_params: the parameters that are relevant for evaluation
-    """
-    if eval_params is None:
-        eval_params = [LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT]
-    test_case = LLMTestCase(input=query, actual_output=generated_message)
-    # don't really care about eval name
-    correctness_metric = GEval(name="Metric", evaluation_steps=eval_steps, evaluation_params=eval_params)
-
-    correctness_metric.measure(test_case)
-    if raise_if_fail:
-        assert correctness_metric.is_successful(), "\n".join(
-            [
-                f"score={correctness_metric.score}",
-                f"reason={correctness_metric.reason}",
-                f"{query=}",
-                f"{generated_message=}",
-            ]
-        )
-    return correctness_metric
-
-
-def get_results_of_type(result_type: QueryResultType, response: QueryOut):
+def get_results_of_type(result_type: QueryResultType, response: QueryOut) -> list[ResultOut]:
     return [result for result in response.ai_message.results if result.type == result_type.value]
 
 
-def get_query_out_from_stream(lines: list[str]):
+def get_query_out_from_stream(lines: list[str]) -> QueryOut:
     assert len(lines) >= 3
     assert lines[-3] == "event: stored_messages_event"
     assert lines[-2].startswith("data: ")
