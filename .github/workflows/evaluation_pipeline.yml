@@ -2,6 +2,7 @@ name: Evaluate LLM Workflow and Post Comment
 
 on:
   push:
+  workflow_dispatch:
 
 jobs:
   evaluation-pipeline:
@@ -39,10 +40,23 @@ jobs:
         id: markdown
         run: |
           markdown=$(cat scores.md)
-          echo "::set-output name=markdown::$markdown"
-      - name: Post comment on PR
-        uses: thollander/actions-comment-pull-request@v1
+          echo "markdown<<EOF" >> $GITHUB_OUTPUT
+          echo "$markdown" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Find associated pull request
+        uses: jwalton/gh-find-current-pr@v1
+        id: findPr
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Post comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: success() && steps.findPr.outputs.number
+        with:
+          number: ${{ steps.findPr.outputs.number }}
           message: ${{ steps.markdown.outputs.markdown }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      - name: Upload scores.md as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: evaluation-scores
+          path: ./backend/scores.md
