@@ -302,29 +302,33 @@ TEST_CASES = [
                 ],
                 metadata=TestMetadata(tags=[Tag.RESPONSE_QUALITY]),
             ),
-            EvalCountResult(
-                eval_count=(
-                    QueryResultType.SELECTED_TABLES,
-                    EvalCountResultTuple(comparator(operator=operator.le, number=3)),
-                )
-            ),
-            EvalCountResult(
-                eval_count=(
-                    QueryResultType.SQL_QUERY_STRING_RESULT,
-                    EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
-                )
-            ),
-            EvalCountResult(
-                eval_count=(
-                    QueryResultType.SQL_QUERY_RUN_RESULT,
-                    EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
-                )
-            ),
-            EvalCountResult(
-                eval_count=(
-                    QueryResultType.CHART_GENERATION_RESULT,
-                    EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
-                )
+            GroupedEvalCountResult(
+                eval_counts=[
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SELECTED_TABLES,
+                            EvalCountResultTuple(comparator(operator=operator.le, number=3)),
+                        )
+                    ),
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_STRING_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
+                        )
+                    ),
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.SQL_QUERY_RUN_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=1)),
+                        )
+                    ),
+                    EvalCountResult(
+                        eval_count=(
+                            QueryResultType.CHART_GENERATION_RESULT,
+                            EvalCountResultTuple(comparator(operator=operator.eq, number=0)),
+                        )
+                    ),
+                ],
             ),
             EvalSQLRun(
                 expected_row_count=1,

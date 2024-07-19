@@ -167,25 +167,20 @@ class GroupedEvalCountResult(EvalBlockBase):
     eval_counts: Sequence[EvalCountResult]
 
     def evaluate(self, response: QueryOut) -> float:
-        # Return normalized score across all eval counts
-        # We have to scale here so that the "sub-eval count" weights are taken into account
-        # in the generated CSV file. Otherwise each sub-eval count would be weighted equally
-        # and the total score would be > 1.0 which is the max score for the grouped eval counts.
-        score = 0.0
-        total_weights = 0.0
-        for eval_count in self.eval_counts:
-            score += eval_count.evaluate(response) * eval_count.metadata.weight
-            total_weights += eval_count.metadata.weight
-
-        return score / total_weights
+        return 0.0  # not used for this class
 
     def evaluate_and_serialize(self, response: QueryOut) -> list[tuple[str, float, float, float, Sequence[str]]]:
         results = []
+        total_weight = sum(eval_count.metadata.weight for eval_count in self.eval_counts)
+
         for eval_count in self.eval_counts:
             result = eval_count.evaluate_and_serialize(response)
             if isinstance(result, list):
                 raise ValueError("EvalCountResult should not return multiple results")
-            results.append(result)
+
+            # adjust weight to sub-eval-count-weight / total_weight (normalize) * grouped_eval_count.metadata.weight
+            adjusted_weight = result[2] / total_weight * eval_count.metadata.weight
+            results.append((result[0], result[1], adjusted_weight, result[3], result[4]))
 
         return results
 
