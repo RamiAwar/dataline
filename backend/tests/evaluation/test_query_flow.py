@@ -1,12 +1,14 @@
+import csv
 import logging
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 from dataline.models.conversation.schema import ConversationOut
-from tests.evaluation.conftest import PopulateHistoryType, ResultRecorder
+from dataline.repositories.base import AsyncSession
+from tests.evaluation.conftest import populate_conversation_history
 from tests.evaluation.test_cases import TEST_CASES
-from tests.evaluation.utils import TestCase
 
 logger = logging.getLogger(__name__)
 
@@ -14,14 +16,29 @@ logger = logging.getLogger(__name__)
 @pytest.mark.asyncio
 @pytest.mark.expensive
 @pytest.mark.usefixtures("user_info")  # to have a valid user in the db
-@pytest.mark.parametrize("test_case", TEST_CASES)
 async def test_llm(
     client: TestClient,
+    session: AsyncSession,
     sample_conversation: ConversationOut,
-    test_case: TestCase,
-    result_recorder: ResultRecorder,
-    populate_conversation_history: PopulateHistoryType,
 ) -> None:
-    await populate_conversation_history(test_case.message_history, sample_conversation.id)
-    test_case.run(client, sample_conversation.id)
-    result_recorder(test_case)
+    rows = []
+    for test_case in TEST_CASES:
+        nested = session.begin_nested()
+        async with nested:
+            await populate_conversation_history(session, test_case.message_history, sample_conversation.id)
+            rows.extend(test_case.run(client, sample_conversation.id))
+            await nested.rollback()
+
+    output_file = Path("test_results.csv")
+    with output_file.open("w", newline="") as csvfile:
+        fieldnames = ["name", "evaluation", "score", "weight", "time", "tags"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        mapped_rows = map(
+            lambda x: {"name": x[0], "evaluation": x[1], "score": x[2], "weight": x[3], "time": x[4], "tags": x[5]},
+            rows,
+        )
+        writer.writerows(mapped_rows)
+
+    print(f"Test results have been written to {output_file}")

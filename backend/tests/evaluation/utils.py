@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 from enum import Enum, StrEnum
 from typing import Any, Callable, ClassVar, NamedTuple, Self, Sequence, cast
@@ -12,6 +13,10 @@ from dataline.models.llm_flow.enums import QueryResultType
 from dataline.models.llm_flow.schema import ResultType, SQLQueryRunResult
 from dataline.models.message.schema import QueryOut
 from dataline.models.result.schema import ResultOut
+
+
+def snake(s: str) -> str:
+    return s.replace(" ", "_").lower()
 
 
 def evaluate_message_content(
@@ -88,6 +93,10 @@ class Tag(StrEnum):
     FOLLOWUP_ABILITY = "Followup Ability"
 
 
+def render_tags(tags: Sequence[Tag]) -> list[str]:
+    return [snake(t.value) for t in tags]
+
+
 class TestMetadata(BaseModel):
     weight: float = Field(default=1.0, ge=0.0, le=1.0)
     tags: Sequence[Tag] = []
@@ -105,6 +114,14 @@ class EvalBlockBase(ABC, BaseModel):
     @abstractmethod
     def evaluate(self, response: QueryOut) -> float:
         raise NotImplementedError
+
+    def evaluate_and_serialize(
+        self, response: QueryOut
+    ) -> tuple[str, float, float, float, Sequence[str]] | list[tuple[str, float, float, float, Sequence[str]]]:
+        start = time.time()
+        score = self.evaluate(response)
+        time_delta = round(time.time() - start, 4)
+        return self.name, score, self.metadata.weight, time_delta, render_tags(self.metadata.tags)
 
 
 class EvalAIText(EvalBlockBase):
@@ -127,7 +144,7 @@ class EvalCountResultTuple(NamedTuple):
 
 
 class EvalCountResult(EvalBlockBase):
-    name: ClassVar[str] = "result_count_evaluation"
+    name: ClassVar[str] = "result_count"
     eval_count: tuple[QueryResultType, EvalCountResultTuple]
 
     def evaluate(self, response: QueryOut) -> float:
@@ -137,6 +154,13 @@ class EvalCountResult(EvalBlockBase):
             return 1
         return 0
 
+    def evaluate_and_serialize(self, response: QueryOut) -> tuple[str, float, float, float, Sequence[str]]:
+        start = time.time()
+        score = self.evaluate(response)
+        time_delta = round(time.time() - start, 4)
+        name = f"{self.name}_{self.eval_count[0].value}"
+        return name, score, self.metadata.weight, time_delta, render_tags(self.metadata.tags)
+
 
 class GroupedEvalCountResult(EvalBlockBase):
     name: ClassVar[str] = "grouped_result_count_evaluation"
@@ -144,6 +168,9 @@ class GroupedEvalCountResult(EvalBlockBase):
 
     def evaluate(self, response: QueryOut) -> float:
         # Return normalized score across all eval counts
+        # We have to scale here so that the "sub-eval count" weights are taken into account
+        # in the generated CSV file. Otherwise each sub-eval count would be weighted equally
+        # and the total score would be > 1.0 which is the max score for the grouped eval counts.
         score = 0.0
         total_weights = 0.0
         for eval_count in self.eval_counts:
@@ -151,6 +178,16 @@ class GroupedEvalCountResult(EvalBlockBase):
             total_weights += eval_count.metadata.weight
 
         return score / total_weights
+
+    def evaluate_and_serialize(self, response: QueryOut) -> list[tuple[str, float, float, float, Sequence[str]]]:
+        results = []
+        for eval_count in self.eval_counts:
+            result = eval_count.evaluate_and_serialize(response)
+            if isinstance(result, list):
+                raise ValueError("EvalCountResult should not return multiple results")
+            results.append(result)
+
+        return results
 
 
 class EvalSQLString(EvalBlockBase):
@@ -257,13 +294,17 @@ class TestCase(BaseModel):
     scores: list[float] = []
     total_score: float | None = None
 
-    def run(self, client: TestClient, conversation_id: UUID) -> list[tuple[str, float]]:
-        evaluation_results: list[tuple[str, float]] = []
+    # TODO: Maybe created named tuples for the results - getting a bit messy
+    def run(
+        self, client: TestClient, conversation_id: UUID
+    ) -> list[tuple[str, str, float, float, float, Sequence[str]]]:
+        evaluation_results: list[tuple[str, float, float, float, Sequence[str]]] = []
         response = call_query_endpoint(client, conversation_id, self.query)
         for evaluation in self.evaluations:
-            eval_score = evaluation.evaluate(response) * evaluation.metadata.weight
-            self.scores.append(eval_score)
-        total_weights = sum(e.metadata.weight for e in self.evaluations)
-        total_score = sum([e[1] for e in evaluation_results]) / total_weights
-        self.total_score = total_score
-        return evaluation_results
+            result = evaluation.evaluate_and_serialize(response)
+            if isinstance(result, list):
+                evaluation_results.extend(result)
+            else:
+                evaluation_results.append(result)
+
+        return [(snake(self.test_name), *result) for result in evaluation_results]
