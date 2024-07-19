@@ -1,7 +1,7 @@
 name: Evaluate LLM Workflow and Post Comment
 
 on:
-  workflow_dispatch:
+  push:
 
 jobs:
   evaluation-pipeline:
