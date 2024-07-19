@@ -1,10 +1,6 @@
-import csv
 import os
-from pathlib import Path
-from typing import Callable, Coroutine, Generator, Protocol
 from uuid import UUID
 
-import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 
@@ -13,7 +9,7 @@ from dataline.models.message.schema import BaseMessageType, MessageCreate
 from dataline.repositories.base import AsyncSession
 from dataline.repositories.message import MessageRepository
 from dataline.repositories.result import ResultRepository
-from tests.evaluation.utils import MessagePair, TestCase
+from tests.evaluation.utils import MessagePair
 
 
 @pytest_asyncio.fixture
@@ -61,7 +57,3 @@ async def populate_conversation_history(
         for result in message_pair.ai_message.results:
             if isinstance(result, StorableResultMixin):
                 await result.store_result(session, result_repo, stored_ai_message.id)
-
-
-class ResultRecorder(Protocol):
-    def __call__(self, test_case: TestCase) -> None: ...

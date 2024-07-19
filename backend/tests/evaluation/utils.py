@@ -1,6 +1,6 @@
 import time
 from abc import ABC, abstractmethod
-from enum import Enum, StrEnum
+from enum import StrEnum
 from typing import Any, Callable, ClassVar, NamedTuple, Self, Sequence, cast
 from uuid import UUID
 
