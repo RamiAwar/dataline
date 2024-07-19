@@ -34,7 +34,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: PYTHONPATH=. poetry run pytest tests/evaluation/test_query_flow.py --run-expensive
       - name: Run score aggregation script
-        run: python tests/evaluation/aggregate_scores.py
+        run: poetry run python tests/evaluation/aggregate_scores.py
       - name: Generate markdown comment
         id: markdown
         run: |
