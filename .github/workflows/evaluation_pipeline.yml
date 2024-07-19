@@ -6,7 +6,6 @@ permissions:
   issues: write
 
 on:
-  push:
   workflow_dispatch:
 
 jobs:
@@ -53,21 +52,25 @@ jobs:
         id: findPr
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Post comment on PR
+      - name: Post or update comment on PR
         uses: marocchino/sticky-pull-request-comment@v2
         if: success() && steps.findPr.outputs.number
         with:
           number: ${{ steps.findPr.outputs.number }}
-          message: ${{ steps.markdown.outputs.markdown }}
+          message: |
+            ## Evaluation Results (Updated: ${{ github.event.head_commit.timestamp }})
+           
+            ${{ steps.markdown.outputs.markdown }}
+
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload scores.md as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: evaluation-scores
+          name: evaluation-scores.md
           path: ./backend/scores.md
       - name: Upload test results as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: test-results-csv
+          name: test-results.csv
           path: ./backend/test_results.csv
   
