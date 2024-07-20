@@ -21,31 +21,36 @@ jobs:
           python-version: 3.11.6
       - name: Install poetry
         uses: abatilo/actions-poetry@v2
+
       - name: Setup a local virtual environment (if no poetry.toml file)
         run: |
           poetry config virtualenvs.create true --local
           poetry config virtualenvs.in-project true --local
+
       - uses: actions/cache@v3
         name: Define a cache for the virtual environment based on the dependencies lock file
         with:
           path: ./.venv
           key: venv-${{ hashFiles('poetry.lock') }}
+
       - name: Install the project dependencies
         run: poetry install --with dev --no-interaction --no-root
+
       - name: Run eval pipeline test cases
         env:
           DATA_DIRECTORY: ./
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: PYTHONPATH=. poetry run pytest tests/evaluation/test_query_flow.py --run-expensive
+
       - name: Run score aggregation script
         run: poetry run python tests/evaluation/aggregate_scores.py
+      
       - name: Save scores as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: evaluation_scores.md
+          name: scores.md
           path: ./backend/scores.md
-      
-  
+
       - name: Find associated pull request
         uses: jwalton/gh-find-current-pr@v1
         id: findPr
