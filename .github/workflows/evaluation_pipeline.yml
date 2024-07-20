@@ -66,7 +66,7 @@ jobs:
         with:
           workflow: evaluate-llm.yml
           branch: main
-          name: llm-evaluation-scores
+          name: scores.md
           path: main-scores
 
       - name: Compare scores and generate report
