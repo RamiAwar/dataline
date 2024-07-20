@@ -30,12 +30,13 @@ langgraph = "^0.0.48"
 langsmith = "^0.1.57"
 langchain-openai = "^0.1.6"
 mirascope = "^0.12.3"
-tenacity = "^8.3.0"
+tenacity = "^8.2.3"
 pandas = "^2.2.2"
 pyreadstat = "^1.2.7"
 sentry-sdk = {extras = ["fastapi"], version = "^2.3.1"}
 snowflake-sqlalchemy = "^1.6.1"
 openpyxl = "^3.1.5"
+deepeval = "^0.21.55"
 
 
 [tool.poetry.group.dev.dependencies]

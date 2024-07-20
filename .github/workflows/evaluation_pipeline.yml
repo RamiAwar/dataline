@@ -1,0 +1,75 @@
+name: Evaluate LLM Workflow and Post Comment
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+on: workflow_dispatch
+
+jobs:
+  evaluation-pipeline:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.6
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Setup a local virtual environment (if no poetry.toml file)
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+      - uses: actions/cache@v3
+        name: Define a cache for the virtual environment based on the dependencies lock file
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+      - name: Install the project dependencies
+        run: poetry install --with dev --no-interaction --no-root
+      - name: Run eval pipeline test cases
+        env:
+          DATA_DIRECTORY: ./
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: PYTHONPATH=. poetry run pytest tests/evaluation/test_query_flow.py --run-expensive
+      - name: Run score aggregation script
+        run: poetry run python tests/evaluation/aggregate_scores.py
+      - name: Generate markdown comment
+        id: markdown
+        run: |
+          markdown=$(cat scores.md)
+          echo "markdown<<EOF" >> $GITHUB_OUTPUT
+          echo "$markdown" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Find associated pull request
+        uses: jwalton/gh-find-current-pr@v1
+        id: findPr
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Post or update comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: success() && steps.findPr.outputs.number
+        with:
+          number: ${{ steps.findPr.outputs.number }}
+          message: |
+            ## Evaluation Results (Updated: ${{ github.event.head_commit.timestamp }})
+           
+            ${{ steps.markdown.outputs.markdown }}
+
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload scores.md as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: evaluation-scores.md
+          path: ./backend/scores.md
+      - name: Upload test results as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results.csv
+          path: ./backend/test_results.csv
+  
