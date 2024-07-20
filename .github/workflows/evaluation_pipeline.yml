@@ -39,34 +39,55 @@ jobs:
         run: PYTHONPATH=. poetry run pytest tests/evaluation/test_query_flow.py --run-expensive
       - name: Run score aggregation script
         run: poetry run python tests/evaluation/aggregate_scores.py
-      - name: Generate markdown comment
-        id: markdown
-        run: |
-          markdown=$(cat scores.md)
-          echo "markdown<<EOF" >> $GITHUB_OUTPUT
-          echo "$markdown" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Save scores as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: evaluation_scores.md
+          path: ./backend/scores.md
+      
+  
       - name: Find associated pull request
         uses: jwalton/gh-find-current-pr@v1
         id: findPr
+        # Only run this on PRs
+        if: github.ref != 'refs/heads/main'
+        continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Post or update comment on PR
-        uses: marocchino/sticky-pull-request-comment@v2
+
+      - name: Download main branch scores
+        if: github.ref != 'refs/heads/main'
+        uses: dawidd6/action-download-artifact@v2
+        continue-on-error: true
+        with:
+          workflow: evaluate-llm.yml
+          branch: main
+          name: llm-evaluation-scores
+          path: main-scores
+
+      - name: Compare scores and generate report
+        if: github.ref != 'refs/heads/main'
+        run: |
+          poetry run python tests/evaluation/compare_scores.py \
+            scores.md \
+            main-scores/scores.md \
+            comparison.md
+            
+      - name: Post comparison on PR
         if: success() && steps.findPr.outputs.number
+        uses: marocchino/sticky-pull-request-comment@v2
+        continue-on-error: true
         with:
           number: ${{ steps.findPr.outputs.number }}
-          message: |
-            ## Evaluation Results (Updated: ${{ github.event.head_commit.timestamp }})
-           
-            ${{ steps.markdown.outputs.markdown }}
+          path: comparison.md
 
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload scores.md as artifact
+      - name: Upload comparison as artifact
+        if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@v3
         with:
-          name: evaluation-scores.md
-          path: ./backend/scores.md
+          name: score-comparison
+          path: comparison.md
+
       - name: Upload test results as artifact
         uses: actions/upload-artifact@v3
         with:
