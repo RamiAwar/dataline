@@ -13,6 +13,11 @@
 <img src="https://img.shields.io/docker/pulls/ramiawar/dataline?color=%2338bdf8">
 </div>
 
+<div align="center">
+  <a href="https://github.com/RamiAwar/dataline/actions/workflows/test.yml">
+    <img src="https://github.com/RamiAwar/dataline/actions/workflows/test.yml/badge.svg?branch=main&event=push" />
+  </a>
+</div>
 ---
 
 - [Who is this for](#who-is-this-for)
