@@ -41,15 +41,21 @@ jobs:
           DATA_DIRECTORY: ./
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: PYTHONPATH=. poetry run pytest tests/evaluation/test_query_flow.py --run-expensive
+      
+      - name: Upload test results as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results.csv
+          path: ./backend/test_results.csv
 
       - name: Run score aggregation script
         run: poetry run python tests/evaluation/aggregate_scores.py
-      
+
       - name: Save scores as artifact
         uses: actions/upload-artifact@v3
         with:
           name: scores.md
-          path: scores.md
+          path: ./backend/scores.md
 
       - name: Find associated pull request
         uses: jwalton/gh-find-current-pr@v1
@@ -64,55 +70,39 @@ jobs:
         if: github.ref != 'refs/heads/main'
         uses: dawidd6/action-download-artifact@v2
         with:
-          workflow: evaluate-llm.yml
-          branch: main
-          name: scores.md
-          path: main-scores
           workflow: evaluation_pipeline.yml
           branch: main
           name: scores.md
-          path: main-scores
-      
-      - name: Verify working directory and file locations
-        run: |
-          echo "Current working directory:"
-          pwd
-          echo "Contents of current directory:"
-          ls -la
-          echo "Contents of parent directory:"
-          ls -la ..
-          echo "Contents of main-scores directory:"
-          ls -la main-scores || echo "main-scores directory not found"
-          echo "Content of scores.md (if exists):"
-          cat scores.md || echo "scores.md not found"
-          echo "Content of main-scores/scores.md (if exists):"
-          cat main-scores/scores.md || echo "main-scores/scores.md not found"
+          path: ./backend/main-scores
 
       - name: Compare scores and generate report
         if: github.ref != 'refs/heads/main'
         run: |
           poetry run python tests/evaluation/compare_scores.py \
             scores.md \
-            main-scores/scores.md \
-            comparison.md
-            
+            main-scores/scores.md
+
+      - name: Generate markdown comment
+        if: github.ref != 'refs/heads/main'
+        id: comparison
+        run: |
+          comparison=$(cat comparison.md )
+          echo "comparison<<EOF" >> $GITHUB_OUTPUT
+          echo "$comparison" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Post comparison on PR
         if: success() && steps.findPr.outputs.number
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           number: ${{ steps.findPr.outputs.number }}
-          path: comparison.md
+          message: |
+            ${{ steps.comparison.outputs.comparison }}
 
       - name: Upload comparison as artifact
         if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@v3
         with:
           name: score-comparison
-          path: comparison.md
-
-      - name: Upload test results as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results.csv
-          path: ./backend/test_results.csv
+          path: ./backend/comparison.md
   
