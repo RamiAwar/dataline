@@ -1,5 +1,10 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Dialog,
+  DialogPanel,
+  Transition as HeadlessTransition,
+  TransitionChild as HeadlessTransitionChild,
+} from "@headlessui/react";
 import {
   Bars3Icon,
   PlusIcon,
@@ -10,9 +15,9 @@ import {
 } from "@heroicons/react/24/outline";
 import logo from "@/assets/images/logo_md.png";
 import { PencilSquareIcon } from "@heroicons/react/20/solid";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "@tanstack/react-router";
 import { ProfileDropdown } from "@components/Home/ProfileDropdown";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import {
   useDeleteConversation,
   useGetConnections,
@@ -46,13 +51,13 @@ function classNames(...classes: string[]) {
 }
 
 export const Sidebar = () => {
-  const params = useParams<{ conversationId: string }>();
+  const params = useParams({ strict: false });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: conversationsData } = useGetConversations();
   const { data: connectionsData } = useGetConnections();
   const { mutate: deleteConversation } = useDeleteConversation({
     onSuccess() {
-      navigate("/");
+      navigate({ to: "/" });
     },
   });
 
@@ -143,14 +148,13 @@ export const Sidebar = () => {
   return (
     // Sidebar component, swap this element with another sidebar if you like
     <div>
-      <Transition.Root show={sidebarOpen} as={Fragment}>
+      <HeadlessTransition show={sidebarOpen}>
         <Dialog
           as="div"
           className="relative z-50 lg:hidden"
           onClose={setSidebarOpen}
         >
-          <Transition.Child
-            as={Fragment}
+          <HeadlessTransitionChild
             enter="transition-opacity ease-linear duration-300"
             enterFrom="opacity-0"
             enterTo="opacity-100"
@@ -159,11 +163,10 @@ export const Sidebar = () => {
             leaveTo="opacity-0"
           >
             <div className="fixed inset-0 bg-gray-900/80" />
-          </Transition.Child>
+          </HeadlessTransitionChild>
 
           <div className="fixed inset-0 flex">
-            <Transition.Child
-              as={Fragment}
+            <HeadlessTransitionChild
               enter="transition ease-in-out duration-300 transform"
               enterFrom="-translate-x-full"
               enterTo="translate-x-0"
@@ -171,9 +174,8 @@ export const Sidebar = () => {
               leaveFrom="translate-x-0"
               leaveTo="-translate-x-full"
             >
-              <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1">
-                <Transition.Child
-                  as={Fragment}
+              <DialogPanel className="relative mr-16 flex w-full max-w-xs flex-1">
+                <HeadlessTransitionChild
                   enter="ease-in-out duration-300"
                   enterFrom="opacity-0"
                   enterTo="opacity-100"
@@ -194,7 +196,7 @@ export const Sidebar = () => {
                       />
                     </button>
                   </div>
-                </Transition.Child>
+                </HeadlessTransitionChild>
 
                 {/* Hideable sidebar for small screens */}
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-2 ring-1 ring-white/10">
@@ -270,11 +272,11 @@ export const Sidebar = () => {
                     </ul>
                   </nav>
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
+              </DialogPanel>
+            </HeadlessTransitionChild>
           </div>
         </Dialog>
-      </Transition.Root>
+      </HeadlessTransition>
 
       {/* BIG SCREENS */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col border-r border-gray-600">

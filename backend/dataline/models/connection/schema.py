@@ -16,6 +16,7 @@ class Connection(BaseModel):
     dsn: str
     database: str
     dialect: str
+    type: str
     is_sample: bool
 
 
@@ -143,6 +144,7 @@ class FileConnectionType(Enum):
     sqlite = "sqlite"
     csv = "csv"
     sas7bdat = "sas7bdat"
+    excel = "excel"
 
 
 class SampleName(Enum):

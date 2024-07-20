@@ -51,6 +51,7 @@ export function Dialog({
         </HeadlessTransitionChild>
 
         <HeadlessTransitionChild
+          as="div"
           className="fixed inset-0 w-screen overflow-y-auto pt-6 sm:pt-0"
           enter="ease-out duration-100"
           enterFrom="opacity-0 translate-y-12 sm:translate-y-0"

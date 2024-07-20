@@ -4,8 +4,7 @@ import React, { useRef, useState } from "react";
 import { Input } from "@catalyst/input";
 import { Button } from "@catalyst/button";
 import { enqueueSnackbar } from "notistack";
-import { Routes } from "@/router";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { CloudArrowUpIcon, DocumentCheckIcon } from "@heroicons/react/24/solid";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useCreateConnection, useCreateFileConnection } from "@/hooks";
@@ -162,7 +161,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
             variant: "success",
             message: "Connection created",
           });
-          navigate(Routes.Root);
+          navigate({ to: "/" });
         },
       }
     );
@@ -202,7 +201,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
             variant: "success",
             message: "Connection created",
           });
-          navigate(Routes.Root);
+          navigate({ to: "/" });
         },
       }
     );
@@ -231,6 +230,10 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
           <RadioField>
             <Radio value="csv" color="white" />
             <Label className="cursor-pointer">CSV file</Label>
+          </RadioField>
+          <RadioField>
+            <Radio value="excel" color="white" />
+            <Label className="cursor-pointer">Excel file</Label>
           </RadioField>
           <RadioField>
             <Radio value="sas7bdat" color="white" />

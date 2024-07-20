@@ -9,7 +9,7 @@ cd frontend
 npm install && NODE_ENV=local npm run build
 cp -r dist/assets/ ../backend/assets
 cp dist/favicon.ico ../backend/assets/favicon.ico
-cp dist/manifest.json ../backend/assets/manifest.json
+cp dist/.vite/manifest.json ../backend/assets/manifest.json
 ```
 
 ## Linux

@@ -1,6 +1,6 @@
 import logging
-import sqlite3
 import os
+import sqlite3
 import tempfile
 from pathlib import Path
 from typing import BinaryIO
@@ -20,8 +20,10 @@ from dataline.repositories.base import AsyncSession, NotFoundError, NotUniqueErr
 from dataline.repositories.connection import (
     ConnectionCreate,
     ConnectionRepository,
+    ConnectionType,
     ConnectionUpdate,
 )
+from dataline.services.file_parsers.excel_parser import ExcelParserService
 from dataline.utils.utils import (
     forward_connection_errors,
     generate_short_uuid,
@@ -36,24 +38,6 @@ class ConnectionService:
 
     def __init__(self, connection_repo: ConnectionRepository = Depends(ConnectionRepository)) -> None:
         self.connection_repo = connection_repo
-
-    async def create_connection(
-        self,
-        session: AsyncSession,
-        dsn: str,
-        name: str,
-        is_sample: bool = False,
-    ) -> ConnectionOut:
-        # Check if connection can be established before saving it
-        dialect, database = await self.get_connection_details(dsn)
-
-        # Check if connection already exists
-        await self.check_dsn_already_exists(session, dsn)
-
-        connection = await self.connection_repo.create(
-            session, ConnectionCreate(dsn=dsn, database=database, name=name, dialect=dialect, is_sample=is_sample)
-        )
-        return ConnectionOut.model_validate(connection)
 
     async def get_connection(self, session: AsyncSession, connection_id: UUID) -> ConnectionOut:
         connection = await self.connection_repo.get_by_uuid(session, connection_id)
@@ -143,6 +127,28 @@ class ConnectionService:
         updated_connection = await self.connection_repo.update_by_uuid(session, connection_uuid, update)
         return ConnectionOut.model_validate(updated_connection)
 
+    async def create_connection(
+        self,
+        session: AsyncSession,
+        dsn: str,
+        name: str,
+        type: str | None = None,
+        is_sample: bool = False,
+    ) -> ConnectionOut:
+        # Check if connection can be established before saving it
+        dialect, database = await self.get_connection_details(dsn)
+        if not type:
+            type = dialect
+
+        # Check if connection already exists
+        await self.check_dsn_already_exists(session, dsn)
+
+        connection = await self.connection_repo.create(
+            session,
+            ConnectionCreate(dsn=dsn, database=database, name=name, dialect=dialect, type=type, is_sample=is_sample),
+        )
+        return ConnectionOut.model_validate(connection)
+    
     async def create_sqlite_connection(
         self, session: AsyncSession, file: BinaryIO, name: str, is_sample: bool = False
     ) -> ConnectionOut:
@@ -172,7 +178,23 @@ class ConnectionService:
 
         # Create connection with the locally copied file
         dsn = get_sqlite_dsn(str(file_path.absolute()))
-        return await self.create_connection(session, dsn=dsn, name=name, is_sample=False)
+        return await self.create_connection(session, dsn=dsn, name=name, type=ConnectionType.csv.value, is_sample=False)
+
+    async def create_excel_connection(self, session: AsyncSession, file: UploadFile, name: str) -> ConnectionOut:
+        generated_name = generate_short_uuid() + ".sqlite"
+        file_path = Path(config.data_directory) / generated_name
+
+        # Connect to the SQLite database and input data (it will be created if it doesn't exist)
+        conn = sqlite3.connect(file_path)
+        ExcelParserService.to_sqlite_offline_secure(file.file, conn, name)
+        conn.commit()
+        conn.close()
+
+        # Create connection with the locally copied file
+        dsn = get_sqlite_dsn(str(file_path.absolute()))
+        return await self.create_connection(
+            session, dsn=dsn, name=name, type=ConnectionType.excel.value, is_sample=False
+        )
 
     async def create_sas7bdat_connection(self, session: AsyncSession, file: UploadFile, name: str) -> ConnectionOut:
         generated_name = generate_short_uuid() + ".sqlite"
@@ -213,7 +235,9 @@ class ConnectionService:
 
             # Create connection with the locally copied file
             dsn = get_sqlite_dsn(str(file_path.absolute()))
-            return await self.create_connection(session, dsn=dsn, name=name, is_sample=False)
+            return await self.create_connection(
+                session, dsn=dsn, name=name, type=ConnectionType.sas.value, is_sample=False
+            )        
         finally:
             # Clean up the temporary file
             os.unlink(temp_file_path)

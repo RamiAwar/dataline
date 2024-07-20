@@ -16,6 +16,8 @@ services:
       - "7377:7377"
     environment:
       ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost:7377,http://0.0.0.0:7377,http://localhost:5173,http://127.0.0.1:5173}"
+      AUTH_USERNAME: "${AUTH_USERNAME}"
+      AUTH_PASSWORD: "${AUTH_PASSWORD}"
     working_dir: /home/dataline/backend
     command: ["bash", "-c", "python -m alembic upgrade head && python -m uvicorn dataline.main:app --port=7377 --host=0.0.0.0 --reload"]
     volumes:

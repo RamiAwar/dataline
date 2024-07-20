@@ -8,7 +8,12 @@ import {
   IUserInfo,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
-import { apiURL, backendApi } from "./services/api_client";
+import {
+  apiURL,
+  backendApi,
+  configureAxiosInstance,
+  isAuthEnabled,
+} from "./services/api_client";
 import { decodeBase64Data } from "./utils";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 
@@ -20,12 +25,22 @@ type ApiResponse<T> = SuccessResponse<T>;
 
 type HealthcheckResult = ApiResponse<void>;
 const healthcheck = async (): Promise<HealthcheckResult> => {
-  return (await backendApi<HealthcheckResult>({ url: "/healthcheck" })).data;
+  return (
+    await backendApi<HealthcheckResult>({
+      url: "/healthcheck",
+      withCredentials: false,
+    })
+  ).data;
 };
 
 const hasAuth = async (): Promise<boolean> => {
   try {
-    await backendApi({ url: "/auth/login", method: "HEAD" });
+    await backendApi({
+      url: "/auth/login",
+      method: "HEAD",
+      withCredentials: false,
+    });
+    configureAxiosInstance(true);
   } catch (error) {
     if (
       isAxiosError(error) &&
@@ -279,12 +294,12 @@ const streamingQuery = async ({
     },
     onerror(err) {
       onClose && onClose();
-      // I tried using a AbortController witgh ctrl.abort, but doesn't work, see issue below
+      // Tried using a AbortController witgh ctrl.abort, but doesn't work, see issue below
       // https://github.com/Azure/fetch-event-source/issues/24#issuecomment-1470332423
       throw new Error(err);
     },
     openWhenHidden: true,
-    credentials: "include",
+    credentials: isAuthEnabled() ? "include" : "omit",
   });
 };
 

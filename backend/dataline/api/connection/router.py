@@ -81,6 +81,13 @@ async def connect_db_from_file(
         connection = await connection_service.create_sas7bdat_connection(session, file, name)
         return SuccessResponse(data=connection)
 
+    elif type == FileConnectionType.excel:
+        # Convert Excel to SQLite and create connection
+        # TODO: Handle possible errors and forward
+        connection = await connection_service.create_excel_connection(session, file, name)
+        return SuccessResponse(data=connection)
+
+
 @router.get("/connection/{connection_id}")
 async def get_connection(
     connection_id: UUID,

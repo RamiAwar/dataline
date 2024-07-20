@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { IEditConnection } from "../Library/types";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { useNavigate, useParams } from "react-router-dom";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { AlertIcon, AlertModal } from "../Library/AlertModal";
-import { Routes } from "../../router";
 import { enqueueSnackbar } from "notistack";
 import {
   useDeleteConnection,
@@ -17,9 +16,11 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
+const connectionRouteApi = getRouteApi("/_app/connection/$connectionId");
+
 export const ConnectionEditor = () => {
   const navigate = useNavigate();
-  const { connectionId } = useParams<{ connectionId: string }>();
+  const { connectionId } = connectionRouteApi.useParams();
   const [unsavedChanges, setUnsavedChanges] = useState<boolean>(false);
   const [showCancelAlert, setShowCancelAlert] = useState<boolean>(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState<boolean>(false);
@@ -35,13 +36,13 @@ export const ConnectionEditor = () => {
 
   const { mutate: deleteConnection } = useDeleteConnection({
     onSuccess() {
-      navigate(Routes.Root);
+      navigate({ to: "/" });
     },
   });
 
   const { mutate: updateConnection } = useUpdateConnection({
     onSuccess() {
-      navigate(Routes.Root);
+      navigate({ to: "/" });
     },
   });
 
@@ -70,7 +71,7 @@ export const ConnectionEditor = () => {
     if (unsavedChanges) {
       setShowCancelAlert(true);
     } else {
-      navigate(Routes.Root);
+      navigate({ to: "/" });
     }
   }, [navigate, unsavedChanges]);
 
@@ -98,7 +99,8 @@ export const ConnectionEditor = () => {
 
   function handleSubmit() {
     if (!unsavedChanges) {
-      navigate(Routes.Root); // Return to previous page
+      navigate({ to: "/" }); // Return to previous page
+
       return;
     }
 

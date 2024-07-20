@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import { Message } from "./Message";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "@tanstack/react-router";
 import ExpandingInput from "./ExpandingInput";
 
 import { Transition } from "@headlessui/react";
-import { Routes } from "@/router";
 import MessageTemplate from "./MessageTemplate";
 import {
   getMessagesQuery,
@@ -33,7 +32,7 @@ const templateMessages = [
 ];
 
 export const Conversation = () => {
-  const params = useParams<{ conversationId: string }>();
+  const params = useParams({ from: "/_app/chat/$conversationId" });
   // Load messages from conversation via API on load
   const { data: connectionsData } = useGetConnections();
   const { data: conversationsData } = useGetConversations();
@@ -117,7 +116,7 @@ export const Conversation = () => {
       getMessagesError.response?.status === 404) ||
     !connectionsData?.connections?.length
   ) {
-    return <Navigate to={Routes.Root} />;
+    return <Navigate to={"/"} />;
   }
 
   if (!isSuccessGetMessages) {
@@ -173,8 +172,9 @@ export const Conversation = () => {
             </>
           )}
         </div>
-        <div ref={messageListRef}></div>
       </Transition>
+
+      <div ref={messageListRef}></div>
 
       <div className="fixed bottom-0 left-0 lg:left-72 right-0 flex flex-col items-center justify-center backdrop-blur-md pt-0">
         {messages.length === 0 && !currentConversationIsQuerying && (

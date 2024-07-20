@@ -1,16 +1,11 @@
 import { useState } from "react";
 import logo from "@/assets/images/logo_rounded_sm.png";
-import { useNavigate } from "react-router";
-import { Routes } from "@/router";
 import { useLogin } from "@/hooks/auth";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
-  const { mutate: login } = useLogin({
-    onLogin: () => navigate(Routes.Root),
-  });
+  const { mutate: login } = useLogin();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

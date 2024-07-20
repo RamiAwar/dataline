@@ -92,6 +92,18 @@ export default function Footer() {
                 </a>
               ))}
             </div>
+            <div className="py-4">
+              <a
+                href="https://theresanaiforthat.com/ai/dataline/?ref=featured&v=1901847"
+                target="_blank"
+                rel="nofollow"
+              >
+                <img
+                  width="300"
+                  src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
+                />
+              </a>
+            </div>
           </div>
           <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
