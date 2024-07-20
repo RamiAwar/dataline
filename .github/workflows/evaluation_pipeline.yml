@@ -63,11 +63,10 @@ jobs:
       - name: Download main branch scores
         if: github.ref != 'refs/heads/main'
         uses: dawidd6/action-download-artifact@v2
-        continue-on-error: true
         with:
           workflow: evaluate-llm.yml
           branch: main
-          name: llm-evaluation-scores
+          name: scores.md
           path: main-scores
 
       - name: Compare scores and generate report
