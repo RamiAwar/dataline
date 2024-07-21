@@ -26,7 +26,7 @@ from langchain_core.pydantic_v1 import BaseModel as BaseModelV1
 from langchain_core.pydantic_v1 import Field
 from langchain_core.tools import BaseTool, BaseToolkit
 from langgraph.prebuilt import ToolExecutor
-from sqlalchemy import Result
+from sqlalchemy import Result, inspect, text
 
 
 class QueryGraphStateUpdate(TypedDict):
@@ -64,9 +64,15 @@ def execute_sql_query(
     db: SQLDatabase, query: str, for_chart: bool = False, chart_type: Optional[ChartType] = None
 ) -> QueryRunData:
     """Execute the SQL query and return the results or an error message."""
-    result = cast(Result[Any], db.run(query, fetch="cursor", include_columns=True))  # type: ignore[misc]
+    if db.dialect == "mssql":
+        with db._engine.begin() as connection:
+            result = connection.execute(text(query))
+            fetched_rows = result.fetchall()
+    else:
+        result = cast(Result[Any], db.run(query, fetch="cursor", include_columns=True))  # type: ignore[misc]
+        fetched_rows = result.fetchall()
     truncated_rows = []
-    for row in result.fetchall():
+    for row in fetched_rows:
         # truncate each column, then convert the row to a tuple
         truncated_row = tuple(truncate_word(column, length=db._max_string_length) for column in row)
         truncated_rows.append(truncated_row)
@@ -126,6 +132,16 @@ class ToolNames:
     GENERATE_CHART = "generate_chart"
 
 
+def get_mssql_table_names(db: SQLDatabase):
+    inspector = inspect(db._engine)
+    schemas = inspector.get_schema_names()
+    db_tables: list[str] = []
+    for schema in schemas:
+        for table_name in inspector.get_table_names(schema=schema):
+            db_tables.append(f"{schema}.{table_name}")
+    return db_tables
+
+
 class BaseSQLDatabaseTool(BaseModel):
     """Base tool for interacting with a SQL database."""
 
@@ -181,6 +197,7 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         self.table_names = None  # Reset internal state in case it remains from tool calls
         cleaned_names = [table_name.strip() for table_name in table_names.split(",")]
         available_names = self.db.get_usable_table_names()
+        # if self.db.dialect != "mssql" else get_mssql_table_names(self.db)
 
         # Check if the table names are valid
         wrong_tables = []
@@ -378,6 +395,8 @@ class ListSQLTablesTool(BaseSQLDatabaseTool, BaseTool):
         run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> list[str]:
         """Get a comma-separated list of table names."""
+        # if self.db.dialect == "mssql":
+        #     return get_mssql_table_names(self.db)
         return list(self.db.get_usable_table_names())
 
 
