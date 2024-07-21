@@ -5,7 +5,9 @@ from PyInstaller.utils.hooks import collect_submodules
 
 datas = [('alembic', 'alembic'), ('alembic.ini', '.'), ('samples', 'samples'), ('templates', 'templates'), ('assets', 'assets')]
 binaries = []
-hiddenimports = ['asyncpg.pgproto.pgproto', 'uuid', 'ipaddress', 'aiosqlite', 'tiktoken_ext.openai_public', 'tiktoken_ext', 'snowflake.sqlalchemy']
+hiddenimports = [
+    'asyncpg.pgproto.pgproto', 'uuid', 'ipaddress', 'aiosqlite', 'tiktoken_ext.openai_public', 'tiktoken_ext', 'snowflake.sqlalchemy', 'pyodbc'
+]
 datas += collect_data_files('jinja2')
 tmp_ret = collect_all('snowflake-sqlalchemy')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]

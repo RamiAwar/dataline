@@ -43,7 +43,7 @@ if [[ "$@" == "" ]]; then
     pyinstaller --windowed -i logo.ico --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite \
     --add-data "alembic;alembic" --add-data "alembic.ini;." --add-data "samples;samples" --add-data "templates;templates" --add-data "assets;assets" \
     --distpath /win64_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 --collect-submodules=pyreadstat \
-    --collect-all=snowflake-sqlalchemy --hidden-import=snowflake.sqlalchemy --collect-all=snowflake-connector-python dataline/main.py -y
+    --collect-all=snowflake-sqlalchemy --hidden-import=snowflake.sqlalchemy --collect-all=snowflake-connector-python --hidden-import=pyodbc dataline/main.py -y
     chown -R --reference=. /win64_dist
     # pyinstaller --clean -y --dist ./dist/windows --workpath /tmp *.spec
     # chown -R --reference=. ./dist/windows
