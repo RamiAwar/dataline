@@ -1,7 +1,6 @@
 import logging
 from typing import AsyncGenerator, Sequence, Type
 
-from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tracers.langchain import LangChainTracer
@@ -23,6 +22,7 @@ from dataline.services.llm_flow.toolkit import (
     QueryGraphState,
     SQLDatabaseToolkit,
 )
+from dataline.services.llm_flow.utils import DatalineSQLDatabase as SQLDatabase
 from dataline.utils.utils import forward_connection_errors
 
 logger = logging.getLogger(__name__)
