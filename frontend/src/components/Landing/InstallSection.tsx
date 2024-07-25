@@ -1,10 +1,22 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CustomTooltip } from "../Library/Tooltip";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
+import DownloadReleaseButton from "@components/Landing/DownloadReleaseButton";
 import logo_w_border from "@/assets/images/logo_w_border.png";
 
 export const InstallSection = () => {
   const [selectedTab, setSelectedTab] = useState<string>("All");
+
+  useEffect(() => {
+    const detectOS = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      if (userAgent.indexOf("win") > -1) return "Windows";
+      if (userAgent.indexOf("mac") > -1) return "MacOS";
+      if (userAgent.indexOf("linux") > -1) return "Linux";
+      return "All";
+    };
+    setSelectedTab(detectOS());
+  }, []);
 
   function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text);
@@ -12,16 +24,34 @@ export const InstallSection = () => {
 
   const installationSections = [
     {
-      title: "All",
-      code: "https://github.com/RamiAwar/dataline/releases",
+      title: "MacOS",
+      isDownloadable: true,
+      os: "darwin",
+    },
+    {
+      title: "Windows",
+      isDownloadable: true,
+      os: "windows",
+    },
+    {
+      title: "Linux",
+      isDownloadable: true,
+      os: "linux",
     },
     {
       title: "Homebrew",
+      isDownloadable: false,
       code: "brew tap ramiawar/dataline && brew install dataline",
     },
     {
       title: "Docker",
+      isDownloadable: false,
       code: "docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest",
+    },
+    {
+      title: "GH Releases",
+      code: "https://github.com/RamiAwar/dataline/releases",
+      isDownloadable: false,
     },
   ];
 
@@ -42,6 +72,7 @@ export const InstallSection = () => {
             <div className="mt-6 flex justify-left">
               {installationSections.map((item) => (
                 <button
+                  key={item.title}
                   className={`px-4 py-2 rounded-md ${selectedTab === item.title ? "bg-indigo-600 text-white" : "bg-transparent text-white"}`}
                   onClick={() => setSelectedTab(item.title)}
                 >
@@ -51,25 +82,28 @@ export const InstallSection = () => {
             </div>
             <div className="mt-6 flex justify-between">
               {installationSections.map((item) => (
-                <>
-                  {selectedTab === item.title && (
-                    <div className="bg-gray-900 p-8 rounded-xl text-white flex items-center gap-5">
-                      <p className="flex font-mono gap-2 max-w-sm break-all">
-                        <pre>$</pre>
-                        {item.code}
-                      </p>
-                      <CustomTooltip clickText="COPIED!" hoverText="Copy">
-                        <button
-                          tabIndex={-1}
-                          onClick={() => copyToClipboard(item.code)}
-                          className="p-1"
-                        >
-                          <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
-                        </button>
-                      </CustomTooltip>
-                    </div>
-                  )}
-                </>
+                <React.Fragment key={item.title}>
+                  {selectedTab === item.title &&
+                    (item.isDownloadable ? (
+                      <DownloadReleaseButton os={item.os} />
+                    ) : (
+                      <div className="bg-gray-900 p-8 rounded-xl text-white flex items-center gap-5">
+                        <p className="flex font-mono gap-2 max-w-sm break-all">
+                          <pre>$</pre>
+                          {item.code}
+                        </p>
+                        <CustomTooltip clickText="COPIED!" hoverText="Copy">
+                          <button
+                            tabIndex={-1}
+                            onClick={() => copyToClipboard(item.code)}
+                            className="p-1"
+                          >
+                            <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+                          </button>
+                        </CustomTooltip>
+                      </div>
+                    ))}
+                </React.Fragment>
               ))}
             </div>
           </div>
