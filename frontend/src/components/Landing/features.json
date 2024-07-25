@@ -1,17 +1,17 @@
 {
   "features": [
     {
-      "feature": "Works with databases",
+      "feature": "Postgres, MySQL, SQLite, MS SQL Server",
       "dataline": true,
       "chatgpt": false
     },
     {
-      "feature": "Works with data files",
+      "feature": "CSV, Excel",
       "dataline": true,
       "chatgpt": true
     },
     {
-      "feature": "Data never leaves your machine",
+      "feature": "Data rows never leave your machine",
       "dataline": true,
       "chatgpt": false
     },
@@ -24,11 +24,6 @@
       "feature": "Data visualization",
       "dataline": true,
       "chatgpt": true
-    },
-    {
-      "feature": "Query & chart edits, data refreshes",
-      "dataline": true,
-      "chatgpt": false
     },
     {
       "feature": "Open Source",
