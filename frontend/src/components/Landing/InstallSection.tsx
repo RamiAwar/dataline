@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { CustomTooltip } from "../Library/Tooltip";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
-import DownloadReleaseButton from "@components/Landing/DownloadReleaseButton";
+import {
+  DownloadReleaseButton,
+  OS,
+} from "@components/Landing/DownloadReleaseButton";
 import logo_w_border from "@/assets/images/logo_w_border.png";
+
+interface Item {
+  title: string;
+  os?: OS;
+  isDownloadable: boolean;
+  code?: string;
+}
 
 export const InstallSection = () => {
   const [selectedTab, setSelectedTab] = useState<string>("All");
@@ -22,7 +32,7 @@ export const InstallSection = () => {
     navigator.clipboard.writeText(text);
   }
 
-  const installationSections = [
+  const installationSections: Item[] = [
     {
       title: "MacOS",
       isDownloadable: true,
@@ -81,11 +91,11 @@ export const InstallSection = () => {
               ))}
             </div>
             <div className="mt-6 flex justify-between">
-              {installationSections.map((item) => (
+              {installationSections.map((item: Item) => (
                 <React.Fragment key={item.title}>
                   {selectedTab === item.title &&
                     (item.isDownloadable ? (
-                      <DownloadReleaseButton os={item.os} />
+                      item.os && <DownloadReleaseButton os={item.os} />
                     ) : (
                       <div className="bg-gray-900 p-8 rounded-xl text-white flex items-center gap-5">
                         <p className="flex font-mono gap-2 max-w-sm break-all">
@@ -95,7 +105,9 @@ export const InstallSection = () => {
                         <CustomTooltip clickText="COPIED!" hoverText="Copy">
                           <button
                             tabIndex={-1}
-                            onClick={() => copyToClipboard(item.code)}
+                            onClick={() =>
+                              item.code && copyToClipboard(item.code)
+                            }
                             className="p-1"
                           >
                             <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />

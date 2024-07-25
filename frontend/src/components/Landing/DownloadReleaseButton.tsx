@@ -1,9 +1,34 @@
 import { useState, useEffect } from "react";
 import { ArrowDownTrayIcon } from "@heroicons/react/20/solid";
 
-type OS = "darwin" | "windows" | "linux";
+export type OS = "darwin" | "windows" | "linux";
 
-const DownloadReleaseButton = ({ os }: { os: OS }) => {
+interface GithubReleaseAsset {
+  browser_download_url: string;
+  content_type: string;
+  created_at: string;
+  download_count: number;
+  id: number;
+  label: null;
+  name: string;
+  node_id: string;
+  size: number;
+  state: string;
+  updated_at: string;
+  uploader: {
+    login: string;
+    id: number;
+    node_id: string;
+    avatar_url: string;
+    gravatar_id: string;
+    // Add other properties of the uploader object here
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any; // For any additional properties
+  };
+  url: string;
+}
+
+export const DownloadReleaseButton = ({ os }: { os: OS }) => {
   const [downloadUrl, setDownloadUrl] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -44,7 +69,9 @@ const DownloadReleaseButton = ({ os }: { os: OS }) => {
         }
         const data = await response.json();
         const assetName = getAssetName(os);
-        const asset = data.assets.find((asset) => asset.name === assetName);
+        const asset: GithubReleaseAsset = data.assets.find(
+          (asset: GithubReleaseAsset) => asset.name === assetName
+        );
         if (asset) {
           setDownloadUrl(asset.browser_download_url);
         } else {
@@ -89,5 +116,3 @@ const DownloadReleaseButton = ({ os }: { os: OS }) => {
     </a>
   );
 };
-
-export default DownloadReleaseButton;
