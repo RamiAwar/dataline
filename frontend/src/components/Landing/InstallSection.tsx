@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CustomTooltip } from "../Library/Tooltip";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
 import DownloadReleaseButton from "@components/Landing/DownloadReleaseButton";
@@ -6,6 +6,17 @@ import logo_w_border from "@/assets/images/logo_w_border.png";
 
 export const InstallSection = () => {
   const [selectedTab, setSelectedTab] = useState<string>("All");
+
+  useEffect(() => {
+    const detectOS = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      if (userAgent.indexOf("win") > -1) return "Windows";
+      if (userAgent.indexOf("mac") > -1) return "MacOS";
+      if (userAgent.indexOf("linux") > -1) return "Linux";
+      return "All";
+    };
+    setSelectedTab(detectOS());
+  }, []);
 
   function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text);
@@ -61,6 +72,7 @@ export const InstallSection = () => {
             <div className="mt-6 flex justify-left">
               {installationSections.map((item) => (
                 <button
+                  key={item.title}
                   className={`px-4 py-2 rounded-md ${selectedTab === item.title ? "bg-indigo-600 text-white" : "bg-transparent text-white"}`}
                   onClick={() => setSelectedTab(item.title)}
                 >
@@ -70,7 +82,7 @@ export const InstallSection = () => {
             </div>
             <div className="mt-6 flex justify-between">
               {installationSections.map((item) => (
-                <>
+                <React.Fragment key={item.title}>
                   {selectedTab === item.title &&
                     (item.isDownloadable ? (
                       <DownloadReleaseButton os={item.os} />
@@ -91,7 +103,7 @@ export const InstallSection = () => {
                         </CustomTooltip>
                       </div>
                     ))}
-                </>
+                </React.Fragment>
               ))}
             </div>
           </div>

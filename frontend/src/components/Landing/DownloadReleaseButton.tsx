@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ArrowDownTrayIcon } from "@heroicons/react/20/solid";
 
 type OS = "darwin" | "windows" | "linux";

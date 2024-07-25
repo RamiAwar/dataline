@@ -1,12 +1,12 @@
 {
   "features": [
     {
-      "feature": "Postgres, MySQL, SQLite, MS SQL Server",
+      "feature": "Supports Databases (Postgres, MySQL, SQLite, MS SQL Server, Snowflake, BigQuery)",
       "dataline": true,
       "chatgpt": false
     },
     {
-      "feature": "CSV, Excel",
+      "feature": "CSV, Excel support",
       "dataline": true,
       "chatgpt": true
     },
