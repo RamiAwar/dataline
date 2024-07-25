@@ -1,4 +1,5 @@
 from typing import Any, Iterable, Self, cast
+
 from langchain_community.utilities.sql_database import SQLDatabase
 from sqlalchemy import URL, Engine, MetaData, create_engine, inspect, text
 from sqlalchemy.engine import CursorResult
@@ -85,9 +86,11 @@ class DatalineSQLDatabase(SQLDatabase):
         return super().get_usable_table_names()
 
     def get_table_info(self, table_names: list[str] | None = None) -> str:
-        if self.dialect != "mssql":
-            return super().get_table_info(table_names)
+        if self.dialect == "mssql":
+            return self.get_table_info_mssql(table_names)
+        return super().get_table_info(table_names)
 
+    def get_table_info_mssql(self, table_names: list[str] | None = None) -> str:
         all_table_names = self.get_usable_table_names()
         if table_names is not None:
             missing_tables = set(table_names).difference(all_table_names)
@@ -95,7 +98,7 @@ class DatalineSQLDatabase(SQLDatabase):
                 raise ValueError(f"table_names {missing_tables} not found in database")
             all_table_names = table_names
 
-        # changed this for mssql
+        # Get MSSQL format schema.table
         metadata_table_names = [f"{tbl.schema}.{tbl.name}" for tbl in self._metadata.sorted_tables]
         to_reflect = set(all_table_names) - set(metadata_table_names)
         if to_reflect:
@@ -106,7 +109,7 @@ class DatalineSQLDatabase(SQLDatabase):
                 schema=self._schema,
             )
 
-        # changed this for mssql
+        # Get MSSQL format schema.table
         meta_tables = [
             tbl for tbl in self._metadata.sorted_tables if f"{tbl.schema}.{tbl.name}" in set(all_table_names)
         ]
