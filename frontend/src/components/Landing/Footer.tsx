@@ -6,8 +6,8 @@ const navigation = {
     // { name: "Insights", href: "#" },
   ],
   support: [
-    // { name: "Pricing", href: "#" },
-    { name: "Contact", href: "mailto:support@dataline.app" },
+    { name: "Discord", href: "https://discord.gg/qwT2zztZ" },
+    { name: "Email", href: "mailto:support@dataline.app" },
     { name: "GitHub", href: "https://github.com/RamiAwar/dataline" },
     // { name: "Guides", href: "#" },
     // { name: "API Status", href: "#" },
@@ -15,7 +15,7 @@ const navigation = {
   company: [
     { name: "About", href: "/about" },
     { name: "Blog", href: "/blog" },
-    // { name: "Jobs", href: "#" },
+    { name: "FAQ", href: "/faq" },
     // { name: "Press", href: "#" },
     // { name: "Partners", href: "#" },
   ],
