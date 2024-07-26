@@ -39,9 +39,14 @@ class DatalineSQLDatabase(SQLDatabase):
             lazy_table_reflection,
         )
         if self.dialect == "mssql":
+            # Custom metadata reflection for SQL Server
+            # We want to support multiple schemas here but parent class doesn't support it
             inspector = inspect(self._engine)
             schemas = inspector.get_schema_names()
             for curr_schema in schemas:
+                # Get the schemas, loop through them and find the tables that belong to each schema
+                # Then do the reflection by specifying the relevant tables list and their parent schema
+                # Metadata reflection is what allows us to get table info (see get_table_info)
                 relevant_tables = [
                     table.split(".")[1] for table in self._usable_tables if table.split(".")[0] == curr_schema
                 ]
