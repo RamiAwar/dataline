@@ -7,16 +7,6 @@ from sqlalchemy.schema import CreateTable
 from sqlalchemy.types import NullType
 
 
-def get_mssql_table_names(engine: Engine):
-    inspector = inspect(engine)
-    schemas = inspector.get_schema_names()
-    db_tables: list[str] = []
-    for schema in schemas:
-        for table_name in inspector.get_table_names(schema=schema):
-            db_tables.append(f"{schema}.{table_name}")
-    return db_tables
-
-
 class DatalineSQLDatabase(SQLDatabase):
 
     def __init__(
@@ -82,8 +72,17 @@ class DatalineSQLDatabase(SQLDatabase):
 
     def get_usable_table_names(self) -> Iterable[str]:
         if self.dialect == "mssql":
-            return get_mssql_table_names(self._engine)
+            return self.get_mssql_table_names()
         return super().get_usable_table_names()
+
+    def get_mssql_table_names(self) -> Iterable[str]:
+        inspector = inspect(self._engine)
+        schemas = inspector.get_schema_names()
+        db_tables: list[str] = []
+        for schema in schemas:
+            for table_name in inspector.get_table_names(schema=schema):
+                db_tables.append(f"{schema}.{table_name}")
+        return db_tables
 
     def get_table_info(self, table_names: list[str] | None = None) -> str:
         if self.dialect == "mssql":
