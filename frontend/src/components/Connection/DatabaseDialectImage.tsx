@@ -1,6 +1,7 @@
 import React from "react";
 import postgresImage from "../../assets/images/postgres.png";
 import sqliteImage from "../../assets/images/sqlite.png";
+import sqlServerImage from "../../assets/images/sql_server.png";
 import snowflakeImage from "../../assets/images/snowflake.png";
 import mysqlImage from "../../assets/images/mysql.png";
 import netflixImage from "../../assets/images/netflix.png";
@@ -20,6 +21,7 @@ const ConnectionImage: React.FC<ConnectionImageProps> = ({
   const imageMap: { [key: string]: string } = {
     postgresql: postgresImage,
     sqlite: sqliteImage,
+    mssql: sqlServerImage,
     snowflake: snowflakeImage,
     mysql: mysqlImage,
     // You can add more mappings here as needed
