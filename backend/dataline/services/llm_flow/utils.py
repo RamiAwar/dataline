@@ -1,7 +1,7 @@
-from typing import Any, Iterable, Self, cast
+from typing import Any, Iterable, Self, Sequence, cast
 
 from langchain_community.utilities.sql_database import SQLDatabase
-from sqlalchemy import URL, Engine, MetaData, create_engine, inspect, text
+from sqlalchemy import URL, Engine, MetaData, Row, create_engine, inspect, text
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.schema import CreateTable
 from sqlalchemy.types import NullType
@@ -55,7 +55,7 @@ class DatalineSQLDatabase(SQLDatabase):
                         views=view_support, bind=self._engine, only=relevant_tables, schema=curr_schema
                     )
 
-    def custom_run_sql(self, query: str):
+    def custom_run_sql(self, query: str) -> tuple[list[Any], Sequence[Row[Any]]]:
         if self.dialect == "mssql":
             with self._engine.begin() as connection:
                 command = text(query)
