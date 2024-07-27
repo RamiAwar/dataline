@@ -115,8 +115,10 @@ def validate_dsn(value: str) -> str:
     if value.startswith("postgres") and not value.startswith("postgresql"):
         # Only replace first occurrence
         value = value.replace("postgres", "postgresql", 1)
-    elif value.startswith("mysql"):
+    elif value.startswith("mysql") and not value.startswith("mysql+pymysql"):
         value = value.replace("mysql", "mysql+pymysql", 1)
+    elif value.startswith("mssql") and not value.startswith("mssql+pyodbc"):
+        value = value.replace("mssql", "mssql+pyodbc", 1)
 
     return value
 
