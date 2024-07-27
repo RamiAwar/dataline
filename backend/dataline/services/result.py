@@ -3,7 +3,6 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import Depends
-from langchain_community.utilities.sql_database import SQLDatabase
 
 from dataline.errors import ValidationError
 from dataline.models.llm_flow.schema import (
@@ -14,6 +13,8 @@ from dataline.models.result.schema import ChartRefreshOut, ResultUpdate
 from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.result import ResultRepository
 from dataline.services.llm_flow.llm_calls.chart_generator import ChartType
+from dataline.services.llm_flow.utils import DatalineSQLDatabase as SQLDatabase
+
 from dataline.services.llm_flow.toolkit import (
     RunException,
     execute_sql_query,

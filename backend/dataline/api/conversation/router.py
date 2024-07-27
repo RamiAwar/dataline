@@ -1,10 +1,9 @@
 import logging
-from typing import Annotated, AsyncGenerator
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends
 from fastapi.responses import StreamingResponse
-from langchain_community.utilities.sql_database import SQLDatabase
 
 from dataline.models.conversation.schema import (
     ConversationOut,
@@ -20,6 +19,7 @@ from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.connection import ConnectionService
 from dataline.services.conversation import ConversationService
 from dataline.services.llm_flow.toolkit import execute_sql_query
+from dataline.services.llm_flow.utils import DatalineSQLDatabase as SQLDatabase
 from dataline.utils.utils import generate_with_errors
 
 logger = logging.getLogger(__name__)
@@ -133,10 +133,7 @@ async def execute_sql(
 
     # Refresh chart data
     db = SQLDatabase.from_uri(connection.dsn)
-    query_run_data = execute_sql_query(
-        db,
-        sql,
-    )
+    query_run_data = execute_sql_query(db, sql)
 
     # Execute query
     result = SQLQueryRunResult(
