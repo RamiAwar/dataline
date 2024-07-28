@@ -129,11 +129,6 @@ jobs:
           python-version: 3.11.6
       - name: Install poetry
         uses: abatilo/actions-poetry@v2
-      - name: Install dependencies
-        run: |
-          poetry self add poetry-plugin-export
-          poetry export --without-hashes -f requirements.txt --output requirements.txt
-          pip install -r requirements.txt pyinstaller==5.13.2
       - name: Install unixODBC
         run: |
           brew install unixodbc
@@ -142,10 +137,11 @@ jobs:
         run: |
           echo "LDFLAGS=-L/usr/local/opt/unixodbc/lib" >> $GITHUB_ENV
           echo "CPPFLAGS=-I/usr/local/opt/unixodbc/include" >> $GITHUB_ENV
-      - name: Reinstall pyodbc
+      - name: Install dependencies
         run: |
-          pip uninstall -y pyodbc
-          pip install --no-binary :all: pyodbc
+          poetry self add poetry-plugin-export
+          poetry export --without-hashes -f requirements.txt --output requirements.txt
+          pip install -r requirements.txt pyinstaller==5.13.2
       - name: Run pyinstaller
         run: |
           pyinstaller --clean --distpath macos_dist -y macos.spec
