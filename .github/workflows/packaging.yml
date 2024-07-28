@@ -2,8 +2,8 @@ name: Packaging
 run-name: Packaging triggered by ${{ github.actor }}
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - fix-packaging-mac-pyodbc
 jobs:
   build-frontend:
     runs-on: ubuntu-latest
@@ -134,6 +134,18 @@ jobs:
           poetry self add poetry-plugin-export
           poetry export --without-hashes -f requirements.txt --output requirements.txt
           pip install -r requirements.txt pyinstaller==5.13.2
+      - name: Install unixODBC
+        run: |
+          brew install unixodbc
+          odbcinst -j
+      - name: Set ODBC environment variables
+        run: |
+          echo "LDFLAGS=-L/usr/local/opt/unixodbc/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I/usr/local/opt/unixodbc/include" >> $GITHUB_ENV
+      - name: Reinstall pyodbc
+        run: |
+          pip uninstall -y pyodbc
+          pip install --no-binary :all: pyodbc
       - name: Run pyinstaller
         run: |
           pyinstaller --clean --distpath macos_dist -y macos.spec
