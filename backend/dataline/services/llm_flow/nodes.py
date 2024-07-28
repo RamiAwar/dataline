@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import cast
 
-from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
+from langchain_core.messages import AIMessage, BaseMessage, ToolMessage, ToolCall
 from langchain_core.utils.function_calling import convert_to_openai_function
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END
@@ -84,6 +84,10 @@ class CallToolNode(Node):
 
         output_messages: list[BaseMessage] = []
         results: list[QueryResultSchema] = []
+        if len(last_message.tool_calls) == 1 and last_message.tool_calls[0]["name"] == "multi_tool_use.parallel":
+            # Attempt to extract nested tool calls from this buggy openai message
+            last_message.tool_calls = cls.fix_openai_multi_tool_use_bug(last_message.tool_calls[0])
+
         for tool_call in last_message.tool_calls:
             tool = state.tool_executor.tool_map[tool_call["name"]]
             if isinstance(tool, StateUpdaterTool):
@@ -102,6 +106,42 @@ class CallToolNode(Node):
 
         # We return a list, because this will get added to the existing list
         return state_update(messages=output_messages, results=results)
+
+    @staticmethod
+    def fix_openai_multi_tool_use_bug(buggy_tool_call: ToolCall) -> list[ToolCall]:
+        """
+        {
+            "name": "multi_tool_use.parallel",
+            "args": {
+                "tool_uses": [
+                    {
+                        "recipient_name": "functions.sql_db_query",
+                        "parameters": {
+                            "query": "SELECT d.Name AS DepartmentName ...",
+                            "for_chart": True,
+                            "chart_type": "bar",
+                        },
+                    },
+                    {
+                        "recipient_name": "functions.generate_chart",
+                        "parameters": {"chart_type": "bar", "request": "Employee count per department"},
+                    },
+                ]
+            },
+            "id": "call_uv2lM7cmbHCqZzhfWAraz0IB",
+            "type": "tool_call",
+        }
+        """
+        tool_uses = buggy_tool_call["args"]["tool_uses"]
+        return [
+            ToolCall(
+                name=tool_use["recipient_name"].split(".")[-1],  # eg extract "func_name" from "functions.func_name"
+                args=tool_use["parameters"],
+                id=f"call_{i}",
+                type="tool_call",
+            )
+            for i, tool_use in enumerate(tool_uses)
+        ]
 
 
 class ShouldCallToolCondition(Condition):
