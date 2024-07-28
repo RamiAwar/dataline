@@ -2,6 +2,7 @@
 export enum Dialect {
   Postgres = "postgresql",
   MySQL = "mysql",
+  MySQLServer = "mssql",
   SQLite = "sqlite",
   MariaDB = "mariadb",
   Spark = "spark",

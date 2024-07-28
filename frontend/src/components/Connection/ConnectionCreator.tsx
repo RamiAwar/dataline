@@ -220,7 +220,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
           <RadioField>
             <Radio value="database" color="white" />
             <Label className="cursor-pointer">
-              Postgres, MySQL, Snowflake connection string
+              Postgres, MySQL, Snowflake, or MS SQL Server connection string
             </Label>
           </RadioField>
           <RadioField>
