@@ -2,8 +2,8 @@ name: Packaging
 run-name: Packaging triggered by ${{ github.actor }}
 on:
   push:
-    branches:
-      - fix-packaging-mac-pyodbc
+    tags:
+      - "v*"
 jobs:
   build-frontend:
     runs-on: ubuntu-latest
@@ -129,6 +129,8 @@ jobs:
           python-version: 3.11.6
       - name: Install poetry
         uses: abatilo/actions-poetry@v2
+      # pyodbc issue with Mac builds
+      # https://stackoverflow.com/questions/75442083/import-pyodbc-error-while-running-a-python-script-on-pycharm-on-mac
       - name: Install unixODBC
         run: |
           brew install unixodbc
