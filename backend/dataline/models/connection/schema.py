@@ -118,7 +118,7 @@ def validate_dsn(value: str) -> str:
     # Simpler way to connect to postgres even though officially deprecated
     # This mirrors psql which is a very common way to connect to postgres
     # Only replace first occurrence
-    if value.startswith("postgres"):
+    if value.startswith("postgres") and not value.startswith("postgresql"):
         value = value.replace("postgres", "postgresql", 1)
     elif value.startswith("mysql"):
         value = value.replace("mysql", "mysql+pymysql", 1)

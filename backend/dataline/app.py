@@ -21,16 +21,16 @@ logger = logging.getLogger(__name__)
 
 def handle_exceptions(request: Request, e: Exception) -> JSONResponse:
     if isinstance(e, NotFoundError):
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": e.message})
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"detail": e.message})
     elif isinstance(e, NotUniqueError):
-        return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"message": e.message})
+        return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": e.message})
     elif isinstance(e, ValidationError):
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)})
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(e)})
     elif isinstance(e, UserFacingError):
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)})
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(e)})
 
     logger.exception(e)
-    return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"message": str(e)})
+    return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"detail": str(e)})
 
 
 class App(fastapi.FastAPI):

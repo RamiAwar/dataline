@@ -54,7 +54,7 @@ class ConnectionService:
     async def delete_connection(self, session: AsyncSession, connection_id: UUID) -> None:
         await self.connection_repo.delete_by_uuid(session, connection_id)
 
-    async def get_connection_details(self, dsn: str) -> tuple[str, str]:
+    async def get_connection_details(self, dsn: str) -> tuple[str, str, str]:
         # Check if connection can be established before saving it
         try:
             engine = create_engine(dsn)
@@ -67,7 +67,7 @@ class ConnectionService:
             if not database:
                 raise ValidationError("Invalid DSN. Database name is missing, append '/DBNAME'.")
 
-            return dialect, database
+            return dialect, database, dsn
 
         except OperationalError as exc:
             # Try again replacing localhost with host.docker.internal to connect with DBs running in docker
@@ -77,6 +77,14 @@ class ConnectionService:
                     engine = create_engine(dsn)
                     with engine.connect():
                         pass
+
+                    dialect = engine.url.get_dialect().name
+                    database = engine.url.database
+
+                    if not database:
+                        raise ValidationError("Invalid DSN. Database name is missing, append '/DBNAME'.")
+
+                    return dialect, database, dsn
                 except OperationalError as e:
                     logger.error(e)
                     raise ValidationError("Failed to connect to database, please check your DSN.")
@@ -116,8 +124,8 @@ class ConnectionService:
                 raise NotUniqueError("Connection DSN already exists.")
 
             # Check if connection can be established before saving it
-            dialect, database = await self.get_connection_details(data.dsn)
-            update.dsn = data.dsn
+            dialect, database, dsn = await self.get_connection_details(data.dsn)
+            update.dsn = dsn
             update.database = database
             update.dialect = dialect
 
@@ -136,7 +144,7 @@ class ConnectionService:
         is_sample: bool = False,
     ) -> ConnectionOut:
         # Check if connection can be established before saving it
-        dialect, database = await self.get_connection_details(dsn)
+        dialect, database, dsn = await self.get_connection_details(dsn)
         if not type:
             type = dialect
 
@@ -148,7 +156,7 @@ class ConnectionService:
             ConnectionCreate(dsn=dsn, database=database, name=name, dialect=dialect, type=type, is_sample=is_sample),
         )
         return ConnectionOut.model_validate(connection)
-    
+
     async def create_sqlite_connection(
         self, session: AsyncSession, file: BinaryIO, name: str, is_sample: bool = False
     ) -> ConnectionOut:
@@ -237,7 +245,7 @@ class ConnectionService:
             dsn = get_sqlite_dsn(str(file_path.absolute()))
             return await self.create_connection(
                 session, dsn=dsn, name=name, type=ConnectionType.sas.value, is_sample=False
-            )        
+            )
         finally:
             # Clean up the temporary file
             os.unlink(temp_file_path)

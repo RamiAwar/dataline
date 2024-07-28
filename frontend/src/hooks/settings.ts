@@ -131,7 +131,7 @@ export function useUpdateUserAvatar(options = {}) {
       if (isAxiosError(error) && error.response?.status === 400) {
         enqueueSnackbar({
           variant: "error",
-          message: error.response.data.message,
+          message: error.response.data.detail,
         });
       } else {
         enqueueSnackbar({
