@@ -33,6 +33,7 @@
 - [Authentication](#authentication)
   - [With Docker](#with-docker)
 - [Startup Quest](#startup-quest)
+- [Supported Databases](#supported-databases)
 - [Deployment](#deployment)
 
 ## Who is this for?
@@ -161,6 +162,10 @@ Go through the following checklist to explore DataLine's features!
 - [ ] Try asking for a chart!
 - [ ] To really challenge it, ask a question that is answered with multiple results (charts, tables, etc.) - [example](https://www.youtube.com/watch?v=6ouSok9bOVo)
 - [ ] Add a profile picture
+
+### Supported databases
+
+See [instructions file](./dsn-instructions.md) for more details.
 
 ### Deployment
 

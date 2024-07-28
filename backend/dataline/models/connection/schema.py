@@ -87,36 +87,43 @@ def validate_dsn(value: str) -> str:
         return value
 
     dsn_pattern = (
-        r"^(?P<driver>[\w+]+):\/\/(?:(?P<username>\w+):(?P<password>\S+)@)?(?P<host>[\w\.-]+)"
+        r"^(?P<db>[\w]+)(?P<driver>\+[\w]+)?:\/\/(?:(?P<username>\w+):(?P<password>\S+)@)?(?P<host>[\w\.-]+)"
         r"(?::(?P<port>\d+))?(?:\/(?P<database>[\w\.\/-]+))?(?:\?(?P<parameters>.*))?$"
     )
     match = re.match(dsn_pattern, value)
     if match:
         # Extracting components from the DSN
+        db = match.group("db")
         driver = match.group("driver")
         host = match.group("host")
         database = match.group("database")
 
         # Validating components (You can customize the validation rules as per your requirements)
-        if not driver:
-            raise ValueError("Missing driver in DSN")
+        if not db:
+            raise ValueError("Missing database in DSN (ex. postgres://...)")
 
         if not host:
-            raise ValueError("Host missing from DSN")
+            raise ValueError("Host missing from DSN (ex. ...@localhost/db_name)")
 
         if not database:
-            raise ValueError("DSN must specify a database name")
+            raise ValueError("DSN must specify a database name (ex .../dvd_rental)")
+
+        if driver:
+            # Remove user-supplied drivers, we will enforce our own
+            value = value.replace(driver, "")
     else:
         # DSN doesn't match the expected pattern
         raise ValueError("Invalid DSN format")
 
     # Simpler way to connect to postgres even though officially deprecated
     # This mirrors psql which is a very common way to connect to postgres
+    # Only replace first occurrence
     if value.startswith("postgres") and not value.startswith("postgresql"):
-        # Only replace first occurrence
         value = value.replace("postgres", "postgresql", 1)
     elif value.startswith("mysql"):
         value = value.replace("mysql", "mysql+pymysql", 1)
+    elif value.startswith("mssql"):
+        value = value.replace("mssql", "mssql+pyodbc", 1)
 
     return value
 
