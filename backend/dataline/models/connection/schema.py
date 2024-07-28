@@ -112,12 +112,12 @@ def validate_dsn(value: str) -> str:
 
     # Simpler way to connect to postgres even though officially deprecated
     # This mirrors psql which is a very common way to connect to postgres
-    if value.startswith("postgres") and not value.startswith("postgresql"):
+    if value.startswith("postgres://"):
         # Only replace first occurrence
         value = value.replace("postgres", "postgresql", 1)
-    elif value.startswith("mysql") and not value.startswith("mysql+pymysql"):
+    elif value.startswith("mysql://"):
         value = value.replace("mysql", "mysql+pymysql", 1)
-    elif value.startswith("mssql") and not value.startswith("mssql+pyodbc"):
+    elif value.startswith("mssql://"):
         value = value.replace("mssql", "mssql+pyodbc", 1)
 
     return value
