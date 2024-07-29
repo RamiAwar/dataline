@@ -129,6 +129,16 @@ jobs:
           python-version: 3.11.6
       - name: Install poetry
         uses: abatilo/actions-poetry@v2
+      # pyodbc issue with Mac builds
+      # https://stackoverflow.com/questions/75442083/import-pyodbc-error-while-running-a-python-script-on-pycharm-on-mac
+      - name: Install unixODBC
+        run: |
+          brew install unixodbc
+          odbcinst -j
+      - name: Set ODBC environment variables
+        run: |
+          echo "LDFLAGS=-L/usr/local/opt/unixodbc/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I/usr/local/opt/unixodbc/include" >> $GITHUB_ENV
       - name: Install dependencies
         run: |
           poetry self add poetry-plugin-export
