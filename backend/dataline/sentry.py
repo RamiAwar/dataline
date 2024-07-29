@@ -15,7 +15,7 @@ def setup_sentry() -> None:
     sentry_sdk.init(
         dsn="https://eb866cebe8c8378fd689c1ad3d39bcb5@o4507329853915136.ingest.de.sentry.io/4507335339278416",
         environment=config.environment,
-        release="v1.0.8",
+        release="v1.0.11",
         enable_tracing=True,
         integrations=[FastApiIntegration()],
         traces_sample_rate=1.0,

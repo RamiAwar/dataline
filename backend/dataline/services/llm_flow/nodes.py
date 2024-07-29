@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import cast
 
-from langchain_core.messages import AIMessage, BaseMessage, ToolMessage, ToolCall
+from langchain_core.messages import AIMessage, BaseMessage, ToolCall, ToolMessage
 from langchain_core.utils.function_calling import convert_to_openai_function
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END
@@ -56,10 +56,9 @@ class CallModelNode(Node):
         all_tools = sql_tools + [ChartGeneratorTool()]
         tools = [convert_to_openai_function(t) for t in all_tools]
         model = cast(ChatOpenAI, model.bind_tools(tools))
-        # We only want to pass the last 20 messages to the model
         # This includes tool messages and ai messages at this point
-        # Useful to limit tokens when graph recursion is very deep
-        last_n_messages = state.messages[-20:]
+        # TODO: Useful to limit tokens when graph recursion is very deep
+        last_n_messages = state.messages
         try:
             response = model.invoke(last_n_messages)
         except RateLimitError as e:
