@@ -52,7 +52,7 @@ It's privacy-focused, storing everything on your device. No ☁️, only ☀️!
 
 It hides your data from the LLMs used by default, but this can be disabled if the data is not deemed sensitive.
 
-It can connect to a variety of data sources (Postgres, Snowflake, MySQL, [Excel](#excel-support), SQLite, CSV, sas7bdat, and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
+It can connect to a variety of data sources (Postgres, Snowflake, MySQL, Azure SQL Server, Microsoft SQL Server, [Excel](#excel-support), SQLite, CSV, sas7bdat, and more), execute queries, generate charts, and allow for copying the results to build reports quickly.
 
 ## Where is it going?
 
