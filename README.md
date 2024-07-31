@@ -1,8 +1,6 @@
 <p align="center">
-  <a href="https://youtu.be/NN99OTVy7uA"><img src="https://github.com/user-attachments/assets/34dfba7c-7ab5-4a35-8fe1-e40b298ef1ae" height="300" alt="DataLine logo"></a>
+  <a href="https://dataline.app"><img src="https://github.com/RamiAwar/dataline/assets/8523191/97e3a26c-e064-4e4e-b804-4e739986dbe9" alt="DataLine logo"></a>
 </p>
-
-
 <p align="center">
     <strong>💬 Chat with your data using natural language 📊</strong>
 </p>
@@ -19,7 +17,14 @@
     <img src="https://github.com/RamiAwar/dataline/actions/workflows/test.yml/badge.svg?branch=main&event=push" />
   </a>
 </div>
+
+## 🍿 Watch a quick demo
+<a href="https://youtu.be/NN99OTVy7uA"><img src="https://github.com/user-attachments/assets/34dfba7c-7ab5-4a35-8fe1-e40b298ef1ae" height="300" alt="DataLine logo"></a>
+
+
 ---
+
+## Index
 
 - [Who is this for](#who-is-this-for)
 - [What is it](#what-is-it)
