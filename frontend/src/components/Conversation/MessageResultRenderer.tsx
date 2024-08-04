@@ -113,7 +113,10 @@ export const MessageResultRenderer = ({
 
   // Used by CodeBlock to replace the linked SQL query run when an SQL string is re-run
   // Necessary since the results are only present at this level and the codeblock can't modify them
-  function updateLinkedSQLRun(sql_string_result_id: string, content: string) {
+  function updateLinkedSQLRunResult(
+    sql_string_result_id: string,
+    content: string
+  ) {
     // != null, rules out both null and undefined
     if (results != null && content != null) {
       // Remove SQL query run result linked to this ID if any
@@ -137,7 +140,7 @@ export const MessageResultRenderer = ({
     }
   }
 
-  function updateLinkedChart(
+  function updateLinkedChartResult(
     sql_string_result_id: string,
     newJson: string,
     newCreatedAt: string
@@ -233,11 +236,11 @@ export const MessageResultRenderer = ({
               (result.type === "SQL_QUERY_STRING_RESULT" && (
                 <CodeBlock
                   key={`message-${messageId}-code-${result.result_id}`}
-                  language="SQL_QUERY_STRING_RESULT"
+                  dialect={result.content.dialect}
                   code={result.content.sql}
                   resultId={result.result_id}
-                  updateSQLRunResult={updateLinkedSQLRun}
-                  updateChartResult={updateLinkedChart}
+                  onUpdateSQLRunResult={updateLinkedSQLRunResult}
+                  onUpdateChartResult={updateLinkedChartResult}
                   forChart={result.content.for_chart}
                 />
               )) ||

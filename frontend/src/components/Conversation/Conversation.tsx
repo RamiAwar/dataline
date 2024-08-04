@@ -74,6 +74,9 @@ export const Conversation = () => {
     (conn) => conn.id === currConversation?.connection_id
   );
 
+  // Scroll to bottom of screen when new result comes in
+  // TODO: Look into removing this to avoid disrupting user
+  // experience and show arrow to scroll to bottom instead
   const scrollToBottom = (
     behavior: ScrollBehavior = "instant" as ScrollBehavior
   ) => {
@@ -82,17 +85,22 @@ export const Conversation = () => {
     }
   };
   useEffect(() => {
-    // Wait for charts to render, otherwise the scroll will happen and stop before it reaches the bottom
-    const animationFrameId = requestAnimationFrame(() => scrollToBottom());
-
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isPendingGetMessages, messageListRef, params, isStreamingResults]);
-
-  useEffect(() => {
     if (streamedResults.length > 0) {
       scrollToBottom("smooth");
     }
   }, [streamedResults]);
+
+  useEffect(() => {
+    // Wait for charts to render, otherwise the scroll will happen and stop before it reaches the bottom
+    const animationFrameId = requestAnimationFrame(() => scrollToBottom());
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [
+    isPendingGetMessages,
+    messageListRef,
+    params.conversationId,
+    isStreamingResults,
+  ]);
 
   // Checks if the current conversation has an ongoing query
   // Edge case: if there are two or more ongoing queries in different conversations, the variable below

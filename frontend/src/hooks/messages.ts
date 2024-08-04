@@ -17,6 +17,7 @@ import { enqueueSnackbar } from "notistack";
 import { isAxiosError } from "axios";
 import { getMessageOptions } from "./messageOptions";
 import { useGetRelatedConnection } from "./conversations";
+import { useParams } from "@tanstack/react-router";
 
 const MESSAGES_QUERY_KEY = ["MESSAGES"];
 
@@ -183,17 +184,47 @@ export function useRunSql(
   {
     conversationId,
     sql,
-    linkedId,
+    resultId,
   }: {
     conversationId: string;
     sql: string;
-    linkedId: string;
+    resultId: string;
   },
   options: UseMutationOptions<IResult> = {}
 ) {
   return useMutation({
     mutationFn: async () =>
-      (await api.runSQL(conversationId, sql, linkedId)).data,
+      (await api.runSQL(conversationId, sql.replace(/\s+/g, " "), resultId))
+        .data,
+    onError() {
+      enqueueSnackbar({ variant: "error", message: "Error running query" });
+    },
+    onSuccess() {
+      enqueueSnackbar({
+        variant: "success",
+        message: "Query executed successfully",
+        autoHideDuration: 1500,
+      });
+    },
+    ...options,
+  });
+}
+
+export function useRunSqlInConversation(
+  {
+    sql,
+    resultId,
+  }: {
+    sql: string;
+    resultId: string;
+  },
+  options: UseMutationOptions<IResult> = {}
+) {
+  const { conversationId } = useParams({ from: "/_app/chat/$conversationId" });
+  return useMutation({
+    mutationFn: async () =>
+      (await api.runSQL(conversationId, sql.replace(/\s+/g, " "), resultId))
+        .data,
     onError() {
       enqueueSnackbar({ variant: "error", message: "Error running query" });
     },
@@ -212,19 +243,19 @@ export function useUpdateSqlQuery(
   options: UseMutationOptions<
     UpdateSQLQueryStringResponse,
     DefaultError,
-    { id: string; code: string; forChart: boolean }
+    { sqlStringResultId: string; code: string; forChart: boolean }
   >
 ) {
   return useMutation({
     mutationFn: ({
-      id,
+      sqlStringResultId,
       code,
       forChart,
     }: {
-      id: string;
+      sqlStringResultId: string;
       code: string;
       forChart: boolean;
-    }) => api.updateSQLQueryString(id, code, forChart),
+    }) => api.updateSQLQueryString(sqlStringResultId, code, forChart),
     onError(error) {
       if (isAxiosError(error) && error.response?.status === 400) {
         enqueueSnackbar({

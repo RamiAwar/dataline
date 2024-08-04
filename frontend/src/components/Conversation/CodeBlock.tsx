@@ -1,5 +1,4 @@
 import SyntaxHighlighter from "react-syntax-highlighter";
-import { IResultTypeName } from "@components/Library/types";
 import {
   ClipboardIcon,
   PlayIcon,
@@ -9,10 +8,8 @@ import {
 import { CustomTooltip } from "../Library/Tooltip";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { format } from "prettier-sql";
-import { Dialect } from "../Library/types";
 import { useEffect, useRef, useState } from "react";
-import { useRunSql, useUpdateSqlQuery } from "@/hooks";
-import { useParams } from "@tanstack/react-router";
+import { useRunSqlInConversation, useUpdateSqlQuery } from "@/hooks";
 import {
   Alert,
   AlertActions,
@@ -65,9 +62,23 @@ function getNewCursorPosition(
   return i;
 }
 
-const formattedCodeOrInitial = (code: string) => {
+type SupportedFormatters =
+  | "bigquery"
+  | "db2"
+  | "hive"
+  | "mariadb"
+  | "mysql"
+  | "n1ql"
+  | "plsql"
+  | "postgresql"
+  | "redshift"
+  | "spark"
+  | "sql"
+  | "tsql";
+
+const formattedCodeOrInitial = (code: string, dialect: SupportedFormatters) => {
   try {
-    return format(code, { language: Dialect.Postgres });
+    return format(code, { language: dialect });
   } catch {
     return code;
   }
@@ -75,30 +86,28 @@ const formattedCodeOrInitial = (code: string) => {
 
 export const CodeBlock = ({
   code,
-  language,
+  dialect,
   resultId,
-  updateSQLRunResult,
-  updateChartResult,
+  onUpdateSQLRunResult,
+  onUpdateChartResult,
   forChart = false,
 }: {
   code: string;
   resultId: string;
-  language: IResultTypeName;
-  updateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
-  updateChartResult: (
+  dialect: string;
+  onUpdateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
+  onUpdateChartResult: (
     sql_string_result_id: string,
     newJson: string,
     newCreatedAt: string
   ) => void;
   forChart: boolean;
 }) => {
-  const { conversationId } = useParams({ from: "/_app/chat/$conversationId" });
-
   const [savedCode, setSavedCode] = useState<string>(() =>
-    formattedCodeOrInitial(code)
+    formattedCodeOrInitial(code, dialect as SupportedFormatters)
   );
   const [formattedCode, setFormattedCode] = useState<string>(() =>
-    formattedCodeOrInitial(code)
+    formattedCodeOrInitial(code, dialect as SupportedFormatters)
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const syntaxHighlighterId = `syntax-highlighter-${resultId}`;
@@ -108,11 +117,10 @@ export const CodeBlock = ({
   const BookmarkIcon = BookmarkIconOutline;
   const extraSpace = "";
 
-  const { isPending, mutate: runSql } = useRunSql(
+  const { isPending, mutate: runSql } = useRunSqlInConversation(
     {
-      conversationId: conversationId || "",
-      sql: savedCode.replace(/\s+/g, " "),
-      linkedId: resultId,
+      sql: savedCode,
+      resultId: resultId,
     },
     {
       onSettled: (data, error) => {
@@ -120,7 +128,7 @@ export const CodeBlock = ({
           console.error("onsettled error in: ", error);
         } else {
           if (data?.content) {
-            updateSQLRunResult(resultId, data.content as string);
+            onUpdateSQLRunResult(resultId, data.content as string);
           }
         }
       },
@@ -134,7 +142,7 @@ export const CodeBlock = ({
       } else {
         // Check if data not undefined then we have chart response
         if (data && data.data && data.data.chartjs_json) {
-          updateChartResult(
+          onUpdateChartResult(
             resultId,
             data.data.chartjs_json,
             data.data.created_at
@@ -146,7 +154,11 @@ export const CodeBlock = ({
 
   function saveNewSQLString() {
     if (!resultId) return;
-    updateSQL({ id: resultId, code: savedCode, forChart: forChart });
+    updateSQL({
+      sqlStringResultId: resultId,
+      code: savedCode,
+      forChart: forChart,
+    });
   }
 
   useEffect(() => {
@@ -167,7 +179,9 @@ export const CodeBlock = ({
         return;
       }
 
-      const formatted = format(savedCode, { language: Dialect.Postgres });
+      const formatted = format(savedCode, {
+        language: dialect as SupportedFormatters,
+      });
       setFormattedCode(formatted + extraSpace);
 
       if (textareaRef.current !== null) {
@@ -194,7 +208,7 @@ export const CodeBlock = ({
     } catch (e) {
       setFormattedCode(savedCode);
     }
-  }, [savedCode, formattedCode, lastChar]);
+  }, [savedCode, formattedCode, lastChar, dialect]);
 
   const handleTextUpdate = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // If the user is typing a space, don't update and reformat the saved code
@@ -258,7 +272,7 @@ export const CodeBlock = ({
         // add dynamic ID based on resultId
         id={syntaxHighlighterId}
         children={formattedCode}
-        language={language === "SQL_QUERY_STRING_RESULT" ? "sql" : language}
+        language="sql" // TODO: make dynamic to support multiple DB dialects?
         style={monokai}
         wrapLines={true}
         customStyle={{
