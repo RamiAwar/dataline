@@ -95,7 +95,11 @@ class SettingsService:
         else:
             # Update user with data
             user_update = UserUpdate.model_construct(**data.model_dump(exclude_unset=True))
-            base_url = user_info.openai_base_url or user_update.openai_base_url
+            base_url = (
+                user_update.openai_base_url
+                if "openai_base_url" in user_update.model_fields_set
+                else user_info.openai_base_url
+            )
             if user_update.openai_api_key:
                 key_to_check = user_update.openai_api_key
                 model_to_check = (
