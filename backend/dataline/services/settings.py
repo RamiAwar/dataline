@@ -19,9 +19,12 @@ from dataline.sentry import opt_out_of_sentry, setup_sentry
 logger = logging.getLogger(__name__)
 
 
-def model_exists(openai_api_key: SecretStr | str, model: str) -> bool:
+def model_exists(openai_api_key: SecretStr | str, model: str, base_url: str | None = None) -> bool:
     api_key = openai_api_key.get_secret_value() if isinstance(openai_api_key, SecretStr) else openai_api_key
-    models = openai.OpenAI(api_key=api_key).models.list()
+    try:
+        models = openai.OpenAI(api_key=api_key, base_url=base_url).models.list()
+    except openai.AuthenticationError as e:
+        raise ValueError("Invalid OpenAI Key") from e
     return model in {model.id for model in models}
 
 
@@ -83,7 +86,7 @@ class SettingsService:
             if user_create.openai_api_key and user_create.preferred_openai_model is None:
                 user_create.preferred_openai_model = (
                     config.default_model
-                    if model_exists(user_create.openai_api_key, config.default_model)
+                    if model_exists(user_create.openai_api_key, config.default_model, user_create.openai_base_url)
                     else "gpt-3.5-turbo"
                 )
             user = await self.user_repo.create(session, user_create)
@@ -92,15 +95,16 @@ class SettingsService:
         else:
             # Update user with data
             user_update = UserUpdate.model_construct(**data.model_dump(exclude_unset=True))
+            base_url = user_info.openai_base_url or user_update.openai_base_url
             if user_update.openai_api_key:
                 key_to_check = user_update.openai_api_key
                 model_to_check = (
                     user_update.preferred_openai_model or user_info.preferred_openai_model or config.default_model
                 )
-                if not model_exists(key_to_check, model_to_check):
+                if not model_exists(key_to_check, model_to_check, base_url):
                     raise Exception(f"model {model_to_check} not accessible with current key")
             elif user_update.preferred_openai_model and user_info.openai_api_key:
-                if not model_exists(user_info.openai_api_key, user_update.preferred_openai_model):
+                if not model_exists(user_info.openai_api_key, user_update.preferred_openai_model, base_url):
                     raise Exception(f"model {user_update.preferred_openai_model} not accessible with current key")
             should_update_sentry_preference = (
                 data.sentry_enabled is not None and user_info.sentry_enabled != data.sentry_enabled
