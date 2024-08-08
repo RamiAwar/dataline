@@ -12,3 +12,4 @@ class UserModel(DBModel, UUIDMixin, kw_only=True):
     preferred_openai_model: Mapped[str | None] = mapped_column("preferred_openai_model", String, nullable=True)
     langsmith_api_key: Mapped[str | None] = mapped_column("langsmith_api_key", String, nullable=True)
     sentry_enabled: Mapped[bool] = mapped_column("sentry_enabled", Boolean, server_default=true())
+    openai_base_url: Mapped[str | None] = mapped_column("openai_base_url", String, nullable=True)

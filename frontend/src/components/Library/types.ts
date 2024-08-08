@@ -119,6 +119,7 @@ export interface IEditConnection {
 export interface IUserInfo {
   name: string;
   openai_api_key: string;
+  openai_base_url?: string | null;
   langsmith_api_key?: string | null;
   sentry_enabled: boolean;
 }

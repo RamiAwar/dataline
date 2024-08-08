@@ -50,7 +50,11 @@ class CallModelNode(Node):
     def run(cls, state: QueryGraphState) -> QueryGraphStateUpdate:
         # TODO: Consider replacing with mirascope
         model = ChatOpenAI(
-            model=state.options.model_name, api_key=state.options.openai_api_key, temperature=0, streaming=True
+            model=state.options.model_name,
+            base_url=state.options.openai_base_url,
+            api_key=state.options.openai_api_key,
+            temperature=0,
+            streaming=True,
         )
         sql_tools = state.sql_toolkit.get_tools()
         all_tools = sql_tools + [ChartGeneratorTool()]
