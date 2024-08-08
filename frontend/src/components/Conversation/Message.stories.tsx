@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Message } from "@components/Conversation/Message";
 import { generateUUID } from "../Library/utils";
+import { Dialect } from "../Library/types";
 
 const meta: Meta<typeof Message> = {
   component: Message,
@@ -46,6 +47,7 @@ export const Primary: Story = {
           content: {
             sql: "SELECT COUNT(*) FROM rental WHERE return_date::date = rental_date::date",
             for_chart: false,
+            dialect: Dialect.Postgres,
           },
           result_id: "Jjasd",
         },

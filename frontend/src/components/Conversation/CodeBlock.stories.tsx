@@ -17,7 +17,7 @@ type Story = StoryObj<typeof CodeBlock>;
 export const Primary: Story = {
   args: {
     code: `SELECT * FROM table JOIN table2 ON table.id = table2.id WHERE table.id = 1;`,
-    language: Dialect.Postgres,
+    dialect: Dialect.Postgres,
   },
   parameters: {
     // Place in conversation context

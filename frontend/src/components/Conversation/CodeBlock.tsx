@@ -17,6 +17,7 @@ import {
   AlertTitle,
 } from "../Catalyst/alert";
 import { Button } from "../Catalyst/button";
+import { Dialect } from "../Library/types";
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
@@ -78,7 +79,7 @@ type SupportedFormatters =
 
 const formattedCodeOrInitial = (code: string, dialect: SupportedFormatters) => {
   try {
-    return format(code, { language: dialect });
+    return format(code, { language: dialect || Dialect.Postgres });
   } catch {
     return code;
   }
@@ -89,17 +90,15 @@ export const CodeBlock = ({
   dialect,
   resultId,
   onUpdateSQLRunResult,
-  onUpdateChartResult,
+  onSaveSQLStringResult,
   forChart = false,
 }: {
   code: string;
   resultId: string;
   dialect: string;
   onUpdateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
-  onUpdateChartResult: (
-    sql_string_result_id: string,
-    newJson: string,
-    newCreatedAt: string
+  onSaveSQLStringResult: (
+    data?: { created_at: string; chartjs_json: string } | void
   ) => void;
   forChart: boolean;
 }) => {
@@ -117,37 +116,31 @@ export const CodeBlock = ({
   const BookmarkIcon = BookmarkIconOutline;
   const extraSpace = "";
 
-  const { isPending, mutate: runSql } = useRunSqlInConversation(
-    {
-      sql: savedCode,
-      resultId: resultId,
-    },
-    {
-      onSettled: (data, error) => {
-        if (error) {
-          console.error("onsettled error in: ", error);
-        } else {
-          if (data?.content) {
-            onUpdateSQLRunResult(resultId, data.content as string);
-          }
-        }
+  const { isPending: isPendingRunSql, mutate: runSql } =
+    useRunSqlInConversation(
+      {
+        sql: savedCode,
+        resultId: resultId,
       },
-    }
-  );
+      {
+        onSettled: (data, error) => {
+          if (error) {
+            console.error("onsettled error in: ", error);
+          } else {
+            if (data?.content) {
+              onUpdateSQLRunResult(resultId, data.content as string);
+            }
+          }
+        },
+      }
+    );
 
-  const { mutate: updateSQL } = useUpdateSqlQuery({
+  const { isPending: isPendingSaveSql, mutate: updateSQL } = useUpdateSqlQuery({
     onSettled: (data, error) => {
       if (error) {
         console.error("onsettled error in: ", error);
       } else {
-        // Check if data not undefined then we have chart response
-        if (data && data.data && data.data.chartjs_json) {
-          onUpdateChartResult(
-            resultId,
-            data.data.chartjs_json,
-            data.data.created_at
-          );
-        }
+        onSaveSQLStringResult(data);
       }
     },
   });
@@ -180,7 +173,7 @@ export const CodeBlock = ({
       }
 
       const formatted = format(savedCode, {
-        language: dialect as SupportedFormatters,
+        language: (dialect as SupportedFormatters) || Dialect.Postgres,
       });
       setFormattedCode(formatted + extraSpace);
 
@@ -298,8 +291,18 @@ export const CodeBlock = ({
       <div className="absolute bottom-0 right-0 m-2 flex gap-1">
         {/* Save Icon */}
         <CustomTooltip hoverText="Save">
-          <button tabIndex={-1} onClick={saveNewSQLString} className="p-1">
-            <BookmarkIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+          <button
+            tabIndex={-1}
+            onClick={saveNewSQLString}
+            className="p-1"
+            disabled={isPendingSaveSql}
+          >
+            <BookmarkIcon
+              className={classNames(
+                isPendingSaveSql ? "animate-spin" : "group-hover:-rotate-6",
+                "w-6 h-6 [&>path]:stroke-[2]"
+              )}
+            />
           </button>
         </CustomTooltip>
 
@@ -321,12 +324,12 @@ export const CodeBlock = ({
             onClick={() => {
               runSql();
             }}
-            disabled={isPending}
+            disabled={isPendingRunSql}
             className="p-1"
           >
             <PlayIcon
               className={classNames(
-                isPending ? "animate-spin" : "group-hover:-rotate-12",
+                isPendingRunSql ? "animate-spin" : "group-hover:-rotate-12",
                 "w-6 h-6 [&>path]:stroke-[2]"
               )}
             />

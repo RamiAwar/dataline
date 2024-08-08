@@ -1,4 +1,4 @@
-import { api, RefreshChartResult, UpdateSQLQueryStringResponse } from "@/api";
+import { api, RefreshChartResult } from "@/api";
 import {
   IMessageOut,
   IMessageWithResultsOut,
@@ -241,13 +241,16 @@ export function useRunSqlInConversation(
 
 export function useUpdateSqlQuery(
   options: UseMutationOptions<
-    UpdateSQLQueryStringResponse,
+    void | {
+      created_at: string;
+      chartjs_json: string;
+    },
     DefaultError,
     { sqlStringResultId: string; code: string; forChart: boolean }
   >
 ) {
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       sqlStringResultId,
       code,
       forChart,
@@ -255,7 +258,8 @@ export function useUpdateSqlQuery(
       sqlStringResultId: string;
       code: string;
       forChart: boolean;
-    }) => api.updateSQLQueryString(sqlStringResultId, code, forChart),
+    }) =>
+      (await api.updateSQLQueryString(sqlStringResultId, code, forChart)).data,
     onError(error) {
       if (isAxiosError(error) && error.response?.status === 400) {
         enqueueSnackbar({

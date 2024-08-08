@@ -8,6 +8,9 @@ import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
 import { DynamicTable } from "../Library/DynamicTable";
 import { CodeBlock } from "./CodeBlock";
 import Chart from "../Library/Chart";
+import { useQueryClient } from "@tanstack/react-query";
+import { getMessagesQuery } from "@/hooks";
+import { useParams } from "@tanstack/react-router";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -110,6 +113,8 @@ export const MessageResultRenderer = ({
     () => getResultGroups(results),
     [results]
   );
+  const queryClient = useQueryClient();
+  const { conversationId } = useParams({ from: "/_app/chat/$conversationId" });
 
   // Used by CodeBlock to replace the linked SQL query run when an SQL string is re-run
   // Necessary since the results are only present at this level and the codeblock can't modify them
@@ -178,6 +183,24 @@ export const MessageResultRenderer = ({
     }
   }
 
+  function onSaveSQLStringResult(sql_string_result_id: string) {
+    return (data?: { created_at: string; chartjs_json: string } | void) => {
+      // Check if data not undefined then we have chart response
+      if (data) {
+        updateLinkedChartResult(
+          sql_string_result_id,
+          data.chartjs_json,
+          data.created_at
+        );
+      }
+      if (conversationId) {
+        queryClient.invalidateQueries({
+          queryKey: getMessagesQuery({ conversationId }).queryKey,
+        });
+      }
+    };
+  }
+
   return (
     <>
       {unlinkedGroup.length > 0 && (
@@ -240,7 +263,9 @@ export const MessageResultRenderer = ({
                   code={result.content.sql}
                   resultId={result.result_id}
                   onUpdateSQLRunResult={updateLinkedSQLRunResult}
-                  onUpdateChartResult={updateLinkedChartResult}
+                  onSaveSQLStringResult={onSaveSQLStringResult(
+                    result.result_id
+                  )}
                   forChart={result.content.for_chart}
                 />
               )) ||
