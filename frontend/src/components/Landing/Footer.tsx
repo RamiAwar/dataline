@@ -6,7 +6,7 @@ const navigation = {
     // { name: "Insights", href: "#" },
   ],
   support: [
-    { name: "Discord", href: "https://discord.gg/qwT2zztZ" },
+    { name: "Discord", href: "https://discord.gg/f2dC4CJK8d" },
     { name: "Email", href: "mailto:support@dataline.app" },
     { name: "GitHub", href: "https://github.com/RamiAwar/dataline" },
     // { name: "Guides", href: "#" },
