@@ -8,6 +8,9 @@ import { SelectedTablesDisplay } from "../Library/SelectedTablesDisplay";
 import { DynamicTable } from "../Library/DynamicTable";
 import { CodeBlock } from "./CodeBlock";
 import Chart from "../Library/Chart";
+import { useQueryClient } from "@tanstack/react-query";
+import { getMessagesQuery } from "@/hooks";
+import { useParams } from "@tanstack/react-router";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -110,10 +113,15 @@ export const MessageResultRenderer = ({
     () => getResultGroups(results),
     [results]
   );
+  const queryClient = useQueryClient();
+  const { conversationId } = useParams({ from: "/_app/chat/$conversationId" });
 
   // Used by CodeBlock to replace the linked SQL query run when an SQL string is re-run
   // Necessary since the results are only present at this level and the codeblock can't modify them
-  function updateLinkedSQLRun(sql_string_result_id: string, content: string) {
+  function updateLinkedSQLRunResult(
+    sql_string_result_id: string,
+    content: string
+  ) {
     // != null, rules out both null and undefined
     if (results != null && content != null) {
       // Remove SQL query run result linked to this ID if any
@@ -137,7 +145,7 @@ export const MessageResultRenderer = ({
     }
   }
 
-  function updateLinkedChart(
+  function updateLinkedChartResult(
     sql_string_result_id: string,
     newJson: string,
     newCreatedAt: string
@@ -173,6 +181,24 @@ export const MessageResultRenderer = ({
       ] as IResultType[];
       setResults(updatedResults);
     }
+  }
+
+  function onSaveSQLStringResult(sql_string_result_id: string) {
+    return (data?: { created_at: string; chartjs_json: string } | void) => {
+      // Check if data not undefined then we have chart response
+      if (data) {
+        updateLinkedChartResult(
+          sql_string_result_id,
+          data.chartjs_json,
+          data.created_at
+        );
+      }
+      if (conversationId) {
+        queryClient.invalidateQueries({
+          queryKey: getMessagesQuery({ conversationId }).queryKey,
+        });
+      }
+    };
   }
 
   return (
@@ -233,11 +259,13 @@ export const MessageResultRenderer = ({
               (result.type === "SQL_QUERY_STRING_RESULT" && (
                 <CodeBlock
                   key={`message-${messageId}-code-${result.result_id}`}
-                  language="SQL_QUERY_STRING_RESULT"
+                  dialect={result.content.dialect}
                   code={result.content.sql}
                   resultId={result.result_id}
-                  updateSQLRunResult={updateLinkedSQLRun}
-                  updateChartResult={updateLinkedChart}
+                  onUpdateSQLRunResult={updateLinkedSQLRunResult}
+                  onSaveSQLStringResult={onSaveSQLStringResult(
+                    result.result_id
+                  )}
                   forChart={result.content.for_chart}
                 />
               )) ||

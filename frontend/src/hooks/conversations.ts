@@ -93,6 +93,13 @@ export function useUpdateConversation(options = {}) {
   });
 }
 
+/**
+ * Get the connection object for the current conversation
+ *
+ * **Warning:** This must be used within the conversation chat context
+ *
+ * @returns ConnectionResult
+ */
 export function useGetRelatedConnection() {
   const params = useParams({ from: "/_app/chat/$conversationId" });
   const { data: connectionsData } = useGetConnections();

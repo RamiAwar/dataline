@@ -1,7 +1,9 @@
 from enum import Enum
 from typing import Type
 
+from langsmith import wrappers
 from mirascope import tags
+from mirascope.base import BaseConfig
 from mirascope.openai import OpenAICallParams, OpenAIExtractor
 from pydantic import BaseModel, Field
 
@@ -179,6 +181,7 @@ class ShouldGenerateChart(BaseModel):
 
 @tags(["version:0001"])
 class ShouldGenerateChartCall(OpenAIExtractor[ShouldGenerateChart]):
+    configuration = BaseConfig(client_wrappers=[wrappers.wrap_openai])
     extract_schema: Type[ShouldGenerateChart] = ShouldGenerateChart
     call_params = OpenAICallParams(model="gpt-3.5-turbo")
     api_key: str | None
@@ -198,6 +201,7 @@ class GeneratedChart(BaseModel):
 
 @tags(["version:0001"])
 class GenerateChartCall(OpenAIExtractor[GeneratedChart]):
+    configuration = BaseConfig(client_wrappers=[wrappers.wrap_openai])
     extract_schema: Type[GeneratedChart] = GeneratedChart
     call_params = OpenAICallParams(model="gpt-3.5-turbo")
     api_key: str | None

@@ -1,5 +1,4 @@
 import SyntaxHighlighter from "react-syntax-highlighter";
-import { IResultTypeName } from "@components/Library/types";
 import {
   ClipboardIcon,
   PlayIcon,
@@ -9,10 +8,8 @@ import {
 import { CustomTooltip } from "../Library/Tooltip";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { format } from "prettier-sql";
-import { Dialect } from "../Library/types";
 import { useEffect, useRef, useState } from "react";
-import { useRunSql, useUpdateSqlQuery } from "@/hooks";
-import { useParams } from "@tanstack/react-router";
+import { useRunSqlInConversation, useUpdateSqlQuery } from "@/hooks";
 import {
   Alert,
   AlertActions,
@@ -20,6 +17,7 @@ import {
   AlertTitle,
 } from "../Catalyst/alert";
 import { Button } from "../Catalyst/button";
+import { Dialect } from "../Library/types";
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
@@ -65,9 +63,23 @@ function getNewCursorPosition(
   return i;
 }
 
-const formattedCodeOrInitial = (code: string) => {
+type SupportedFormatters =
+  | "bigquery"
+  | "db2"
+  | "hive"
+  | "mariadb"
+  | "mysql"
+  | "n1ql"
+  | "plsql"
+  | "postgresql"
+  | "redshift"
+  | "spark"
+  | "sql"
+  | "tsql";
+
+const formattedCodeOrInitial = (code: string, dialect: SupportedFormatters) => {
   try {
-    return format(code, { language: Dialect.Postgres });
+    return format(code, { language: dialect || Dialect.Postgres });
   } catch {
     return code;
   }
@@ -75,30 +87,26 @@ const formattedCodeOrInitial = (code: string) => {
 
 export const CodeBlock = ({
   code,
-  language,
+  dialect,
   resultId,
-  updateSQLRunResult,
-  updateChartResult,
+  onUpdateSQLRunResult,
+  onSaveSQLStringResult,
   forChart = false,
 }: {
   code: string;
   resultId: string;
-  language: IResultTypeName;
-  updateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
-  updateChartResult: (
-    sql_string_result_id: string,
-    newJson: string,
-    newCreatedAt: string
+  dialect: string;
+  onUpdateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
+  onSaveSQLStringResult: (
+    data?: { created_at: string; chartjs_json: string } | void
   ) => void;
   forChart: boolean;
 }) => {
-  const { conversationId } = useParams({ from: "/_app/chat/$conversationId" });
-
   const [savedCode, setSavedCode] = useState<string>(() =>
-    formattedCodeOrInitial(code)
+    formattedCodeOrInitial(code, dialect as SupportedFormatters)
   );
   const [formattedCode, setFormattedCode] = useState<string>(() =>
-    formattedCodeOrInitial(code)
+    formattedCodeOrInitial(code, dialect as SupportedFormatters)
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const syntaxHighlighterId = `syntax-highlighter-${resultId}`;
@@ -108,45 +116,42 @@ export const CodeBlock = ({
   const BookmarkIcon = BookmarkIconOutline;
   const extraSpace = "";
 
-  const { isPending, mutate: runSql } = useRunSql(
-    {
-      conversationId: conversationId || "",
-      sql: savedCode.replace(/\s+/g, " "),
-      linkedId: resultId,
-    },
-    {
-      onSettled: (data, error) => {
-        if (error) {
-          console.error("onsettled error in: ", error);
-        } else {
-          if (data?.content) {
-            updateSQLRunResult(resultId, data.content as string);
-          }
-        }
+  const { isPending: isPendingRunSql, mutate: runSql } =
+    useRunSqlInConversation(
+      {
+        sql: savedCode,
+        resultId: resultId,
       },
-    }
-  );
+      {
+        onSettled: (data, error) => {
+          if (error) {
+            console.error("onsettled error in: ", error);
+          } else {
+            if (data?.content) {
+              onUpdateSQLRunResult(resultId, data.content as string);
+            }
+          }
+        },
+      }
+    );
 
-  const { mutate: updateSQL } = useUpdateSqlQuery({
+  const { isPending: isPendingSaveSql, mutate: updateSQL } = useUpdateSqlQuery({
     onSettled: (data, error) => {
       if (error) {
         console.error("onsettled error in: ", error);
       } else {
-        // Check if data not undefined then we have chart response
-        if (data && data.data && data.data.chartjs_json) {
-          updateChartResult(
-            resultId,
-            data.data.chartjs_json,
-            data.data.created_at
-          );
-        }
+        onSaveSQLStringResult(data);
       }
     },
   });
 
   function saveNewSQLString() {
     if (!resultId) return;
-    updateSQL({ id: resultId, code: savedCode, forChart: forChart });
+    updateSQL({
+      sqlStringResultId: resultId,
+      code: savedCode,
+      forChart: forChart,
+    });
   }
 
   useEffect(() => {
@@ -167,7 +172,9 @@ export const CodeBlock = ({
         return;
       }
 
-      const formatted = format(savedCode, { language: Dialect.Postgres });
+      const formatted = format(savedCode, {
+        language: (dialect as SupportedFormatters) || Dialect.Postgres,
+      });
       setFormattedCode(formatted + extraSpace);
 
       if (textareaRef.current !== null) {
@@ -194,7 +201,7 @@ export const CodeBlock = ({
     } catch (e) {
       setFormattedCode(savedCode);
     }
-  }, [savedCode, formattedCode, lastChar]);
+  }, [savedCode, formattedCode, lastChar, dialect]);
 
   const handleTextUpdate = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // If the user is typing a space, don't update and reformat the saved code
@@ -258,7 +265,7 @@ export const CodeBlock = ({
         // add dynamic ID based on resultId
         id={syntaxHighlighterId}
         children={formattedCode}
-        language={language === "SQL_QUERY_STRING_RESULT" ? "sql" : language}
+        language="sql" // TODO: make dynamic to support multiple DB dialects?
         style={monokai}
         wrapLines={true}
         customStyle={{
@@ -284,8 +291,18 @@ export const CodeBlock = ({
       <div className="absolute bottom-0 right-0 m-2 flex gap-1">
         {/* Save Icon */}
         <CustomTooltip hoverText="Save">
-          <button tabIndex={-1} onClick={saveNewSQLString} className="p-1">
-            <BookmarkIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+          <button
+            tabIndex={-1}
+            onClick={saveNewSQLString}
+            className="p-1"
+            disabled={isPendingSaveSql}
+          >
+            <BookmarkIcon
+              className={classNames(
+                isPendingSaveSql ? "animate-spin" : "group-hover:-rotate-6",
+                "w-6 h-6 [&>path]:stroke-[2]"
+              )}
+            />
           </button>
         </CustomTooltip>
 
@@ -307,12 +324,12 @@ export const CodeBlock = ({
             onClick={() => {
               runSql();
             }}
-            disabled={isPending}
+            disabled={isPendingRunSql}
             className="p-1"
           >
             <PlayIcon
               className={classNames(
-                isPending ? "animate-spin" : "group-hover:-rotate-12",
+                isPendingRunSql ? "animate-spin" : "group-hover:-rotate-12",
                 "w-6 h-6 [&>path]:stroke-[2]"
               )}
             />
