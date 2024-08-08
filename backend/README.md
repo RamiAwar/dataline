@@ -21,13 +21,14 @@ poetry install --no-root
 # Define a custom SQLITE_PATH
 
 ```
-SQLITE_PATH="." # Define where sqlite DB will be stored
+export SQLITE_PATH="./db.sqlite3" # Define where sqlite DB will be stored
 
 poetry shell # Active python environment (makes alembic command available)
 alembic upgrade head # Run migrations
 ```
 
 # CORS settings
+
 Set the environment variable `ALLOWED_ORIGINS` to a comma-separated list of origins if you're deploying this to a custom domain.
 
 ## Environment setup
@@ -51,6 +52,9 @@ python -m alembic upgrade head
 You can then run uvicorn to start the backend:
 
 ```bash
+# don't forget to specify your SQLITE path
+# export SQLITE_PATH="./db.sqlite3"
+
 uvicorn dataline.main:app --reload --port=7377
 ```
 
@@ -67,6 +71,7 @@ PRAGMA foreign_keys=ON;
 ```
 
 Alembic:
+
 ```python
 # disable foreign key checking
 op.execute("PRAGMA foreign_keys=OFF;")

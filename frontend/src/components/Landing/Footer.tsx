@@ -32,7 +32,7 @@ import logomd from "../../assets/images/logo_md.png";
 const socials = [
   {
     name: "Discord",
-    href: "https://discord.gg/qwT2zztZ",
+    href: "https://discord.gg/f2dC4CJK8d",
     icon: (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) => (
       <svg viewBox="0 0 23 16" xmlns="http://www.w3.org/2000/svg" {...props}>
         <path
