@@ -41,7 +41,7 @@ export const ConnectionSelector = () => {
             {data?.connections?.map((connection) => (
               <div
                 key={connection.id}
-                className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border px-2 py-2 border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-auto max-w-xs"
+                className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border px-2 py-2 border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between bg-gray-900 hover:bg-gray-700 transition-all duration-75 w-auto max-w-xs"
                 onClick={() => selectConnection(connection)}
               >
                 <div className="flex overflow-hidden w-full h-full justify-center items-center sm:mt-4">
@@ -69,9 +69,9 @@ export const ConnectionSelector = () => {
                       onClick={(e) => {
                         e.stopPropagation(); // Prevent the click event from propagating to the parent container
                       }}
-                      className="flex-none group w-10 h-10 p-1 flex justify-end items-end hover:bg-gray-600 rounded-md duration-100 transition-colors "
+                      className="flex-none group w-10 h-10 p-1 flex justify-end items-end hover:bg-gray-600 rounded-md duration-100 transition-colors"
                     >
-                      <Cog6ToothIcon className="text-gray-50 group-hover:-rotate-45 transition-transform duration-100" />
+                      <Cog6ToothIcon className="text-gray-50 group-hover:-rotate-45 transition-transform duration-100 h-full w-full" />
                     </Link>
                   </div>
                 </div>
@@ -79,7 +79,7 @@ export const ConnectionSelector = () => {
             ))}
 
             <div
-              className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border px-2 py-2 border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between hover:bg-gray-700 transition-all duration-75 w-full sm:w-auto sm:max-w-xs"
+              className="hover:cursor-pointer md:hover:ring-2 ring-gray-600 border px-2 py-2 border-gray-700 aspect-square overflow-hidden rounded-lg flex flex-col justify-between bg-gray-900 hover:bg-gray-700 transition-all duration-75 w-full sm:w-auto sm:max-w-xs"
               onClick={createConnection}
             >
               {/* Item to add new connection */}

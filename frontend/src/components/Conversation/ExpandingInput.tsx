@@ -70,8 +70,12 @@ const MessageSettingsPopup: React.FC<MessageSettingsPopupProps> = ({
         <Fieldset>
           <SwitchGroup>
             <SwitchField>
-              <Label className="flex items-center">Data Security </Label>
-              <Description>Hide your data from the AI model</Description>
+              <Label className="flex items-center text-white">
+                Data Security
+              </Label>
+              <Description className={"!text-gray-400"}>
+                Hide your data from the AI model
+              </Description>
               <Switch
                 color="green"
                 checked={messageOptions?.secure_data}
@@ -134,9 +138,9 @@ const ExpandingInput = forwardRef<HTMLTextAreaElement, ExpandingInputProps>(
           id="email"
           className={classNames(
             disabled
-              ? "placeholder:text-gray-600 text-gray-800 dark:text-gray-400 dark:bg-gray-800 focus:ring-0"
-              : "placeholder:text-gray-400 text-gray-900 dark:text-gray-200 dark:bg-gray-900",
-            "block rounded-xl border p-4 shadow-sm sm:text-md sm:leading-6 resize-none dark:border-gray-600 pl-12 sm:pl-20 pr-12 overflow-y-hidden mr-1"
+              ? "placeholder:text-gray-600 text-gray-400 bg-gray-800 focus:ring-0"
+              : "placeholder:text-gray-400 text-gray-200 bg-gray-900",
+            "block rounded-xl border p-4 shadow-sm sm:text-md sm:leading-6 resize-none border-gray-600 pl-12 sm:pl-20 pr-12 overflow-y-hidden mr-1"
           )}
           style={{ height: "auto" }}
           rows={1}
@@ -157,13 +161,13 @@ const ExpandingInput = forwardRef<HTMLTextAreaElement, ExpandingInputProps>(
           <div
             ref={settingsCogRef}
             onClick={() => setMessageSettingsShown((prev) => !prev)}
-            className="hover:cursor-pointer hover:bg-white/10 dark:text-gray-400 ml-2 p-1 rounded-md transition-all duration-150"
+            className="hover:cursor-pointer hover:bg-white/10 text-gray-400 ml-2 p-1 rounded-md transition-all duration-150"
           >
             <Cog6ToothIcon
               className={"hover:-rotate-6 h-6 w-6 [&>path]:stroke-[2]"}
             />
           </div>
-          <div className="dark:text-gray-400 ml-1 invisible sm:visible">
+          <div className="text-gray-400 ml-1 invisible sm:visible">
             {messageOptions?.secure_data ? (
               <ShieldCheckIcon className="h-6 w-6 text-green-500 [&>path]:stroke-[2]" />
             ) : (
@@ -175,9 +179,9 @@ const ExpandingInput = forwardRef<HTMLTextAreaElement, ExpandingInputProps>(
           onClick={handleSubmit}
           className={classNames(
             inputValue.length > 0 && !disabled
-              ? "dark:text-gray-700 dark:bg-gray-300 dark:hover:cursor-pointer"
+              ? "text-gray-700 bg-gray-300 hover:cursor-pointer"
               : "",
-            "group absolute right-0 mr-4 -rotate-90 dark:text-gray-400 p-1 rounded-md transition-all duration-150"
+            "group absolute right-0 mr-4 -rotate-90 text-gray-400 p-1 rounded-md transition-all duration-150"
           )}
         >
           <PaperAirplaneIcon

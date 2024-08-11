@@ -39,7 +39,7 @@ export const DynamicTable: React.FC<{
   };
 
   return (
-    <div className="relative max-w-7xl border dark:text-gray-300 border-gray-500 bg-gray-800 rounded-xl">
+    <div className="relative max-w-7xl border text-gray-300 border-gray-500 bg-gray-800 rounded-xl">
       <div ref={parent}>
         {minimized && (
           <div
@@ -48,7 +48,10 @@ export const DynamicTable: React.FC<{
           >
             <div className="ml-2">Data results</div>
             <CustomTooltip hoverText="Expand">
-              <button tabIndex={-1} className="p-1">
+              <button
+                tabIndex={-1}
+                className="p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50"
+              >
                 <ArrowsPointingOutIcon className="w-6 h-6 [&>path]:stroke-[2]" />
               </button>
             </CustomTooltip>
@@ -99,7 +102,7 @@ export const DynamicTable: React.FC<{
                 setMinimized(true);
                 setLimitedView(true);
               }}
-              className="p-1"
+              className="p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50"
             >
               <MinusIcon className="w-6 h-6 [&>path]:stroke-[2]" />
             </button>
@@ -108,7 +111,11 @@ export const DynamicTable: React.FC<{
             (limitedView ? (
               /* Expand Icon */
               <CustomTooltip hoverText="Expand">
-                <button tabIndex={-1} onClick={handleExpand} className="p-1">
+                <button
+                  tabIndex={-1}
+                  onClick={handleExpand}
+                  className="p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50"
+                >
                   <ArrowsPointingOutIcon className="w-6 h-6 [&>path]:stroke-[2]" />
                 </button>
               </CustomTooltip>
@@ -118,7 +125,7 @@ export const DynamicTable: React.FC<{
                 <button
                   tabIndex={-1}
                   onClick={() => setLimitedView(true)}
-                  className="p-1"
+                  className="p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50"
                 >
                   <ArrowsPointingInIcon className="w-6 h-6 [&>path]:stroke-[2]" />
                 </button>

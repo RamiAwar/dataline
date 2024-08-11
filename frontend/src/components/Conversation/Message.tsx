@@ -50,10 +50,8 @@ export const Message = ({
   return (
     <div
       className={classNames(
-        message.message.role === "ai"
-          ? "dark:bg-gray-700/30"
-          : "dark:bg-gray-900",
-        "w-full text-gray-800 dark:text-gray-100 bg-gray-50",
+        message.message.role === "ai" ? "bg-gray-700/30" : "bg-gray-900",
+        "w-full text-gray-100",
         className
       )}
     >

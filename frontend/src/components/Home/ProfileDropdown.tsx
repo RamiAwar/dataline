@@ -31,7 +31,7 @@ export const ProfileDropdown = ({ topRight }: { topRight?: boolean }) => {
     <>
       {/* Profile dropdown */}
       <Menu as="div" className="relative">
-        <MenuButton className="flex items-center p-1.5 cursor-pointer">
+        <MenuButton className="flex items-center p-1.5 cursor-pointer bg-gray-900">
           {avatarUrl ? (
             <img
               className="h-10 w-10 rounded-full bg-gray-600 object-cover"

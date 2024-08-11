@@ -241,14 +241,22 @@ const Chart = ({
           <option value="doughnut">Doughnut</option>
         </Select>
         <CustomTooltip hoverText="Refresh">
-          <button tabIndex={-1} onClick={triggerRefreshChart} className="p-1">
+          <button
+            tabIndex={-1}
+            onClick={triggerRefreshChart}
+            className="p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50"
+          >
             <ArrowPathIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
 
         {/* Save Icon */}
         <CustomTooltip hoverText="Save">
-          <button tabIndex={-1} onClick={saveCanvas} className="p-1">
+          <button
+            tabIndex={-1}
+            onClick={saveCanvas}
+            className="p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50"
+          >
             <ArrowDownTrayIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
@@ -264,7 +272,7 @@ const Chart = ({
             tabIndex={-1}
             onClick={copyCanvasToClipboard}
             className={classNames(
-              "p-1",
+              "p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50",
               window.ClipboardItem
                 ? "transition-all duration-150 ease-in-out"
                 : "cursor-not-allowed"

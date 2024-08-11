@@ -154,7 +154,7 @@ export const Conversation = () => {
                     id: generateUUID(),
                   },
                 }}
-                className="dark:text-gray-400"
+                className="text-gray-400"
               />
               <Message
                 key={new Date().toJSON()}

@@ -274,7 +274,11 @@ export const CodeBlock = ({
         {/* Help Icon */}
         {forChart && (
           <CustomTooltip hoverText="Help">
-            <button tabIndex={-1} onClick={openSQLForChartHelp} className="p-1">
+            <button
+              tabIndex={-1}
+              onClick={openSQLForChartHelp}
+              className="p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50"
+            >
               <QuestionMarkCircleIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-12" />
             </button>
           </CustomTooltip>
@@ -284,7 +288,11 @@ export const CodeBlock = ({
       <div className="absolute bottom-0 right-0 m-2 flex gap-1">
         {/* Save Icon */}
         <CustomTooltip hoverText="Save">
-          <button tabIndex={-1} onClick={saveNewSQLString} className="p-1">
+          <button
+            tabIndex={-1}
+            onClick={saveNewSQLString}
+            className="p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50"
+          >
             <BookmarkIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
         </CustomTooltip>
@@ -294,7 +302,7 @@ export const CodeBlock = ({
           <button
             tabIndex={-1}
             onClick={() => copyToClipboard(savedCode)}
-            className="p-1"
+            className="p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50"
           >
             <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
           </button>
@@ -308,7 +316,7 @@ export const CodeBlock = ({
               runSql();
             }}
             disabled={isPending}
-            className="p-1"
+            className="p-1 bg-gray-700/50 hover:bg-gray-100/90 hover:text-gray-700/90 text-gray-100/50"
           >
             <PlayIcon
               className={classNames(
