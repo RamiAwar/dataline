@@ -32,7 +32,7 @@ class Config(BaseSettings):
     sample_spotify_path: str = str(Path(__file__).parent.parent / "samples" / "spotify.sqlite3")
 
     # to be consumed by the bundled frontend app
-    base_api_url: str | None = None  # e.g. http://localhost:7377
+    base_api_url: str = ""  # e.g. http://localhost:7377
 
     default_model: str = "gpt-3.5-turbo"
     templates_path: Path = Path(__file__).parent.parent / "templates"
