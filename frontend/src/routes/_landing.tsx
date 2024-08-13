@@ -1,4 +1,5 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import UmamiScript from "@/components/Landing/Umami";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_landing")({
   beforeLoad: () => {
@@ -6,4 +7,10 @@ export const Route = createFileRoute("/_landing")({
       throw redirect({ to: "/" });
     }
   },
+  component: () => (
+    <>
+      <UmamiScript />
+      <Outlet />
+    </>
+  ),
 });
