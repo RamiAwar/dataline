@@ -346,9 +346,16 @@ const updateUserInfo = async (options: {
   name?: string;
   openai_api_key?: string;
   langsmith_api_key?: string;
+  openai_base_url?: string;
   sentry_enabled?: boolean;
 }) => {
-  const { name, openai_api_key, langsmith_api_key, sentry_enabled } = options;
+  const {
+    name,
+    openai_api_key,
+    langsmith_api_key,
+    openai_base_url,
+    sentry_enabled,
+  } = options;
   // send only the filled in fields
   const data: Partial<IUserInfo> = {
     ...(name && { name }),
@@ -356,8 +363,13 @@ const updateUserInfo = async (options: {
     ...(sentry_enabled != null && { sentry_enabled }),
   };
   if (langsmith_api_key !== undefined) {
+    // When deleting the langsmith API key
     data.langsmith_api_key =
       langsmith_api_key === "" ? null : langsmith_api_key;
+  }
+  if (openai_base_url !== undefined) {
+    // When deleting the base URL
+    data.openai_base_url = openai_base_url === "" ? null : openai_base_url;
   }
   const response = await backendApi<UpdateUserInfoResult>({
     url: "/settings/info",

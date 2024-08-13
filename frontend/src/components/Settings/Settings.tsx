@@ -10,6 +10,7 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { Switch } from "@components/Catalyst/switch";
 import _ from "lodash";
+import { Input } from "@catalyst/input";
 import { Button } from "../Catalyst/button";
 import { IUserInfo } from "../Library/types";
 
@@ -168,6 +169,7 @@ export default function Account() {
                     <div className="mt-2">
                       <MaskedInput
                         value={userInfo?.openai_api_key || ""}
+                        autoFocus={false}
                         onChange={(value) =>
                           setUserInfo((prevUserInfo) => ({
                             ...prevUserInfo!,
@@ -191,6 +193,35 @@ export default function Account() {
 
                   <div className="col-span-full">
                     <label
+                      htmlFor="base-url"
+                      className="block text-md font-medium leading-6 text-white"
+                    >
+                      OpenAI Base URL
+                    </label>
+                    <div className="mt-2 mr-9 sm:mr-11">
+                      <Input
+                        type="text"
+                        autoComplete="off"
+                        name="base-url"
+                        id="base-url"
+                        onChange={(event) =>
+                          setUserInfo((prevUserInfo) => ({
+                            ...prevUserInfo!,
+                            openai_base_url: event.target.value,
+                          }))
+                        }
+                        value={userInfo?.openai_base_url || ""}
+                        className="font-mono"
+                      />
+                    </div>
+                    <p className="text-xs sm:text-sm text-gray-400 pt-2">
+                      Base URL path for API requests, leave blank if not using a
+                      proxy or service emulator.
+                    </p>
+                  </div>
+
+                  <div className="col-span-full">
+                    <label
                       htmlFor="current-password"
                       className="block text-md font-medium leading-6 text-white"
                     >
@@ -199,6 +230,7 @@ export default function Account() {
                     <div className="mt-2">
                       <MaskedInput
                         value={userInfo?.langsmith_api_key || ""}
+                        autoFocus={false}
                         onChange={(value) =>
                           setUserInfo((prevUserInfo) => ({
                             ...prevUserInfo!,

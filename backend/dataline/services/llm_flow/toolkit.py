@@ -476,6 +476,7 @@ class ChartGeneratorTool(StateUpdaterTool):
         chart_type = ChartType[args["chart_type"]]
         generate_chart_call = GenerateChartCall(
             api_key=state.options.openai_api_key.get_secret_value(),
+            base_url=state.options.openai_base_url,
             chart_type=args["chart_type"],
             request=args["request"],
             chartjs_template=TEMPLATES[chart_type],

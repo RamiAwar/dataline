@@ -13,10 +13,12 @@ import MaskedInput from "@components/Settings/MaskedInput";
 import { enqueueSnackbar } from "notistack";
 import { useUpdateUserInfo } from "@/hooks";
 import { Spinner } from "../Spinner/Spinner";
+import { Input } from "@components/Catalyst/input";
 
 export function OpenAIKeyPopup() {
   const [isOpen, setIsOpen] = useState(true);
   const [apiKey, setApiKey] = useState("");
+  const [baseUrl, setBaseUrl] = useState("");
   const [sentryEnabled, setSentryEnabled] = useState(true);
 
   const { mutate, isPending } = useUpdateUserInfo({
@@ -36,15 +38,11 @@ export function OpenAIKeyPopup() {
       return;
     }
 
-    if (!apiKey.startsWith("sk-")) {
-      enqueueSnackbar({
-        variant: "error",
-        message: "Invalid OpenAI API key.",
-      });
-      return;
-    }
-
-    mutate({ openai_api_key: apiKey, sentry_enabled: sentryEnabled });
+    mutate({
+      openai_api_key: apiKey,
+      sentry_enabled: sentryEnabled,
+      ...(baseUrl && { openai_base_url: baseUrl }),
+    });
   }
 
   function handleKeyPress(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -65,6 +63,7 @@ export function OpenAIKeyPopup() {
           value={apiKey || ""}
           onChange={setApiKey}
           onKeyUp={handleKeyPress}
+          placeholder="OpenAI API key"
         />
       </AlertBody>
       <AlertDescription className="!text-xs">
@@ -86,6 +85,20 @@ export function OpenAIKeyPopup() {
         </a>
       </AlertDescription>
 
+      <AlertBody className="mt-8 mr-9 sm:mr-11">
+        <Input
+          name="base-url"
+          value={baseUrl || ""}
+          onChange={(event) => setBaseUrl(event.target.value)}
+          onKeyUp={handleKeyPress}
+          className={"font-mono"}
+          placeholder="Base URL (Optional)"
+        />
+      </AlertBody>
+      <AlertDescription className="!text-xs">
+        Base URL path for API requests, leave blank if not using a proxy or
+        service emulator.
+      </AlertDescription>
       <AlertBody>
         <div className="flex">
           <SwitchField className="mt-4">

@@ -129,6 +129,7 @@ class ConversationService:
             options=QueryOptions(
                 secure_data=secure_data,
                 openai_api_key=user_with_model_details.openai_api_key.get_secret_value(),  # type: ignore
+                openai_base_url=user_with_model_details.openai_base_url,
                 langsmith_api_key=langsmith_api_key.get_secret_value() if langsmith_api_key else None,  # type: ignore
                 model_name=user_with_model_details.preferred_openai_model,
             ),

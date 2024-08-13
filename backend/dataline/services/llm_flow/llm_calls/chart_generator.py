@@ -185,6 +185,7 @@ class ShouldGenerateChartCall(OpenAIExtractor[ShouldGenerateChart]):
     extract_schema: Type[ShouldGenerateChart] = ShouldGenerateChart
     call_params = OpenAICallParams(model="gpt-3.5-turbo")
     api_key: str | None
+    base_url: str | None = None
 
     prompt_template = """
     Determine if a chart should be generated for this query.
@@ -205,6 +206,7 @@ class GenerateChartCall(OpenAIExtractor[GeneratedChart]):
     extract_schema: Type[GeneratedChart] = GeneratedChart
     call_params = OpenAICallParams(model="gpt-3.5-turbo")
     api_key: str | None
+    base_url: str | None = None
 
     prompt_template = """
     Create a chartjs.org chart of type {chart_type} that would be appropriate for this data.

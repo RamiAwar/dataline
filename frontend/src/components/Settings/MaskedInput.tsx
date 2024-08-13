@@ -7,6 +7,7 @@ interface MaskedInputProps {
   onChange: (value: string) => void;
   onKeyUp?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   autoFocus?: boolean;
+  placeholder?: string;
 }
 
 export default function MaskedInput({
@@ -14,6 +15,7 @@ export default function MaskedInput({
   onChange,
   onKeyUp,
   autoFocus = true,
+  placeholder,
 }: MaskedInputProps) {
   const [isMasked, setIsMasked] = useState(true);
 
@@ -30,6 +32,7 @@ export default function MaskedInput({
         }}
         value={value}
         className="font-mono"
+        placeholder={placeholder}
       />
       <div className="rounded-full hover:bg-white hover:bg-opacity-10 p-1">
         <Icon

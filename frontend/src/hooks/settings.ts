@@ -154,6 +154,7 @@ export function useUpdateUserInfo(options = {}) {
       openai_api_key?: string;
       name?: string;
       langsmith_api_key?: string;
+      openai_base_url?: string;
       sentry_enabled?: boolean;
     }) => (await api.updateUserInfo(payload)).data,
     onSuccess() {
