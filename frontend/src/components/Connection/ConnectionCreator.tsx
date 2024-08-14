@@ -16,9 +16,11 @@ function classNames(...classes: string[]) {
 const FileDragAndDrop = ({
   currentFile,
   setFile,
+  fileTypeLabel,
 }: {
   currentFile: File | undefined;
   setFile: (file: File | undefined) => void;
+  fileTypeLabel: string;
 }) => {
   const [dragActive, setDragActive] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -117,7 +119,7 @@ const FileDragAndDrop = ({
           <p>or drag and drop</p>
         </div>
         <p className="text-xs leading-5 text-gray-400 px-12 mt-4">
-          Creates a copy of your SQLite file in DataLine. Changes you make to
+          Creates a copy of your {fileTypeLabel} in DataLine. Changes you make to
           the file will not be accessible to DataLine as it will work on the
           copy you upload.
         </p>
@@ -266,7 +268,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
             <div>
               <Field>
                 <Label>{fileTypeLabel[selectedRadio]}</Label>
-                <FileDragAndDrop setFile={setFile} currentFile={file} />
+                <FileDragAndDrop setFile={setFile} currentFile={file} fileTypeLabel={fileTypeLabel[selectedRadio]} />
               </Field>
               <Button
                 className="cursor-pointer mt-4"
