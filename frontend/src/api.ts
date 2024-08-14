@@ -1,5 +1,6 @@
 import { isAxiosError } from "axios";
 import {
+  DatabaseFileType,
   IConversationWithMessagesWithResultsOut,
   IMessageOptions,
   IMessageOut,
@@ -94,7 +95,7 @@ const createSampleConnection = async (
 const createFileConnection = async (
   file: File,
   name: string,
-  type: "sqlite" | "csv" | "sas7bdat"
+  type: DatabaseFileType
 ): Promise<ConnectResult> => {
   const formData = new FormData();
   formData.append("file", file);

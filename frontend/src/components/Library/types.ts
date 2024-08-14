@@ -19,6 +19,8 @@ export type IResultTypeName =
   | "SELECTED_TABLES"
   | "CHART_GENERATION_RESULT";
 
+export type DatabaseFileType = "sqlite" | "csv" | "sas7bdat" | "excel";
+
 export type Role = "ai" | "human";
 
 export interface IResult {

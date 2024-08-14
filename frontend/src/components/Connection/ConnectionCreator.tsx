@@ -8,6 +8,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { CloudArrowUpIcon, DocumentCheckIcon } from "@heroicons/react/24/solid";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useCreateConnection, useCreateFileConnection } from "@/hooks";
+import { DatabaseFileType } from "@components/Library/types";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -119,8 +120,8 @@ const FileDragAndDrop = ({
           <p>or drag and drop</p>
         </div>
         <p className="text-xs leading-5 text-gray-400 px-12 mt-4">
-          Creates a copy of your {fileTypeLabel} in DataLine. Changes you make to
-          the file will not be accessible to DataLine as it will work on the
+          Creates a copy of your {fileTypeLabel} in DataLine. Changes you make
+          to the file will not be accessible to DataLine as it will work on the
           copy you upload.
         </p>
       </div>
@@ -128,14 +129,13 @@ const FileDragAndDrop = ({
   );
 };
 
-type RadioValue = "database" | "sqlite" | "csv" | "sas7bdat" | "excel" | null;
-const fileTypeLabelMap: { [K in Exclude<RadioValue, null | "database">]: string } =
-  {
-    sqlite: "SQLite data file",
-    csv: "CSV file",
-    sas7bdat: "sas7bdat file",
-    excel: "Excel file",
-  };
+type RadioValue = DatabaseFileType | "database" | null;
+const fileTypeLabelMap: { [K in DatabaseFileType]: string } = {
+  sqlite: "SQLite data file",
+  csv: "CSV file",
+  sas7bdat: "sas7bdat file",
+  excel: "Excel file",
+};
 
 const ConnectionCreator = ({ name = null }: { name: string | null }) => {
   const [selectedRadio, setSelectedRadio] = useState<RadioValue>(null);
@@ -170,7 +170,7 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
     );
   };
 
-  const handleFileCreate = async (type: "sqlite" | "csv" | "sas7bdat") => {
+  const handleFileCreate = async (type: DatabaseFileType) => {
     if (!file) {
       enqueueSnackbar({
         variant: "info",
@@ -268,7 +268,11 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
             <div>
               <Field>
                 <Label>{fileTypeLabelMap[selectedRadio]}</Label>
-                <FileDragAndDrop setFile={setFile} currentFile={file} fileTypeLabel={fileTypeLabelMap[selectedRadio]} />
+                <FileDragAndDrop
+                  setFile={setFile}
+                  currentFile={file}
+                  fileTypeLabel={fileTypeLabelMap[selectedRadio]}
+                />
               </Field>
               <Button
                 className="cursor-pointer mt-4"
