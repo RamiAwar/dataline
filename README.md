@@ -108,7 +108,7 @@ brew install dataline
 dataline
 ```
 
-DataLine should then be running on port 5173 accessible from your browser: http://localhost:5173
+DataLine should then be running on port 7377 accessible from your browser: http://localhost:7377
 
 #### Linux
 
