@@ -129,7 +129,7 @@ const FileDragAndDrop = ({
 };
 
 type RadioValue = "database" | "sqlite" | "csv" | "sas7bdat" | "excel" | null;
-const fileTypeLabel: { [K in Exclude<RadioValue, null | "database">]: string } =
+const fileTypeLabelMap: { [K in Exclude<RadioValue, null | "database">]: string } =
   {
     sqlite: "SQLite data file",
     csv: "CSV file",
@@ -267,8 +267,8 @@ const ConnectionCreator = ({ name = null }: { name: string | null }) => {
           selectedRadio && (
             <div>
               <Field>
-                <Label>{fileTypeLabel[selectedRadio]}</Label>
-                <FileDragAndDrop setFile={setFile} currentFile={file} fileTypeLabel={fileTypeLabel[selectedRadio]} />
+                <Label>{fileTypeLabelMap[selectedRadio]}</Label>
+                <FileDragAndDrop setFile={setFile} currentFile={file} fileTypeLabel={fileTypeLabelMap[selectedRadio]} />
               </Field>
               <Button
                 className="cursor-pointer mt-4"
