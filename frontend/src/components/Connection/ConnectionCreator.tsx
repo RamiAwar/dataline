@@ -126,12 +126,13 @@ const FileDragAndDrop = ({
   );
 };
 
-type RadioValue = "database" | "sqlite" | "csv" | "sas7bdat" | null;
+type RadioValue = "database" | "sqlite" | "csv" | "sas7bdat" | "excel" | null;
 const fileTypeLabel: { [K in Exclude<RadioValue, null | "database">]: string } =
   {
     sqlite: "SQLite data file",
     csv: "CSV file",
     sas7bdat: "sas7bdat file",
+    excel: "Excel file",
   };
 
 const ConnectionCreator = ({ name = null }: { name: string | null }) => {
