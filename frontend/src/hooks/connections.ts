@@ -7,7 +7,7 @@ import {
   queryOptions,
 } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { IEditConnection } from "@/components/Library/types";
+import { DatabaseFileType, IEditConnection } from "@/components/Library/types";
 import { CONVERSATIONS_QUERY_KEY } from "./conversations";
 import { getBackendStatusQuery } from "@/hooks/settings";
 import { useEffect } from "react";
@@ -144,7 +144,7 @@ export function useCreateFileConnection(options = {}) {
     }: {
       file: File;
       name: string;
-      type: "sqlite" | "csv" | "sas7bdat";
+      type: DatabaseFileType;
     }) => api.createFileConnection(file, name, type),
     onSettled() {
       queryClient.invalidateQueries({
