@@ -114,8 +114,6 @@ ARG AUTH_PASSWORD
 ENV AUTH_PASSWORD=$AUTH_PASSWORD
 ARG ALLOWED_ORIGINS
 ENV ALLOWED_ORIGINS=$ALLOWED_ORIGINS
-# If serving the frontend from a separate URL. Defaults to empty string.
-ENV BASE_API_URL=
 
 # Running alembic and uvicorn without combining them in a bash -c command won't work
 CMD ["bash", "-c", "python -m dataline.main"]

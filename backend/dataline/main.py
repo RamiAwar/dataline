@@ -74,7 +74,7 @@ if IS_BUNDLED or config.spa_mode:
 
     @app.get("/{rest_of_path:path}", include_in_schema=False)
     def index(request: Request, rest_of_path: str) -> Response:
-        context: dict = {"request": request}
+        context = {"request": request}
         vite_config_path = config.assets_path / "manifest.json"
         if not vite_config_path.is_file():
             raise HTTPException(status_code=404, detail="Could not find frontend manifest")
@@ -83,9 +83,6 @@ if IS_BUNDLED or config.spa_mode:
             vite_config = json.load(f)
             context["VITE_MANIFEST_JS"] = vite_config["index.html"]["file"]
             context["VITE_MANIFEST_CSS"] = vite_config["index.html"]["css"][0]
-
-        if config.base_api_url:
-            context["BASE_API_URL"] = config.base_api_url
         return templates.TemplateResponse("index.html.jinja2", context=context)
 
     def is_port_in_use(port: int) -> bool:
