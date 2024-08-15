@@ -105,17 +105,31 @@ export interface IConversation {
   name: string;
 }
 
+export interface IConnectionOptions {
+  schemas: {
+    name: string;
+    enabled: boolean;
+    tables: {
+      name: string;
+      enabled: boolean;
+    }[];
+  }[];
+}
+
 export interface IConnection {
   id: string;
-  name: string;
   dsn: string;
+  database: string;
+  name: string;
   dialect: string;
   is_sample: boolean;
+  options?: IConnectionOptions;
 }
 
 export interface IEditConnection {
   name: string;
-  dsn: string;
+  dsn?: string;
+  options?: IConnectionOptions;
 }
 
 export interface IUserInfo {

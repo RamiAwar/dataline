@@ -26,9 +26,9 @@ import {
 } from "@/hooks";
 import {
   IConversation,
+  IConnection,
   IConversationWithMessagesWithResultsOut,
 } from "@components/Library/types";
-import { ConnectionResult } from "@/api";
 
 const LShapedChar = (
   <svg
@@ -63,7 +63,7 @@ export const Sidebar = () => {
 
   const conversations = useMemo<
     (IConversationWithMessagesWithResultsOut & {
-      connection?: ConnectionResult;
+      connection?: IConnection;
     })[]
   >(() => {
     if (conversationsData && connectionsData?.connections) {

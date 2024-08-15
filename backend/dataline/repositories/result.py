@@ -18,19 +18,23 @@ class ResultRepository(BaseRepository[ResultModel, ResultCreate, ResultUpdate]):
         return ResultModel
 
     async def get_dsn_from_result(self, session: AsyncSession, result_id: UUID) -> str:
+        connection = await self.get_connection_from_result(session, result_id)
+        return connection.dsn
+
+    async def get_connection_from_result(self, session: AsyncSession, result_id: UUID) -> ConnectionModel:
         query = (
-            select(ConnectionModel.dsn)
+            select(ConnectionModel)
             .join(ConversationModel)
             .join(MessageModel)
             .join(ResultModel)
             .where(ResultModel.id == result_id)
         )
         result = await session.execute(query)
-        dsn = result.fetchone()
-        if not dsn:
-            raise ValueError(f"Could not find DSN for result_id: {result_id}")
+        connection = result.fetchone()
+        if not connection:
+            raise ValueError(f"Could not find connection for result_id: {result_id}")
 
-        return dsn[0]
+        return connection[0]
 
     async def get_chart_from_sql_query(self, session: AsyncSession, sql_string_result_id: UUID) -> ResultModel:
         query = (

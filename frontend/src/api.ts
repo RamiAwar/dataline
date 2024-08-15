@@ -1,5 +1,6 @@
 import { isAxiosError } from "axios";
 import {
+  IConnection,
   DatabaseFileType,
   IConversationWithMessagesWithResultsOut,
   IMessageOptions,
@@ -54,15 +55,7 @@ const hasAuth = async (): Promise<boolean> => {
   return true;
 };
 
-export type ConnectionResult = {
-  id: string;
-  dsn: string;
-  database: string;
-  name: string;
-  dialect: string;
-  is_sample: boolean;
-};
-type ConnectResult = ApiResponse<ConnectionResult>;
+type ConnectResult = ApiResponse<IConnection>;
 const createConnection = async (
   connectionString: string,
   name: string,
@@ -110,14 +103,14 @@ const createFileConnection = async (
 };
 
 export type ListConnectionsResult = ApiResponse<{
-  connections: ConnectionResult[];
+  connections: IConnection[];
 }>;
 const listConnections = async (): Promise<ListConnectionsResult> => {
   return (await backendApi<ListConnectionsResult>({ url: "/connections" }))
     .data;
 };
 
-export type GetConnectionResult = ApiResponse<ConnectionResult>;
+export type GetConnectionResult = ApiResponse<IConnection>;
 const getConnection = async (
   connectionId: string
 ): Promise<GetConnectionResult> => {
@@ -141,7 +134,7 @@ const getSamples = async (): Promise<GetSamplesResult> => {
 };
 
 export type UpdateConnectionResult = ApiResponse<{
-  connection: ConnectionResult;
+  connection: IConnection;
 }>;
 const updateConnection = async (
   connectionId: string,

@@ -22,7 +22,7 @@ from dataline.services.llm_flow.toolkit import (
     QueryGraphState,
     SQLDatabaseToolkit,
 )
-from dataline.services.llm_flow.utils import DatalineSQLDatabase as SQLDatabase
+from dataline.services.llm_flow.utils import ConnectionProtocol, DatalineSQLDatabase as SQLDatabase
 from dataline.utils.utils import forward_connection_errors
 
 logger = logging.getLogger(__name__)
@@ -41,13 +41,10 @@ def add_conditional_edge(graph: StateGraph, source: Type[Node], condition: Type[
 
 
 class QueryGraphService:
-    def __init__(
-        self,
-        dsn: str,
-    ) -> None:
+    def __init__(self, connection: ConnectionProtocol) -> None:
         # Enable this try catch once we support errors with streaming responses
         try:
-            self.db = SQLDatabase.from_uri(dsn)
+            self.db = SQLDatabase.from_dataline_connection(connection)
         except Exception as e:
             forward_connection_errors(e)
             raise e
