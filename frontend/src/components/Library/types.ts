@@ -42,6 +42,7 @@ export interface ISQLQueryStringResult extends IResult {
   type: "SQL_QUERY_STRING_RESULT";
   result_id: string;
   content: {
+    dialect: string;
     sql: string;
     for_chart: boolean;
   };
