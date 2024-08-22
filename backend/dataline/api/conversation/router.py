@@ -132,7 +132,7 @@ async def execute_sql(
     connection = await connection_service.get_connection(session, connection_id)
 
     # Refresh chart data
-    db = SQLDatabase.from_uri(connection.dsn)
+    db = SQLDatabase.from_dataline_connection(connection)
     query_run_data = execute_sql_query(db, sql)
 
     # Execute query

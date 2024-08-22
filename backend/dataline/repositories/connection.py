@@ -6,6 +6,8 @@ from sqlalchemy import select
 
 from dataline.models.connection.model import ConnectionModel
 from dataline.repositories.base import AsyncSession, BaseRepository
+from dataline.models.connection.schema import ConnectionOptions
+
 
 class ConnectionType(Enum):
     csv = "csv"
@@ -16,6 +18,7 @@ class ConnectionType(Enum):
     snowflake = "snowflake"
     sas = "sas"
 
+
 class ConnectionCreate(BaseModel):
     model_config = ConfigDict(from_attributes=True, extra="ignore")
 
@@ -25,6 +28,7 @@ class ConnectionCreate(BaseModel):
     dialect: str
     type: str
     is_sample: bool = False
+    options: ConnectionOptions | None = None
 
 
 class ConnectionUpdate(BaseModel):
@@ -36,6 +40,7 @@ class ConnectionUpdate(BaseModel):
     dialect: str | None = None
     type: str | None = None
     is_sample: bool | None = None
+    options: ConnectionOptions | None = None
 
 
 class ConnectionRepository(BaseRepository[ConnectionModel, ConnectionCreate, ConnectionUpdate]):

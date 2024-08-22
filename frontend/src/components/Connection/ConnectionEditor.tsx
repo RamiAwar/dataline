@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { IEditConnection } from "../Library/types";
+import { IConnectionOptions, IEditConnection } from "@components/Library/types";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { AlertIcon, AlertModal } from "../Library/AlertModal";
+import { AlertIcon, AlertModal } from "@components/Library/AlertModal";
 import { enqueueSnackbar } from "notistack";
 import {
   useDeleteConnection,
@@ -11,10 +11,133 @@ import {
   useUpdateConnection,
 } from "@/hooks";
 import { Button } from "../Catalyst/button";
+import { Transition } from "@headlessui/react";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { Switch } from "@components/Catalyst/switch";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
+const SchemaEditor = ({
+  options,
+  setOptions,
+}: {
+  options: IConnectionOptions;
+  setOptions: (newOptions: IConnectionOptions) => void;
+}) => {
+  const [expanded, setExpanded] = useState(options.schemas.map(() => false));
+
+  return (
+    <div className="mt-2 divide-y divide-white/5 rounded-xl bg-white/5">
+      {options.schemas.map((schema, schema_index) =>
+        schema.tables.length === 0 ? null : (
+          <div className="flex flex-col" key={schema_index}>
+            <div className="flex w-full items-center p-6" key={schema_index}>
+              <Switch
+                color="green"
+                name="select_schema"
+                checked={schema.enabled}
+                onChange={(checked) =>
+                  // Check/Uncheck schema and its tables
+                  setOptions({
+                    schemas: options.schemas.map((prev_schema, prev_idx) =>
+                      prev_idx === schema_index
+                        ? {
+                            ...prev_schema,
+                            enabled: checked,
+                            tables: prev_schema.tables.map((table) => ({
+                              ...table,
+                              enabled: checked,
+                            })),
+                          }
+                        : prev_schema
+                    ),
+                  })
+                }
+              />
+              <div
+                className="group flex w-full items-center cursor-pointer"
+                onClick={() =>
+                  setExpanded((prev) =>
+                    prev.map((value, inner_idx) =>
+                      schema_index === inner_idx ? !value : value
+                    )
+                  )
+                }
+              >
+                <span
+                  className={classNames(
+                    "ml-4 text-sm/6 font-medium group-hover:text-white/80 grow",
+                    schema.enabled ? "text-white" : "text-white/50"
+                  )}
+                >
+                  {schema.name}
+                </span>
+                <ChevronDownIcon
+                  className={classNames(
+                    "size-5 fill-white/60 group-hover:fill-white/50",
+                    expanded[schema_index] ? "rotate-180" : ""
+                  )}
+                />
+              </div>
+            </div>
+
+            <Transition show={expanded[schema_index]}>
+              <div className="transition ease-in-out translate-x-0 data-[closed]:opacity-0 data-[closed]:-translate-y-3">
+                {schema.tables.map((table, table_index) => (
+                  <div className="p-6 pt-0 pl-12" key={table_index}>
+                    <div
+                      className="flex w-full items-center"
+                      key={schema_index}
+                    >
+                      <Switch
+                        color="green"
+                        name="select_schema"
+                        checked={table.enabled && schema.enabled}
+                        onChange={(checked) =>
+                          // Check/Uncheck table
+                          setOptions({
+                            schemas: options.schemas.map(
+                              (prev_schema, prev_idx) =>
+                                prev_idx === schema_index
+                                  ? {
+                                      ...prev_schema,
+                                      tables: prev_schema.tables.map(
+                                        (table, inner_table_idx) =>
+                                          inner_table_idx === table_index
+                                            ? {
+                                                ...table,
+                                                enabled: checked,
+                                              }
+                                            : table
+                                      ),
+                                    }
+                                  : prev_schema
+                            ),
+                          })
+                        }
+                      />
+                      <span
+                        className={classNames(
+                          "ml-4 text-sm/5",
+                          schema.enabled && table.enabled
+                            ? "text-white"
+                            : "text-white/50"
+                        )}
+                      >
+                        {table.name}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Transition>
+          </div>
+        )
+      )}
+    </div>
+  );
+};
 
 const connectionRouteApi = getRouteApi("/_app/connection/$connectionId");
 
@@ -56,6 +179,7 @@ export const ConnectionEditor = () => {
     setEditFields((prev) => ({
       name: connection?.name || prev.name,
       dsn: connection?.dsn || prev.dsn,
+      options: connection?.options || prev.options,
     }));
   }, [connection]);
 
@@ -110,7 +234,8 @@ export const ConnectionEditor = () => {
       id: connectionId,
       payload: {
         name: editFields.name,
-        dsn: editFields.dsn,
+        ...(editFields.dsn !== connection?.dsn && { dsn: editFields.dsn }), // only add dsn if it changed
+        options: editFields.options,
       },
     });
   }
@@ -212,6 +337,26 @@ export const ConnectionEditor = () => {
               />
             </div>
           </div>
+          {editFields.options && (
+            <div className="sm:col-span-6">
+              <label
+                htmlFor="schema"
+                className="block text-sm font-medium leading-6 text-white"
+              >
+                Schema options
+              </label>
+              <SchemaEditor
+                options={editFields.options}
+                setOptions={(newOptions) => {
+                  setEditFields((prev) => ({
+                    ...prev,
+                    options: newOptions,
+                  }));
+                  setUnsavedChanges(true);
+                }}
+              />
+            </div>
+          )}
 
           <div className="sm:col-span-6 flex items-center justify-end gap-x-6">
             <Button

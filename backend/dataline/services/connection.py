@@ -9,13 +9,18 @@ from uuid import UUID
 import pandas as pd
 import pyreadstat
 from fastapi import Depends, UploadFile
-from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
 from dataline.config import config
 from dataline.errors import ValidationError
 from dataline.models.connection.model import ConnectionModel
-from dataline.models.connection.schema import ConnectionOut, ConnectionUpdateIn
+from dataline.models.connection.schema import (
+    ConnecitonSchemaTable,
+    ConnectionOptions,
+    ConnectionOut,
+    ConnectionSchema,
+    ConnectionUpdateIn,
+)
 from dataline.repositories.base import AsyncSession, NotFoundError, NotUniqueError
 from dataline.repositories.connection import (
     ConnectionCreate,
@@ -24,6 +29,7 @@ from dataline.repositories.connection import (
     ConnectionUpdate,
 )
 from dataline.services.file_parsers.excel_parser import ExcelParserService
+from dataline.services.llm_flow.utils import DatalineSQLDatabase as SQLDatabase
 from dataline.utils.utils import (
     forward_connection_errors,
     generate_short_uuid,
@@ -54,37 +60,29 @@ class ConnectionService:
     async def delete_connection(self, session: AsyncSession, connection_id: UUID) -> None:
         await self.connection_repo.delete_by_uuid(session, connection_id)
 
-    async def get_connection_details(self, dsn: str) -> tuple[str, str, str]:
+    async def get_connection_details(self, dsn: str) -> SQLDatabase:
         # Check if connection can be established before saving it
         try:
-            engine = create_engine(dsn)
-            with engine.connect():
-                pass
-
-            dialect = engine.url.get_dialect().name
-            database = engine.url.database
+            db = SQLDatabase.from_uri(dsn)
+            database = db._engine.url.database
 
             if not database:
                 raise ValidationError("Invalid DSN. Database name is missing, append '/DBNAME'.")
 
-            return dialect, database, dsn
+            return db
 
         except OperationalError as exc:
             # Try again replacing localhost with host.docker.internal to connect with DBs running in docker
             if "localhost" in dsn:
                 dsn = dsn.replace("localhost", "host.docker.internal")
                 try:
-                    engine = create_engine(dsn)
-                    with engine.connect():
-                        pass
-
-                    dialect = engine.url.get_dialect().name
-                    database = engine.url.database
+                    db = SQLDatabase.from_uri(dsn)
+                    database = db._engine.url.database
 
                     if not database:
                         raise ValidationError("Invalid DSN. Database name is missing, append '/DBNAME'.")
 
-                    return dialect, database, dsn
+                    return db
                 except OperationalError as e:
                     logger.error(e)
                     raise ValidationError("Failed to connect to database, please check your DSN.")
@@ -124,10 +122,14 @@ class ConnectionService:
                 raise NotUniqueError("Connection DSN already exists.")
 
             # Check if connection can be established before saving it
-            dialect, database, dsn = await self.get_connection_details(data.dsn)
-            update.dsn = dsn
-            update.database = database
-            update.dialect = dialect
+            db = await self.get_connection_details(data.dsn)
+            update.dsn = str(db._engine.url.render_as_string(hide_password=False))
+            update.database = db._engine.url.database
+            update.dialect = db.dialect
+            # TODO: What do we do for the options? Enable everything?
+        elif data.options:
+            # only modify options if dsn hasn't changed
+            update.options = data.options
 
         if data.name:
             update.name = data.name
@@ -140,20 +142,35 @@ class ConnectionService:
         session: AsyncSession,
         dsn: str,
         name: str,
-        type: str | None = None,
+        connection_type: str | None = None,
         is_sample: bool = False,
     ) -> ConnectionOut:
         # Check if connection can be established before saving it
-        dialect, database, dsn = await self.get_connection_details(dsn)
-        if not type:
-            type = dialect
+        db = await self.get_connection_details(dsn)
+        if not connection_type:
+            connection_type = db.dialect
 
         # Check if connection already exists
         await self.check_dsn_already_exists(session, dsn)
-
+        connection_schemas: list[ConnectionSchema] = [
+            ConnectionSchema(
+                name=schema,
+                tables=[ConnecitonSchemaTable(name=table, enabled=True) for table in tables],
+                enabled=True,
+            )
+            for schema, tables in db._all_tables_per_schema.items()
+        ]
         connection = await self.connection_repo.create(
             session,
-            ConnectionCreate(dsn=dsn, database=database, name=name, dialect=dialect, type=type, is_sample=is_sample),
+            ConnectionCreate(
+                dsn=dsn,
+                database=db._engine.url.database,
+                name=name,
+                dialect=db.dialect,
+                type=connection_type,
+                is_sample=is_sample,
+                options=ConnectionOptions(schemas=connection_schemas),
+            ),
         )
         return ConnectionOut.model_validate(connection)
 
@@ -186,7 +203,9 @@ class ConnectionService:
 
         # Create connection with the locally copied file
         dsn = get_sqlite_dsn(str(file_path.absolute()))
-        return await self.create_connection(session, dsn=dsn, name=name, type=ConnectionType.csv.value, is_sample=False)
+        return await self.create_connection(
+            session, dsn=dsn, name=name, connection_type=ConnectionType.csv.value, is_sample=False
+        )
 
     async def create_excel_connection(self, session: AsyncSession, file: UploadFile, name: str) -> ConnectionOut:
         generated_name = generate_short_uuid() + ".sqlite"
@@ -201,7 +220,7 @@ class ConnectionService:
         # Create connection with the locally copied file
         dsn = get_sqlite_dsn(str(file_path.absolute()))
         return await self.create_connection(
-            session, dsn=dsn, name=name, type=ConnectionType.excel.value, is_sample=False
+            session, dsn=dsn, name=name, connection_type=ConnectionType.excel.value, is_sample=False
         )
 
     async def create_sas7bdat_connection(self, session: AsyncSession, file: UploadFile, name: str) -> ConnectionOut:
@@ -244,7 +263,7 @@ class ConnectionService:
             # Create connection with the locally copied file
             dsn = get_sqlite_dsn(str(file_path.absolute()))
             return await self.create_connection(
-                session, dsn=dsn, name=name, type=ConnectionType.sas.value, is_sample=False
+                session, dsn=dsn, name=name, connection_type=ConnectionType.sas.value, is_sample=False
             )
         finally:
             # Clean up the temporary file

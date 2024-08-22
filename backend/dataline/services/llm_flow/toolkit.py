@@ -226,7 +226,7 @@ class _QuerySQLDataBaseToolInput(BaseModelV1):
             "If it is true, make sure to return ONLY TWO columns in the SQL: (label, value)."
         ),
     )
-    chart_type: ChartType | None = Field(
+    chart_type: Optional[ChartType] = Field(
         default=None, description="If for chart is true, specify the type of chart to generate."
     )
 

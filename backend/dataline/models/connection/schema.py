@@ -8,6 +8,21 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from dataline.config import config
 
 
+class ConnecitonSchemaTable(BaseModel):
+    name: str
+    enabled: bool
+
+
+class ConnectionSchema(BaseModel):
+    name: str
+    tables: list[ConnecitonSchemaTable]
+    enabled: bool
+
+
+class ConnectionOptions(BaseModel):
+    schemas: list[ConnectionSchema]
+
+
 class Connection(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -18,6 +33,7 @@ class Connection(BaseModel):
     dialect: str
     type: str
     is_sample: bool
+    options: Optional[ConnectionOptions] = None
 
 
 class ConnectionOut(Connection):
@@ -141,6 +157,7 @@ class ConnectRequest(BaseModel):
 class ConnectionUpdateIn(BaseModel):
     name: Optional[str] = None
     dsn: Optional[str] = None
+    options: Optional[ConnectionOptions] = None
 
     @field_validator("dsn")
     def validate_dsn_format(cls, value: str) -> str:

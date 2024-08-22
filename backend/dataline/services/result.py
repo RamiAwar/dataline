@@ -10,6 +10,7 @@ from dataline.models.llm_flow.schema import (
     SQLQueryStringResultContent,
 )
 from dataline.models.result.schema import ChartRefreshOut, ResultUpdate
+from dataline.models.connection.schema import Connection
 from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.result import ResultRepository
 from dataline.services.llm_flow.llm_calls.chart_generator import ChartType
@@ -83,8 +84,8 @@ class ResultService:
         sql_string = SQLQueryStringResultContent.model_validate_json(sql_query_string_result.content).sql
 
         # Get DSN from linked connection
-        dsn = await self.result_repo.get_dsn_from_result(session, chart_id)
-        db = SQLDatabase.from_uri(dsn)
+        connection = await self.result_repo.get_connection_from_result(session, chart_id)
+        db = SQLDatabase.from_dataline_connection(Connection.model_validate(connection))
 
         # Refresh chart data
         query_run_data = execute_sql_query(db, sql_string, for_chart=True, chart_type=chart_type)
@@ -105,8 +106,8 @@ class ResultService:
         self, session: AsyncSession, result_id: UUID, sql: str, chart_type: ChartType
     ) -> None:
         # Get DSN from linked connection
-        dsn = await self.result_repo.get_dsn_from_result(session, result_id)
-        db = SQLDatabase.from_uri(dsn)
+        connection = await self.result_repo.get_connection_from_result(session, result_id)
+        db = SQLDatabase.from_dataline_connection(Connection.model_validate(connection))
 
         # Run query to ensure it's compatible with the linked chart
         try:
