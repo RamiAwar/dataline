@@ -91,3 +91,22 @@ They stay if you ship something you're proud of, you've shipped too late.
 ```
 pre-commit install
 ```
+
+# Example DBMS-based databases
+
+## SQL Server:
+
+`docker run -p 1433:1433 -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=My_password1' -d chriseaton/adventureworks:latest`
+DSN: `mssql://SA:My_password1@localhost/AdventureWorks?TrustServerCertificate=yes&driver=ODBC+Driver+18+for+SQL+Server`
+
+## PostgreSQL:
+
+Build & Run image locally: `bash ./scripts/postgres_img_with_sample_data.sh`
+
+DSN: `postgres://postgres:dvdrental@localhost:5432/dvdrental`
+
+## MySQL:
+
+`docker run -p 3306:3306 -d sakiladb/mysql`
+
+DSN: `mysql://sakila:p_ssW0rd@127.0.0.1:3306/sakila`

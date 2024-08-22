@@ -26,7 +26,7 @@ class DatalineSQLDatabase(SQLDatabase):
         sample_rows_in_table_info: int = 3,
         indexes_in_table_info: bool = False,
         custom_table_info: dict | None = None,
-        view_support: bool = False,
+        view_support: bool = True,
         max_string_length: int = 300,
     ):
         """Create engine from database URI."""
