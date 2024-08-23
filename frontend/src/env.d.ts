@@ -6,7 +6,3 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
-
-interface Window {
-  BASE_API_URL?: string;
-}

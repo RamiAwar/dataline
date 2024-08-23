@@ -22,6 +22,7 @@ jobs:
       - name: Build the frontend
         env:
           NODE_ENV: local
+          VITE_API_URL: /
         run: npm run build
       - name: Prepare assets for use by backend
         run: |

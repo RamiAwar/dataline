@@ -269,10 +269,7 @@ const streamingQuery = async ({
     "Content-Type": "application/json",
   };
 
-  let baseURL = apiURL;
-  if (!apiURL.endsWith("/")) {
-    baseURL = baseURL + "/";
-  }
+  const baseURL = apiURL.endsWith("/") ? apiURL : apiURL + "/";
 
   const url = `${baseURL}conversation/${conversationId}/query?execute=${execute}&query=${encodeURIComponent(query)}`;
 

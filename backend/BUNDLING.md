@@ -6,7 +6,7 @@ We currently do this manually, will be refactored when we have scripts for bundl
 
 ```bash
 cd frontend
-npm install && NODE_ENV=local npm run build
+npm install && NODE_ENV=local VITE_API_URL=/ npm run build
 cp -r dist/assets/ ../backend/assets
 cp dist/favicon.ico ../backend/assets/favicon.ico
 cp dist/.vite/manifest.json ../backend/assets/manifest.json
