@@ -84,8 +84,6 @@ if IS_BUNDLED or config.spa_mode:
             context["VITE_MANIFEST_JS"] = vite_config["index.html"]["file"]
             context["VITE_MANIFEST_CSS"] = vite_config["index.html"]["css"][0]
 
-        if config.base_api_url:
-            context["BASE_API_URL"] = config.base_api_url
         return templates.TemplateResponse("index.html.jinja2", context=context)
 
     def is_port_in_use(port: int) -> bool:
