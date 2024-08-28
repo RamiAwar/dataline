@@ -166,6 +166,24 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
     # Pydantic model to validate input to the tool
     args_schema: Type[BaseModelV1] = _InfoSQLDatabaseToolInput
 
+    def _validate_table_names(self, table_names: str, available_names: list[str]) -> tuple[set[str], list[str]]:
+        """Validate table names and return valid and invalid tables."""
+        cleaned_names = [table_name.strip() for table_name in table_names.split(",")]
+        available_names_tables_only = {name.split(".")[-1]: name for name in available_names}
+
+        valid_tables = set()
+        wrong_tables = []
+
+        for name in cleaned_names:
+            if name in available_names:
+                valid_tables.add(name)
+            elif name in available_names_tables_only:
+                valid_tables.add(available_names_tables_only[name])
+            else:
+                wrong_tables.append(name)
+
+        return valid_tables, wrong_tables
+
     def _run(
         self,
         table_names: str,
@@ -173,20 +191,15 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
     ) -> str:
         """Get the schema for tables in a comma-separated list."""
         self.table_names = None  # Reset internal state in case it remains from tool calls
-        cleaned_names = [table_name.strip() for table_name in table_names.split(",")]
-        available_names = self.db.get_usable_table_names()
 
-        # Check if the table names are valid
-        wrong_tables = []
-        for name in cleaned_names:
-            if name not in available_names:
-                wrong_tables.append(name)
+        available_names = self.db.get_usable_table_names()
+        valid_tables, wrong_tables = self._validate_table_names(table_names, available_names)
 
         if wrong_tables:
             return f"""ERROR: Tables {wrong_tables} that you selected do not exist in the database.
             Available tables are the following, please select from them ONLY: "{'", "'.join(available_names)}"."""
 
-        self.table_names = [t.strip() for t in table_names.split(",")]
+        self.table_names = list(valid_tables)
         return self.db.get_table_info_no_throw(self.table_names)
 
     def get_response(  # type: ignore[misc]
