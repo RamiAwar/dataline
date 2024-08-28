@@ -1,7 +1,7 @@
 import abc
 import json
 import operator
-from typing import Annotated, Any, List, Optional, Sequence, Type, TypedDict, cast
+from typing import Annotated, Any, Iterable, List, Optional, Sequence, Type, TypedDict, cast
 
 from dataline.models.llm_flow.schema import (
     ChartGenerationResult,
@@ -38,6 +38,9 @@ class RunException(Exception):
 
 
 class ChartValidationRunException(RunException): ...
+
+
+class TableNotFoundException(RunException): ...
 
 
 def truncate_word(content: Any, *, length: int, suffix: str = "...") -> str:  # type: ignore[misc]
@@ -166,6 +169,30 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
     # Pydantic model to validate input to the tool
     args_schema: Type[BaseModelV1] = _InfoSQLDatabaseToolInput
 
+    def _validate_sanitize_table_names(self, table_names: str, available_names: Iterable[str]) -> set[str]:
+        """Validate table names and return valid and invalid tables."""
+        cleaned_names = [table_name.strip() for table_name in table_names.split(",")]
+        available_names_tables_only = {name.split(".")[-1]: name for name in available_names}
+
+        valid_tables = set()
+        wrong_tables = []
+
+        for name in cleaned_names:
+            if name in available_names:
+                valid_tables.add(name)
+            elif name in available_names_tables_only:
+                valid_tables.add(available_names_tables_only[name])
+            else:
+                wrong_tables.append(name)
+
+        if wrong_tables:
+            raise TableNotFoundException(
+                f"""ERROR: Tables {wrong_tables} that you selected do not exist in the database.
+            Available tables are the following, please select from them ONLY: "{'", "'.join(available_names)}"."""
+            )
+
+        return valid_tables
+
     def _run(
         self,
         table_names: str,
@@ -173,20 +200,11 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
     ) -> str:
         """Get the schema for tables in a comma-separated list."""
         self.table_names = None  # Reset internal state in case it remains from tool calls
-        cleaned_names = [table_name.strip() for table_name in table_names.split(",")]
+
         available_names = self.db.get_usable_table_names()
+        valid_tables = self._validate_sanitize_table_names(table_names, available_names)
 
-        # Check if the table names are valid
-        wrong_tables = []
-        for name in cleaned_names:
-            if name not in available_names:
-                wrong_tables.append(name)
-
-        if wrong_tables:
-            return f"""ERROR: Tables {wrong_tables} that you selected do not exist in the database.
-            Available tables are the following, please select from them ONLY: "{'", "'.join(available_names)}"."""
-
-        self.table_names = [t.strip() for t in table_names.split(",")]
+        self.table_names = list(valid_tables)
         return self.db.get_table_info_no_throw(self.table_names)
 
     def get_response(  # type: ignore[misc]
@@ -198,8 +216,14 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         messages: list[BaseMessage] = []
         results: list[QueryResultSchema] = []
 
-        # We call the tool_executor and get back a response
-        response = self.run(args)
+        try:
+            # We call the tool_executor and get back a response
+            response = self.run(args)
+        except TableNotFoundException as e:
+            tool_message = ToolMessage(content=str(e.message), name=self.name, tool_call_id=call_id)
+            messages.append(tool_message)
+            return state_update(messages=messages)
+
         # We use the response to create a ToolMessage
         tool_message = ToolMessage(content=str(response), name=self.name, tool_call_id=call_id)
         messages.append(tool_message)
@@ -208,10 +232,7 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         if self.table_names:
             results.append(SelectedTablesResult(tables=self.table_names))
 
-        return {
-            "messages": messages,
-            "results": results,
-        }
+        return state_update(messages=messages, results=results)
 
 
 class _QuerySQLDataBaseToolInput(BaseModelV1):
