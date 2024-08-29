@@ -144,3 +144,13 @@ async def execute_sql(
     )
 
     return SuccessResponse(data=result.serialize_result())
+
+
+@router.post("/conversation/{conversation_id}/generate-title")
+async def generate_conversation_title(
+    conversation_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    conversation_service: ConversationService = Depends(),
+) -> SuccessResponse[str]:
+    title = await conversation_service.generate_title(session, conversation_id)
+    return SuccessResponse(data=title)
