@@ -3,6 +3,7 @@ from mirascope.openai import OpenAICall
 
 class ConversationTitleGenerator(OpenAICall):
     api_key: str | None
+    base_url: str | None = None
     prompt_template = """
     ---BEGIN First Message---
     {first_message}

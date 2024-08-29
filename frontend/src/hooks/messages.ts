@@ -43,7 +43,7 @@ export function useSendMessageStreaming({
   onSettled,
 }: {
   onAddResult: (result: IResultType) => void;
-  onSettled: () => void;
+  onSettled: (data: QueryOut | null | undefined, error: Error | null) => void;
 }) {
   const queryClient = useQueryClient();
   const current_connection = useGetRelatedConnection();

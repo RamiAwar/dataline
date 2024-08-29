@@ -65,16 +65,20 @@ class ConversationService:
         self.settings_service = settings_service
 
     async def generate_title(self, session: AsyncSession, conversation_id: UUID) -> str:
-        user_details = await self.settings_service.get_model_details(session)
-        api_key = user_details.openai_api_key.get_secret_value()
         conversation = await self.get_conversation_with_messages(session, conversation_id)
-
         if not conversation.messages:
             return "Untitled chat"
 
+        user_details = await self.settings_service.get_model_details(session)
+        api_key = user_details.openai_api_key.get_secret_value()
+
         first_message_content = conversation.messages[0].message.content
-        title_generator = ConversationTitleGenerator(first_message=first_message_content, api_key=api_key)
+        title_generator = ConversationTitleGenerator(
+            first_message=first_message_content, api_key=api_key, base_url=user_details.openai_base_url
+        )
         title = title_generator.call().choices[0].message.content
+        if not title:
+            return "Untitled chat"
 
         updated_conversation = await self.update_conversation_name(session, conversation_id, title)
         return updated_conversation.name
