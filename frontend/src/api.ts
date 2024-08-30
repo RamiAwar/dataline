@@ -188,6 +188,19 @@ const updateConversation = async (
   return response.data;
 };
 
+export type ConversationTitleGenerationResult = ApiResponse<{
+  new_title: string;
+}>;
+const generateConversationTitle = async (
+  conversationId: string
+): Promise<ConversationTitleGenerationResult> => {
+  const response = await backendApi<ConversationTitleGenerationResult>({
+    url: `/conversation/${conversationId}/generate-title`,
+    method: "post",
+  });
+  return response.data;
+};
+
 export type ConversationDeletionResult = ApiResponse<void>;
 const deleteConversation = async (conversationId: string) => {
   const response = await backendApi<ConversationDeletionResult>({
@@ -441,6 +454,7 @@ export const api = {
   deleteConnection,
   listConnections,
   listConversations,
+  generateConversationTitle,
   login,
   logout,
   createConversation,

@@ -93,6 +93,24 @@ export function useUpdateConversation(options = {}) {
   });
 }
 
+export function useGenerateConversationTitle(options = {}) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id }: { id: string }) =>
+      (await api.generateConversationTitle(id)).data,
+    onError() {
+      enqueueSnackbar({
+        variant: "error",
+        message: "Error generating conversation title",
+      });
+    },
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY });
+    },
+    ...options,
+  });
+}
+
 /**
  * Get the connection object for the current conversation
  *
