@@ -56,7 +56,7 @@ export const InstallSection = () => {
     {
       title: "Docker",
       isDownloadable: false,
-      code: "docker run -p 2222:2222 -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest",
+      code: "docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest",
     },
     {
       title: "GH Releases",
