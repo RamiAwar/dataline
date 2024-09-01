@@ -10,6 +10,7 @@ import { getBackendStatusQuery } from "@/hooks/settings";
 import { useEffect } from "react";
 import { useParams } from "@tanstack/react-router";
 import { useGetConnections } from "./connections";
+import { isAxiosError } from "axios";
 
 export const CONVERSATIONS_QUERY_KEY = ["CONVERSATIONS"];
 
@@ -98,11 +99,18 @@ export function useGenerateConversationTitle(options = {}) {
   return useMutation({
     mutationFn: async ({ id }: { id: string }) =>
       (await api.generateConversationTitle(id)).data,
-    onError() {
-      enqueueSnackbar({
-        variant: "error",
-        message: "Error generating conversation title",
-      });
+    onError(error) {
+      if (isAxiosError(error) && error.response?.status === 400) {
+        enqueueSnackbar({
+          variant: "error",
+          message: error.response.data.detail,
+        });
+      } else {
+        enqueueSnackbar({
+          variant: "error",
+          message: "There was a problem generating a conversation title",
+        });
+      }
     },
     onSuccess() {
       queryClient.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY });
