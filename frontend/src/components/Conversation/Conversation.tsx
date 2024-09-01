@@ -47,6 +47,9 @@ export const Conversation = () => {
   } = useQuery(
     getMessagesQuery({ conversationId: params.conversationId ?? "" })
   );
+  const currConversation = conversationsData?.find(
+    (conv) => conv.id === params.conversationId
+  );
   const { mutate: generateConversationTitle } = useGenerateConversationTitle();
   const {
     mutate: sendMessageMutation,
@@ -62,7 +65,13 @@ export const Conversation = () => {
       ]),
     onSettled: (_, error) => {
       setStreamedResults([]);
-      if (!error && messages && messages.length < 2) {
+      if (
+        !error &&
+        messages &&
+        messages.length < 2 &&
+        currConversation?.name === "Untitled chat"
+      ) {
+        // Generate a title for the conversation if it's untitled
         generateConversationTitle({ id: params.conversationId ?? "" });
       }
     },
@@ -70,10 +79,6 @@ export const Conversation = () => {
 
   const messageListRef = useRef<HTMLDivElement | null>(null);
   const expandingInputRef = useRef<HTMLTextAreaElement | null>(null);
-
-  const currConversation = conversationsData?.find(
-    (conv) => conv.id === params.conversationId
-  );
 
   const currConnection = connectionsData?.connections?.find(
     (conn) => conn.id === currConversation?.connection_id
