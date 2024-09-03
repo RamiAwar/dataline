@@ -1,6 +1,7 @@
 import { BackgroundLayout } from "@components/Layouts/BackgroundLayout";
 
 import headline_image from "@/assets/images/headline_image.png";
+import devhunt_orange from "@/assets/images/devhunt_orange.svg";
 import demo_gif from "@/assets/images/demo.gif";
 import data_security_image from "@/assets/images/data_security.avif";
 
@@ -68,6 +69,37 @@ export const Landing = () => {
                   }}
                 ></p>
               </div>
+
+              <div className="pb-6 sm:pb-12">
+                <div className="mx-auto max-w-7xl px-6 lg:px-8 flex gap-4 sm:gap-8 justify-center">
+                  {/* <div className="mx-auto grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-12 sm:max-w-xl sm:grid-cols-6 sm:gap-x-10 sm:gap-y-14 lg:mx-0 lg:max-w-none lg:grid-cols-5"> */}
+                  <div className="shrink">
+                    <a href="https://devhunt.org/tool/dataline">
+                      <img
+                        className="mx-auto col-span-2 max-h-12 w-full object-contain lg:col-span-1"
+                        src={devhunt_orange}
+                        alt="Reform"
+                        width="158"
+                        height="48"
+                      />
+                    </a>
+                  </div>
+                  <div className="shrink">
+                    <a
+                      href="https://theresanaiforthat.com/ai/dataline/?ref=featured&v=1901847"
+                      target="_blank"
+                      rel="nofollow"
+                    >
+                      <img
+                        className="max-h-12"
+                        src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
+                      />
+                    </a>
+                  </div>
+                  {/* </div> */}
+                </div>
+              </div>
+
               <img
                 src={headline_image}
                 alt="DataLine platform screenshot"
