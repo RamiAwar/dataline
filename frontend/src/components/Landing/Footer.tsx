@@ -152,6 +152,8 @@ export default function Footer() {
                     {navigation.support.map((item) => (
                       <li key={item.name}>
                         <a
+                          data-umami-event="click_socials"
+                          data-umami-event-name={item.name}
                           href={item.href}
                           className="text-sm leading-6 text-gray-300 hover:text-white"
                         >
