@@ -99,6 +99,8 @@ export const DownloadReleaseButton = ({ os }: { os: OS }) => {
 
   return (
     <a
+      data-umami-event="click_download_release"
+      data-umami-event-os={os}
       href={downloadUrl}
       download
       className="bg-gray-700 rounded-xl px-4 py-2 flex items-center text-white hover:bg-gray-600"

@@ -44,6 +44,7 @@ export const EmailSignupForm = ({
           value="e675d172-5277-4e0b-9b79-f4f21f164f44"
         />
         <button
+          data-umami-event="click_email_subscribe"
           type="submit"
           className="flex-none rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         >

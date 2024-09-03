@@ -1,11 +1,8 @@
-import { useEffect } from "react";
-
 import { BackgroundLayout } from "@components/Layouts/BackgroundLayout";
 
 import headline_image from "@/assets/images/headline_image.png";
 import demo_gif from "@/assets/images/demo.gif";
 import data_security_image from "@/assets/images/data_security.avif";
-import ReactGA from "react-ga4";
 
 import "./Landing.css";
 import { EmailSignupForm } from "@/components/Landing/EmailSignupForm";
@@ -17,11 +14,6 @@ import { InstallSection } from "@components/Landing/InstallSection";
 import Header from "@components/Layouts/Header";
 import { Element } from "react-scroll";
 import Footer from "./Footer";
-import {
-  CookieConsent,
-  Cookies,
-  getCookieConsentValue,
-} from "react-cookie-consent";
 
 // Randomly select cohort
 const selectedCohort = "ab-test-1-landing";
@@ -56,46 +48,8 @@ const CohortData = {
 };
 
 export const Landing = () => {
-  const handleAcceptCookie = () => {
-    if (process.env.NODE_ENV !== "local") {
-      ReactGA.initialize("G-9LG8MD1T1B", { gaOptions: { anonymizeIp: true } });
-    }
-  };
-
-  const handleDeclineCookie = () => {
-    //remove google analytics cookies
-    Cookies.remove("_ga");
-    Cookies.remove("_gat");
-    Cookies.remove("_gid");
-  };
-
-  useEffect(() => {
-    const isConsent = getCookieConsentValue();
-    if (isConsent === "true") {
-      handleAcceptCookie();
-    }
-  }, []);
-
   return (
     <>
-      <CookieConsent
-        enableDeclineButton
-        onAccept={handleAcceptCookie}
-        onDecline={handleDeclineCookie}
-        acceptOnScroll={true}
-        acceptOnScrollPercentage={50}
-        disableStyles={true}
-        buttonText="Accept"
-        declineButtonText="Decline"
-        buttonClasses="bg-indigo-600 p-2 rounded-md hover:bg-gray-800 gap-2"
-        declineButtonClasses="bg-gray-700 p-2 rounded-md hover:bg-gray-800 gap-2"
-        buttonWrapperClasses="flex flex-col md:flex-row gap-2"
-        containerClasses="fixed bottom-0 z-50 w-full bg-gray-800/50 backdrop-blur-md text-white p-2 flex flex-row items-center justify-center gap-8 md:gap-12"
-        contentClasses="grow-0"
-      >
-        We need cookies to feed our data-driven decisions. But we don't store
-        anything that can identify you. Pinky promise.
-      </CookieConsent>
       <Header />
 
       <div className="bg-gray-900 overflow-hidden border-r border-white/5">
