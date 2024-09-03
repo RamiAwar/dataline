@@ -97,6 +97,8 @@ export default function Footer() {
             <div className="flex space-x-6">
               {socials.map((item) => (
                 <a
+                  data-umami-event="click_socials"
+                  data-umami-event-name={item.name}
                   key={item.name}
                   href={item.href}
                   className="text-gray-500 hover:text-gray-400"
