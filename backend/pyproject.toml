@@ -33,7 +33,7 @@ mirascope = "^0.18.2"
 tenacity = "^8.2.3"
 pandas = "^2.2.2"
 pyreadstat = "^1.2.7"
-sentry-sdk = {extras = ["fastapi"], version = "^2.3.1"}
+sentry-sdk = {extras = ["fastapi"], version = "^2.8.0"}
 snowflake-sqlalchemy = "^1.6.1"
 openpyxl = "^3.1.5"
 deepeval = "^0.21.55"
