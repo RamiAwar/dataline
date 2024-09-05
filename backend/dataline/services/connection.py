@@ -147,6 +147,8 @@ class ConnectionService:
     ) -> ConnectionOut:
         # Check if connection can be established before saving it
         db = await self.get_connection_details(dsn)
+        # get potentially modified dsn (eg. if localhost was replaced with host.docker.internal)
+        dsn = str(db._engine.url.render_as_string(hide_password=False))
         if not connection_type:
             connection_type = db.dialect
 
