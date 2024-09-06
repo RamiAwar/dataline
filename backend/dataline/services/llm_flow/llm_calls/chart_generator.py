@@ -12,6 +12,7 @@ class ChartType(Enum):
     bar = "bar"
     doughnut = "doughnut"
     line = "line"
+    scatter = "scatter"
     # bubble = "bubble"
     # radar = "radar"
 
@@ -113,7 +114,38 @@ TEMPLATES: dict[ChartType, str] = {
       }
     }
   }""",
-    #     ChartType.bubble: """{
+    ChartType.scatter: """{
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Scatter Dataset',
+        data: [{
+          x: -10,
+          y: 0
+        }, {
+          x: 0,
+          y: 10
+        }, {
+          x: 10,
+          y: 5
+        }]
+      }]
+    },
+    options: {
+      scales: {
+        x: {
+          type: 'linear',
+          position: 'bottom'
+        },
+        y: {
+          type: 'linear',
+          position: 'left'
+        }
+      }
+    }
+  };
+  """,
+    # ChartType.bubble: """{
     #   datasets: [{
     #     data: [{
     #       x: 20,

@@ -54,6 +54,10 @@ const Chart = ({
   const [createdAt, setCreatedAt] = useState<Date>(initialCreatedAt);
   const [chartData, setChartData] = useState<ChartConfiguration>(initialData);
 
+  // We cannot transition from a scatter chart into a basic chart type (line, bar, doughnut)
+  // since scatter charts have a different data structure (x and y are numbers)
+  const isScatter = chartData.type === "scatter";
+
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<ChartJS | null>(null); // Add a useRef to store the chart instance
 
@@ -236,9 +240,18 @@ const Chart = ({
           onChange={updateChartType}
           style={{ backgroundColor: "rgb(29, 36, 50)" }} // firefox's select element doesn't understand rgba...
         >
-          <option value="bar">Bar</option>
-          <option value="line">Line</option>
-          <option value="doughnut">Doughnut</option>
+          <option value="bar" disabled={isScatter}>
+            Bar
+          </option>
+          <option value="line" disabled={isScatter}>
+            Line
+          </option>
+          <option value="doughnut" disabled={isScatter}>
+            Doughnut
+          </option>
+          <option value="scatter" disabled={!isScatter}>
+            Scatter
+          </option>
         </Select>
         <CustomTooltip hoverText="Refresh">
           <button tabIndex={-1} onClick={triggerRefreshChart} className="p-1">
