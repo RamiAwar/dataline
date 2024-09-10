@@ -173,6 +173,17 @@ const createConversation = async (connectionId: string, name: string) => {
   return response.data;
 };
 
+export type RefreshConnectionSchemaResult = ApiResponse<IConnection>;
+const refreshConnectionSchema = async (
+  connectionId: string
+): Promise<RefreshConnectionSchemaResult> => {
+  const response = await backendApi<RefreshConnectionSchemaResult>({
+    url: `/connection/${connectionId}/refresh`,
+    method: "post",
+  });
+  return response.data;
+};
+
 export type ConversationUpdateResult = ApiResponse<void>;
 const updateConversation = async (
   conversationId: string,
@@ -452,6 +463,7 @@ export const api = {
   createFileConnection,
   updateConnection,
   deleteConnection,
+  refreshConnectionSchema,
   listConnections,
   listConversations,
   generateConversationTitle,

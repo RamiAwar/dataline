@@ -270,3 +270,46 @@ class ConnectionService:
         finally:
             # Clean up the temporary file
             os.unlink(temp_file_path)
+
+    async def refresh_connection_schema(self, session: AsyncSession, connection_id: UUID) -> ConnectionOut:
+        connection = await self.connection_repo.get_by_uuid(session, connection_id)
+
+        # Get the latest schema information
+        db = await self.get_connection_details(connection.dsn)
+
+        # Create new ConnectionOptions with updated schema information
+        new_schemas = [
+            ConnectionSchema(
+                name=schema,
+                tables=[ConnecitonSchemaTable(name=table, enabled=False) for table in tables],
+                enabled=False,
+            )
+            for schema, tables in db._all_tables_per_schema.items()
+        ]
+
+        # Merge the new schema information with existing options
+        old_options = connection.options
+        if old_options:
+            existing_schemas = {schema["name"]: schema for schema in old_options["schemas"]}
+            for new_schema in new_schemas:
+                if new_schema.name in existing_schemas:
+                    # Keep existing enabled status for schemas and tables
+                    existing_schema = existing_schemas[new_schema.name]
+                    new_schema.enabled = existing_schema["enabled"]
+                    existing_tables = {table["name"]: table["enabled"] for table in existing_schema["tables"]}
+                    for table in new_schema.tables:
+                        table.enabled = existing_tables.get(table.name, False)
+
+        # sort schemas and tables by name
+        new_schemas.sort(key=lambda x: x.name)
+        for schema in new_schemas:
+            schema.tables.sort(key=lambda x: x.name)
+
+        new_options = ConnectionOptions(schemas=new_schemas)
+
+        # Update the connection with new options
+        updated_connection = await self.connection_repo.update_by_uuid(
+            session, connection_id, ConnectionUpdate(options=new_options)
+        )
+
+        return ConnectionOut.model_validate(updated_connection)

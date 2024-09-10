@@ -9,6 +9,7 @@ import {
   useGetConnection,
   useGetConversations,
   useUpdateConnection,
+  useRefreshConnectionSchema,
 } from "@/hooks";
 import { Button } from "../Catalyst/button";
 import { Transition } from "@headlessui/react";
@@ -25,7 +26,9 @@ const SchemaEditor = ({
   options: IConnectionOptions;
   setOptions: (newOptions: IConnectionOptions) => void;
 }) => {
-  const [expanded, setExpanded] = useState(options.schemas.map(() => false));
+  const [expanded, setExpanded] = useState(
+    Object.fromEntries(options.schemas.map((schema) => [schema.name, false]))
+  );
 
   return (
     <div className="mt-2 divide-y divide-white/5 rounded-xl bg-white/5">
@@ -58,11 +61,10 @@ const SchemaEditor = ({
               <div
                 className="group flex w-full items-center cursor-pointer"
                 onClick={() =>
-                  setExpanded((prev) =>
-                    prev.map((value, inner_idx) =>
-                      schema_index === inner_idx ? !value : value
-                    )
-                  )
+                  setExpanded((prev) => ({
+                    ...prev,
+                    [schema.name]: !prev[schema.name],
+                  }))
                 }
               >
                 <span
@@ -76,13 +78,13 @@ const SchemaEditor = ({
                 <ChevronDownIcon
                   className={classNames(
                     "size-5 fill-white/60 group-hover:fill-white/50",
-                    expanded[schema_index] ? "rotate-180" : ""
+                    expanded[schema.name] ? "rotate-180" : ""
                   )}
                 />
               </div>
             </div>
 
-            <Transition show={expanded[schema_index]}>
+            <Transition show={expanded[schema.name] || false}>
               <div className="transition ease-in-out translate-x-0 data-[closed]:opacity-0 data-[closed]:-translate-y-3">
                 {schema.tables.map((table, table_index) => (
                   <div className="p-6 pt-0 pl-12" key={table_index}>
@@ -168,6 +170,14 @@ export const ConnectionEditor = () => {
       navigate({ to: "/" });
     },
   });
+
+  const { mutate: refreshSchema, isPending: isRefreshing } =
+    useRefreshConnectionSchema((data) => {
+      setEditFields((prev) => ({
+        ...prev,
+        options: data.options,
+      }));
+    });
 
   // Form state
   const [editFields, setEditFields] = useState<IEditConnection>({
@@ -337,14 +347,24 @@ export const ConnectionEditor = () => {
               />
             </div>
           </div>
-          {editFields.options && (
-            <div className="sm:col-span-6">
-              <label
-                htmlFor="schema"
-                className="block text-sm font-medium leading-6 text-white"
+
+          <div className="sm:col-span-6">
+            <label
+              htmlFor="schema"
+              className="block text-sm font-medium leading-6 text-white"
+            >
+              Schema options
+            </label>
+            <div className="flex justify-between items-center mb-2">
+              <Button
+                onClick={() => refreshSchema(connectionId)}
+                color="blue"
+                disabled={isRefreshing}
               >
-                Schema options
-              </label>
+                {isRefreshing ? "Refreshing..." : "Refresh Schema"}
+              </Button>
+            </div>
+            {editFields.options && (
               <SchemaEditor
                 options={editFields.options}
                 setOptions={(newOptions) => {
@@ -355,8 +375,8 @@ export const ConnectionEditor = () => {
                   setUnsavedChanges(true);
                 }}
               />
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="sm:col-span-6 flex items-center justify-end gap-x-6">
             <Button

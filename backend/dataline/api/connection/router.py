@@ -4,7 +4,6 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from dataline.config import config
 from dataline.models.connection.schema import (
     DB_SAMPLES,
     ConnectionOut,
@@ -153,3 +152,13 @@ async def get_sample_connections() -> SuccessListResponse[SampleOut]:
             for key, sample in DB_SAMPLES.items()
         ]
     )
+
+
+@router.post("/connection/{connection_id}/refresh")
+async def refresh_connection_schema(
+    connection_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    connection_service: ConnectionService = Depends(ConnectionService),
+) -> SuccessResponse[ConnectionOut]:
+    updated_connection = await connection_service.refresh_connection_schema(session, connection_id)
+    return SuccessResponse(data=updated_connection)

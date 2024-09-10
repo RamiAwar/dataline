@@ -7,7 +7,11 @@ import {
   queryOptions,
 } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { DatabaseFileType, IEditConnection } from "@/components/Library/types";
+import {
+  DatabaseFileType,
+  IConnection,
+  IEditConnection,
+} from "@/components/Library/types";
 import { CONVERSATIONS_QUERY_KEY } from "./conversations";
 import { getBackendStatusQuery } from "@/hooks/settings";
 import { useEffect } from "react";
@@ -204,5 +208,31 @@ export function useGetSamples() {
     queryKey: ["DB_SAMPLES"],
     queryFn: async () => (await api.getSamples()).data,
     enabled: isSuccess,
+  });
+}
+
+export function useRefreshConnectionSchema(
+  onRefreshSuccess: (data: IConnection) => void
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (connectionId: string) =>
+      (await api.refreshConnectionSchema(connectionId)).data,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: getConnectionsQuery().queryKey,
+      });
+      enqueueSnackbar({
+        variant: "success",
+        message: "Schema refreshed successfully",
+      });
+      onRefreshSuccess(data);
+    },
+    onError(error) {
+      enqueueSnackbar({
+        variant: "error",
+        message: "Failed to refresh schema: " + error.message,
+      });
+    },
   });
 }
