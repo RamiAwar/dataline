@@ -235,24 +235,17 @@ const Chart = ({
         </div>
       )}
       <div className="absolute top-0 right-0 m-2 flex gap-1 ">
-        <Select
-          value={chartData.type}
-          onChange={updateChartType}
-          style={{ backgroundColor: "rgb(29, 36, 50)" }} // firefox's select element doesn't understand rgba...
-        >
-          <option value="bar" disabled={isScatter}>
-            Bar
-          </option>
-          <option value="line" disabled={isScatter}>
-            Line
-          </option>
-          <option value="doughnut" disabled={isScatter}>
-            Doughnut
-          </option>
-          <option value="scatter" disabled={!isScatter}>
-            Scatter
-          </option>
-        </Select>
+        {!isScatter && (
+          <Select
+            value={chartData.type}
+            onChange={updateChartType}
+            style={{ backgroundColor: "rgb(29, 36, 50)" }} // firefox's select element doesn't understand rgba...
+          >
+            <option value="bar">Bar</option>
+            <option value="line">Line</option>
+            <option value="doughnut">Doughnut</option>
+          </Select>
+        )}
         <CustomTooltip hoverText="Refresh">
           <button tabIndex={-1} onClick={triggerRefreshChart} className="p-1">
             <ArrowPathIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
