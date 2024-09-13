@@ -274,47 +274,66 @@ class ConnectionService:
     async def refresh_connection_schema(self, session: AsyncSession, connection_id: UUID) -> ConnectionOut:
         """
         Refresh the schema of a connection. Flow of the function:
-        1. Get the connection details from the database
-        2. Get the latest schema information from the database (using DatalineSQLDatabase)
-        3. Create new ConnectionOptions with schema information from step 2
-        4. Fetch stored ConnectionOptions from the database and, if it exists, merge with new schema information
-        5. Sort schemas and tables by name
-        6. Update the connection with new options
+        1. Get the latest schema information from the database (using DatalineSQLDatabase)
+        2. Fetch stored ConnectionOptions from the database
+            - If no options are stored, create new options with everything enabled
+            - If options are stored, merge with new schema information
+        3. Sort schemas and tables by name
+        4. Update the connection with new options
         """
         connection = await self.connection_repo.get_by_uuid(session, connection_id)
 
         # Get the latest schema information
         db = await self.get_connection_details(connection.dsn)
 
-        # Create new ConnectionOptions with updated schema information
-        new_schemas = [
-            ConnectionSchema(
-                name=schema,
-                tables=[ConnecitonSchemaTable(name=table, enabled=False) for table in tables],
-                enabled=False,
-            )
-            for schema, tables in db._all_tables_per_schema.items()
-        ]
-
-        # Merge the new schema information with existing options
+        schemas: list[ConnectionSchema] = []
         old_options = connection.options
-        if old_options:
-            existing_schemas = {schema["name"]: schema for schema in old_options["schemas"]}
-            for new_schema in new_schemas:
-                if new_schema.name in existing_schemas:
-                    # Keep existing enabled status for schemas and tables
-                    existing_schema = existing_schemas[new_schema.name]
-                    new_schema.enabled = existing_schema["enabled"]
-                    existing_tables = {table["name"]: table["enabled"] for table in existing_schema["tables"]}
-                    for table in new_schema.tables:
-                        table.enabled = existing_tables.get(table.name, False)
+        if old_options is None:
+            # No options stored, everything is new. Set everything to enabled (this was the default behavior)
+            schemas = [
+                ConnectionSchema(
+                    name=schema,
+                    tables=[ConnecitonSchemaTable(name=table, enabled=True) for table in tables],
+                    enabled=True,
+                )
+                for schema, tables in db._all_tables_per_schema.items()
+            ]
+        else:
+            old_schemas = {schema["name"]: schema for schema in old_options["schemas"]}
+            # Merging logic
+            for schema_name, tables in db._all_tables_per_schema.items():
+                if schema_name not in old_schemas:
+                    # schema is new. Add schema with all tables disabled
+                    schemas.append(
+                        ConnectionSchema(
+                            name=schema_name,
+                            tables=[ConnecitonSchemaTable(name=table, enabled=False) for table in tables],
+                            enabled=False,
+                        )
+                    )
+                else:
+                    # schema exists:
+                    # - Set "enabled" to old schema status
+                    # - Set "enabled" to old table status if table exists in old schema else False
+                    old_schema = old_schemas[schema_name]
+                    old_tables = {table["name"]: table["enabled"] for table in old_schema["tables"]}
+                    schemas.append(
+                        ConnectionSchema(
+                            name=schema_name,
+                            tables=[
+                                ConnecitonSchemaTable(name=table, enabled=old_tables.get(table, False))
+                                for table in tables
+                            ],
+                            enabled=old_schema["enabled"],
+                        )
+                    )
 
-        # sort schemas and tables by name
-        new_schemas.sort(key=lambda x: x.name)
-        for schema in new_schemas:
-            schema.tables.sort(key=lambda x: x.name)
+        # Sort schemas and tables by name
+        schemas.sort(key=lambda x: x.name)
+        for conn_schema in schemas:
+            conn_schema.tables.sort(key=lambda x: x.name)
 
-        new_options = ConnectionOptions(schemas=new_schemas)
+        new_options = ConnectionOptions(schemas=schemas)
 
         # Update the connection with new options
         updated_connection = await self.connection_repo.update_by_uuid(
