@@ -272,6 +272,15 @@ class ConnectionService:
             os.unlink(temp_file_path)
 
     async def refresh_connection_schema(self, session: AsyncSession, connection_id: UUID) -> ConnectionOut:
+        """
+        Refresh the schema of a connection. Flow of the function:
+        1. Get the connection details from the database
+        2. Get the latest schema information from the database (using DatalineSQLDatabase)
+        3. Create new ConnectionOptions with schema information from step 2
+        4. Fetch stored ConnectionOptions from the database and, if it exists, merge with new schema information
+        5. Sort schemas and tables by name
+        6. Update the connection with new options
+        """
         connection = await self.connection_repo.get_by_uuid(session, connection_id)
 
         # Get the latest schema information
