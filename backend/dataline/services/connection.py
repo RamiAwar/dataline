@@ -286,18 +286,20 @@ class ConnectionService:
         # Get the latest schema information
         db = await self.get_db_from_dsn(connection.dsn)
 
+        old_options = connection.options
+        enabled_default = old_options is None  # if no options existed, everything was enabled by default
+
         # Create new ConnectionOptions with updated schema information
         new_schemas = [
             ConnectionSchema(
                 name=schema,
-                tables=[ConnecitonSchemaTable(name=table, enabled=False) for table in tables],
-                enabled=False,
+                tables=[ConnecitonSchemaTable(name=table, enabled=enabled_default) for table in tables],
+                enabled=enabled_default,
             )
             for schema, tables in db._all_tables_per_schema.items()
         ]
 
         # Merge the new schema information with existing options
-        old_options = connection.options
         if old_options:
             existing_schemas = {schema["name"]: schema for schema in old_options["schemas"]}
             for new_schema in new_schemas:
