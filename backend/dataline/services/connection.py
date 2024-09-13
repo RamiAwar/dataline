@@ -60,7 +60,7 @@ class ConnectionService:
     async def delete_connection(self, session: AsyncSession, connection_id: UUID) -> None:
         await self.connection_repo.delete_by_uuid(session, connection_id)
 
-    async def get_connection_details(self, dsn: str) -> SQLDatabase:
+    async def get_db_from_dsn(self, dsn: str) -> SQLDatabase:
         # Check if connection can be established before saving it
         try:
             db = SQLDatabase.from_uri(dsn)
@@ -122,7 +122,7 @@ class ConnectionService:
                 raise NotUniqueError("Connection DSN already exists.")
 
             # Check if connection can be established before saving it
-            db = await self.get_connection_details(data.dsn)
+            db = await self.get_db_from_dsn(data.dsn)
             update.dsn = str(db._engine.url.render_as_string(hide_password=False))
             update.database = db._engine.url.database
             update.dialect = db.dialect
@@ -146,7 +146,7 @@ class ConnectionService:
         is_sample: bool = False,
     ) -> ConnectionOut:
         # Check if connection can be established before saving it
-        db = await self.get_connection_details(dsn)
+        db = await self.get_db_from_dsn(dsn)
         # get potentially modified dsn (eg. if localhost was replaced with host.docker.internal)
         dsn = str(db._engine.url.render_as_string(hide_password=False))
         if not connection_type:
@@ -284,7 +284,7 @@ class ConnectionService:
         connection = await self.connection_repo.get_by_uuid(session, connection_id)
 
         # Get the latest schema information
-        db = await self.get_connection_details(connection.dsn)
+        db = await self.get_db_from_dsn(connection.dsn)
 
         # Create new ConnectionOptions with updated schema information
         new_schemas = [
