@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { IConnectionOptions, IEditConnection } from "@components/Library/types";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { AlertIcon, AlertModal } from "@components/Library/AlertModal";
 import { enqueueSnackbar } from "notistack";
@@ -349,19 +349,24 @@ export const ConnectionEditor = () => {
           </div>
 
           <div className="sm:col-span-6">
-            <label
-              htmlFor="schema"
-              className="block text-sm font-medium leading-6 text-white"
-            >
-              Schema options
-            </label>
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center mb-2 gap-x-2">
+              <label
+                htmlFor="schema"
+                className="block text-sm font-medium leading-6 text-white"
+              >
+                Schema options
+              </label>
               <Button
                 onClick={() => refreshSchema(connectionId)}
-                color="blue"
+                plain
                 disabled={isRefreshing}
               >
-                {isRefreshing ? "Refreshing..." : "Refresh Schema"}
+                <ArrowPathIcon
+                  className={classNames(
+                    "w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6",
+                    isRefreshing ? "animate-spin" : ""
+                  )}
+                />
               </Button>
             </div>
             {editFields.options && (
