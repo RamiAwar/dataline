@@ -274,12 +274,11 @@ class ConnectionService:
     async def refresh_connection_schema(self, session: AsyncSession, connection_id: UUID) -> ConnectionOut:
         """
         Refresh the schema of a connection. Flow of the function:
-        1. Get the connection details from the database
-        2. Get the latest schema information from the database (using DatalineSQLDatabase)
-        3. Create new ConnectionOptions with schema information from step 2
-        4. Fetch stored ConnectionOptions from the database and, if it exists, merge with new schema information
-        5. Sort schemas and tables by name
-        6. Update the connection with new options
+        1. Get the latest schema information from the database (using DatalineSQLDatabase)
+        2.a. If ConnectionOptions is null in the db,  create new ConnectionOptions with everything enabled
+        2.b. Otherwise, fetch stored ConnectionOptions from the database and merge with new schema information
+        3. Sort schemas and tables by name
+        4. Update the connection with new options
         """
         connection = await self.connection_repo.get_by_uuid(session, connection_id)
 
@@ -287,29 +286,39 @@ class ConnectionService:
         db = await self.get_db_from_dsn(connection.dsn)
 
         old_options = connection.options
-        enabled_default = old_options is None  # if no options existed, everything was enabled by default
+        if old_options is None:
+            # No options in the db, create new ConnectionOptions with everything enabled
+            new_schemas = [
+                ConnectionSchema(
+                    name=schema,
+                    tables=[ConnecitonSchemaTable(name=table, enabled=True) for table in tables],
+                    enabled=True,
+                )
+                for schema, tables in db._all_tables_per_schema.items()
+            ]
+        else:
+            # "schema_name": enabled
+            existing_schemas: dict[str, bool] = {schema["name"]: schema["enabled"] for schema in old_options["schemas"]}
+            # ("schema_name", "table_name"): enabled
+            schema_table_enabled_map: dict[tuple[str, str], bool] = {
+                (schema["name"], table["name"]): table["enabled"]
+                for schema in old_options["schemas"]
+                for table in schema["tables"]
+            }
 
-        # Create new ConnectionOptions with updated schema information
-        new_schemas = [
-            ConnectionSchema(
-                name=schema,
-                tables=[ConnecitonSchemaTable(name=table, enabled=enabled_default) for table in tables],
-                enabled=enabled_default,
-            )
-            for schema, tables in db._all_tables_per_schema.items()
-        ]
-
-        # Merge the new schema information with existing options
-        if old_options:
-            existing_schemas = {schema["name"]: schema for schema in old_options["schemas"]}
-            for new_schema in new_schemas:
-                if new_schema.name in existing_schemas:
-                    # Keep existing enabled status for schemas and tables
-                    existing_schema = existing_schemas[new_schema.name]
-                    new_schema.enabled = existing_schema["enabled"]
-                    existing_tables = {table["name"]: table["enabled"] for table in existing_schema["tables"]}
-                    for table in new_schema.tables:
-                        table.enabled = existing_tables.get(table.name, False)
+            new_schemas = [
+                ConnectionSchema(
+                    name=schema_name,
+                    tables=[
+                        ConnecitonSchemaTable(
+                            name=table, enabled=schema_table_enabled_map.get((schema_name, table), False)
+                        )
+                        for table in tables
+                    ],
+                    enabled=existing_schemas.get(schema_name, False),
+                )
+                for schema_name, tables in db._all_tables_per_schema.items()
+            ]
 
         # sort schemas and tables by name
         new_schemas.sort(key=lambda x: x.name)
