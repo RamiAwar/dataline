@@ -1,7 +1,25 @@
 import abc
 import json
 import operator
-from typing import Annotated, Any, Iterable, List, Optional, Sequence, Type, TypedDict, cast
+from typing import (
+    Annotated,
+    Any,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Type,
+    TypedDict,
+    cast,
+)
+
+from fastapi.encoders import jsonable_encoder
+from langchain_core.callbacks import CallbackManagerForToolRun
+from langchain_core.messages import BaseMessage, ToolMessage
+from langchain_core.pydantic_v1 import BaseModel as BaseModelV1
+from langchain_core.pydantic_v1 import Field
+from langchain_core.tools import BaseTool, BaseToolkit
+from langgraph.prebuilt import ToolExecutor
 
 from dataline.models.llm_flow.schema import (
     ChartGenerationResult,
@@ -12,16 +30,12 @@ from dataline.models.llm_flow.schema import (
     SQLQueryRunResult,
     SQLQueryStringResult,
 )
-from dataline.services.llm_flow.llm_calls.chart_generator import TEMPLATES, ChartType, GenerateChartCall
+from dataline.services.llm_flow.llm_calls.chart_generator import (
+    TEMPLATES,
+    ChartType,
+    GenerateChartCall,
+)
 from dataline.services.llm_flow.utils import DatalineSQLDatabase as SQLDatabase
-
-from fastapi.encoders import jsonable_encoder
-from langchain_core.callbacks import CallbackManagerForToolRun
-from langchain_core.messages import BaseMessage, ToolMessage
-from langchain_core.pydantic_v1 import BaseModel as BaseModelV1
-from langchain_core.pydantic_v1 import Field
-from langchain_core.tools import BaseTool, BaseToolkit
-from langgraph.prebuilt import ToolExecutor
 
 
 class QueryGraphStateUpdate(TypedDict):
@@ -70,7 +84,7 @@ def execute_sql_query(
         truncated_rows.append(truncated_row)
 
     if for_chart:
-        if chart_type in [ChartType.bar, ChartType.line, ChartType.doughnut]:
+        if chart_type in [ChartType.bar, ChartType.line, ChartType.doughnut, ChartType.scatter]:
             # These chart types take in single dimensional data for labels and values
             # Validate that each row has only 1 element
             if not truncated_rows:
@@ -99,7 +113,7 @@ def query_run_result_to_chart_json(chart_json: str, chart_type: ChartType, query
         chart_type: The type of chart to generate (used to format the chartjs JSON)
         query_run_result: The result of the SQL query execution.
     """
-    if chart_type in [ChartType.bar, ChartType.line, ChartType.doughnut]:
+    if chart_type in [ChartType.bar, ChartType.line, ChartType.doughnut, ChartType.scatter]:
         # Insert the flattened query result data into the chartjs JSON
         flattened_labels = [row[0] for row in query_run_data.rows]
         flattened_values = [row[1] for row in query_run_data.rows]

@@ -64,29 +64,6 @@ export const Select = forwardRef<HTMLSelectElement, HeadlessSelectProps>(
             "data-[disabled]:border-gray-950/20 data-[disabled]:opacity-100 dark:data-[hover]:data-[disabled]:border-white/15 data-[disabled]:dark:border-white/15 data-[disabled]:dark:bg-white/[2.5%]",
           ])}
         />
-        {!multiple && (
-          <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-            <svg
-              className="size-5 stroke-gray-500 group-has-[[data-disabled]]:stroke-gray-600 sm:size-4 dark:stroke-gray-400 forced-colors:stroke-[CanvasText]"
-              viewBox="0 0 16 16"
-              aria-hidden="true"
-              fill="none"
-            >
-              <path
-                d="M5.75 10.75L8 13L10.25 10.75"
-                strokeWidth={1.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M10.25 5.25L8 3L5.75 5.25"
-                strokeWidth={1.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-        )}
       </span>
     );
   }
