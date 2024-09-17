@@ -116,6 +116,7 @@ class ConnectionService:
     ) -> ConnectionOut:
         update = ConnectionUpdate()
         if data.dsn:
+            current_connection = await self.get_connection(session, connection_uuid)
             # Check if connection already exists and is different from the current one
             existing_connection = await self.check_dsn_already_exists_or_none(session, data.dsn)
             if existing_connection is not None and existing_connection.id != connection_uuid:
@@ -126,7 +127,10 @@ class ConnectionService:
             update.dsn = str(db._engine.url.render_as_string(hide_password=False))
             update.database = db._engine.url.database
             update.dialect = db.dialect
-            # TODO: What do we do for the options? Enable everything?
+            old_options = (
+                ConnectionOptions.model_validate(current_connection.options) if current_connection.options else None
+            )
+            update.options = self.merge_options(old_options, db)
         elif data.options:
             # only modify options if dsn hasn't changed
             update.options = data.options
@@ -271,21 +275,7 @@ class ConnectionService:
             # Clean up the temporary file
             os.unlink(temp_file_path)
 
-    async def refresh_connection_schema(self, session: AsyncSession, connection_id: UUID) -> ConnectionOut:
-        """
-        Refresh the schema of a connection. Flow of the function:
-        1. Get the latest schema information from the database (using DatalineSQLDatabase)
-        2.a. If ConnectionOptions is null in the db,  create new ConnectionOptions with everything enabled
-        2.b. Otherwise, fetch stored ConnectionOptions from the database and merge with new schema information
-        3. Sort schemas and tables by name
-        4. Update the connection with new options
-        """
-        connection = await self.connection_repo.get_by_uuid(session, connection_id)
-
-        # Get the latest schema information
-        db = await self.get_db_from_dsn(connection.dsn)
-
-        old_options = connection.options
+    def merge_options(self, old_options: ConnectionOptions | None, db: SQLDatabase) -> ConnectionOptions:
         if old_options is None:
             # No options in the db, create new ConnectionOptions with everything enabled
             new_schemas = [
@@ -298,12 +288,10 @@ class ConnectionService:
             ]
         else:
             # "schema_name": enabled
-            existing_schemas: dict[str, bool] = {schema["name"]: schema["enabled"] for schema in old_options["schemas"]}
+            existing_schemas: dict[str, bool] = {schema.name: schema.enabled for schema in old_options.schemas}
             # ("schema_name", "table_name"): enabled
             schema_table_enabled_map: dict[tuple[str, str], bool] = {
-                (schema["name"], table["name"]): table["enabled"]
-                for schema in old_options["schemas"]
-                for table in schema["tables"]
+                (schema.name, table.name): table.enabled for schema in old_options.schemas for table in schema.tables
             }
 
             new_schemas = [
@@ -325,7 +313,24 @@ class ConnectionService:
         for schema in new_schemas:
             schema.tables.sort(key=lambda x: x.name)
 
-        new_options = ConnectionOptions(schemas=new_schemas)
+        return ConnectionOptions(schemas=new_schemas)
+
+    async def refresh_connection_schema(self, session: AsyncSession, connection_id: UUID) -> ConnectionOut:
+        """
+        Refresh the schema of a connection. Flow of the function:
+        1. Get the latest schema information from the database (using DatalineSQLDatabase)
+        2.a. If ConnectionOptions is null in the db,  create new ConnectionOptions with everything enabled
+        2.b. Otherwise, fetch stored ConnectionOptions from the database and merge with new schema information
+        3. Sort schemas and tables by name
+        4. Update the connection with new options
+        """
+        connection = await self.connection_repo.get_by_uuid(session, connection_id)
+
+        # Get the latest schema information
+        db = await self.get_db_from_dsn(connection.dsn)
+
+        old_options = ConnectionOptions.model_validate(connection.options) if connection.options else None
+        new_options = self.merge_options(old_options, db)
 
         # Update the connection with new options
         updated_connection = await self.connection_repo.update_by_uuid(
