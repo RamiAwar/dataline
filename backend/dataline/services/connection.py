@@ -116,7 +116,6 @@ class ConnectionService:
     ) -> ConnectionOut:
         update = ConnectionUpdate()
         if data.dsn:
-            current_connection = await self.get_connection(session, connection_uuid)
             # Check if connection already exists and is different from the current one
             existing_connection = await self.check_dsn_already_exists_or_none(session, data.dsn)
             if existing_connection is not None and existing_connection.id != connection_uuid:
@@ -127,6 +126,7 @@ class ConnectionService:
             update.dsn = str(db._engine.url.render_as_string(hide_password=False))
             update.database = db._engine.url.database
             update.dialect = db.dialect
+            current_connection = await self.get_connection(session, connection_uuid)
             old_options = (
                 ConnectionOptions.model_validate(current_connection.options) if current_connection.options else None
             )
