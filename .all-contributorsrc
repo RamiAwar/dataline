@@ -21,6 +21,21 @@
         "blog",
         "bug"
       ]
+    },
+    {
+      "login": "anthony2261",
+      "name": "anthony2261",
+      "avatar_url": "https://avatars.githubusercontent.com/u/26882839?v=4",
+      "profile": "http://anthonymalkoun.com",
+      "contributions": [
+        "code",
+        "ideas",
+        "infra",
+        "platform",
+        "mentoring",
+        "maintenance",
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
