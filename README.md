@@ -1,4 +1,7 @@
 <p align="center">
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
   <a href="https://dataline.app"><img src="https://github.com/RamiAwar/dataline/assets/8523191/97e3a26c-e064-4e4e-b804-4e739986dbe9" alt="DataLine logo"></a>
 </p>
 <p align="center">
@@ -195,3 +198,25 @@ Right now, we will try to automatically detect the 'header row' and the first co
 To ensure the best quality, make sure your first row is the column names, and remove any padding rows/columns from all the sheets. If any sheet fails, the import will fail.
 
 Future improvements to this include optionally allowing LLMs to figure out what the header row is to reduce user effort.
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://ramiawar.github.io/"><img src="https://avatars.githubusercontent.com/u/8523191?v=4?s=100" width="100px;" alt="Rami Awar"/><br /><sub><b>Rami Awar</b></sub></a><br /><a href="https://github.com/RamiAwar/dataline/commits?author=ramiawar" title="Code">💻</a> <a href="#design-ramiawar" title="Design">🎨</a> <a href="https://github.com/RamiAwar/dataline/commits?author=ramiawar" title="Documentation">📖</a> <a href="#infra-ramiawar" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#platform-ramiawar" title="Packaging/porting to new platform">📦</a> <a href="#blog-ramiawar" title="Blogposts">📝</a> <a href="https://github.com/RamiAwar/dataline/issues?q=author%3Aramiawar" title="Bug reports">🐛</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
