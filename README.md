@@ -1,6 +1,6 @@
 <p align="center">
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
   <a href="https://dataline.app"><img src="https://github.com/RamiAwar/dataline/assets/8523191/97e3a26c-e064-4e4e-b804-4e739986dbe9" alt="DataLine logo"></a>
 </p>
@@ -214,6 +214,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/wmahad"><img src="https://avatars.githubusercontent.com/u/11237598?v=4?s=100" width="100px;" alt="Walusimbi Mahad"/><br /><sub><b>Walusimbi Mahad</b></sub></a><br /><a href="https://github.com/RamiAwar/dataline/commits?author=wmahad" title="Code">💻</a> <a href="#ideas-wmahad" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://peter.gy"><img src="https://avatars.githubusercontent.com/u/40776291?v=4?s=100" width="100px;" alt="Péter Gyarmati"/><br /><sub><b>Péter Gyarmati</b></sub></a><br /><a href="https://github.com/RamiAwar/dataline/commits?author=peter-gy" title="Code">💻</a> <a href="https://github.com/RamiAwar/dataline/commits?author=peter-gy" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/joehaddad2000"><img src="https://avatars.githubusercontent.com/u/71342036?v=4?s=100" width="100px;" alt="Joe Haddad"/><br /><sub><b>Joe Haddad</b></sub></a><br /><a href="https://github.com/RamiAwar/dataline/commits?author=joehaddad2000" title="Code">💻</a> <a href="https://github.com/RamiAwar/dataline/commits?author=joehaddad2000" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/maryamalki"><img src="https://avatars.githubusercontent.com/u/27642194?v=4?s=100" width="100px;" alt="maryamalki"/><br /><sub><b>maryamalki</b></sub></a><br /><a href="https://github.com/RamiAwar/dataline/commits?author=maryamalki" title="Code">💻</a> <a href="https://github.com/RamiAwar/dataline/commits?author=maryamalki" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>
