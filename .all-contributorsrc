@@ -56,6 +56,16 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "joehaddad2000",
+      "name": "Joe Haddad",
+      "avatar_url": "https://avatars.githubusercontent.com/u/71342036?v=4",
+      "profile": "https://github.com/joehaddad2000",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
