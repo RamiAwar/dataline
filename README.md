@@ -1,6 +1,6 @@
 <p align="center">
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
   <a href="https://dataline.app"><img src="https://github.com/RamiAwar/dataline/assets/8523191/97e3a26c-e064-4e4e-b804-4e739986dbe9" alt="DataLine logo"></a>
 </p>
@@ -212,6 +212,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://ramiawar.github.io/"><img src="https://avatars.githubusercontent.com/u/8523191?v=4?s=100" width="100px;" alt="Rami Awar"/><br /><sub><b>Rami Awar</b></sub></a><br /><a href="https://github.com/RamiAwar/dataline/commits?author=RamiAwar" title="Code">💻</a> <a href="#design-RamiAwar" title="Design">🎨</a> <a href="https://github.com/RamiAwar/dataline/commits?author=RamiAwar" title="Documentation">📖</a> <a href="#infra-RamiAwar" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#platform-RamiAwar" title="Packaging/porting to new platform">📦</a> <a href="#blog-RamiAwar" title="Blogposts">📝</a> <a href="https://github.com/RamiAwar/dataline/issues?q=author%3ARamiAwar" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://anthonymalkoun.com"><img src="https://avatars.githubusercontent.com/u/26882839?v=4?s=100" width="100px;" alt="anthony2261"/><br /><sub><b>anthony2261</b></sub></a><br /><a href="https://github.com/RamiAwar/dataline/commits?author=anthony2261" title="Code">💻</a> <a href="#ideas-anthony2261" title="Ideas, Planning, & Feedback">🤔</a> <a href="#infra-anthony2261" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#platform-anthony2261" title="Packaging/porting to new platform">📦</a> <a href="#mentoring-anthony2261" title="Mentoring">🧑‍🏫</a> <a href="#maintenance-anthony2261" title="Maintenance">🚧</a> <a href="https://github.com/RamiAwar/dataline/issues?q=author%3Aanthony2261" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/wmahad"><img src="https://avatars.githubusercontent.com/u/11237598?v=4?s=100" width="100px;" alt="Walusimbi Mahad"/><br /><sub><b>Walusimbi Mahad</b></sub></a><br /><a href="https://github.com/RamiAwar/dataline/commits?author=wmahad" title="Code">💻</a> <a href="#ideas-wmahad" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://peter.gy"><img src="https://avatars.githubusercontent.com/u/40776291?v=4?s=100" width="100px;" alt="Péter Gyarmati"/><br /><sub><b>Péter Gyarmati</b></sub></a><br /><a href="https://github.com/RamiAwar/dataline/commits?author=peter-gy" title="Code">💻</a> <a href="https://github.com/RamiAwar/dataline/commits?author=peter-gy" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>
