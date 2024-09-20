@@ -46,6 +46,16 @@
         "code",
         "ideas"
       ]
+    },
+    {
+      "login": "peter-gy",
+      "name": "Péter Gyarmati",
+      "avatar_url": "https://avatars.githubusercontent.com/u/40776291?v=4",
+      "profile": "http://peter.gy",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
