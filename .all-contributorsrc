@@ -1,0 +1,32 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "RamiAwar",
+      "name": "Rami Awar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8523191?v=4",
+      "profile": "https://ramiawar.github.io/",
+      "contributions": [
+        "code",
+        "design",
+        "doc",
+        "infra",
+        "platform",
+        "blog",
+        "bug"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "projectName": "dataline",
+  "projectOwner": "RamiAwar"
+}
