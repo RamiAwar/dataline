@@ -156,6 +156,7 @@ export function useUpdateUserInfo(options = {}) {
       langsmith_api_key?: string;
       openai_base_url?: string;
       sentry_enabled?: boolean;
+      analytics_enabled?: boolean;
     }) => (await api.updateUserInfo(payload)).data,
     onSuccess() {
       enqueueSnackbar({

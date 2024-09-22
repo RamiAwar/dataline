@@ -6,6 +6,7 @@ from dataline.models.user.schema import AvatarOut, UserOut, UserUpdateIn
 from dataline.old_models import SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.settings import SettingsService
+from dataline.utils.posthog import PosthogAnalytics
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -16,6 +17,9 @@ async def upload_avatar(
     settings_service: SettingsService = Depends(SettingsService),
     session: AsyncSession = Depends(get_session),
 ) -> SuccessResponse[AvatarOut]:
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(user.id, "avatar_uploaded")  # type: ignore[no-untyped-call]
+
     media = await settings_service.upload_avatar(session, file)
     blob_base64 = base64.b64encode(media.blob).decode("utf-8")
     return SuccessResponse(data=AvatarOut(blob=blob_base64))

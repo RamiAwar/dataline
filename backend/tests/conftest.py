@@ -14,8 +14,12 @@ from alembic.config import Config
 from dataline.app import App
 from dataline.models.base import DBModel
 from dataline.repositories.base import AsyncSession, get_session
+from dataline.utils.posthog import posthog
 
 logging.basicConfig(level=logging.INFO)
+
+# Disable Posthog in tests
+posthog.disabled = True
 
 
 def pytest_addoption(parser):

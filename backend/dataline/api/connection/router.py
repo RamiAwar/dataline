@@ -17,6 +17,7 @@ from dataline.models.connection.schema import (
 from dataline.old_models import SuccessListResponse, SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.connection import ConnectionService
+from dataline.utils.posthog import PosthogAnalytics
 from dataline.utils.utils import get_sqlite_dsn, is_valid_sqlite_file
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,9 @@ async def connect_db(
     session: AsyncSession = Depends(get_session),
     connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ConnectionOut]:
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(user.id, "connection_created", properties={"is_sample": False, "is_file": False})  # type: ignore[no-untyped-call]
+
     connection = await connection_service.create_connection(session, dsn=req.dsn, name=req.name, is_sample=False)
     return SuccessResponse(data=connection)
 
@@ -40,6 +44,9 @@ async def connect_sample_db(
     session: AsyncSession = Depends(get_session),
     connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ConnectionOut]:
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(user.id, "connection_created", properties={"is_sample": True, "is_file": True})  # type: ignore[no-untyped-call]
+
     # Identify sample, copy file in, then create connection
     sample = DB_SAMPLES[req.sample_name.value]
 
@@ -60,6 +67,9 @@ async def connect_db_from_file(
     session: AsyncSession = Depends(get_session),
     connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ConnectionOut]:
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(user.id, "connection_created", properties={"is_sample": False, "is_file": True})  # type: ignore[no-untyped-call]
+
     # Validate file type - currently only sqlite supported
     if type == FileConnectionType.sqlite:
         if not is_valid_sqlite_file(file):
@@ -134,6 +144,9 @@ async def update_connection(
     session: AsyncSession = Depends(get_session),
     connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[GetConnectionOut]:
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(user.id, "connection_updated")  # type: ignore[no-untyped-call]
+
     updated_connection = await connection_service.update_connection(session, connection_id, req)
 
     # TODO: Simplify output structure here and on FE
@@ -160,5 +173,8 @@ async def refresh_connection_schema(
     session: AsyncSession = Depends(get_session),
     connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ConnectionOut]:
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(user.id, "connection_schema_refreshed")  # type: ignore[no-untyped-call]
+
     updated_connection = await connection_service.refresh_connection_schema(session, connection_id)
     return SuccessResponse(data=updated_connection)

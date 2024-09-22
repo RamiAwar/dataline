@@ -20,6 +20,7 @@ from dataline.services.connection import ConnectionService
 from dataline.services.conversation import ConversationService
 from dataline.services.llm_flow.toolkit import execute_sql_query
 from dataline.services.llm_flow.utils import DatalineSQLDatabase as SQLDatabase
+from dataline.utils.posthog import PosthogAnalytics
 from dataline.utils.utils import generate_with_errors
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,8 @@ async def get_conversation_messages(
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(),
 ) -> SuccessListResponse[MessageWithResultsOut]:
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(user.id, "conversation_opened")  # type: ignore[no-untyped-call]
     conversation = await conversation_service.get_conversation_with_messages(session, conversation_id=conversation_id)
     messages = [MessageWithResultsOut.model_validate(message) for message in conversation.messages]
     return SuccessListResponse(data=messages)
@@ -65,6 +68,8 @@ async def create_conversation(
     session: AsyncSession = Depends(get_session),
     conversation_service: ConversationService = Depends(),
 ) -> SuccessResponse[ConversationOut]:
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(user.id, "conversation_created")  # type: ignore[no-untyped-call]
     conversation = await conversation_service.create_conversation(
         session, connection_id=conversation_in.connection_id, name=conversation_in.name
     )
@@ -123,6 +128,13 @@ async def execute_sql(
     conversation_service: ConversationService = Depends(ConversationService),
     connection_service: ConnectionService = Depends(ConnectionService),
 ) -> SuccessResponse[ResultOut]:
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(
+            user.id,
+            "sql_executed",
+            properties={"conversation_id": conversation_id},
+        )  # type: ignore[no-untyped-call]
+
     # Get conversation
     # Will raise error that's auto captured by middleware if not exists
     conversation = await conversation_service.get_conversation(session, conversation_id=conversation_id)

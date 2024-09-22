@@ -7,6 +7,7 @@ from dataline.models.result.schema import ChartRefreshOut
 from dataline.old_models import SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.result import ResultService
+from dataline.utils.posthog import PosthogAnalytics
 
 router = APIRouter(tags=["results"])
 
@@ -19,6 +20,9 @@ async def update_sql_query_result(
     session: AsyncSession = Depends(get_session),
     result_service: ResultService = Depends(ResultService),
 ) -> SuccessResponse[None | ChartRefreshOut]:
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(user.id, "sql_updated")  # type: ignore[no-untyped-call]
+
     chart_out = await result_service.update_sql_query_result_content(
         session, result_id=result_id, sql=sql, for_chart=for_chart
     )
@@ -31,5 +35,8 @@ async def refresh_chart_result_data(
     session: AsyncSession = Depends(get_session),
     result_service: ResultService = Depends(ResultService),
 ) -> SuccessResponse[ChartRefreshOut]:
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(user.id, "chart_refreshed")  # type: ignore[no-untyped-call]
+
     chart_data = await result_service.refresh_chart_result_data(session, chart_id=result_id)
     return SuccessResponse(data=chart_data)

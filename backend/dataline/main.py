@@ -18,6 +18,7 @@ from dataline.app import App
 from dataline.config import IS_BUNDLED, config
 from dataline.old_models import SuccessResponse
 from dataline.sentry import maybe_init_sentry
+from dataline.utils.posthog import PosthogAnalytics
 
 logging.basicConfig(level=logging.INFO)
 
@@ -55,11 +56,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         webbrowser.open("http://localhost:7377", new=2)
 
     await maybe_init_sentry()
+
+    async with PosthogAnalytics() as (ph, user):
+        ph.capture(user.id, "dataline_started")
+
     yield
-    # On shutdown
 
 
-app = App(lifespan=lifespan)
+app = App(lifespan=lifespan)  # type: ignore
 
 
 @app.get("/healthcheck", response_model_exclude_none=True)

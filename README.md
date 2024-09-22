@@ -22,8 +22,8 @@
 </div>
 
 ## 🍿 Watch a quick demo
-<a href="https://youtu.be/NN99OTVy7uA"><img src="https://github.com/user-attachments/assets/34dfba7c-7ab5-4a35-8fe1-e40b298ef1ae" height="300" alt="DataLine logo"></a>
 
+<a href="https://youtu.be/NN99OTVy7uA"><img src="https://github.com/user-attachments/assets/34dfba7c-7ab5-4a35-8fe1-e40b298ef1ae" height="300" alt="DataLine logo"></a>
 
 ---
 
@@ -80,6 +80,9 @@ But you can still influence the direction we go in. We're building this for you,
 - [x] Querying data files like CSV, [Excel](#excel-support), SQLite, sas7bdat (more connection types)
 - [x] Charting via natural language
 - [x] Modifying chart queries and re-rendering/refreshing charts
+- [ ] Dashboards and triggers
+- [ ] Knowledge base and 'trainable' examples (flavor of RAG)
+- [ ] More advanced charting options (bubble, stacks, etc.)
 
 With a lot more coming soon. You can still influence what we build, so if you're a user and you're down for it, we'd love to interview you! Book some time with one of us here:
 
@@ -141,6 +144,12 @@ To connect to the frontend, you can then visit:
 
 #### Running manually
 
+Feeling spicy are we? 🌶️
+There are a few things you should know. DataLine is split into two parts: the backend and the frontend.
+
+The backend is a Python FastAPI server, and the frontend is a React app.
+The frontend also includes our landing page, so you need to set up an env var first!
+
 Check the [backend](./backend/README.md) and [frontend](./frontend/README.md) readmes.
 
 ## Authentication
@@ -184,10 +193,10 @@ To do this, add the environment variable `ALLOWED_ORIGINS` (comma separated list
 By default, it is set to `http://localhost:7377,http://0.0.0.0:7377` to make it work with local Docker and local binaries.
 
 For example, running the docker image on a remote server with IP `123.123.12.34`:
+
 ```bash
 docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline -e ALLOWED_ORIGINS="http://123.123.12.34:7377,https://123.123.12.34:7377" ramiawar/dataline:latest
 ```
-
 
 ### Excel Support
 

@@ -259,7 +259,7 @@ export default function Account() {
               <div className="md:col-span-2">
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
                   <div className="col-span-full">
-                    <div className="flex items-center gap-x-6">
+                    <div className="flex items-center gap-x-6 cursor-pointer">
                       <label
                         htmlFor="current-password"
                         className="block text-md font-medium leading-6 text-white"
@@ -279,11 +279,41 @@ export default function Account() {
                       />
                     </div>
                     <p className="text-xs md:text-sm text-gray-400 pt-2">
-                      Send technical errors to our Sentry to help improve
-                      DataLine.
+                      Send technical errors to our Sentry instance to help us
+                      debug errors. Disable this if you're using sensitive data.
                     </p>
                   </div>
                 </div>
+
+                <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
+                  <div className="col-span-full">
+                    <div className="flex items-center gap-x-6 cursor-pointer">
+                      <label
+                        htmlFor="current-password"
+                        className="block text-md font-medium leading-6 text-white"
+                      >
+                        Send anonymized & safe analytics
+                      </label>
+                      <Switch
+                        name="allow_analytics"
+                        color="green"
+                        checked={userInfo?.analytics_enabled ?? true}
+                        onChange={(value) =>
+                          setUserInfo((prevUserInfo) => ({
+                            ...prevUserInfo!,
+                            analytics_enabled: value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <p className="text-xs md:text-sm text-gray-400 pt-2">
+                      No user data or IP addresses collected, only generic
+                      events to improve product development. Code is open
+                      source, zero trust needed!
+                    </p>
+                  </div>
+                </div>
+
                 <div className="mt-8 flex">
                   <Button
                     color="green"
