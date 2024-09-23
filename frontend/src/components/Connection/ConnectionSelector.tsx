@@ -31,7 +31,7 @@ export const ConnectionSelector = () => {
   }
 
   return (
-    <div className="bg-gray-900 w-full h-screen relative flex flex-col sm:-mt-16 lg:mt-0 sm:justify-center">
+    <div className="bg-gray-900 w-full h-screen relative flex flex-col lg:mt-16">
       <div className="flex flex-col justify-center items-center lg:mt-0">
         <div className="w-full sm:w-3/4 md:w-3/4 rounded-xl p-6">
           <div className="text-gray-50 text-md md:text-2xl font-semibold">
