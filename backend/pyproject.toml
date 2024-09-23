@@ -38,6 +38,7 @@ snowflake-sqlalchemy = "^1.6.1"
 openpyxl = "^3.1.5"
 deepeval = "^0.21.55"
 pyodbc = "^5.1.0"
+posthog = "^3.6.6"
 
 
 [tool.poetry.group.dev.dependencies]

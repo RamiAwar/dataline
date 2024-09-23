@@ -139,4 +139,5 @@ export interface IUserInfo {
   openai_base_url?: string | null;
   langsmith_api_key?: string | null;
   sentry_enabled: boolean;
+  analytics_enabled: boolean;
 }

@@ -165,7 +165,7 @@ export function Switch({
         className,
 
         // Base styles
-        "group relative isolate inline-flex h-6 w-10 cursor-default rounded-full p-[3px] sm:h-5 sm:w-8",
+        "group relative isolate inline-flex h-6 w-10 rounded-full p-[3px] sm:h-5 sm:w-8 cursor-pointer",
 
         // Transitions
         "transition duration-0 ease-in-out data-[changing]:duration-200",

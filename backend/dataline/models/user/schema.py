@@ -3,7 +3,6 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_serializer
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -14,6 +13,7 @@ class UserUpdateIn(BaseModel):
     langsmith_api_key: Optional[SecretStr] = Field(None, min_length=4)
     preferred_openai_model: Optional[str] = None
     sentry_enabled: Optional[bool] = None
+    analytics_enabled: Optional[bool] = None
 
     @field_serializer("openai_api_key")
     def dump_openai_api_key(self, v: SecretStr) -> str:
@@ -33,6 +33,7 @@ class UserOut(BaseModel):
     langsmith_api_key: Optional[SecretStr] = None
     preferred_openai_model: Optional[str] = None
     sentry_enabled: bool
+    analytics_enabled: Optional[bool] = None
 
 
 class UserWithKeys(BaseModel):
@@ -45,6 +46,7 @@ class UserWithKeys(BaseModel):
     langsmith_api_key: SecretStr | None = None
     preferred_openai_model: str
     sentry_enabled: bool
+    analytics_enabled: Optional[bool] = None
 
 
 class AvatarOut(BaseModel):
