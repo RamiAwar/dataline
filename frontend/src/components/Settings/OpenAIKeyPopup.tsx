@@ -20,6 +20,7 @@ export function OpenAIKeyPopup() {
   const [apiKey, setApiKey] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
   const [sentryEnabled, setSentryEnabled] = useState(true);
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
 
   const { mutate, isPending } = useUpdateUserInfo({
     onSuccess() {
@@ -41,6 +42,7 @@ export function OpenAIKeyPopup() {
     mutate({
       openai_api_key: apiKey,
       sentry_enabled: sentryEnabled,
+      analytics_enabled: analyticsEnabled,
       ...(baseUrl && { openai_base_url: baseUrl }),
     });
   }
@@ -85,7 +87,7 @@ export function OpenAIKeyPopup() {
         </a>
       </AlertDescription>
 
-      <AlertBody className="mt-8 mr-9 sm:mr-11">
+      <AlertBody className="mt-2 mr-9 sm:mr-11">
         <Input
           name="base-url"
           value={baseUrl || ""}
@@ -101,7 +103,25 @@ export function OpenAIKeyPopup() {
       </AlertDescription>
       <AlertBody>
         <div className="flex">
-          <SwitchField className="mt-4">
+          <SwitchField className="">
+            <Label>Send anonymous & safe analytics</Label>
+            <Switch
+              name="allow_analytics"
+              color="green"
+              checked={analyticsEnabled}
+              onChange={setAnalyticsEnabled}
+            />
+          </SwitchField>
+        </div>
+      </AlertBody>
+      <AlertDescription className="!text-xs">
+        No user data or IP addresses collected, only generic events to
+        understand product usage. Specifics in our open source code, you can
+        trust us!
+      </AlertDescription>
+      <AlertBody>
+        <div className="flex">
+          <SwitchField>
             <Label>Send Error Reports</Label>
             <Switch
               name="allow_sentry"

@@ -259,7 +259,7 @@ export default function Account() {
               <div className="md:col-span-2">
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
                   <div className="col-span-full">
-                    <div className="flex items-center gap-x-6 cursor-pointer">
+                    <div className="flex items-center gap-x-6">
                       <label
                         htmlFor="current-password"
                         className="block text-md font-medium leading-6 text-white"
@@ -287,7 +287,7 @@ export default function Account() {
 
                 <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
                   <div className="col-span-full">
-                    <div className="flex items-center gap-x-6 cursor-pointer">
+                    <div className="flex items-center gap-x-6">
                       <label
                         htmlFor="current-password"
                         className="block text-md font-medium leading-6 text-white"
