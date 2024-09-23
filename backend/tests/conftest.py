@@ -16,7 +16,7 @@ from dataline.app import App
 from dataline.models.base import DBModel
 from dataline.models.user.model import UserModel
 from dataline.repositories.base import AsyncSession, get_session
-from dataline.utils.posthog import PosthogAnalytics, PosthogClient, posthog
+from dataline.utils.posthog import PosthogClient, posthog
 
 logging.basicConfig(level=logging.INFO)
 
