@@ -1,7 +1,7 @@
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from dataline.models.connection.schema import (
@@ -17,12 +17,34 @@ from dataline.models.connection.schema import (
 from dataline.old_models import SuccessListResponse, SuccessResponse
 from dataline.repositories.base import AsyncSession, get_session
 from dataline.services.connection import ConnectionService
-from dataline.utils.posthog import PosthogAnalytics
+from dataline.utils.posthog import PosthogAnalytics, posthog_analytics
 from dataline.utils.utils import get_sqlite_dsn, is_valid_sqlite_file
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["connections"])
+
+
+@router.post("/test")
+@posthog_analytics("test_event_1", ["conn_id"])
+async def test(
+    conn_id: int,
+    session: AsyncSession = Depends(get_session),
+    connection_service: ConnectionService = Depends(ConnectionService),
+) -> SuccessResponse[int]:
+    return SuccessResponse(data=conn_id)
+
+
+@router.post("/test_2")
+@posthog_analytics("test_event_2", ["conn_id"])
+async def test_2(
+    conn_id: int,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_session),
+    connection_service: ConnectionService = Depends(ConnectionService),
+) -> SuccessResponse[int]:
+
+    return SuccessResponse(data=conn_id)
 
 
 @router.post("/connect", response_model_exclude_none=True)
