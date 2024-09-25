@@ -18,7 +18,7 @@ from dataline.app import App
 from dataline.config import IS_BUNDLED, config
 from dataline.old_models import SuccessResponse
 from dataline.sentry import maybe_init_sentry
-from dataline.utils.posthog import PosthogAnalytics
+from dataline.utils.posthog import posthog_capture
 
 logging.basicConfig(level=logging.INFO)
 
@@ -57,8 +57,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     await maybe_init_sentry()
 
-    async with PosthogAnalytics() as (ph, user):
-        ph.capture(user.id, "dataline_started")
+    await posthog_capture("dataline_started")
 
     yield
 
