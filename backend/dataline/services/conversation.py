@@ -42,7 +42,6 @@ from dataline.services.llm_flow.llm_calls.conversation_title_generator import (
     ConversationTitleGenerator,
 )
 from dataline.services.settings import SettingsService
-from dataline.utils.posthog import PosthogAnalytics
 from dataline.utils.utils import stream_event_str
 
 logger = logging.getLogger(__name__)
@@ -136,12 +135,6 @@ class ConversationService:
         query: str,
         secure_data: bool = True,
     ) -> AsyncGenerator[str, None]:
-        async with PosthogAnalytics() as (ph, user):
-            ph.capture(
-                user.id,
-                "message_sent",
-                properties={"conversation_id": conversation_id, "is_secure": secure_data},
-            )  # type: ignore[no-untyped-call]
 
         # Get conversation, connection, user settings
         conversation = await self.get_conversation(session, conversation_id=conversation_id)

@@ -1,6 +1,5 @@
 import logging.config
 import pathlib
-import uuid
 from typing import AsyncGenerator, Generator
 from unittest import mock
 
@@ -14,9 +13,8 @@ from alembic.command import upgrade
 from alembic.config import Config
 from dataline.app import App
 from dataline.models.base import DBModel
-from dataline.models.user.model import UserModel
 from dataline.repositories.base import AsyncSession, get_session
-from dataline.utils.posthog import PosthogClient, posthog
+from dataline.utils.posthog import posthog
 
 logging.basicConfig(level=logging.INFO)
 
@@ -70,33 +68,6 @@ def apply_migrations() -> None:
     config.set_main_option("sqlalchemy.url", "sqlite+aiosqlite:///test.sqlite3")
     config.config_file_name = None  # to prevent alembic from overriding the logs
     upgrade(config, "head")
-
-
-@pytest.fixture(scope="function", autouse=True)
-def patch_posthog(monkeypatch: pytest.MonkeyPatch) -> None:
-    class PosthogAnalyticsMock:
-        async def __aenter__(self) -> tuple[PosthogClient, UserModel]:
-            return posthog, UserModel(
-                id=uuid.uuid4(),
-                name="",
-                langsmith_api_key="",
-                sentry_enabled=False,
-                analytics_enabled=False,
-                preferred_openai_model="",
-                openai_api_key="",
-                openai_base_url="",
-            )
-
-        async def __aexit__(self, exc_type: Exception, exc_val: Exception, exc_tb: Exception) -> None:
-            pass
-
-    monkeypatch.setattr("dataline.main.PosthogAnalytics", PosthogAnalyticsMock)
-    monkeypatch.setattr("dataline.api.auth.router.PosthogAnalytics", PosthogAnalyticsMock)
-    monkeypatch.setattr("dataline.api.connection.router.PosthogAnalytics", PosthogAnalyticsMock)
-    monkeypatch.setattr("dataline.api.conversation.router.PosthogAnalytics", PosthogAnalyticsMock)
-    monkeypatch.setattr("dataline.api.result.router.PosthogAnalytics", PosthogAnalyticsMock)
-    monkeypatch.setattr("dataline.api.settings.router.PosthogAnalytics", PosthogAnalyticsMock)
-    monkeypatch.setattr("dataline.services.conversation.PosthogAnalytics", PosthogAnalyticsMock)
 
 
 app = App()
