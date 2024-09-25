@@ -37,10 +37,10 @@
   - [Linux](#linux)
   - [Docker](#docker)
 - [Upgrading](#upgrading)
-  - [Windows](#windows)
-  - [Mac](#mac)
-  - [Linux](#linux)
-  - [Docker](#docker)
+  - [Windows](#upgrade-windows)
+  - [Mac](#upgrade-mac)
+  - [Linux](#upgrade-linux)
+  - [Docker](#upgrade-docker)
 - [Running manually](#running-manually)
 - [Authentication](#authentication)
   - [With Docker](#with-docker)
@@ -149,10 +149,10 @@ To connect to the frontend, you can then visit:
 
 ## Upgrading
 
-#### Windows
+#### Upgrade Windows
 Same as installation, just replace old exe with new exe! Your data will still be there across versions.
 
-#### Mac
+#### Upgrade Mac
 
 Homebrew (retains your data, don't worry about that!)
 
@@ -162,11 +162,11 @@ brew update && brew upgrade dataline
 
 If you don't like Homebrew, a binary can be found in the latest release! Data will still be retained there as well.
 
-#### Linux
+#### Upgrade Linux
 
 If using Homebrew, same as above. Otherwise simply replace the old binary with the new one!
 
-#### Docker 
+#### Upgrade Docker 
 
 For updating to a new version, just remove the container and rerun the command. This way the volume is persisted across updates.
 
