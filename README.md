@@ -36,7 +36,12 @@
   - [Mac](#mac)
   - [Linux](#linux)
   - [Docker](#docker)
-  - [Running manually](#running-manually)
+- [Upgrading](#upgrading)
+  - [Windows](#windows)
+  - [Mac](#mac)
+  - [Linux](#linux)
+  - [Docker](#docker)
+- [Running manually](#running-manually)
 - [Authentication](#authentication)
   - [With Docker](#with-docker)
 - [Startup Quest](#startup-quest)
@@ -112,6 +117,8 @@ brew install dataline
 dataline
 ```
 
+If you don't like Homebrew, a binary can be found in the latest release!
+
 DataLine should then be running on port 7377 accessible from your browser: http://localhost:7377
 
 #### Linux
@@ -140,7 +147,35 @@ docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dat
 To connect to the frontend, you can then visit:
 [http://localhost:7377](http://localhost:7377)
 
-#### Running manually
+## Upgrading
+
+#### Windows
+Same as installation, just replace old exe with new exe! Your data will still be there across versions.
+
+#### Mac
+
+Homebrew (retains your data, don't worry about that!)
+
+```bash
+brew update && brew upgrade dataline
+```
+
+If you don't like Homebrew, a binary can be found in the latest release! Data will still be retained there as well.
+
+#### Linux
+
+If using Homebrew, same as above. Otherwise simply replace the old binary with the new one!
+
+#### Docker 
+
+For updating to a new version, just remove the container and rerun the command. This way the volume is persisted across updates.
+
+```bash
+docker rm dataline
+docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest
+```
+
+## Running manually
 
 Feeling spicy are we? 🌶️
 There are a few things you should know. DataLine is split into two parts: the backend and the frontend.
