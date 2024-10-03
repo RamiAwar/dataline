@@ -5,7 +5,6 @@ import {
   BookmarkIcon as BookmarkIconOutline,
   QuestionMarkCircleIcon,
   MinusIcon,
-  ArrowsPointingOutIcon,
 } from "@heroicons/react/24/outline";
 import { CustomTooltip } from "../Library/Tooltip";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
@@ -253,21 +252,11 @@ export const CodeBlock = ({
 
   return (
     <div className="max-w-7xl border border-gray-500 rounded-xl bg-gray-900">
-      <Minimizer minimized={!minimized} duration={300}>
-        <div
-          className="flex items-center justify-between p-2 cursor-pointer text-gray-300"
-          onClick={() => setMinimized(false)}
-        >
-          <div className="ml-2">Code block</div>
-          <CustomTooltip hoverText="Expand">
-            <button tabIndex={-1} className="p-1">
-              <ArrowsPointingOutIcon className="w-6 h-6 [&>path]:stroke-[2]" />
-            </button>
-          </CustomTooltip>
-        </div>
-      </Minimizer>
-
-      <Minimizer minimized={minimized} duration={300}>
+      <Minimizer
+        minimized={minimized}
+        setMinimized={setMinimized}
+        label="Code block"
+      >
         <div
           role="button"
           tabIndex={0}

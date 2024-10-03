@@ -11,14 +11,11 @@ import { CustomTooltip } from "./Tooltip";
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
-  ArrowsPointingOutIcon,
   ClipboardIcon,
   MinusIcon,
 } from "@heroicons/react/24/outline";
 import { useRefreshChartData } from "@/hooks";
 import { Select } from "@catalyst/select";
-import clsx from "clsx";
-import autoAnimate from "@formkit/auto-animate";
 import Minimizer from "../Minimizer/Minimizer";
 
 ChartJS.defaults.borderColor = "#334155";
@@ -61,14 +58,6 @@ const Chart = ({
   const [createdAt, setCreatedAt] = useState<Date>(initialCreatedAt);
   const [chartData, setChartData] = useState<ChartConfiguration>(initialData);
   const [minimized, setMinimized] = useState(minimize || false);
-  const parent = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    parent.current &&
-      autoAnimate(parent.current, {
-        duration: 300,
-      });
-  }, [parent]);
 
   // We cannot transition from a scatter chart into a basic chart type (line, bar, doughnut)
   // since scatter charts have a different data structure (x and y are numbers)
@@ -111,6 +100,7 @@ const Chart = ({
 
   // Refresh the chart data when the data prop changes
   useEffect(() => {
+    if (minimized) return;
     if (chartRef.current) {
       if (chartInstanceRef.current) {
         chartInstanceRef.current.destroy(); // Destroy the existing chart instance
@@ -140,7 +130,7 @@ const Chart = ({
         chartInstanceRef.current.destroy(); // Destroy the chart instance when the component unmounts
       }
     };
-  }, [chartData]);
+  }, [chartData, minimized]);
 
   const { mutate: refreshChart } = useRefreshChartData({
     onSettled: (data, error) => {
@@ -242,110 +232,87 @@ const Chart = ({
   };
 
   return (
-    <div
-      ref={parent}
-      className={clsx(
-        "relative w-full md:max-w-7xl border border-gray-500 rounded-xl bg-gray-900",
-        !minimized && "pt-8 md:px-4"
-      )}
+    <Minimizer
+      minimized={minimized}
+      setMinimized={setMinimized}
+      label="Chart"
+      classes="border border-gray-500 rounded-xl bg-gray-900"
     >
-      <Minimizer minimized={!minimized}>
-        <div
-          className="flex items-center justify-between p-2 cursor-pointer text-gray-300"
-          onClick={() => setMinimized(false)}
-        >
-          <div className="ml-2">Chart</div>
-          <CustomTooltip hoverText="Expand">
-            <button tabIndex={-1} className="p-1">
-              <ArrowsPointingOutIcon className="w-6 h-6 [&>path]:stroke-[2]" />
+      <div className="relative w-full md:max-w-7xl pt-8 md:px-4">
+        <canvas ref={chartRef} className="overflow-hidden rounded-xl" />
+
+        {createdAt && (
+          <div className="absolute top-0 left-0 m-2 text-gray-100/70 text-xs invisible md:visible">
+            {createdAt?.toLocaleDateString()} @{" "}
+            {createdAt?.toLocaleTimeString()}
+          </div>
+        )}
+
+        <div className="absolute top-0 right-0 m-2 flex gap-1 ">
+          {!isScatter && (
+            <Select
+              value={chartData.type}
+              onChange={updateChartType}
+              style={{ backgroundColor: "rgb(29, 36, 50)" }} // firefox's select element doesn't understand rgba...
+            >
+              <option value="bar">Bar</option>
+              <option value="line">Line</option>
+              <option value="doughnut">Doughnut</option>
+            </Select>
+          )}
+
+          {/* Minimize Icon */}
+          <CustomTooltip hoverText="Minimize">
+            <button
+              tabIndex={-1}
+              onClick={() => setMinimized(true)}
+              className="p-1"
+            >
+              <MinusIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+            </button>
+          </CustomTooltip>
+
+          <CustomTooltip hoverText="Refresh">
+            <button tabIndex={-1} onClick={triggerRefreshChart} className="p-1">
+              <ArrowPathIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+            </button>
+          </CustomTooltip>
+
+          {/* Save Icon */}
+          <CustomTooltip hoverText="Save">
+            <button tabIndex={-1} onClick={saveCanvas} className="p-1">
+              <ArrowDownTrayIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+            </button>
+          </CustomTooltip>
+
+          <CustomTooltip
+            hoverText={
+              window.ClipboardItem ? "Copy" : "Not supported in this browser"
+            }
+            clickText="COPIED!"
+          >
+            <button
+              disabled={!window.ClipboardItem}
+              tabIndex={-1}
+              onClick={copyCanvasToClipboard}
+              className={classNames(
+                "p-1",
+                window.ClipboardItem
+                  ? "transition-all duration-150 ease-in-out"
+                  : "cursor-not-allowed"
+              )}
+            >
+              <ClipboardIcon
+                className={classNames(
+                  window.ClipboardItem && "group-hover:-rotate-6",
+                  "w-6 h-6 [&>path]:stroke-[2]"
+                )}
+              />
             </button>
           </CustomTooltip>
         </div>
-      </Minimizer>
-
-      <Minimizer minimized={minimized}>
-        <canvas ref={chartRef} className="overflow-hidden rounded-xl" />
-      </Minimizer>
-
-      {!minimized && (
-        <>
-          {createdAt && (
-            <div className="absolute top-0 left-0 m-2 text-gray-100/70 text-xs invisible md:visible">
-              {createdAt?.toLocaleDateString()} @{" "}
-              {createdAt?.toLocaleTimeString()}
-            </div>
-          )}
-
-          <div className="absolute top-0 right-0 m-2 flex gap-1 ">
-            {!isScatter && (
-              <Select
-                value={chartData.type}
-                onChange={updateChartType}
-                style={{ backgroundColor: "rgb(29, 36, 50)" }} // firefox's select element doesn't understand rgba...
-              >
-                <option value="bar">Bar</option>
-                <option value="line">Line</option>
-                <option value="doughnut">Doughnut</option>
-              </Select>
-            )}
-
-            {/* Minimize Icon */}
-            <CustomTooltip hoverText="Minimize">
-              <button
-                tabIndex={-1}
-                onClick={() => setMinimized(true)}
-                className="p-1"
-              >
-                <MinusIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
-              </button>
-            </CustomTooltip>
-
-            <CustomTooltip hoverText="Refresh">
-              <button
-                tabIndex={-1}
-                onClick={triggerRefreshChart}
-                className="p-1"
-              >
-                <ArrowPathIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
-              </button>
-            </CustomTooltip>
-
-            {/* Save Icon */}
-            <CustomTooltip hoverText="Save">
-              <button tabIndex={-1} onClick={saveCanvas} className="p-1">
-                <ArrowDownTrayIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
-              </button>
-            </CustomTooltip>
-
-            <CustomTooltip
-              hoverText={
-                window.ClipboardItem ? "Copy" : "Not supported in this browser"
-              }
-              clickText="COPIED!"
-            >
-              <button
-                disabled={!window.ClipboardItem}
-                tabIndex={-1}
-                onClick={copyCanvasToClipboard}
-                className={classNames(
-                  "p-1",
-                  window.ClipboardItem
-                    ? "transition-all duration-150 ease-in-out"
-                    : "cursor-not-allowed"
-                )}
-              >
-                <ClipboardIcon
-                  className={classNames(
-                    window.ClipboardItem && "group-hover:-rotate-6",
-                    "w-6 h-6 [&>path]:stroke-[2]"
-                  )}
-                />
-              </button>
-            </CustomTooltip>
-          </div>
-        </>
-      )}
-    </div>
+      </div>
+    </Minimizer>
   );
 };
 

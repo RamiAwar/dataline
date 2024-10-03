@@ -1,24 +1,44 @@
-import clsx from "clsx";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
+import { CustomTooltip } from "../Library/Tooltip";
+import { ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
+import autoAnimate from "@formkit/auto-animate";
 
 const Minimizer = ({
   minimized,
+  setMinimized,
   children,
-  duration,
+  label,
+  classes = "",
 }: {
   minimized: boolean;
+  setMinimized: (minimized: boolean) => void;
   children: ReactNode;
-  duration?: number;
+  label: string;
+  classes?: string;
 }) => {
+  const parent = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    parent.current &&
+      autoAnimate(parent.current, {
+        duration: 150,
+      });
+  }, [parent, minimized]);
   return (
-    <div
-      className={clsx(
-        `grid`,
-        minimized ? "grid-rows-[0fr]" : "grid-rows-[1fr]",
-        duration && `transition-[grid-template-rows] duration-${duration}`
+    <div ref={parent} className={classes}>
+      {minimized && (
+        <div
+          className="flex items-center justify-between p-2 cursor-pointer text-gray-300"
+          onClick={() => setMinimized(false)}
+        >
+          <div className="ml-2">{label}</div>
+          <CustomTooltip hoverText="Expand">
+            <button tabIndex={-1} className="p-1">
+              <ArrowsPointingOutIcon className="w-6 h-6 [&>path]:stroke-[2]" />
+            </button>
+          </CustomTooltip>
+        </div>
       )}
-    >
-      <div className="overflow-hidden">{children}</div>
+      {!minimized && children}
     </div>
   );
 };
