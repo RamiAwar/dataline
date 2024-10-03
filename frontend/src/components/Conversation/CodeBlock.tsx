@@ -278,7 +278,7 @@ export const CodeBlock = ({
           <textarea
             spellCheck={false}
             ref={textareaRef}
-            className="absolute h-full w-full border-0 inset-0 resize-none bg-transparent overflow-y-hidden overflow-x-scroll text-transparent p-2 font-mono caret-white outline-none focus:outline-none focus:rounded-xl whitespace-pre"
+            className="absolute h-full w-full border-0 inset-0 resize-none bg-transparent overflow-y-hidden overflow-x-scroll text-transparent p-2 font-mono caret-white outline-none focus:outline-none focus:ring-0 focus:rounded-xl whitespace-pre"
             onChange={handleTextUpdate}
             onKeyDown={handleKeyboardInput}
             onScroll={mirrorScroll}
