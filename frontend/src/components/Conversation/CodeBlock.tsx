@@ -251,155 +251,150 @@ export const CodeBlock = ({
   };
 
   return (
-    <div className="max-w-7xl border border-gray-500 rounded-xl bg-gray-900">
-      <Minimizer
-        minimized={minimized}
-        setMinimized={setMinimized}
-        label="Code block"
+    <Minimizer
+      minimized={minimized}
+      setMinimized={setMinimized}
+      label="Code block"
+      classes="max-w-7xl border border-gray-500 rounded-xl bg-gray-900"
+    >
+      <div
+        role="button"
+        tabIndex={0}
+        className="flex flex-col relative"
+        onKeyDown={() => textareaRef.current?.focus()}
+        onClick={() => textareaRef.current?.focus()}
       >
-        <div
-          role="button"
-          tabIndex={0}
-          className="flex flex-col relative"
-          onKeyDown={() => textareaRef.current?.focus()}
-          onClick={() => textareaRef.current?.focus()}
-        >
-          <textarea
-            spellCheck={false}
-            ref={textareaRef}
-            className="absolute h-full w-full border-0 inset-0 resize-none bg-transparent overflow-y-hidden overflow-x-scroll text-transparent p-2 font-mono caret-white outline-none focus:outline-none focus:border focus:ring-0 focus:rounded-xl whitespace-pre"
-            onChange={handleTextUpdate}
-            onKeyDown={handleKeyboardInput}
-            onScroll={mirrorScroll}
-          />
-          <SyntaxHighlighter
-            // add dynamic ID based on resultId
-            id={syntaxHighlighterId}
-            children={formattedCode}
-            language="sql" // TODO: make dynamic to support multiple DB dialects?
-            style={monokai}
-            wrapLines={true}
-            customStyle={{
-              flex: "1",
-              overflow: "scroll",
-              scrollbarWidth: "none",
-              background: "transparent",
-            }}
-          />
+        <textarea
+          spellCheck={false}
+          ref={textareaRef}
+          className="absolute h-full w-full border-0 inset-0 resize-none bg-transparent overflow-y-hidden overflow-x-scroll text-transparent p-2 font-mono caret-white outline-none focus:outline-none focus:border focus:ring-0 focus:rounded-xl whitespace-pre"
+          onChange={handleTextUpdate}
+          onKeyDown={handleKeyboardInput}
+          onScroll={mirrorScroll}
+        />
+        <SyntaxHighlighter
+          // add dynamic ID based on resultId
+          id={syntaxHighlighterId}
+          children={formattedCode}
+          language="sql" // TODO: make dynamic to support multiple DB dialects?
+          style={monokai}
+          wrapLines={true}
+          customStyle={{
+            flex: "1",
+            overflow: "scroll",
+            scrollbarWidth: "none",
+            background: "transparent",
+          }}
+        />
 
-          {/* Top right corner icons */}
-          <div className="absolute top-0 right-0 m-2 flex gap-1">
-            {/* Help Icon */}
-            {forChart && (
-              <CustomTooltip hoverText="Help">
-                <button
-                  tabIndex={-1}
-                  onClick={openSQLForChartHelp}
-                  className="p-1"
-                >
-                  <QuestionMarkCircleIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-12" />
-                </button>
-              </CustomTooltip>
-            )}
-          </div>
-
-          <div className="absolute bottom-0 right-0 m-2 flex gap-1">
-            {/* Minimize Icon */}
-            <CustomTooltip hoverText="Minimize">
-              {/* On minimize, also collapse if already expanded */}
-              <button
-                tabIndex={-1}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMinimized(true);
-                }}
-                className="p-1"
-              >
-                <MinusIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
-              </button>
-            </CustomTooltip>
-
-            {/* Save Icon */}
-            <CustomTooltip hoverText="Save">
-              <button
-                tabIndex={-1}
-                onClick={saveNewSQLString}
-                className="p-1"
-                disabled={isPendingSaveSql}
-              >
-                <BookmarkIcon
-                  className={classNames(
-                    isPendingSaveSql ? "animate-spin" : "group-hover:-rotate-6",
-                    "w-6 h-6 [&>path]:stroke-[2]"
-                  )}
-                />
-              </button>
-            </CustomTooltip>
-
-            {/* Copy Icon */}
-            <CustomTooltip clickText="COPIED!" hoverText="Copy">
-              <button
-                tabIndex={-1}
-                onClick={() => copyToClipboard(savedCode)}
-                className="p-1"
-              >
-                <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
-              </button>
-            </CustomTooltip>
-
-            {/* Run Icon */}
-            <CustomTooltip hoverText="Run">
-              <button
-                tabIndex={-1}
-                onClick={() => {
-                  runSql();
-                }}
-                disabled={isPendingRunSql}
-                className="p-1"
-              >
-                <PlayIcon
-                  className={classNames(
-                    isPendingRunSql ? "animate-spin" : "group-hover:-rotate-12",
-                    "w-6 h-6 [&>path]:stroke-[2]"
-                  )}
-                />
-              </button>
-            </CustomTooltip>
-          </div>
-
-          {/* Help for editing queries when codeblock is linked to a chart */}
+        {/* Top right corner icons */}
+        <div className="absolute top-0 right-0 m-2 flex gap-1">
+          {/* Help Icon */}
           {forChart && (
-            <Alert
-              className="lg:ml-72"
-              open={isHelpOpen}
-              onClose={setIsHelpOpen}
-            >
-              <AlertTitle>
-                Quick overview of how you can edit chart-linked queries
-              </AlertTitle>
-              <AlertDescription>
-                Charts are generated from the SQL results automatically. <br />
-                <br />
-                The first column returned by the query is used as the x-axis,
-                and the second column is used as the y-axis.
-                <br />
-                <br />
-                You can edit the query to change the chart type, add filters, or
-                change the x-axis and y-axis columns.
-                <br />
-                <br />
-                But the query must return at least two columns for the basic
-                chart types to work (labels and values respectively).
-              </AlertDescription>
-              <AlertActions>
-                <Button plain onClick={() => setIsHelpOpen(false)}>
-                  Got it!
-                </Button>
-              </AlertActions>
-            </Alert>
+            <CustomTooltip hoverText="Help">
+              <button
+                tabIndex={-1}
+                onClick={openSQLForChartHelp}
+                className="p-1"
+              >
+                <QuestionMarkCircleIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-12" />
+              </button>
+            </CustomTooltip>
           )}
         </div>
-      </Minimizer>
-    </div>
+
+        <div className="absolute bottom-0 right-0 m-2 flex gap-1">
+          {/* Minimize Icon */}
+          <CustomTooltip hoverText="Minimize">
+            {/* On minimize, also collapse if already expanded */}
+            <button
+              tabIndex={-1}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMinimized(true);
+              }}
+              className="p-1"
+            >
+              <MinusIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+            </button>
+          </CustomTooltip>
+
+          {/* Save Icon */}
+          <CustomTooltip hoverText="Save">
+            <button
+              tabIndex={-1}
+              onClick={saveNewSQLString}
+              className="p-1"
+              disabled={isPendingSaveSql}
+            >
+              <BookmarkIcon
+                className={classNames(
+                  isPendingSaveSql ? "animate-spin" : "group-hover:-rotate-6",
+                  "w-6 h-6 [&>path]:stroke-[2]"
+                )}
+              />
+            </button>
+          </CustomTooltip>
+
+          {/* Copy Icon */}
+          <CustomTooltip clickText="COPIED!" hoverText="Copy">
+            <button
+              tabIndex={-1}
+              onClick={() => copyToClipboard(savedCode)}
+              className="p-1"
+            >
+              <ClipboardIcon className="w-6 h-6 [&>path]:stroke-[2] group-hover:-rotate-6" />
+            </button>
+          </CustomTooltip>
+
+          {/* Run Icon */}
+          <CustomTooltip hoverText="Run">
+            <button
+              tabIndex={-1}
+              onClick={() => {
+                runSql();
+              }}
+              disabled={isPendingRunSql}
+              className="p-1"
+            >
+              <PlayIcon
+                className={classNames(
+                  isPendingRunSql ? "animate-spin" : "group-hover:-rotate-12",
+                  "w-6 h-6 [&>path]:stroke-[2]"
+                )}
+              />
+            </button>
+          </CustomTooltip>
+        </div>
+
+        {/* Help for editing queries when codeblock is linked to a chart */}
+        {forChart && (
+          <Alert className="lg:ml-72" open={isHelpOpen} onClose={setIsHelpOpen}>
+            <AlertTitle>
+              Quick overview of how you can edit chart-linked queries
+            </AlertTitle>
+            <AlertDescription>
+              Charts are generated from the SQL results automatically. <br />
+              <br />
+              The first column returned by the query is used as the x-axis, and
+              the second column is used as the y-axis.
+              <br />
+              <br />
+              You can edit the query to change the chart type, add filters, or
+              change the x-axis and y-axis columns.
+              <br />
+              <br />
+              But the query must return at least two columns for the basic chart
+              types to work (labels and values respectively).
+            </AlertDescription>
+            <AlertActions>
+              <Button plain onClick={() => setIsHelpOpen(false)}>
+                Got it!
+              </Button>
+            </AlertActions>
+          </Alert>
+        )}
+      </div>
+    </Minimizer>
   );
 };

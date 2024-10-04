@@ -14,6 +14,7 @@ import {
   MinusIcon,
 } from "@heroicons/react/24/outline";
 import autoAnimate from "@formkit/auto-animate";
+import Minimizer from "../Minimizer/Minimizer";
 
 // TODO: Remove after defining this better on backend
 export const DynamicTable: React.FC<{
@@ -39,56 +40,43 @@ export const DynamicTable: React.FC<{
   };
 
   return (
-    <div className="relative max-w-7xl border dark:text-gray-300 border-gray-500 bg-gray-800 rounded-xl">
-      <div ref={parent}>
-        {minimized && (
-          <div
-            className="flex items-center justify-between p-2 cursor-pointer"
-            onClick={() => setMinimized(false)}
-          >
-            <div className="ml-2">Data results</div>
-            <CustomTooltip hoverText="Expand">
-              <button tabIndex={-1} className="p-1">
-                <ArrowsPointingOutIcon className="w-6 h-6 [&>path]:stroke-[2]" />
-              </button>
-            </CustomTooltip>
-          </div>
-        )}
+    <Minimizer
+      minimized={minimized}
+      setMinimized={setMinimized}
+      label="Data results"
+      classes="max-w-7xl border dark:text-gray-300 border-gray-500 bg-gray-800 rounded-xl"
+    >
+      <div className="relative">
+        <Table
+          grid
+          bleed
+          striped
+          dense
+          maxRows={limitedView ? 5 : data.rows.length + 10}
+          className="ml-0 mr-0 [--gutter:theme(spacing.6)]"
+        >
+          <TableHead>
+            <TableRow>
+              {data.columns.map((header: string, index: number) => (
+                <TableHeader key={index}>{header}</TableHeader>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.rows.map((row: string[] | number[], index: number) => {
+              return (
+                <TableRow key={index}>
+                  {row.map((item: string | number, cellIndex: number) => (
+                    <TableCell key={cellIndex} className="font-medium pl-8">
+                      {item}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
 
-        {!minimized && (
-          <Table
-            grid
-            bleed
-            striped
-            dense
-            maxRows={limitedView ? 5 : data.rows.length + 10}
-            className="ml-0 mr-0 [--gutter:theme(spacing.6)]"
-          >
-            <TableHead>
-              <TableRow>
-                {data.columns.map((header: string, index: number) => (
-                  <TableHeader key={index}>{header}</TableHeader>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.rows.map((row: string[] | number[], index: number) => {
-                return (
-                  <TableRow key={index}>
-                    {row.map((item: string | number, cellIndex: number) => (
-                      <TableCell key={cellIndex} className="font-medium pl-8">
-                        {item}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      {!minimized && (
         <div className="absolute bottom-0 right-0 m-2 flex gap-1">
           {/* Minimize Icon */}
           <CustomTooltip hoverText="Minimize">
@@ -125,7 +113,7 @@ export const DynamicTable: React.FC<{
               </CustomTooltip>
             ))}
         </div>
-      )}
-    </div>
+      </div>
+    </Minimizer>
   );
 };
