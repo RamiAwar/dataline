@@ -1,9 +1,10 @@
-from mirascope.openai import OpenAICall
+from mirascope.openai import OpenAICall, OpenAICallParams
 
 
 class ConversationTitleGenerator(OpenAICall):
     api_key: str | None
     base_url: str | None = None
+    call_params: OpenAICallParams = OpenAICallParams(model="gpt-4o-mini")
     prompt_template = """
     You are a highly skilled title generator. Your task is to create a concise, engaging title based on the user's initial message or request.
 
