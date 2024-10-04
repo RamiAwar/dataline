@@ -208,6 +208,12 @@ export const CodeBlock = ({
     }
   }, [savedCode, formattedCode, lastChar, dialect]);
 
+  useEffect(() => {
+    if (!minimized && textareaRef.current !== null) {
+      textareaRef.current.value = formattedCode;
+    }
+  }, [minimized, formattedCode, textareaRef]);
+
   const handleTextUpdate = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // If the user is typing a space, don't update and reformat the saved code
     setSavedCode(e.target.value);
