@@ -1,5 +1,4 @@
 import logging
-from typing import cast
 
 from posthog import Posthog
 from posthog.client import Client as PosthogClient
@@ -26,7 +25,7 @@ class PosthogAnalytics:
     If a user has disabled analytics, this context manager will not execute the block of code.
     """
 
-    async def __aenter__(self) -> tuple[PosthogClient, UserModel]:
+    async def __aenter__(self) -> tuple[PosthogClient, UserModel | None]:
         async with SessionCreator.begin() as session:
             user_repo = UserRepository()
             user_info = await user_repo.get_one_or_none(session)
@@ -36,13 +35,15 @@ class PosthogAnalytics:
                 and config.environment == EnvironmentType.production  # disable in dev mode
             )
 
-            if not is_enabled:
-                posthog.disabled = True
-            else:
-                posthog.disabled = False
+            posthog.disabled = not is_enabled
 
-            user_info = cast(UserModel, user_info)
             return posthog, user_info
 
     async def __aexit__(self, exc_type: Exception, exc_val: Exception, exc_tb: Exception) -> None:
         pass
+
+
+async def posthog_capture(event_name: str, properties: dict[str, str | int | bool] | None = None) -> None:
+    async with PosthogAnalytics() as (ph, user):
+        if user is not None:
+            ph.capture(user.id, event_name, properties)
