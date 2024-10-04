@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -13,7 +13,6 @@ import {
   ArrowsPointingOutIcon,
   MinusIcon,
 } from "@heroicons/react/24/outline";
-import autoAnimate from "@formkit/auto-animate";
 import Minimizer from "../Minimizer/Minimizer";
 
 // TODO: Remove after defining this better on backend
@@ -23,16 +22,8 @@ export const DynamicTable: React.FC<{
   initialCreatedAt?: Date;
   minimize?: boolean;
 }> = ({ data, minimize }) => {
-  const parent = useRef<HTMLDivElement>(null);
   const [minimized, setMinimized] = useState(minimize || false);
   const [limitedView, setLimitedView] = useState(true);
-
-  useEffect(() => {
-    parent.current &&
-      autoAnimate(parent.current, {
-        duration: 150,
-      });
-  }, [parent]);
 
   const handleExpand = () => {
     if (minimized) setMinimized(false);
@@ -44,7 +35,7 @@ export const DynamicTable: React.FC<{
       minimized={minimized}
       setMinimized={setMinimized}
       label="Data results"
-      classes="max-w-7xl border dark:text-gray-300 border-gray-500 bg-gray-800 rounded-xl"
+      classes="bg-gray-800"
     >
       <div className="relative">
         <Table

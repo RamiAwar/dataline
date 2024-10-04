@@ -236,7 +236,7 @@ const Chart = ({
       minimized={minimized}
       setMinimized={setMinimized}
       label="Chart"
-      classes="border border-gray-500 rounded-xl bg-gray-900 w-full md:max-w-7xl"
+      classes="bg-gray-900"
     >
       <div className="pt-8 md:px-4 relative">
         <canvas ref={chartRef} className="overflow-hidden rounded-xl" />

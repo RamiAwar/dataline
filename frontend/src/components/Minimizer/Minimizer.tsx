@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useRef } from "react";
 import { CustomTooltip } from "../Library/Tooltip";
 import { ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
 import autoAnimate from "@formkit/auto-animate";
+import clsx from "clsx";
 
 const Minimizer = ({
   minimized,
@@ -24,7 +25,10 @@ const Minimizer = ({
       });
   }, [parent, minimized]);
   return (
-    <div ref={parent} className={classes}>
+    <div
+      ref={parent}
+      className={clsx("max-w-7xl border border-gray-500 rounded-xl", classes)}
+    >
       {minimized && (
         <div
           className="flex items-center justify-between p-2 cursor-pointer text-gray-300"

@@ -261,7 +261,7 @@ export const CodeBlock = ({
       minimized={minimized}
       setMinimized={setMinimized}
       label="Code block"
-      classes="max-w-7xl border border-gray-500 rounded-xl bg-gray-900"
+      classes="bg-gray-900"
     >
       <div
         role="button"
