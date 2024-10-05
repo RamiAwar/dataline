@@ -59,6 +59,7 @@ export interface IChartGenerationResult extends IResult {
 
 export interface ISQLQueryRunResult extends IResult {
   type: "SQL_QUERY_RUN_RESULT";
+  result_id: string;
   linked_id: string;
   content: {
     columns: string[];

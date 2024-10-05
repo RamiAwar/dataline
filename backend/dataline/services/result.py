@@ -1,26 +1,23 @@
+import csv
 import logging
 from datetime import datetime
+from io import StringIO
 from uuid import UUID
 
 from fastapi import Depends
+from fastapi.responses import StreamingResponse
 
 from dataline.errors import ValidationError
-from dataline.models.llm_flow.schema import (
-    ChartGenerationResultContent,
-    SQLQueryStringResultContent,
-)
-from dataline.models.result.schema import ChartRefreshOut, ResultUpdate
 from dataline.models.connection.schema import Connection
+from dataline.models.llm_flow.enums import QueryResultType
+from dataline.models.llm_flow.schema import ChartGenerationResultContent, SQLQueryStringResultContent
+from dataline.models.result.schema import ChartRefreshOut, ResultUpdate
 from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.result import ResultRepository
 from dataline.services.llm_flow.llm_calls.chart_generator import ChartType
+from dataline.services.llm_flow.toolkit import RunException, execute_sql_query, query_run_result_to_chart_json
 from dataline.services.llm_flow.utils import DatalineSQLDatabase as SQLDatabase
 
-from dataline.services.llm_flow.toolkit import (
-    RunException,
-    execute_sql_query,
-    query_run_result_to_chart_json,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -118,3 +115,47 @@ class ResultService:
                 "New SQL query is not compatible with chart! "
                 "Make sure to specify 2 columns, first for labels and second for values."
             )
+
+    async def export_results_as_csv(self, session: AsyncSession, result_id: UUID) -> StreamingResponse:
+        # Fetch the SQL_QUERY_STRING_RESULT
+        query_string_result = await self.result_repo.get_by_uuid(session, result_id)
+        if query_string_result.type != QueryResultType.SQL_QUERY_STRING_RESULT.value:
+            raise ValueError("The provided result_id does not belong to an SQL_QUERY_STRING_RESULT")
+
+        # Parse the SQL query from the content
+        query_content = SQLQueryStringResultContent.model_validate_json(query_string_result.content)
+        sql_query = query_content.sql
+
+        # Get the connection for the result
+        connection = await self.result_repo.get_connection_from_result(session, result_id)
+        db = SQLDatabase.from_dataline_connection(Connection.model_validate(connection))
+
+        # Create a generator function to stream the results
+        async def generate_csv():
+            buffer = StringIO()
+            writer = csv.writer(buffer)
+
+            # TODO: Figure out how to stream the sql results
+            # Execute the query and write results to CSV
+            columns, rows = db.custom_run_sql(sql_query)
+
+            # Write header
+            writer.writerow(columns)
+            yield buffer.getvalue()
+            buffer.seek(0)
+            buffer.truncate(0)
+
+            # Write data rows
+            for row in rows:
+                writer.writerow(row)
+                if buffer.tell() > 1024 * 1024:  # Yield every ~1MB
+                    yield buffer.getvalue()
+                    buffer.seek(0)
+                    buffer.truncate(0)
+
+            yield buffer.getvalue()  # Yield any remaining data
+
+        # Create and return the StreamingResponse
+        response = StreamingResponse(generate_csv(), media_type="text/csv")
+        response.headers["Content-Disposition"] = f"attachment; filename=export_{str(result_id)[:5]}.csv"
+        return response

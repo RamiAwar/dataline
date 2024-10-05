@@ -54,6 +54,7 @@ export const Primary: Story = {
         {
           type: "SQL_QUERY_RUN_RESULT",
           linked_id: "Jjasd",
+          result_id: "hello",
           content: {
             columns: ["count", "rental", "payment", "one more", "and another"],
             rows: [
