@@ -306,3 +306,16 @@ export function useRefreshChartData(
     ...options,
   });
 }
+
+export function useExportData() {
+  return useMutation({
+    mutationFn: async (linkedId: string) =>
+      (await api.getExportDataUrl(linkedId)).data,
+    onSuccess(data) {
+      window.open(data, "_self");
+    },
+    onError() {
+      enqueueSnackbar({ variant: "error", message: "Error exporting data" });
+    },
+  });
+}

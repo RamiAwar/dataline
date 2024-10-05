@@ -12,8 +12,10 @@ import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
   MinusIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import Minimizer from "../Minimizer/Minimizer";
+import { useExportData } from "@/hooks/messages";
 
 // TODO: Remove after defining this better on backend
 export const DynamicTable: React.FC<{
@@ -21,9 +23,11 @@ export const DynamicTable: React.FC<{
   data: { columns: string[]; rows: any[][] };
   initialCreatedAt?: Date;
   minimize?: boolean;
-}> = ({ data, minimize }) => {
+  linked_id?: string;
+}> = ({ data, minimize, linked_id }) => {
   const [minimized, setMinimized] = useState(minimize || false);
   const [limitedView, setLimitedView] = useState(true);
+  const { mutate: exportData } = useExportData();
 
   const handleExpand = () => {
     if (minimized) setMinimized(false);
@@ -103,6 +107,17 @@ export const DynamicTable: React.FC<{
                 </button>
               </CustomTooltip>
             ))}
+          {data.rows.length > 1 && linked_id && (
+            <CustomTooltip hoverText="Export">
+              <button
+                tabIndex={-1}
+                onClick={() => exportData(linked_id)}
+                className="p-1"
+              >
+                <ArrowDownTrayIcon className="w-6 h-6 [&>path]:stroke-[2]" />
+              </button>
+            </CustomTooltip>
+          )}
         </div>
       </div>
     </Minimizer>

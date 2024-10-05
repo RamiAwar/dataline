@@ -456,6 +456,15 @@ const logout = async () => {
   return response;
 };
 
+export type GetExportDataUrlResult = ApiResponse<string>;
+const getExportDataUrl = async (resultId: string) => {
+  return (
+    await backendApi<GetExportDataUrlResult>({
+      url: `/result/${resultId}/export-url`,
+    })
+  ).data;
+};
+
 export const api = {
   healthcheck,
   hasAuth,
@@ -486,4 +495,5 @@ export const api = {
   updateUserInfo,
   getUserInfo,
   refreshChart,
+  getExportDataUrl,
 };
