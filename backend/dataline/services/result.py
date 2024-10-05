@@ -135,19 +135,9 @@ class ResultService:
             buffer = StringIO()
             writer = csv.writer(buffer)
 
-            # TODO: Figure out how to stream the sql results
             # Execute the query and write results to CSV
-            columns, rows = db.custom_run_sql(sql_query)
-
-            # Write header
-            writer.writerow(columns)
-            yield buffer.getvalue()
-            buffer.seek(0)
-            buffer.truncate(0)
-
-            # Write data rows
-            for row in rows:
-                writer.writerow(row)
+            for entry in db.custom_run_sql_stream(sql_query):
+                writer.writerow(entry)
                 if buffer.tell() > 1024 * 1024:  # Yield every ~1MB
                     yield buffer.getvalue()
                     buffer.seek(0)

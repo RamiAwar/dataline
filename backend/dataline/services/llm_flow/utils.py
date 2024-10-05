@@ -1,4 +1,4 @@
-from typing import Any, Protocol, Self, Sequence, cast
+from typing import Any, Generator, Protocol, Self, Sequence, cast
 
 from langchain_community.utilities.sql_database import SQLDatabase
 from sqlalchemy import Engine, MetaData, Row, create_engine, inspect, text
@@ -108,6 +108,29 @@ class DatalineSQLDatabase(SQLDatabase):
         _engine_args = engine_args or {}
         engine = create_engine(database_uri, **_engine_args)
         return cls(engine, schemas=schemas, **kwargs)
+
+    def custom_run_sql_stream(self, query: str) -> Generator[Sequence[Row[Any]], Any, None]:
+        # https://docs.sqlalchemy.org/en/20/core/connections.html#streaming-with-a-fixed-buffer-via-yield-per
+        yield_per = 1000
+        if self.dialect == "mssql":
+            with self._engine.begin() as connection:
+                command = text(query)
+                with connection.execution_options(yield_per=yield_per).execute(command) as result:
+                    columns = list(result.keys())
+                    yield columns
+                    for partition in result.partitions():
+                        for row in partition:
+                            yield row
+
+        result = cast(
+            CursorResult[Any],
+            super().run(query, "cursor", include_columns=True, execution_options={"yield_per": yield_per}),
+        )  # type: ignore[misc]
+        columns = list(result.keys())
+        yield columns
+        for partition in result.partitions():
+            for row in partition:
+                yield row
 
     def custom_run_sql(self, query: str) -> tuple[list[Any], Sequence[Row[Any]]]:
         if self.dialect == "mssql":
