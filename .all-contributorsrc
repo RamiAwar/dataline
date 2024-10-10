@@ -76,6 +76,16 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "filip65",
+      "name": "Filip Katušin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50335272?v=4",
+      "profile": "https://github.com/filip65",
+      "contributions": [
+        "code",
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
