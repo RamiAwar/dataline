@@ -296,6 +296,16 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         messages = []
         results: list[QueryResultSchema] = []
 
+        if "for_chart" not in args:
+            tool_message = ToolMessage(
+                content=f"ERROR: Missing argument for {ToolNames.EXECUTE_SQL_QUERY} tool: 'for_chart'. "
+                "Please try again by providing all the necessary arguments.",
+                name=self.name,
+                tool_call_id=call_id,
+            )
+            messages.append(tool_message)
+            return state_update(messages=messages)
+
         # Add SQL query to results
         query_string_result = SQLQueryStringResult(sql=args["query"], for_chart=args["for_chart"])
         results.append(query_string_result)

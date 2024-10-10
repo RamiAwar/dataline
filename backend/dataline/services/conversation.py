@@ -7,10 +7,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from openai._exceptions import APIError
 
 from dataline.errors import UserFacingError
-from dataline.models.conversation.schema import (
-    ConversationOut,
-    ConversationWithMessagesWithResultsOut,
-)
+from dataline.models.conversation.schema import ConversationOut, ConversationWithMessagesWithResultsOut
 from dataline.models.llm_flow.enums import QueryStreamingEventType
 from dataline.models.llm_flow.schema import (
     QueryOptions,
@@ -29,18 +26,12 @@ from dataline.models.message.schema import (
 )
 from dataline.models.result.schema import ResultUpdate
 from dataline.repositories.base import AsyncSession
-from dataline.repositories.conversation import (
-    ConversationCreate,
-    ConversationRepository,
-    ConversationUpdate,
-)
+from dataline.repositories.conversation import ConversationCreate, ConversationRepository, ConversationUpdate
 from dataline.repositories.message import MessageRepository
 from dataline.repositories.result import ResultRepository
 from dataline.services.connection import ConnectionService
 from dataline.services.llm_flow.graph import QueryGraphService
-from dataline.services.llm_flow.llm_calls.conversation_title_generator import (
-    ConversationTitleGenerator,
-)
+from dataline.services.llm_flow.llm_calls.conversation_title_generator import ConversationTitleGenerator
 from dataline.services.settings import SettingsService
 from dataline.utils.utils import stream_event_str
 
