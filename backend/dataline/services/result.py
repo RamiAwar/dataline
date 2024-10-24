@@ -2,6 +2,7 @@ import csv
 import logging
 from datetime import datetime
 from io import StringIO
+from typing import AsyncGenerator
 from uuid import UUID
 
 from fastapi import Depends
@@ -116,6 +117,22 @@ class ResultService:
                 "Make sure to specify 2 columns, first for labels and second for values."
             )
 
+    @staticmethod
+    async def generate_csv(sql_query: str, db: SQLDatabase) -> AsyncGenerator[str, None]:
+        """Returns a generator to stream the results of an SQL query as a CSV file."""
+        buffer = StringIO()
+        writer = csv.writer(buffer)
+
+        # Execute the query and write results to CSV
+        for entry in db.custom_run_sql_stream(sql_query):
+            writer.writerow(entry)
+            if buffer.tell() > 1024 * 1024:  # Yield every ~1MB
+                yield buffer.getvalue()
+                buffer.seek(0)
+                buffer.truncate(0)
+
+        yield buffer.getvalue()  # Yield any remaining data
+
     async def export_results_as_csv(self, session: AsyncSession, result_id: UUID) -> StreamingResponse:
         # Fetch the SQL_QUERY_STRING_RESULT
         query_string_result = await self.result_repo.get_by_uuid(session, result_id)
@@ -130,22 +147,7 @@ class ResultService:
         connection = await self.result_repo.get_connection_from_result(session, result_id)
         db = SQLDatabase.from_dataline_connection(Connection.model_validate(connection))
 
-        # Create a generator function to stream the results
-        async def generate_csv():
-            buffer = StringIO()
-            writer = csv.writer(buffer)
-
-            # Execute the query and write results to CSV
-            for entry in db.custom_run_sql_stream(sql_query):
-                writer.writerow(entry)
-                if buffer.tell() > 1024 * 1024:  # Yield every ~1MB
-                    yield buffer.getvalue()
-                    buffer.seek(0)
-                    buffer.truncate(0)
-
-            yield buffer.getvalue()  # Yield any remaining data
-
         # Create and return the StreamingResponse
-        response = StreamingResponse(generate_csv(), media_type="text/csv")
+        response = StreamingResponse(self.generate_csv(sql_query, db), media_type="text/csv")
         response.headers["Content-Disposition"] = f"attachment; filename=export_{str(result_id)[:5]}.csv"
         return response

@@ -457,12 +457,9 @@ const logout = async () => {
 };
 
 export type GetExportDataUrlResult = ApiResponse<string>;
-const getExportDataUrl = async (resultId: string) => {
-  return (
-    await backendApi<GetExportDataUrlResult>({
-      url: `/result/${resultId}/export-url`,
-    })
-  ).data;
+const getExportDataUrl = (resultId: string) => {
+  const baseURL = apiURL.endsWith("/") ? apiURL : apiURL + "/";
+  return `${baseURL}result/${resultId}/export-csv`;
 };
 
 export const api = {
