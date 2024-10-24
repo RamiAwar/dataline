@@ -34,6 +34,7 @@ export const Primary: Story = {
         ["21", "22", "23", "24", "25"],
       ],
     },
+    linked_id: "123",
   },
 };
 
@@ -49,5 +50,6 @@ export const ManyRows: Story = {
         i + 5,
       ]),
     },
+    linked_id: "123",
   },
 };
