@@ -1,14 +1,11 @@
-from enum import Enum
-from typing import Type
+import json
+from enum import StrEnum
 
-from langsmith import wrappers
-from mirascope import tags
-from mirascope.base import BaseConfig
-from mirascope.openai import OpenAICallParams, OpenAIExtractor
-from pydantic import BaseModel, Field
+from mirascope.core import prompt_template
+from pydantic import BaseModel, ValidationInfo, field_validator
 
 
-class ChartType(Enum):
+class ChartType(StrEnum):
     bar = "bar"
     doughnut = "doughnut"
     line = "line"
@@ -203,44 +200,28 @@ TEMPLATES: dict[ChartType, str] = {
 }
 
 
-class ShouldGenerateChart(BaseModel):
-    should_generate_chart: bool
-    chart_type: ChartType | None = None
-    query: str | None = Field(
-        default=None, description="Translate human query into a query that can be used to generate a chart."
-    )
-
-
-@tags(["version:0001"])
-class ShouldGenerateChartCall(OpenAIExtractor[ShouldGenerateChart]):
-    configuration = BaseConfig(client_wrappers=[wrappers.wrap_openai])
-    extract_schema: Type[ShouldGenerateChart] = ShouldGenerateChart
-    call_params = OpenAICallParams(model="gpt-3.5-turbo")
-    api_key: str | None
-    base_url: str | None = None
-
-    prompt_template = """
-    Determine if a chart should be generated for this query.
-
-    If a chart should be generated, determine the type of chart that should be generated and come up
-    with a query specifying technical requirements.
-    If a chart should not be generated, set should_generate_chart to False.
-    """
-
-
 class GeneratedChart(BaseModel):
     chartjs_json: str
 
+    @field_validator("chartjs_json", mode="before")
+    @classmethod
+    def check_alphanumeric(cls, v: str | dict, info: ValidationInfo) -> str:
+        if isinstance(v, dict):
+            # check chart type - fails if not in valid types
+            v["type"] = ChartType[v["type"]]
+            # convert to json str
+            v = json.dumps(v)
 
-@tags(["version:0001"])
-class GenerateChartCall(OpenAIExtractor[GeneratedChart]):
-    configuration = BaseConfig(client_wrappers=[wrappers.wrap_openai])
-    extract_schema: Type[GeneratedChart] = GeneratedChart
-    call_params = OpenAICallParams(model="gpt-3.5-turbo")
-    api_key: str | None
-    base_url: str | None = None
+        elif isinstance(v, str):
+            v_dict = json.loads(v)
+            # check chart type - this fails if not in valid types
+            v_dict["type"] = ChartType[v_dict["type"]]
+        return v
 
-    prompt_template = """
+
+@prompt_template()
+def generate_chart(chartjs_template: str, chart_type: ChartType, request: str) -> str:
+    return f"""
     Create a chartjs.org chart of type {chart_type} that would be appropriate for this data.
     Create a valid ChartJS config for this chart. Only return the valid JSON config.
     Don't use more than 5 colours.
@@ -252,7 +233,3 @@ class GenerateChartCall(OpenAIExtractor[GeneratedChart]):
     Here is an example ChartJS config:
     {chartjs_template}
     """
-
-    chartjs_template: str
-    chart_type: str
-    request: str

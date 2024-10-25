@@ -32,7 +32,12 @@ from dataline.models.llm_flow.schema import (
 from dataline.services.llm_flow.llm_calls.chart_generator import (
     TEMPLATES,
     ChartType,
-    GenerateChartCall,
+    GeneratedChart,
+    generate_chart,
+)
+from dataline.services.llm_flow.llm_calls.mirascope_utils import (
+    OpenAIClientOptions,
+    call,
 )
 from dataline.services.llm_flow.utils import DatalineSQLDatabase as SQLDatabase
 
@@ -507,14 +512,20 @@ class ChartGeneratorTool(StateUpdaterTool):
         results: list[QueryResultSchema] = []
 
         chart_type = ChartType[args["chart_type"]]
-        generate_chart_call = GenerateChartCall(
-            api_key=state.options.openai_api_key.get_secret_value(),
-            base_url=state.options.openai_base_url,
-            chart_type=args["chart_type"],
+
+        generated_chart = call(
+            "gpt-3.5-turbo",
+            response_model=GeneratedChart,
+            prompt_fn=generate_chart,
+            client_options=OpenAIClientOptions(
+                api_key=state.options.openai_api_key.get_secret_value(),
+                base_url=state.options.openai_base_url,
+            ),
+        )(
+            chart_type=ChartType[args["chart_type"]],
             request=args["request"],
             chartjs_template=TEMPLATES[chart_type],
         )
-        res = generate_chart_call.extract()
 
         # Find the last data result
         # TODO: WHY IS THIS NOT TRIGGERING?
@@ -537,7 +548,7 @@ class ChartGeneratorTool(StateUpdaterTool):
 
         try:
             chart_json = query_run_result_to_chart_json(
-                chart_json=res.chartjs_json,
+                chart_json=generated_chart.chartjs_json,
                 chart_type=chart_type,
                 query_run_data=last_data_result,
             )
