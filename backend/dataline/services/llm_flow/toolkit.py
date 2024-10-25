@@ -33,7 +33,7 @@ from dataline.services.llm_flow.llm_calls.chart_generator import (
     TEMPLATES,
     ChartType,
     GeneratedChart,
-    generate_chart,
+    generate_chart_prompt,
 )
 from dataline.services.llm_flow.llm_calls.mirascope_utils import (
     OpenAIClientOptions,
@@ -516,7 +516,7 @@ class ChartGeneratorTool(StateUpdaterTool):
         generated_chart = call(
             "gpt-3.5-turbo",
             response_model=GeneratedChart,
-            prompt_fn=generate_chart,
+            prompt_fn=generate_chart_prompt,
             client_options=OpenAIClientOptions(
                 api_key=state.options.openai_api_key.get_secret_value(),
                 base_url=state.options.openai_base_url,
@@ -528,7 +528,6 @@ class ChartGeneratorTool(StateUpdaterTool):
         )
 
         # Find the last data result
-        # TODO: WHY IS THIS NOT TRIGGERING?
         last_data_result = None
         for result in reversed(state.results):
             if isinstance(result, SQLQueryRunResult) and result.for_chart:

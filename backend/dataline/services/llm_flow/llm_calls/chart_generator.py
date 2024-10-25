@@ -220,7 +220,7 @@ class GeneratedChart(BaseModel):
 
 
 @prompt_template()
-def generate_chart(chartjs_template: str, chart_type: ChartType, request: str) -> str:
+def generate_chart_prompt(chartjs_template: str, chart_type: ChartType, request: str) -> str:
     return f"""
     Create a chartjs.org chart of type {chart_type} that would be appropriate for this data.
     Create a valid ChartJS config for this chart. Only return the valid JSON config.
