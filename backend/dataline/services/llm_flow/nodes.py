@@ -50,7 +50,7 @@ class CallModelNode(Node):
     def run(cls, state: QueryGraphState) -> QueryGraphStateUpdate:
         # TODO: Consider replacing with mirascope
         model = ChatOpenAI(
-            model=state.options.model_name,
+            model=state.options.llm_model,
             base_url=state.options.openai_base_url,
             api_key=state.options.openai_api_key,
             temperature=0,

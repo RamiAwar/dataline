@@ -16,10 +16,9 @@ from typing import (
 from fastapi.encoders import jsonable_encoder
 from langchain_core.callbacks import CallbackManagerForToolRun
 from langchain_core.messages import BaseMessage, ToolMessage
-from langchain_core.pydantic_v1 import BaseModel as BaseModelV1
-from langchain_core.pydantic_v1 import Field
 from langchain_core.tools import BaseTool, BaseToolkit
 from langgraph.prebuilt import ToolExecutor
+from pydantic import BaseModel, Field, SkipValidation
 
 from dataline.models.llm_flow.schema import (
     ChartGenerationResult,
@@ -33,7 +32,12 @@ from dataline.models.llm_flow.schema import (
 from dataline.services.llm_flow.llm_calls.chart_generator import (
     TEMPLATES,
     ChartType,
-    GenerateChartCall,
+    GeneratedChart,
+    generate_chart_prompt,
+)
+from dataline.services.llm_flow.llm_calls.mirascope_utils import (
+    OpenAIClientOptions,
+    call,
 )
 from dataline.services.llm_flow.utils import DatalineSQLDatabase as SQLDatabase
 
@@ -137,14 +141,13 @@ class ToolNames:
     GENERATE_CHART = "generate_chart"
 
 
-class BaseSQLDatabaseTool(BaseModelV1):
+class BaseSQLDatabaseTool(BaseTool):
     """Base tool for interacting with a SQL database."""
 
-    # TODO: Customize SQLDatabase class to add our improvements
-    db: SQLDatabase = Field(exclude=True)
+    db: Annotated[SQLDatabase, SkipValidation] = Field(exclude=True)
 
-    class Config(BaseTool.Config):
-        pass
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class StateUpdaterTool(BaseTool, abc.ABC):  # type: ignore[misc]
@@ -161,7 +164,7 @@ class StateUpdaterTool(BaseTool, abc.ABC):  # type: ignore[misc]
         raise NotImplementedError
 
 
-class _InfoSQLDatabaseToolInput(BaseModelV1):
+class _InfoSQLDatabaseToolInput(BaseModel):
     table_names: str = Field(
         ...,
         description=(
@@ -181,7 +184,7 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
     table_names: Optional[list[str]] = None
 
     # Pydantic model to validate input to the tool
-    args_schema: Type[BaseModelV1] = _InfoSQLDatabaseToolInput
+    args_schema: Type[BaseModel] = _InfoSQLDatabaseToolInput
 
     def _validate_sanitize_table_names(self, table_names: str, available_names: Iterable[str]) -> set[str]:
         """Validate table names and return valid and invalid tables."""
@@ -249,7 +252,7 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         return state_update(messages=messages, results=results)
 
 
-class _QuerySQLDataBaseToolInput(BaseModelV1):
+class _QuerySQLDataBaseToolInput(BaseModel):
     query: str = Field(
         ...,
         description="A detailed and correct SQL query. If for charting, return only two columns: labels and values in that order!",
@@ -275,7 +278,7 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
     If the query is not correct, an error message will be returned.
     If an error is returned, rewrite the query, check the query, and try again.
     """
-    args_schema: Type[BaseModelV1] = _QuerySQLDataBaseToolInput
+    args_schema: Type[BaseModel] = _QuerySQLDataBaseToolInput
 
     def _run(
         self,
@@ -390,7 +393,7 @@ class QuerySQLDataBaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
         }
 
 
-class _ListSQLTablesToolInput(BaseModelV1):
+class _ListSQLTablesToolInput(BaseModel):
     tool_input: str = Field("", description="An empty string")
 
 
@@ -399,7 +402,7 @@ class ListSQLTablesTool(BaseSQLDatabaseTool, BaseTool):
 
     name: str = ToolNames.LIST_SQL_TABLES
     description: str = "Input is an empty string, output is a comma-separated list of tables in the database."
-    args_schema: Type[BaseModelV1] = _ListSQLTablesToolInput
+    args_schema: Type[BaseModel] = _ListSQLTablesToolInput
 
     def _run(  # type: ignore
         self,
@@ -463,7 +466,7 @@ class SQLDatabaseToolkit(BaseToolkit):
         return self.db.get_context()
 
 
-class QueryGraphState(BaseModelV1):
+class QueryGraphState(BaseModel):
     messages: Annotated[Sequence[BaseMessage], operator.add]
     results: Annotated[Sequence[QueryResultSchema], operator.add]
     options: QueryOptions
@@ -480,7 +483,7 @@ def state_update(
     return {"messages": messages, "results": results}
 
 
-class _ChartGeneratorToolInput(BaseModelV1):
+class _ChartGeneratorToolInput(BaseModel):
     chart_type: ChartType
     request: str = Field(..., description="Some text describing what the chart is and to generate it.")
 
@@ -494,7 +497,7 @@ class ChartGeneratorTool(StateUpdaterTool):
         "Use this only after executing SQL since we need data to add into the chart."
         "If the chart is not based on SQL query generated data, then don't use this tool."
     )
-    args_schema: Type[BaseModelV1] = _ChartGeneratorToolInput
+    args_schema: Type[BaseModel] = _ChartGeneratorToolInput
 
     def _run(self, *args: Any, **kwargs: Any) -> Any:
         pass
@@ -509,17 +512,22 @@ class ChartGeneratorTool(StateUpdaterTool):
         results: list[QueryResultSchema] = []
 
         chart_type = ChartType[args["chart_type"]]
-        generate_chart_call = GenerateChartCall(
-            api_key=state.options.openai_api_key.get_secret_value(),
-            base_url=state.options.openai_base_url,
-            chart_type=args["chart_type"],
+
+        generated_chart = call(
+            "gpt-3.5-turbo",
+            response_model=GeneratedChart,
+            prompt_fn=generate_chart_prompt,
+            client_options=OpenAIClientOptions(
+                api_key=state.options.openai_api_key.get_secret_value(),
+                base_url=state.options.openai_base_url,
+            ),
+        )(
+            chart_type=ChartType[args["chart_type"]],
             request=args["request"],
             chartjs_template=TEMPLATES[chart_type],
         )
-        res = generate_chart_call.extract()
 
         # Find the last data result
-        # TODO: WHY IS THIS NOT TRIGGERING?
         last_data_result = None
         for result in reversed(state.results):
             if isinstance(result, SQLQueryRunResult) and result.for_chart:
@@ -539,7 +547,7 @@ class ChartGeneratorTool(StateUpdaterTool):
 
         try:
             chart_json = query_run_result_to_chart_json(
-                chart_json=res.chartjs_json,
+                chart_json=generated_chart.chartjs_json,
                 chart_type=chart_type,
                 query_run_data=last_data_result,
             )
