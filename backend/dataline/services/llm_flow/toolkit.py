@@ -136,7 +136,7 @@ class ToolNames:
     GENERATE_CHART = "generate_chart"
 
 
-class BaseSQLDatabaseTool(BaseModel):
+class BaseSQLDatabaseTool(BaseTool):
     """Base tool for interacting with a SQL database."""
 
     db: Annotated[SQLDatabase, SkipValidation] = Field(exclude=True)

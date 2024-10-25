@@ -3,9 +3,7 @@ from datetime import datetime
 from typing import Any, ClassVar, List, Self
 from uuid import UUID, uuid4
 
-from langchain_core.pydantic_v1 import BaseModel as BaseModelV1
-from langchain_core.pydantic_v1 import SecretStr as SecretStrV1
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 
 from dataline.models.llm_flow.enums import QueryResultType
 from dataline.models.result.model import ResultModel
@@ -15,10 +13,10 @@ from dataline.repositories.result import ResultRepository
 
 
 # Need to use pydantic v1 due to langchain
-class QueryOptions(BaseModelV1):
-    openai_api_key: SecretStrV1
+class QueryOptions(BaseModel):
+    openai_api_key: SecretStr
     openai_base_url: str | None = None
-    langsmith_api_key: SecretStrV1 | None = None
+    langsmith_api_key: SecretStr | None = None
     model_name: str
     secure_data: bool = False
 
