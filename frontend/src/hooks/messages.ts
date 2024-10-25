@@ -306,3 +306,37 @@ export function useRefreshChartData(
     ...options,
   });
 }
+
+export function useExportData() {
+  return useMutation({
+    mutationFn: async (linkedId: string) => api.getExportDataUrl(linkedId),
+    onSuccess(exportUrl) {
+      // Create a hidden anchor element
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = exportUrl;
+      a.download = ""; // This tells the browser to download instead of navigating
+      a.target = "_blank";
+      document.body.appendChild(a);
+
+      // Trigger the download
+      a.click();
+
+      // Remove the anchor after a delay
+      setTimeout(() => {
+        document.body.removeChild(a);
+      }, 100);
+
+      enqueueSnackbar({
+        variant: "success",
+        message: "Export started. The file will download shortly.",
+      });
+    },
+    onError() {
+      enqueueSnackbar({
+        variant: "error",
+        message: "Error initiating export. Please try again.",
+      });
+    },
+  });
+}

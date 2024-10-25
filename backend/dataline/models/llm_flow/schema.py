@@ -82,6 +82,7 @@ class SQLQueryRunResult(QueryRunData, QueryResultSchema, RenderableResultMixin, 
         return ResultOut(
             content=self.model_dump(exclude={"ephemeral_id", "linked_id", "created_at"}),
             type=self.result_type.value,
+            result_id=self.result_id,
             linked_id=self.linked_id,
             created_at=datetime.now(),
         )

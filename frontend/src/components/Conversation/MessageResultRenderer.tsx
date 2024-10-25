@@ -251,9 +251,10 @@ export const MessageResultRenderer = ({
               )) ||
               (result.type === "SQL_QUERY_RUN_RESULT" && (
                 <DynamicTable
-                  key={`message-${messageId}-table-${result.linked_id}`}
+                  key={`message-${messageId}-table-${result.result_id}`}
                   data={result.content}
                   initialCreatedAt={new Date(result.created_at as string)}
+                  linked_id={result.linked_id}
                 />
               )) ||
               (result.type === "SQL_QUERY_STRING_RESULT" && (
