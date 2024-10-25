@@ -12,12 +12,11 @@ from dataline.repositories.base import AsyncSession
 from dataline.repositories.result import ResultRepository
 
 
-# Need to use pydantic v1 due to langchain
 class QueryOptions(BaseModel):
     openai_api_key: SecretStr
     openai_base_url: str | None = None
     langsmith_api_key: SecretStr | None = None
-    model_name: str
+    llm_model: str
     secure_data: bool = False
 
 
