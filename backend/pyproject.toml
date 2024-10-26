@@ -45,8 +45,8 @@ version = "0.1.0"
 description = ""
 readme = "README.md"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "black<25.0.0,>=24.3.0",
     "pre-commit<4.0.0,>=3.4.0",
     "pyinstaller==6.11.*",
