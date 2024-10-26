@@ -16,7 +16,7 @@ cp dist/.vite/manifest.json ../backend/assets/manifest.json
 
 ```bash
 cd backend
-pyinstaller --clean --distpath ../linux_dist -y linux.spec
+uv run pyinstaller --clean --distpath ../linux_dist -y linux.spec
 ```
 
 <!-- CLI COMMAND - NOT MAINTAINED
@@ -32,10 +32,17 @@ You can find the executable under `linux_dist/dataline/dataline`. Once run, go t
 
 ```bash
 cd backend
-pyinstaller --clean --distpath ../macos_dist -y macos.spec
+uv run pyinstaller --clean --distpath ../macos_dist -y macos.spec
 ```
 
 You can find the executable under `macos_dist/main/main`. Once run, go to localhost:7377
+
+## Windows
+
+```bash
+cd backend
+uv run pyinstaller --clean --distpath ../win64_dist -y windows.spec
+```
 
 ## Windows (using Wine-in-Docker):
 
