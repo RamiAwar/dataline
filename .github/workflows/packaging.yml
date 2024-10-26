@@ -50,19 +50,16 @@ jobs:
           path: ./backend/assets/
           name: frontend-artifact
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.11.6
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v2
+          python-version: 3.11
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
       - name: Install dependencies
-        run: |
-          poetry self add poetry-plugin-export
-          poetry export --without-hashes -f requirements.txt --output requirements.txt
-          pip install -r requirements.txt pyinstaller==5.13.2
+        run: uv sync --no-dev --frozen
       - name: Run pyinstaller
         run: |
-          pyinstaller --clean --distpath linux_dist -y linux.spec
+          uv run --no-sync --with pyinstaller==5.13.2 pyinstaller --clean --distpath linux_dist -y linux.spec
           tar -cvf ../dataline.tar linux_dist
       - uses: actions/upload-artifact@v4
         with:
@@ -85,19 +82,16 @@ jobs:
           path: ./backend/assets/
           name: frontend-artifact
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.11.6
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v2
+          python-version: 3.11
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
       - name: Install dependencies
-        run: |
-          poetry self add poetry-plugin-export
-          poetry export --without-hashes -f requirements.txt --output requirements.txt
-          pip install -r requirements.txt pyinstaller==5.13.2
+        run: uv sync --no-dev --frozen
       - name: Run pyinstaller
         run: |
-          pyinstaller --windowed -i ../images/logo.ico --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite `
+          uv run --no-sync --with pyinstaller==5.13.2 pyinstaller --windowed -i ../images/logo.ico --name DataLine --clean --hidden-import=asyncpg.pgproto.pgproto --hidden-import=uuid --hidden-import=ipaddress --hidden-import=aiosqlite `
             --add-data "alembic;alembic" --add-data "alembic.ini;." --add-data "samples;samples" --add-data "templates;templates" --add-data "assets;assets" `
             --distpath ../win64_dist --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --collect-data=jinja2 --collect-submodules=pyreadstat `
             --collect-all=snowflake-sqlalchemy --hidden-import=snowflake.sqlalchemy --collect-all=snowflake-connector-python --hidden-import=pyodbc dataline/main.py -y
@@ -125,11 +119,11 @@ jobs:
           path: ./backend/assets/
           name: frontend-artifact
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.11.6
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v2
+          python-version: 3.11
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
       # pyodbc issue with Mac builds
       # https://stackoverflow.com/questions/75442083/import-pyodbc-error-while-running-a-python-script-on-pycharm-on-mac
       - name: Install unixODBC
@@ -141,13 +135,10 @@ jobs:
           echo "LDFLAGS=-L/usr/local/opt/unixodbc/lib" >> $GITHUB_ENV
           echo "CPPFLAGS=-I/usr/local/opt/unixodbc/include" >> $GITHUB_ENV
       - name: Install dependencies
-        run: |
-          poetry self add poetry-plugin-export
-          poetry export --without-hashes -f requirements.txt --output requirements.txt
-          pip install -r requirements.txt pyinstaller==5.13.2
+        run: uv sync --no-dev --frozen
       - name: Run pyinstaller
         run: |
-          pyinstaller --clean --distpath macos_dist -y macos.spec
+          uv run --no-sync --with pyinstaller==5.13.2 pyinstaller --clean --distpath macos_dist -y macos.spec
           cd macos_dist
           tar -cf ../../dataline.tar dataline
       - uses: actions/upload-artifact@v4

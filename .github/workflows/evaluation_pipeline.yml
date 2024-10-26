@@ -16,32 +16,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.11.6
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v2
-
-      - name: Setup a local virtual environment (if no poetry.toml file)
-        run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
+          python-version: 3.11
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
 
       - uses: actions/cache@v3
         name: Define a cache for the virtual environment based on the dependencies lock file
         with:
           path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
+          key: venv-${{ hashFiles('uv.lock') }}
 
       - name: Install the project dependencies
-        run: poetry install --with dev --no-interaction --no-root
+        run: uv sync --frozen
 
       - name: Run eval pipeline test cases
         env:
           DATA_DIRECTORY: ./
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: PYTHONPATH=. poetry run pytest tests/evaluation/test_query_flow.py --run-expensive
-      
+        run: uv run pytest tests/evaluation/test_query_flow.py --run-expensive
+
       - name: Upload test results as artifact
         uses: actions/upload-artifact@v3
         with:
@@ -49,7 +44,7 @@ jobs:
           path: ./backend/test_results.csv
 
       - name: Run score aggregation script
-        run: poetry run python tests/evaluation/aggregate_scores.py
+        run: uv run python tests/evaluation/aggregate_scores.py
 
       - name: Save scores as artifact
         uses: actions/upload-artifact@v3
@@ -78,7 +73,7 @@ jobs:
       - name: Compare scores and generate report
         if: github.ref != 'refs/heads/main'
         run: |
-          poetry run python tests/evaluation/compare_scores.py \
+          uv run python tests/evaluation/compare_scores.py \
             scores.md \
             main-scores/scores.md
 
@@ -105,4 +100,3 @@ jobs:
         with:
           name: score-comparison
           path: ./backend/comparison.md
-  

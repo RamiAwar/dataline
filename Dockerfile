@@ -32,51 +32,33 @@ RUN npm run build
 
 
 # -------------------------------
-# BASE-BUILD IMAGE WITH BACKEND
-# Build backend dependencies and install them
-# -------------------------------
-FROM python:3.11.6-slim-bookworm AS temp-backend
-
-# Set working directory
-WORKDIR /home/dataline/backend
-
-# Setup for poetry
-ENV PATH="/home/dataline/.poetry/bin:${PATH}" \
-    POETRY_HOME="/home/dataline/.poetry"
-
-# Don't buffer `stdout`:
-ENV PYTHONUNBUFFERED=1
-# Don't create `.pyc` files:
-ENV PYTHONDONTWRITEBYTECODE=1
-
-RUN pip install --no-cache-dir poetry
-
-# Install build dependencies, install dependencies, remove build dependencies
-RUN apt-get clean && apt update --fix-missing && \
-    apt upgrade -y && \
-    apt-get install git libpq-dev build-essential -y
-
-# Copy in poetry files only - this allows us to cache the layer if no new dependencies were added and install base deps
-COPY backend/pyproject.toml backend/poetry.lock ./
-RUN poetry config virtualenvs.in-project true && poetry install --only main --no-root
-
-
-# -------------------------------
 # BASE BUILD
 # -------------------------------
-FROM python:3.11.6-slim-bookworm AS base
+FROM python:3.11-slim AS base
 
-WORKDIR /home/dataline
+WORKDIR /home/dataline/backend
+
+# set env variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
 # Install postgres connector dependencies
 RUN apt update && apt install --no-install-recommends libpq5 -y
 
-# Move it to venv not .venv so supervisord does not cry
-COPY --from=temp-backend /home/dataline/backend/.venv /home/dataline/backend/venv
-ENV PATH="/home/dataline/backend/venv/bin:$PATH"
+RUN mkdir -p /home/dataline/backend
+
+# Temporarily use uv command from remote image to install dependencies
+# Mount the lock and pyproject.toml to speed up image build time if these files are not changed
+RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
+    --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
+    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
+    uv sync --no-dev --frozen --no-install-project
+
+
+ENV PATH="/home/dataline/backend/.venv/bin:$PATH"
 
 # Copy in backend files
-WORKDIR /home/dataline/backend
 COPY backend/*.py .
 COPY backend/samples ./samples
 COPY backend/dataline ./dataline
