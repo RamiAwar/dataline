@@ -52,10 +52,10 @@ You can then run uvicorn to start the backend:
 # don't forget to specify your SQLITE path
 # export SQLITE_PATH="./db.sqlite3"
 
-uvicorn dataline.main:app --reload --port=7377
+uv run uvicorn dataline.main:app --reload --port=7377
 ```
 
-To run tests: `PYTHONPATH=. pytest . -vv`
+To run tests: `uv run pytest . -vv`
 
 ## Alembic Migrations
 
@@ -86,7 +86,7 @@ They stay if you ship something you're proud of, you've shipped too late.
 ### pre-commit
 
 ```
-pre-commit install
+uv run pre-commit install
 ```
 
 # Example DBMS-based databases
