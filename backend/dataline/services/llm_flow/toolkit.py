@@ -522,7 +522,7 @@ class ChartGeneratorTool(StateUpdaterTool):
                 base_url=state.options.openai_base_url,
             ),
         )(
-            chart_type=ChartType[args["chart_type"]],
+            chart_type=chart_type,
             request=args["request"],
             chartjs_template=TEMPLATES[chart_type],
         )

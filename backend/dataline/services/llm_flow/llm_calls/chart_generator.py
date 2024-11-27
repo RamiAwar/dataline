@@ -2,7 +2,7 @@ import json
 from enum import StrEnum
 
 from mirascope.core import prompt_template
-from pydantic import BaseModel, ValidationInfo, field_validator
+from pydantic import BaseModel, model_validator
 
 
 class ChartType(StrEnum):
@@ -201,22 +201,27 @@ TEMPLATES: dict[ChartType, str] = {
 
 
 class GeneratedChart(BaseModel):
+    chart_type: ChartType
     chartjs_json: str
 
-    @field_validator("chartjs_json", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def check_alphanumeric(cls, v: str | dict, info: ValidationInfo) -> str:
+    def check_json(cls, data: dict):
+        v = data["chartjs_json"]
         if isinstance(v, dict):
             # check chart type - fails if not in valid types
-            v["type"] = ChartType[v["type"]]
+            v["type"] = ChartType[data["chart_type"]]
             # convert to json str
             v = json.dumps(v)
 
         elif isinstance(v, str):
             v_dict = json.loads(v)
             # check chart type - this fails if not in valid types
-            v_dict["type"] = ChartType[v_dict["type"]]
-        return v
+            v_dict["type"] = ChartType[data["chart_type"]]
+            # convert back to json str
+            v = json.dumps(v_dict)
+        data["chartjs_json"] = v
+        return data
 
 
 @prompt_template()
