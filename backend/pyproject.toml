@@ -17,7 +17,7 @@ sqlalchemy = {extras = ["asyncio"], version = "^2.0.27"}
 rapidfuzz = "^3.0.0"
 psycopg = {extras = ["pool"], version = "^3.1.9"}
 openai = "^1.11.0"
-python-multipart = "^0.0.9"
+python-multipart = "^0.0.18"
 aiosqlite = "^0.20.0"
 alembic = "^1.13.1"
 pydantic-settings = "^2.2.1"
