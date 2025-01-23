@@ -25,9 +25,6 @@ COPY frontend/ .
 # Temporary setup - need local env as the 'production' build is landing page only
 ARG API_URL="/"
 
-# Used for railway builds
-ARG SERVICE_ID="1"
-
 ENV VITE_API_URL=$API_URL
 ENV NODE_ENV=local
 RUN npm run build
@@ -44,22 +41,19 @@ WORKDIR /home/dataline/backend
 # set env variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV UV_COMPILE_BYTECODE=1
 
 # Install postgres connector dependencies
 RUN apt update && apt install --no-install-recommends libpq5 -y
 
 RUN mkdir -p /home/dataline/backend
 
-# Temporarily use uv command from remote image to install dependencies
-# https://docs.astral.sh/uv/guides/integration/docker/#non-editable-installs
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 # Mount the lock and pyproject.toml to speed up image build time if these files are not changed
-# Cache ID follows railway structure
-# https://docs.railway.com/guides/dockerfiles#cache-mounts
-RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
-    --mount=type=cache,id=s/${SERVICE_ID}-/root/.cache/uv,target=/root/.cache/uv \
-    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
-    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
-    uv sync --no-dev --frozen --no-install-project
+COPY backend/uv.lock backend/pyproject.toml ./
+RUN uv sync --no-dev --frozen --no-install-project --compile-bytecode
 
 
 ENV PATH="/home/dataline/backend/.venv/bin:$PATH"
