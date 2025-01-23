@@ -63,7 +63,7 @@ jobs:
 
       - name: Download main branch scores
         if: github.ref != 'refs/heads/main'
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: evaluation_pipeline.yml
           branch: main
