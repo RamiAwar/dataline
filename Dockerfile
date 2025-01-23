@@ -48,6 +48,7 @@ RUN apt update && apt install --no-install-recommends libpq5 -y
 RUN mkdir -p /home/dataline/backend
 
 # Temporarily use uv command from remote image to install dependencies
+# https://docs.astral.sh/uv/guides/integration/docker/#non-editable-installs
 # Mount the lock and pyproject.toml to speed up image build time if these files are not changed
 RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
     --mount=type=cache,target=/root/.cache/uv \
