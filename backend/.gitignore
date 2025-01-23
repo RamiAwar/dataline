@@ -41,6 +41,7 @@ test_results.csv
 *.spec
 !macos.spec
 !linux.spec
+!windows.spec
 
 # Installer logs
 pip-log.txt

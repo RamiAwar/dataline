@@ -9,13 +9,11 @@
 
 ## Installation
 
-Make sure you have poetry installed from their official website.
-If you have multiple python versions, do: `poetry env use python3.11`.
+Make sure you have uv installed from their [official website](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer).
 We're going with 3.11 for now cause of all the nice features.
 
 ```bash
-poetry config virtualenvs.in-project true
-poetry install --no-root
+uv sync
 ```
 
 # Define a custom SQLITE_PATH
@@ -23,8 +21,7 @@ poetry install --no-root
 ```
 export SQLITE_PATH="./db.sqlite3" # Define where sqlite DB will be stored
 
-poetry shell # Active python environment (makes alembic command available)
-alembic upgrade head # Run migrations
+uv run alembic upgrade head # Run migrations
 ```
 
 # CORS settings
@@ -46,7 +43,7 @@ You only need an OpenAI API key to start using DataLine. You may optionally use 
 Run migrations if needed:
 
 ```bash
-python -m alembic upgrade head
+uv run alembic upgrade head
 ```
 
 You can then run uvicorn to start the backend:
@@ -55,10 +52,10 @@ You can then run uvicorn to start the backend:
 # don't forget to specify your SQLITE path
 # export SQLITE_PATH="./db.sqlite3"
 
-uvicorn dataline.main:app --reload --port=7377
+uv run uvicorn dataline.main:app --reload --port=7377
 ```
 
-To run tests: `PYTHONPATH=. pytest . -vv`
+To run tests: `uv run pytest . -vv`
 
 ## Alembic Migrations
 
@@ -89,7 +86,7 @@ They stay if you ship something you're proud of, you've shipped too late.
 ### pre-commit
 
 ```
-pre-commit install
+uv run pre-commit install
 ```
 
 # Example DBMS-based databases

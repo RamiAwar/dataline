@@ -14,23 +14,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.11.6
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v2
-      - name: Setup a local virtual environment (if no poetry.toml file)
-        run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
+          python-version: 3.11
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
       - uses: actions/cache@v3
         name: Define a cache for the virtual environment based on the dependencies lock file
         with:
           path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
+          key: venv-${{ hashFiles('uv.lock') }}
       - name: Install the project dependencies
-        run: poetry install --with dev --no-interaction --no-root
+        run: uv sync
       - name: Run the automated tests (for example)
         env:
           DATA_DIRECTORY: ./
-        run: PYTHONPATH=. poetry run pytest .
+        run: uv run pytest .
