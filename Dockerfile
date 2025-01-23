@@ -56,7 +56,6 @@ RUN mkdir -p /home/dataline/backend
 # Cache ID follows railway structure
 # https://docs.railway.com/guides/dockerfiles#cache-mounts
 RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
-    --mount=type=cache,id=s/${SERVICE_ID}-root/.cache/uv,target=/root/.cache/uv \
     --mount=type=bind,source=backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
     uv sync --no-dev --frozen --no-install-project
