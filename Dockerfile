@@ -25,6 +25,9 @@ COPY frontend/ .
 # Temporary setup - need local env as the 'production' build is landing page only
 ARG API_URL="/"
 
+# Used for railway builds
+ARG SERVICE_ID="1"
+
 ENV VITE_API_URL=$API_URL
 ENV NODE_ENV=local
 RUN npm run build
@@ -50,8 +53,10 @@ RUN mkdir -p /home/dataline/backend
 # Temporarily use uv command from remote image to install dependencies
 # https://docs.astral.sh/uv/guides/integration/docker/#non-editable-installs
 # Mount the lock and pyproject.toml to speed up image build time if these files are not changed
+# Cache ID follows railway structure
+# https://docs.railway.com/guides/dockerfiles#cache-mounts
 RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
-    --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
+    --mount=type=cache,id=id=s/${SERVICE_ID}-root/.cache/uv,target=/root/.cache/uv \
     --mount=type=bind,source=backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
     uv sync --no-dev --frozen --no-install-project
