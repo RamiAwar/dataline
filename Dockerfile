@@ -51,7 +51,7 @@ RUN mkdir -p /home/dataline/backend
 # https://docs.astral.sh/uv/guides/integration/docker/#non-editable-installs
 # Mount the lock and pyproject.toml to speed up image build time if these files are not changed
 RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
-    --mount=type=cache,id=uvcache,target=/root/.cache/uv \
+    --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
     --mount=type=bind,source=backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
     uv sync --no-dev --frozen --no-install-project
