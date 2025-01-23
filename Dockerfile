@@ -70,7 +70,6 @@ WORKDIR /home/dataline
 
 RUN mkdir -p /home/.dataline
 
-# Supervisord will forward the env vars to the subprocess envs
 ENV SQLITE_PATH="/home/.dataline/db.sqlite3"
 ENV DATA_DIRECTORY="/home/.dataline/data"
 
