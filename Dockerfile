@@ -3,7 +3,7 @@
 # Build frontend build export dist folder 
 # -------------------------------
 
-FROM node:21-alpine AS temp-frontend
+FROM node:23-alpine AS temp-frontend
 # Need python for node-gyp in building
 RUN apk --update --no-cache add \
     libc6-compat \
