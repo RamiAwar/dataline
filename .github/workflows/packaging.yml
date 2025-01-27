@@ -91,7 +91,7 @@ jobs:
         run: uv sync --no-dev --frozen
       - name: Run pyinstaller
         run: |
-          uv run --no-sync --with pyinstaller==6.11.0 pyinstaller --clean --distpath ../win64_dist -y windows.spec
+          uv run --no-sync --with pyinstaller==6.11.0 pyinstaller --clean --distpath win64_dist -y windows.spec
       - uses: actions/upload-artifact@v4
         with:
           name: windows-artifact
