@@ -132,7 +132,7 @@ jobs:
           echo "LDFLAGS=-L/usr/local/opt/unixodbc/lib" >> $GITHUB_ENV
           echo "CPPFLAGS=-I/usr/local/opt/unixodbc/include" >> $GITHUB_ENV
       - name: Install dependencies
-        run: uv sync --no-dev --frozen
+        run: uv sync --no-dev --frozen --compile-bytecode
       - name: Run pyinstaller
         run: |
           uv run --no-sync --with pyinstaller==5.13.2 pyinstaller --clean --distpath macos_dist -y macos.spec

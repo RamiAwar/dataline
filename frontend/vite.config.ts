@@ -2,11 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import path from "path";
-import viteImagemin from "@vheemstra/vite-plugin-imagemin";
-import imageminMozjpeg from "imagemin-mozjpeg";
-import imageminWebp from "imagemin-webp";
-import imageminGif from "imagemin-gifsicle";
-import imageminPng from "imagemin-pngquant";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -37,20 +32,5 @@ export default defineConfig({
     sourcemap: !!process.env.TAURI_DEBUG,
     manifest: true,
   },
-  plugins: [
-    TanStackRouterVite(),
-    react(),
-    viteImagemin({
-      plugins: {
-        jpg: imageminMozjpeg(),
-        png: imageminPng(),
-        gif: imageminGif(),
-      },
-      makeWebp: {
-        plugins: {
-          jpg: imageminWebp(),
-        },
-      },
-    }),
-  ],
+  plugins: [TanStackRouterVite(), react()],
 });
