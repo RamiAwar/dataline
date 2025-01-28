@@ -56,3 +56,12 @@ exe = EXE(
     entitlements_file=None,
     icon=['../images/logo.ico'],
 )
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    name='dataline',
+)

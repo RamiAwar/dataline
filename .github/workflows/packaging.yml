@@ -91,12 +91,12 @@ jobs:
         run: uv sync --no-dev --frozen
       - name: Run pyinstaller
         run: |
-          uv run --no-sync --with pyinstaller==6.11.0 pyinstaller --clean --distpath win64_dist -y windows.spec
+          uv run --no-sync --with pyinstaller==6.11.1 pyinstaller --clean --distpath ../win64_dist -y windows.spec
       - uses: actions/upload-artifact@v4
         with:
           name: dataline-windows
           # default workdir is only for runs, here we are using "uses" so it does not apply
-          path: build/windows
+          path: win64_dist/
           overwrite: true
 
   bundle-macos:
