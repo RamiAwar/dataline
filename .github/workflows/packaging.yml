@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+  
 jobs:
   build-frontend:
     runs-on: ubuntu-latest
