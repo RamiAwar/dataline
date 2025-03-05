@@ -21,7 +21,7 @@ export const InstallSection = () => {
     const detectOS = () => {
       const userAgent = window.navigator.userAgent.toLowerCase();
       if (userAgent.indexOf("win") > -1) return "Windows";
-      if (userAgent.indexOf("mac") > -1) return "MacOS";
+      if (userAgent.indexOf("mac") > -1) return "MacOS (Apple Silicon)";
       if (userAgent.indexOf("linux") > -1) return "Linux";
       return "All";
     };
@@ -34,9 +34,19 @@ export const InstallSection = () => {
 
   const installationSections: Item[] = [
     {
-      title: "MacOS",
+      title: "Docker",
+      isDownloadable: false,
+      code: "docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest",
+    },
+    {
+      title: "MacOS (Intel)",
       isDownloadable: true,
-      os: "darwin",
+      os: "darwin-x86_64",
+    },
+    {
+      title: "MacOS (Apple Silicon)",
+      isDownloadable: true,
+      os: "darwin-arm64",
     },
     {
       title: "Windows",
@@ -52,11 +62,6 @@ export const InstallSection = () => {
       title: "Homebrew",
       isDownloadable: false,
       code: "brew tap ramiawar/dataline && brew install dataline",
-    },
-    {
-      title: "Docker",
-      isDownloadable: false,
-      code: "docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline ramiawar/dataline:latest",
     },
     {
       title: "GH Releases",

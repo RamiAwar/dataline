@@ -155,7 +155,7 @@ jobs:
           tar -cf ../../dataline.tar dataline
       - uses: actions/upload-artifact@v4
         with:
-          name: dataline-${{ steps.calculate_architecture.outputs.result }}.tar
+          name: dataline-macos-${{ steps.calculate_architecture.outputs.result }}.tar
           # default workdir is only for runs, here we are using "uses" so it does not apply
           path: dataline.tar
           overwrite: true

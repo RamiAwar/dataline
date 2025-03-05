@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ArrowDownTrayIcon } from "@heroicons/react/20/solid";
 
-export type OS = "darwin" | "windows" | "linux";
+export type OS = "darwin-x86_64" | "darwin-arm64" | "windows" | "linux";
 
 interface GithubReleaseAsset {
   browser_download_url: string;
@@ -34,8 +34,10 @@ export const DownloadReleaseButton = ({ os }: { os: OS }) => {
 
   const getOSName = (os: OS) => {
     switch (os) {
-      case "darwin":
-        return "macOS";
+      case "darwin-x86_64":
+        return "macOS (Intel)";
+      case "darwin-arm64":
+        return "macOS (Apple Silicon)";
       case "windows":
         return "Windows";
       case "linux":
@@ -47,10 +49,12 @@ export const DownloadReleaseButton = ({ os }: { os: OS }) => {
 
   const getAssetName = (os: OS) => {
     switch (os) {
-      case "darwin":
-        return "dataline-macos-latest.tar.zip";
+      case "darwin-x86_64":
+        return "dataline-macos-x86_64.tar.zip";
+      case "darwin-arm64":
+        return "dataline-macos-arm64.tar.zip";
       case "windows":
-        return "windows-artifact.zip";
+        return "dataline-windows.zip";
       case "linux":
         return "dataline-linux.tar.zip";
       default:
