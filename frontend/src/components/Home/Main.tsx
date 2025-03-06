@@ -3,7 +3,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@components/Catalyst/alert";
-import { Outlet, useLocation } from "@tanstack/react-router";
+import { Outlet } from "@tanstack/react-router";
 import { Sidebar } from "./Sidebar";
 import { OpenAIKeyPopup } from "../Settings/OpenAIKeyPopup";
 import { Spinner } from "../Spinner/Spinner";
@@ -15,12 +15,12 @@ import {
 } from "@/hooks";
 
 import "simplebar-react/dist/simplebar.min.css";
-import React, { useEffect } from "react";
+import { FC } from "react";
 import Login from "@components/Library/Login";
 import { useQuery } from "@tanstack/react-query";
 import { isAuthenticatedQuery } from "@/hooks/auth";
 
-export const LoadingScreen: React.FC = () => (
+export const LoadingScreen: FC = () => (
   <Alert open={true} onClose={() => {}} size="sm">
     <AlertTitle className="flex gap-4 items-center">
       <Spinner />
@@ -29,7 +29,7 @@ export const LoadingScreen: React.FC = () => (
   </Alert>
 );
 
-export const AppLayout: React.FC = () => {
+export const AppLayout: FC = () => {
   const {
     isSuccess: isHealthy,
     isPending: isPendingHealthy,
@@ -38,16 +38,6 @@ export const AppLayout: React.FC = () => {
   const { data: isAuthenticated, isPending: isPendingAuth } = useQuery(
     isAuthenticatedQuery()
   );
-  const pathname = useLocation({ select: (location) => location.pathname });
-
-  useEffect(() => {
-    // This fixes the issue of the main panel (e.g. settings, connections...) starting from the bottom
-    // when navigating, especially when coming from a chat page.
-    // regex match for "/chat/.+"
-    if (!pathname.match(/^\/chat\/.+$/)) {
-      window.scrollTo({ top: 0, behavior: "instant" });
-    }
-  }, [pathname]);
 
   if (isFetchedHealthy && !isHealthy) {
     return (
