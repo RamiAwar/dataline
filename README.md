@@ -1,3 +1,4 @@
+⚠️ We're looking for maintainers! If you're interested, message me on Discord ⚠️
 
 <p align="center">
     <strong>💬 Chat with your data using natural language 📊</strong>
