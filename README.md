@@ -1,10 +1,12 @@
-⚠️ We're looking for maintainers! If you're interested, message me on Discord ⚠️
 
 <p align="center">
     <strong>💬 Chat with your data using natural language 📊</strong>
 </p>
 <p align="center">
     Introducing DataLine, <em>the simplest and fastest way</em>⚡️ to analyze and visualize your data!<br><em>Generate and export charts, tables, reports in seconds with DataLine - Your AI-driven data analysis and visualization tool</em> 🤓
+</p>
+
+<p align="center">⚠️ We're looking for maintainers! If you're interested, message me on Discord ⚠️
 </p>
 <div align="center">
 <img src="https://img.shields.io/github/downloads/ramiawar/dataline/total?style=flat&color=%2322c55e">
