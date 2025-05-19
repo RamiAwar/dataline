@@ -17,11 +17,13 @@ class UserCreate(BaseModel):
     preferred_openai_model: Optional[str] = None
     sentry_enabled: Optional[bool] = True
     analytics_enabled: Optional[bool] = True
+    hide_sql_preference: Optional[bool] = False
 
 
 class UserUpdate(UserCreate):
     sentry_enabled: Optional[bool] = None
     analytics_enabled: Optional[bool] = None
+    hide_sql_preference: Optional[bool] = None
 
 
 class UserRepository(BaseRepository[UserModel, UserCreate, UserUpdate]):

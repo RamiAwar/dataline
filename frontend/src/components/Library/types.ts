@@ -141,4 +141,5 @@ export interface IUserInfo {
   langsmith_api_key?: string | null;
   sentry_enabled: boolean;
   analytics_enabled: boolean;
+  hide_sql_preference: boolean;
 }

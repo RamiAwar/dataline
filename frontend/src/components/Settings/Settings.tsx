@@ -314,6 +314,34 @@ export default function Account() {
                   </div>
                 </div>
 
+                <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
+                  <div className="col-span-full">
+                    <div className="flex items-center gap-x-6">
+                      <label
+                        htmlFor="hide-sql"
+                        className="block text-md font-medium leading-6 text-white"
+                      >
+                        Hide SQL code blocks
+                      </label>
+                      <Switch
+                        name="hide_sql"
+                        color="green"
+                        checked={userInfo?.hide_sql_preference ?? false}
+                        onChange={(value) =>
+                          setUserInfo((prevUserInfo) => ({
+                            ...prevUserInfo!,
+                            hide_sql_preference: value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <p className="text-xs md:text-sm text-gray-400 pt-2">
+                      When enabled, SQL code blocks will be hidden in conversations by default.
+                      You can still view them by expanding the minimized blocks when needed.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="mt-8 flex">
                   <Button
                     color="green"

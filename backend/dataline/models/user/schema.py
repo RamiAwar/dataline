@@ -14,6 +14,7 @@ class UserUpdateIn(BaseModel):
     preferred_openai_model: Optional[str] = None
     sentry_enabled: Optional[bool] = None
     analytics_enabled: Optional[bool] = None
+    hide_sql_preference: Optional[bool] = None
 
     @field_serializer("openai_api_key")
     def dump_openai_api_key(self, v: SecretStr) -> str:
@@ -34,6 +35,7 @@ class UserOut(BaseModel):
     preferred_openai_model: Optional[str] = None
     sentry_enabled: bool
     analytics_enabled: Optional[bool] = None
+    hide_sql_preference: Optional[bool] = None
 
 
 class UserWithKeys(BaseModel):
@@ -47,6 +49,7 @@ class UserWithKeys(BaseModel):
     preferred_openai_model: str
     sentry_enabled: bool
     analytics_enabled: Optional[bool] = None
+    hide_sql_preference: Optional[bool] = None
 
 
 class AvatarOut(BaseModel):
