@@ -239,19 +239,6 @@ const getMessages = async (
   ).data;
 };
 
-export type MessageCreationResult = ApiResponse<void>;
-const createMessage = async (conversationId: number, content: string) => {
-  const response = await backendApi<MessageCreationResult>({
-    url: "/message",
-    method: "post",
-    data: {
-      conversation_id: conversationId,
-      content,
-    },
-  });
-  return response.data;
-};
-
 export const DEFAULT_OPTIONS = { secure_data: true };
 
 export type QueryOut = ApiResponse<{
@@ -485,7 +472,6 @@ export const api = {
   updateConversation,
   deleteConversation,
   getMessages,
-  createMessage,
   query,
   streamingQuery,
   runSQL,
