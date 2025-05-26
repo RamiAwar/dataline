@@ -26,6 +26,7 @@ async def test_update_user_info_name(client: TestClient) -> None:
             "openai_base_url": None,
             "sentry_enabled": True,
             "analytics_enabled": True,
+            "hide_sql_preference": False,
         },
     }
 
