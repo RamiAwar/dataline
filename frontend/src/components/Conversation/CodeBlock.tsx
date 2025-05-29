@@ -10,7 +10,11 @@ import { CustomTooltip } from "../Library/Tooltip";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { format } from "prettier-sql";
 import { useEffect, useRef, useState } from "react";
-import { useRunSqlInConversation, useUpdateSqlQuery, useGetUserProfile } from "@/hooks";
+import {
+  useRunSqlInConversation,
+  useUpdateSqlQuery,
+  useGetUserProfile,
+} from "@/hooks";
 import {
   Alert,
   AlertActions,
@@ -98,7 +102,7 @@ export const CodeBlock = ({
 }: {
   code: string;
   resultId: string;
-  dialect: string;
+  dialect?: string;
   onUpdateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
   onSaveSQLStringResult: (
     data?: { created_at: string; chartjs_json: string } | void
@@ -114,8 +118,10 @@ export const CodeBlock = ({
     formattedCodeOrInitial(code, dialect as SupportedFormatters)
   );
   // Determine if SQL should be minimized by default based on user preference
-  const shouldHideSql = dialect.toLowerCase().includes("sql") && profile?.hide_sql_preference;
-  const [minimized, setMinimized] = useState(minimize || shouldHideSql || false);
+  const shouldHideSql = profile?.hide_sql_preference;
+  const [minimized, setMinimized] = useState(
+    minimize || shouldHideSql || false
+  );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const syntaxHighlighterId = `syntax-highlighter-${resultId}`;
 
