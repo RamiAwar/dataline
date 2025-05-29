@@ -65,7 +65,8 @@ export const ConnectionSelector = () => {
                   {/** ------ Connection Settings ------ */}
                   <div className="flex flex-col justify-end items-end h-full">
                     <Link
-                      to={`/connection/${connection.id}`}
+                      to={`/connection/$connectionId`}
+                      params={{ connectionId: connection.id }}
                       onClick={(e) => {
                         e.stopPropagation(); // Prevent the click event from propagating to the parent container
                       }}

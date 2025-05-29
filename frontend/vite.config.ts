@@ -32,5 +32,8 @@ export default defineConfig({
     sourcemap: !!process.env.TAURI_DEBUG,
     manifest: true,
   },
-  plugins: [TanStackRouterVite(), react()],
+  plugins: [
+    TanStackRouterVite({ autoCodeSplitting: true, target: "react" }),
+    react(),
+  ],
 });
