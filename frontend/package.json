@@ -18,7 +18,7 @@
     "@microsoft/fetch-event-source": "^2.0.1",
     "@supabase/auth-ui-react": "^0.4.5",
     "@supabase/auth-ui-shared": "^0.1.7",
-    "@supabase/supabase-js": "^2.38.0",
+    "@supabase/supabase-js": "^2.49.8",
     "@tailwindcss/forms": "^0.5.3",
     "@tanstack/react-query": "^5.76.1",
     "@tanstack/react-router": "^1.120.5",
