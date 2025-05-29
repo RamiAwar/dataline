@@ -217,7 +217,8 @@ export const Sidebar = () => {
                           {conversations.map((conversation) => (
                             <li key={conversation.id}>
                               <Link
-                                to={`/chat/${conversation.id}`}
+                                to={`/chat/$conversationId`}
+                                params={{ conversationId: conversation.id }}
                                 onClick={() => {
                                   setIsEditing(false);
                                   setSidebarOpen(false);
@@ -300,7 +301,8 @@ export const Sidebar = () => {
                 <li key={conversation.id}>
                   {!isEditing ? (
                     <Link
-                      to={`/chat/${conversation.id}`}
+                      to={`/chat/$conversationId`}
+                      params={{ conversationId: conversation.id }}
                       onClick={(e) =>
                         conversation.id === params.conversationId &&
                         e.preventDefault()
