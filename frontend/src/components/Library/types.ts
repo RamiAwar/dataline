@@ -42,7 +42,7 @@ export interface ISQLQueryStringResult extends IResult {
   type: "SQL_QUERY_STRING_RESULT";
   result_id: string;
   content: {
-    dialect: string;
+    dialect?: string; // Currently used by Storybook, not passed from the backend
     sql: string;
     for_chart: boolean;
   };
