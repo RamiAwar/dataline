@@ -157,6 +157,7 @@ export function useUpdateUserInfo(options = {}) {
       openai_base_url?: string;
       sentry_enabled?: boolean;
       analytics_enabled?: boolean;
+      hide_sql_preference?: boolean;
     }) => (await api.updateUserInfo(payload)).data,
     onSuccess() {
       enqueueSnackbar({

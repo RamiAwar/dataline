@@ -1,7 +1,7 @@
 import logo from "@/assets/images/logo_md.png";
 import { IMessageWithResultsOut } from "@components/Library/types";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
-import { useGetAvatar } from "@/hooks";
+import { useGetAvatar, useGetUserProfile } from "@/hooks";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { InfoTooltip } from "@components/Library/Tooltip";
 import { MessageResultRenderer } from "./MessageResultRenderer";
@@ -47,6 +47,8 @@ export const Message = ({
   className?: string;
   streaming?: boolean;
 }) => {
+  const { data: profile } = useGetUserProfile();
+  const hideSqlPreference = profile?.hide_sql_preference;
   return (
     <div
       className={classNames(
@@ -87,6 +89,7 @@ export const Message = ({
           <MessageResultRenderer
             initialResults={message.results || []}
             messageId={message.message.id || ""}
+            hideSqlByDefault={hideSqlPreference}
           />
         </div>
       </div>
