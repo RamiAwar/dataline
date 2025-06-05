@@ -10,11 +10,7 @@ import { CustomTooltip } from "../Library/Tooltip";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { format } from "prettier-sql";
 import { useEffect, useRef, useState } from "react";
-import {
-  useRunSqlInConversation,
-  useUpdateSqlQuery,
-  useGetUserProfile,
-} from "@/hooks";
+import { useRunSqlInConversation, useUpdateSqlQuery } from "@/hooks";
 import {
   Alert,
   AlertActions,
@@ -99,6 +95,8 @@ export const CodeBlock = ({
   onSaveSQLStringResult,
   forChart = false,
   minimize,
+  hideSqlByDefault,
+  resultType,
 }: {
   code: string;
   resultId: string;
@@ -109,8 +107,9 @@ export const CodeBlock = ({
   ) => void;
   forChart: boolean;
   minimize?: boolean;
+  hideSqlByDefault?: boolean;
+  resultType?: string;
 }) => {
-  const { data: profile } = useGetUserProfile();
   const [savedCode, setSavedCode] = useState<string>(() =>
     formattedCodeOrInitial(code, dialect as SupportedFormatters)
   );
@@ -118,9 +117,11 @@ export const CodeBlock = ({
     formattedCodeOrInitial(code, dialect as SupportedFormatters)
   );
   // Determine if SQL should be minimized by default based on user preference
-  const shouldHideSql = profile?.hide_sql_preference;
+  const effectiveDialectIsSql =
+    dialect?.toLowerCase() === "sql" ||
+    (resultType === "SQL_QUERY_STRING_RESULT" && dialect === undefined);
   const [minimized, setMinimized] = useState(
-    minimize || shouldHideSql || false
+    minimize || (hideSqlByDefault && effectiveDialectIsSql) || false
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const syntaxHighlighterId = `syntax-highlighter-${resultId}`;
@@ -269,7 +270,11 @@ export const CodeBlock = ({
     <Minimizer
       minimized={minimized}
       setMinimized={setMinimized}
-      label="Code block"
+      label={
+        hideSqlByDefault && dialect?.toLowerCase() === "sql" && minimized
+          ? "SQL code hidden by default. You can change this in settings."
+          : "Code block"
+      }
       classes="bg-gray-900"
     >
       <div

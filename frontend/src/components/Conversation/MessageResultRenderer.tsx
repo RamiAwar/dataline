@@ -104,9 +104,11 @@ function getResultGroups(results: IResultType[]) {
 export const MessageResultRenderer = ({
   initialResults,
   messageId,
+  hideSqlByDefault,
 }: {
   initialResults: IResultType[];
   messageId: string;
+  hideSqlByDefault?: boolean;
 }) => {
   const [results, setResults] = useState(initialResults);
   const { groups: resultGroups, unlinkedGroup } = useMemo(
@@ -268,6 +270,8 @@ export const MessageResultRenderer = ({
                     result.result_id
                   )}
                   forChart={result.content.for_chart}
+                  hideSqlByDefault={hideSqlByDefault}
+                  resultType={result.type}
                 />
               )) ||
               (result.type === "CHART_GENERATION_RESULT" && (
