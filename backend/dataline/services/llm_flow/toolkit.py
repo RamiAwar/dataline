@@ -237,7 +237,7 @@ class InfoSQLDatabaseTool(BaseSQLDatabaseTool, StateUpdaterTool):
                         to_col_ref = f"'{relation.get('schema_name')}.{related_table_name}.{relation.get('column')}'"
                         metadata_line = f"-- Foreign Key: The {from_col_ref} column references {to_col_ref}. \n"
                         table_metadata += metadata_line
-        return self.db.get_table_info(self.table_names) + table_metadata if table_metadata else ("\nSelected Table Relations: \n" + table_metadata)
+        return self.db.get_table_info(self.table_names) + "" if not table_metadata else ("\nSelected Table Relations: \n" + table_metadata)
 
     def get_response(  # type: ignore[misc]
         self,

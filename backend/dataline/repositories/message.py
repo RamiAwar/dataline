@@ -1,7 +1,7 @@
 from typing import Sequence, Type
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, case
 from sqlalchemy.orm import contains_eager
 
 from dataline.models.conversation.model import ConversationModel
@@ -38,7 +38,9 @@ class MessageRepository(BaseRepository[MessageModel, MessageCreate, MessageUpdat
         )
         return await self.list_unique(session, query=query)
 
-    async def get_by_connection_and_user_with_sql_results(self, session: AsyncSession, connection_id: UUID, user_id:UUID, n: int = 10) -> Sequence[MessageModel]:
+    async def get_by_connection_and_user_with_sql_results(self, session: AsyncSession, connection_id: UUID,
+                                                          conversation_id: UUID, user_id: UUID, n: int = 10) -> \
+    Sequence[MessageModel]:
         latest_conversations_subquery = (
             select(ConversationModel.id)
             .where(
@@ -49,10 +51,14 @@ class MessageRepository(BaseRepository[MessageModel, MessageCreate, MessageUpdat
             .limit(n)
             .scalar_subquery()
         )
+        priority_case = case(
+            (ConversationModel.id == conversation_id, 0),
+            else_=1
+        )
         query = (
             select(MessageModel)
             .where(MessageModel.conversation_id.in_(latest_conversations_subquery))
             .join(ConversationModel, MessageModel.conversation_id == ConversationModel.id)
-            .order_by(ConversationModel.created_at.desc(), MessageModel.created_at.asc())
+            .order_by(priority_case.asc(), ConversationModel.created_at.desc(), MessageModel.created_at.desc())
         )
         return await self.list_unique(session, query=query)

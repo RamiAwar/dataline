@@ -185,7 +185,7 @@ class ConversationService:
 
         # Create query graph
         query_graph = QueryGraphService(connection=connection)
-        history = await self.get_conversation_history(session, conversation.connection_id)
+        history = await self.get_conversation_history(session, conversation.connection_id, conversation.id)
 
         messages: list[BaseMessage] = []
         results: list[ResultType] = []
@@ -291,13 +291,13 @@ class ConversationService:
         )
         yield stream_event_str(event=QueryStreamingEventType.STORED_MESSAGES.value, data=query_out.model_dump_json())
 
-    async def get_conversation_history(self, session: AsyncSession, connection_id: UUID) -> list[BaseMessage]:
+    async def get_conversation_history(self, session: AsyncSession, connection_id: UUID, conversation_id:UUID) -> list[BaseMessage]:
         """
         Get the last 10 messages of a conversation (AI, Human, and System)
         """
         user = await self.user_repo.get_one_or_none(session)
         connection = await  self.connection_service.get_connection_by_uuid(session, connection_id)
-        messages = await self.message_repo.get_by_connection_and_user_with_sql_results(session, connection_id, user.id,  n=config.default_conversation_history_limit)
+        messages = await self.message_repo.get_by_connection_and_user_with_sql_results(session, connection_id, conversation_id, user.id,  n=config.default_conversation_history_limit)
         base_messages = []
         for message in reversed(messages):  # Reverse to get the oldest messages first (chat format)
             if message.role == BaseMessageType.HUMAN.value:
