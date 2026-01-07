@@ -62,39 +62,50 @@ class ConnectionService:
 
     async def get_db_from_dsn(self, dsn: str) -> SQLDatabase:
         # Check if connection can be established before saving it
+        db = None
         try:
             db = SQLDatabase.from_uri(dsn)
             database = db._engine.url.database
 
             if not database:
-                db.dispose()
                 raise ValidationError("Invalid DSN. Database name is missing, append '/DBNAME'.")
 
             return db
 
         except OperationalError as exc:
+            # Dispose the first failed engine if it exists
+            if db is not None:
+                db.dispose()
+            
             # Try again replacing localhost with host.docker.internal to connect with DBs running in docker
             if "localhost" in dsn:
                 dsn = dsn.replace("localhost", "host.docker.internal")
+                db = None  # Reset db reference
                 try:
                     db = SQLDatabase.from_uri(dsn)
                     database = db._engine.url.database
 
                     if not database:
-                        db.dispose()
                         raise ValidationError("Invalid DSN. Database name is missing, append '/DBNAME'.")
 
                     return db
                 except OperationalError as e:
+                    if db is not None:
+                        db.dispose()
                     logger.error(e)
                     raise ValidationError("Failed to connect to database, please check your DSN.")
                 except Exception as e:
+                    if db is not None:
+                        db.dispose()
                     forward_connection_errors(e)
 
             logger.error(exc)
             raise ValidationError("Failed to connect to database, please check your DSN.")
 
         except Exception as e:
+            # Dispose on any other error
+            if db is not None:
+                db.dispose()
             forward_connection_errors(e)
             logger.error(e)
             raise ValidationError("Failed to connect to database, please check your DSN.")
