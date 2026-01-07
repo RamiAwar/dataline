@@ -55,6 +55,11 @@ class QueryGraphService:
         self.tool_executor = ToolExecutor(tools=all_tools)
         self.tracer = None  # no tracing by default
 
+    def dispose(self) -> None:
+        """Dispose of the database engine and close all connections."""
+        if hasattr(self, "db") and self.db is not None:
+            self.db.dispose()
+
     async def query(
         self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
     ) -> AsyncGenerator[tuple[Sequence[BaseMessage] | None, Sequence[ResultType] | None], None]:
@@ -84,11 +89,15 @@ class QueryGraphService:
         config: RunnableConfig | None = {"callbacks": [self.tracer]} if self.tracer is not None else None
         current_results: Sequence[ResultType] | None
         current_messages: Sequence[BaseMessage] | None
-        async for chunk in app.astream(initial_state, config=config):
-            for tool, tool_chunk in chunk.items():
-                current_results = tool_chunk.get("results")
-                current_messages = tool_chunk.get("messages")
-                yield (current_messages, current_results)
+        try:
+            async for chunk in app.astream(initial_state, config=config):
+                for tool, tool_chunk in chunk.items():
+                    current_results = tool_chunk.get("results")
+                    current_messages = tool_chunk.get("messages")
+                    yield (current_messages, current_results)
+        finally:
+            # Always dispose of the engine after query completion to prevent connection leaks
+            self.dispose()
 
     def build_graph(self) -> StateGraph:
         # Create the graph
