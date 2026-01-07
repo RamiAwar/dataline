@@ -180,7 +180,7 @@ class DatalineSQLDatabase(SQLDatabase):
 
     def dispose(self) -> None:
         """Dispose of the database engine and close all connections in the pool."""
-        if hasattr(self, "_engine") and self._engine is not None:
+        if self._engine is not None:
             self._engine.dispose()
 
     def get_table_info(self, table_names: list[str] | None = None) -> str:
