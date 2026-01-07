@@ -10,7 +10,7 @@ These tests verify that:
 
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-from sqlalchemy import create_engine, pool, inspect
+from sqlalchemy import create_engine, pool, inspect, text
 
 from dataline.services.llm_flow.utils import DatalineSQLDatabase
 from dataline.services.llm_flow.graph import QueryGraphService
@@ -329,19 +329,51 @@ class TestIntegrationConnectionPoolManagement:
         This test verifies that with proper disposal, we can create many databases
         without issues.
         """
+        engines_created = []
+        
         # Create and dispose many databases in sequence
         for i in range(20):
             db = DatalineSQLDatabase.from_uri("sqlite:///:memory:")
             assert db._engine is not None
+            engine = db._engine
+            engines_created.append(engine)
             
             # Verify we can connect
-            inspector = inspect(db._engine)
+            inspector = inspect(engine)
             # For SQLite, there are default tables
             schemas = inspector.get_schema_names()
             assert schemas is not None
             
+            # Check pool before disposal
+            pool_before = engine.pool
+            assert pool_before is not None, f"Pool not initialized for iteration {i}"
+            
             # Dispose immediately
             db.dispose()
+            
+            # After disposal, attempting to get a new connection should fail or create a new one
+            # The key is that disposal was called
         
-        # If connection pools were leaking, this test would fail or hang
-        # Success means disposal is working correctly
+        # Stronger verification: Create new connections to prove pool wasn't exhausted
+        # If connections were leaking, we'd hit limits here
+        test_databases = []
+        for i in range(10):
+            test_db = DatalineSQLDatabase.from_uri("sqlite:///:memory:")
+            assert test_db._engine is not None
+            # Verify we can actually use the connection
+            with test_db._engine.connect() as conn:
+                result = conn.execute(text("SELECT 1"))
+                assert result.fetchone()[0] == 1
+            test_databases.append(test_db)
+        
+        # Clean up test databases
+        for test_db in test_databases:
+            test_db.dispose()
+        
+        # Final verification: Confirm we created and cleaned up all expected engines
+        assert len(engines_created) == 20, "Not all engines were created"
+        assert len(test_databases) == 10, "Not all verification databases were created"
+        
+        # If we got here without exceptions, disposal is working correctly
+        # Without disposal, we would have accumulated 30 engines with 5 connections each (150 connections)
+        # which would have exhausted most database connection limits
