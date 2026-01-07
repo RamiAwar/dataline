@@ -161,8 +161,9 @@ class TestConnectionServiceDisposal:
         mock_db._all_tables_per_schema = {"main": []}
         mock_db.dispose = Mock()
         
-        with patch.object(service, 'get_db_from_dsn', return_value=mock_db):
-            with patch.object(service, 'check_dsn_already_exists', return_value=None):
+        # Patch async methods with AsyncMock
+        with patch.object(service, 'get_db_from_dsn', new=AsyncMock(return_value=mock_db)):
+            with patch.object(service, 'check_dsn_already_exists', new=AsyncMock(return_value=None)):
                 mock_repo.create = AsyncMock(return_value=Mock(
                     dsn="sqlite:///:memory:",
                     database="test.db",
