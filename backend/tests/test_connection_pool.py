@@ -98,12 +98,17 @@ class TestEngineDisposal:
         mock_connection.dsn = "sqlite:///:memory:"
         mock_connection.options = None
         
-        service = QueryGraphService(connection=mock_connection)
+        # Mock the SQLDatabase.from_dataline_connection to avoid actual DB connection
+        mock_db = Mock()
+        mock_db._sample_rows_in_table_info = 0
+        mock_db.dispose = Mock()
         
-        # Mock the db.dispose method
-        with patch.object(service.db, 'dispose') as mock_dispose:
+        with patch('dataline.services.llm_flow.graph.SQLDatabase.from_dataline_connection', return_value=mock_db):
+            service = QueryGraphService(connection=mock_connection)
+            
+            # Verify dispose is called on the db
             service.dispose()
-            mock_dispose.assert_called_once()
+            mock_db.dispose.assert_called_once()
 
 
 class TestConnectionLeakPrevention:
@@ -200,36 +205,41 @@ class TestQueryGraphServiceAutomaticCleanup:
         mock_connection.dsn = "sqlite:///:memory:"
         mock_connection.options = None
         
-        service = QueryGraphService(connection=mock_connection)
+        # Mock the SQLDatabase.from_dataline_connection to avoid actual DB connection
+        mock_db = Mock()
+        mock_db._sample_rows_in_table_info = 0
         
-        # Mock the dispose method to track if it's called
-        with patch.object(service, 'dispose') as mock_dispose:
-            # Mock the graph execution to avoid actual LLM calls
-            with patch.object(service, 'build_graph') as mock_build_graph:
-                mock_app = MagicMock()
-                # Make astream return an empty async generator
-                async def empty_generator():
-                    yield {}
-                
-                mock_app.astream = Mock(return_value=empty_generator())
-                mock_graph = Mock()
-                mock_graph.compile = Mock(return_value=mock_app)
-                mock_build_graph.return_value = mock_graph
-                
-                # Execute query
-                options = QueryOptions(
-                    secure_data=True,
-                    openai_api_key="test-key",
-                    openai_base_url=None,
-                    langsmith_api_key=None,
-                    llm_model="gpt-4"
-                )
-                
-                async for _ in service.query("test query", options):
-                    pass
-                
-                # Verify dispose was called
-                mock_dispose.assert_called_once()
+        with patch('dataline.services.llm_flow.graph.SQLDatabase.from_dataline_connection', return_value=mock_db):
+            service = QueryGraphService(connection=mock_connection)
+            
+            # Mock the dispose method to track if it's called
+            with patch.object(service, 'dispose') as mock_dispose:
+                # Mock the graph execution to avoid actual LLM calls
+                with patch.object(service, 'build_graph') as mock_build_graph:
+                    mock_app = MagicMock()
+                    # Make astream return an empty async generator
+                    async def empty_generator():
+                        yield {}
+                    
+                    mock_app.astream = Mock(return_value=empty_generator())
+                    mock_graph = Mock()
+                    mock_graph.compile = Mock(return_value=mock_app)
+                    mock_build_graph.return_value = mock_graph
+                    
+                    # Execute query
+                    options = QueryOptions(
+                        secure_data=True,
+                        openai_api_key="test-key",
+                        openai_base_url=None,
+                        langsmith_api_key=None,
+                        llm_model="gpt-4"
+                    )
+                    
+                    async for _ in service.query("test query", options):
+                        pass
+                    
+                    # Verify dispose was called
+                    mock_dispose.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_query_graph_service_disposes_after_error(self):
@@ -241,39 +251,44 @@ class TestQueryGraphServiceAutomaticCleanup:
         mock_connection.dsn = "sqlite:///:memory:"
         mock_connection.options = None
         
-        service = QueryGraphService(connection=mock_connection)
+        # Mock the SQLDatabase.from_dataline_connection to avoid actual DB connection
+        mock_db = Mock()
+        mock_db._sample_rows_in_table_info = 0
         
-        # Mock the dispose method to track if it's called
-        with patch.object(service, 'dispose') as mock_dispose:
-            # Mock the graph execution to raise an error
-            with patch.object(service, 'build_graph') as mock_build_graph:
-                mock_app = MagicMock()
-                
-                # Make astream raise an exception
-                async def error_generator():
-                    raise ValueError("Test error")
-                    yield  # unreachable but needed for generator
-                
-                mock_app.astream = Mock(return_value=error_generator())
-                mock_graph = Mock()
-                mock_graph.compile = Mock(return_value=mock_app)
-                mock_build_graph.return_value = mock_graph
-                
-                # Execute query and expect error
-                options = QueryOptions(
-                    secure_data=True,
-                    openai_api_key="test-key",
-                    openai_base_url=None,
-                    langsmith_api_key=None,
-                    llm_model="gpt-4"
-                )
-                
-                with pytest.raises(ValueError, match="Test error"):
-                    async for _ in service.query("test query", options):
-                        pass
-                
-                # Verify dispose was called even though an error occurred
-                mock_dispose.assert_called_once()
+        with patch('dataline.services.llm_flow.graph.SQLDatabase.from_dataline_connection', return_value=mock_db):
+            service = QueryGraphService(connection=mock_connection)
+            
+            # Mock the dispose method to track if it's called
+            with patch.object(service, 'dispose') as mock_dispose:
+                # Mock the graph execution to raise an error
+                with patch.object(service, 'build_graph') as mock_build_graph:
+                    mock_app = MagicMock()
+                    
+                    # Make astream raise an exception
+                    async def error_generator():
+                        raise ValueError("Test error")
+                        yield  # unreachable but needed for generator
+                    
+                    mock_app.astream = Mock(return_value=error_generator())
+                    mock_graph = Mock()
+                    mock_graph.compile = Mock(return_value=mock_app)
+                    mock_build_graph.return_value = mock_graph
+                    
+                    # Execute query and expect error
+                    options = QueryOptions(
+                        secure_data=True,
+                        openai_api_key="test-key",
+                        openai_base_url=None,
+                        langsmith_api_key=None,
+                        llm_model="gpt-4"
+                    )
+                    
+                    with pytest.raises(ValueError, match="Test error"):
+                        async for _ in service.query("test query", options):
+                            pass
+                    
+                    # Verify dispose was called even though an error occurred
+                    mock_dispose.assert_called_once()
 
 
 class TestIntegrationConnectionPoolManagement:
