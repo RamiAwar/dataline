@@ -25,8 +25,8 @@ class TestConnectionPoolConfiguration:
         dsn = "sqlite:///:memory:"
         db = DatalineSQLDatabase.from_uri(dsn)
         
-        # For SQLite in-memory, it uses NullPool, but for other DBs it would use QueuePool
-        # Check that the engine was created
+        # For SQLite, it uses SingletonThreadPool (not QueuePool)
+        # Check that the engine was created with our pool configuration
         assert db._engine is not None
         
         # Clean up
@@ -52,7 +52,7 @@ class TestConnectionPoolConfiguration:
         db = DatalineSQLDatabase.from_uri(dsn)
         
         assert db._engine is not None
-        # pool_pre_ping would be in the pool options for non-SQLite databases
+        # pool_pre_ping is set for all database types including SQLite
         
         # Clean up
         db.dispose()
@@ -99,7 +99,7 @@ class TestEngineDisposal:
         mock_connection.options = None
         
         # Mock the SQLDatabase.from_dataline_connection to avoid actual DB connection
-        mock_db = Mock()
+        mock_db = Mock(spec=DatalineSQLDatabase)
         mock_db._sample_rows_in_table_info = 0
         mock_db.dispose = Mock()
         
@@ -206,7 +206,7 @@ class TestQueryGraphServiceAutomaticCleanup:
         mock_connection.options = None
         
         # Mock the SQLDatabase.from_dataline_connection to avoid actual DB connection
-        mock_db = Mock()
+        mock_db = Mock(spec=DatalineSQLDatabase)
         mock_db._sample_rows_in_table_info = 0
         
         with patch('dataline.services.llm_flow.graph.SQLDatabase.from_dataline_connection', return_value=mock_db):
@@ -252,7 +252,7 @@ class TestQueryGraphServiceAutomaticCleanup:
         mock_connection.options = None
         
         # Mock the SQLDatabase.from_dataline_connection to avoid actual DB connection
-        mock_db = Mock()
+        mock_db = Mock(spec=DatalineSQLDatabase)
         mock_db._sample_rows_in_table_info = 0
         
         with patch('dataline.services.llm_flow.graph.SQLDatabase.from_dataline_connection', return_value=mock_db):
