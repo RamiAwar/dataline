@@ -106,6 +106,21 @@ class DatalineSQLDatabase(SQLDatabase):
     ) -> Self:
         """Construct a SQLAlchemy engine from URI."""
         _engine_args = engine_args or {}
+        # Set conservative connection pool limits to prevent exhausting database connections
+        # pool_size: number of connections to maintain in the pool
+        # max_overflow: number of connections that can be created beyond pool_size (only for QueuePool)
+        # pool_pre_ping: verify connections before using them (recover from stale connections)
+        
+        # Check if this is SQLite (which uses SingletonThreadPool and doesn't support max_overflow)
+        is_sqlite = database_uri.startswith("sqlite")
+        
+        if "pool_size" not in _engine_args:
+            _engine_args["pool_size"] = 2
+        # max_overflow only works with QueuePool (not with SQLite's SingletonThreadPool)
+        if "max_overflow" not in _engine_args and not is_sqlite:
+            _engine_args["max_overflow"] = 3
+        if "pool_pre_ping" not in _engine_args:
+            _engine_args["pool_pre_ping"] = True
         engine = create_engine(database_uri, **_engine_args)
         return cls(engine, schemas=schemas, **kwargs)
 
@@ -167,6 +182,11 @@ class DatalineSQLDatabase(SQLDatabase):
             include_tables=include_tables,
             **kwargs,
         )
+
+    def dispose(self) -> None:
+        """Dispose of the database engine and close all connections in the pool."""
+        if self._engine is not None:
+            self._engine.dispose()
 
     def get_table_info(self, table_names: list[str] | None = None) -> str:
         """Get information about specified tables.

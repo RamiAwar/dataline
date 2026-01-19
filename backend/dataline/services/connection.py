@@ -62,6 +62,7 @@ class ConnectionService:
 
     async def get_db_from_dsn(self, dsn: str) -> SQLDatabase:
         # Check if connection can be established before saving it
+        db = None
         try:
             db = SQLDatabase.from_uri(dsn)
             database = db._engine.url.database
@@ -72,9 +73,14 @@ class ConnectionService:
             return db
 
         except OperationalError as exc:
+            # Dispose the first failed engine if it exists
+            if db is not None:
+                db.dispose()
+            
             # Try again replacing localhost with host.docker.internal to connect with DBs running in docker
             if "localhost" in dsn:
                 dsn = dsn.replace("localhost", "host.docker.internal")
+                db = None  # Reset db reference
                 try:
                     db = SQLDatabase.from_uri(dsn)
                     database = db._engine.url.database
@@ -84,15 +90,22 @@ class ConnectionService:
 
                     return db
                 except OperationalError as e:
+                    if db is not None:
+                        db.dispose()
                     logger.error(e)
                     raise ValidationError("Failed to connect to database, please check your DSN.")
                 except Exception as e:
+                    if db is not None:
+                        db.dispose()
                     forward_connection_errors(e)
 
             logger.error(exc)
             raise ValidationError("Failed to connect to database, please check your DSN.")
 
         except Exception as e:
+            # Dispose on any other error
+            if db is not None:
+                db.dispose()
             forward_connection_errors(e)
             logger.error(e)
             raise ValidationError("Failed to connect to database, please check your DSN.")
@@ -123,14 +136,18 @@ class ConnectionService:
 
             # Check if connection can be established before saving it
             db = await self.get_db_from_dsn(data.dsn)
-            update.dsn = str(db._engine.url.render_as_string(hide_password=False))
-            update.database = db._engine.url.database
-            update.dialect = db.dialect
-            current_connection = await self.get_connection(session, connection_uuid)
-            old_options = (
-                ConnectionOptions.model_validate(current_connection.options) if current_connection.options else None
-            )
-            update.options = self.merge_options(old_options, db)
+            try:
+                update.dsn = str(db._engine.url.render_as_string(hide_password=False))
+                update.database = db._engine.url.database
+                update.dialect = db.dialect
+                current_connection = await self.get_connection(session, connection_uuid)
+                old_options = (
+                    ConnectionOptions.model_validate(current_connection.options) if current_connection.options else None
+                )
+                update.options = self.merge_options(old_options, db)
+            finally:
+                # Dispose engine to release database connections
+                db.dispose()
         elif data.options:
             # only modify options if dsn hasn't changed
             update.options = data.options
@@ -151,34 +168,38 @@ class ConnectionService:
     ) -> ConnectionOut:
         # Check if connection can be established before saving it
         db = await self.get_db_from_dsn(dsn)
-        # get potentially modified dsn (eg. if localhost was replaced with host.docker.internal)
-        dsn = str(db._engine.url.render_as_string(hide_password=False))
-        if not connection_type:
-            connection_type = db.dialect
+        try:
+            # get potentially modified dsn (eg. if localhost was replaced with host.docker.internal)
+            dsn = str(db._engine.url.render_as_string(hide_password=False))
+            if not connection_type:
+                connection_type = db.dialect
 
-        # Check if connection already exists
-        await self.check_dsn_already_exists(session, dsn)
-        connection_schemas: list[ConnectionSchema] = [
-            ConnectionSchema(
-                name=schema,
-                tables=[ConnecitonSchemaTable(name=table, enabled=True) for table in tables],
-                enabled=True,
+            # Check if connection already exists
+            await self.check_dsn_already_exists(session, dsn)
+            connection_schemas: list[ConnectionSchema] = [
+                ConnectionSchema(
+                    name=schema,
+                    tables=[ConnecitonSchemaTable(name=table, enabled=True) for table in tables],
+                    enabled=True,
+                )
+                for schema, tables in db._all_tables_per_schema.items()
+            ]
+            connection = await self.connection_repo.create(
+                session,
+                ConnectionCreate(
+                    dsn=dsn,
+                    database=db._engine.url.database,
+                    name=name,
+                    dialect=db.dialect,
+                    type=connection_type,
+                    is_sample=is_sample,
+                    options=ConnectionOptions(schemas=connection_schemas),
+                ),
             )
-            for schema, tables in db._all_tables_per_schema.items()
-        ]
-        connection = await self.connection_repo.create(
-            session,
-            ConnectionCreate(
-                dsn=dsn,
-                database=db._engine.url.database,
-                name=name,
-                dialect=db.dialect,
-                type=connection_type,
-                is_sample=is_sample,
-                options=ConnectionOptions(schemas=connection_schemas),
-            ),
-        )
-        return ConnectionOut.model_validate(connection)
+            return ConnectionOut.model_validate(connection)
+        finally:
+            # Dispose engine to release database connections
+            db.dispose()
 
     async def create_sqlite_connection(
         self, session: AsyncSession, file: BinaryIO, name: str, is_sample: bool = False
@@ -328,13 +349,16 @@ class ConnectionService:
 
         # Get the latest schema information
         db = await self.get_db_from_dsn(connection.dsn)
+        try:
+            old_options = ConnectionOptions.model_validate(connection.options) if connection.options else None
+            new_options = self.merge_options(old_options, db)
 
-        old_options = ConnectionOptions.model_validate(connection.options) if connection.options else None
-        new_options = self.merge_options(old_options, db)
+            # Update the connection with new options
+            updated_connection = await self.connection_repo.update_by_uuid(
+                session, connection_id, ConnectionUpdate(options=new_options)
+            )
 
-        # Update the connection with new options
-        updated_connection = await self.connection_repo.update_by_uuid(
-            session, connection_id, ConnectionUpdate(options=new_options)
-        )
-
-        return ConnectionOut.model_validate(updated_connection)
+            return ConnectionOut.model_validate(updated_connection)
+        finally:
+            # Dispose engine to release database connections
+            db.dispose()
