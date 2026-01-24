@@ -119,65 +119,73 @@ Issues:
 ### Proposed State
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                                                                  │
 │                    CLEAN ARCHITECTURE                            │
+│              (Dependencies point INWARD ───►)                    │
 │                                                                  │
 │   ┌──────────────────────────────────────────────────────────┐ │
-│   │                    DOMAIN LAYER                           │ │
+│   │             1. DOMAIN LAYER (CENTER/CORE)                 │ │
 │   │  ┌────────────┐  ┌─────────────┐  ┌──────────────┐      │ │
 │   │  │ Entities   │  │ Value       │  │ Repository   │      │ │
-│   │  │            │  │ Objects     │  │ Interfaces   │      │ │
+│   │  │ Business   │  │ Objects     │  │ Interfaces   │      │ │
+│   │  │ Rules      │  │ (Immutable) │  │ (Ports)      │      │ │
 │   │  └────────────┘  └─────────────┘  └──────────────┘      │ │
+│   │  • Zero external dependencies                            │ │
+│   │  • Pure business logic                                   │ │
 │   └──────────────────────────────────────────────────────────┘ │
 │                             ▲                                    │
 │   ┌─────────────────────────┼────────────────────────────────┐ │
-│   │         APPLICATION LAYER (Use Cases)                     │ │
+│   │    2. APPLICATION LAYER (Use Cases - THE CENTER!)        │ │
 │   │  ┌────────────────┐  ┌──────────────┐  ┌─────────────┐  │ │
 │   │  │ Create         │  │ Execute      │  │ List        │  │ │
 │   │  │ Connection     │  │ NL Query     │  │ Connections │  │ │
 │   │  └────────────────┘  └──────────────┘  └─────────────┘  │ │
+│   │  • Orchestrate domain entities                           │ │
+│   │  • Interface-agnostic (no HTTP/CLI knowledge)            │ │
+│   │  • All interfaces call same use cases!                   │ │
 │   └──────────────────────────────────────────────────────────┘ │
-│                             ▲                                    │
-│   ┌─────────────────────────┼────────────────────────────────┐ │
-│   │      INFRASTRUCTURE LAYER (Adapters)                      │ │
-│   │  ┌───────────────┐  ┌────────────┐  ┌────────────────┐  │ │
-│   │  │ SQLAlchemy    │  │ LangGraph  │  │ API Key Auth   │  │ │
-│   │  │ Repositories  │  │ LLM Service│  │                │  │ │
-│   │  └───────────────┘  └────────────┘  └────────────────┘  │ │
+│          ▲                  ▲                  ▲                 │
+│   ┌──────┼──────────────────┼──────────────────┼────────────┐ │
+│   │  3. INFRASTRUCTURE (Implements Domain Interfaces)        │ │
+│   │  ┌──────┴───────┐  ┌───┴────────┐  ┌──────┴────────┐   │ │
+│   │  │ SQLAlchemy   │  │ LangGraph  │  │ API Key Auth  │   │ │
+│   │  │ Repositories │  │ LLM Service│  │               │   │ │
+│   │  └──────────────┘  └────────────┘  └───────────────┘   │ │
 │   └──────────────────────────────────────────────────────────┘ │
-│                             ▲                                    │
-│   ┌─────────────────────────┼────────────────────────────────┐ │
-│   │           API LAYER (Interface)                           │ │
-│   │  ┌──────────────────────────────────────────────────┐    │ │
-│   │  │              REST API v1                          │    │ │
-│   │  │  /api/v1/connections                              │    │ │
-│   │  │  /api/v1/conversations                            │    │ │
-│   │  │  /api/v1/queries                                  │    │ │
-│   │  └──────────────────────────────────────────────────┘    │ │
+│          ▲                  ▲                  ▲                 │
+│   ┌──────┼──────────────────┼──────────────────┼────────────┐ │
+│   │  4. INTERFACE ADAPTERS (Multiple interfaces, same core!) │ │
+│   │  ┌──────┴────┐  ┌───────┴───┐  ┌──────┴────┐           │ │
+│   │  │  REST API │  │  GraphQL  │  │    CLI    │           │ │
+│   │  │   (v1)    │  │ (Future)  │  │           │           │ │
+│   │  └───────────┘  └───────────┘  └───────────┘           │ │
+│   │                                                           │ │
+│   │  NOTE: REST is just ONE interface, not the center!       │ │
 │   └──────────────────────────────────────────────────────────┘ │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-                              ▲
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                      │
-  ┌─────▼──────┐      ┌──────▼──────┐      ┌───────▼────────┐
-  │  React UI  │      │  Python SDK │      │    Go SDK      │
-  │  (Client)  │      │             │      │                │
-  └────────────┘      └─────────────┘      └────────────────┘
-        │                     │                      │
-  ┌─────▼──────┐      ┌──────▼──────┐      ┌───────▼────────┐
-  │    CLI     │      │ TypeScript  │      │  Mobile App    │
-  │    Tool    │      │    SDK      │      │   (Future)     │
-  └────────────┘      └─────────────┘      └────────────────┘
+│          │                  │                  │                 │
+└──────────┼──────────────────┼──────────────────┼─────────────────┘
+           │                  │                  │
+     ┌─────▼──────┐    ┌─────▼──────┐    ┌─────▼──────┐
+     │  React UI  │    │ Python SDK │    │   Go SDK   │
+     │  (Calls    │    │ (Calls     │    │ (Calls     │
+     │   REST)    │    │  REST)     │    │  REST)     │
+     └────────────┘    └────────────┘    └────────────┘
+
+KEY ARCHITECTURAL PRINCIPLE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The CENTER is Use Cases (Application Layer), NOT REST!
+
+• REST API is just one adapter that calls use cases
+• CLI is another adapter that calls same use cases
+• GraphQL would be another adapter calling same use cases
+• All interfaces reuse the same business logic
 
 Benefits:
-✅ API-first with versioning
-✅ Multiple client options
+✅ Use cases are central - business logic written once
+✅ Multiple interfaces (REST, CLI, GraphQL, gRPC) share same logic
+✅ Easy to add new interfaces without changing core
+✅ Business logic testable without HTTP/database
+✅ Framework-independent (can swap FastAPI for Flask easily)
 ✅ Clean separation of concerns
-✅ Testable business logic
-✅ Independent deployments
-✅ Enterprise-ready
 ```
 
 ## 🎯 Goals

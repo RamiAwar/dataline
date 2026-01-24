@@ -26,49 +26,315 @@ This document proposes a comprehensive architectural transformation of Dataline 
 
 ### 1. Architectural Layers
 
-Following Clean Architecture (Uncle Bob), we organize the system in concentric layers:
+Following Clean Architecture (Uncle Bob), we organize the system in concentric layers with **dependencies pointing inward**. The Domain layer is the center, and REST is just one of many possible interface adapters.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    EXTERNAL LAYER                            │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │         INTERFACE ADAPTERS LAYER                        │ │
-│  │  ┌──────────────────────────────────────────────────┐  │ │
-│  │  │        APPLICATION LAYER                          │  │ │
-│  │  │  ┌────────────────────────────────────────────┐  │  │ │
-│  │  │  │         DOMAIN LAYER (Core)                 │  │  │ │
-│  │  │  │                                             │  │  │ │
-│  │  │  │  - Entities                                 │  │  │ │
-│  │  │  │  - Value Objects                            │  │  │ │
-│  │  │  │  - Domain Services                          │  │  │ │
-│  │  │  │  - Repository Interfaces                    │  │  │ │
-│  │  │  │  - Use Case Interfaces                      │  │  │ │
-│  │  │  │                                             │  │  │ │
-│  │  │  └────────────────────────────────────────────┘  │  │ │
-│  │  │                                                    │  │ │
-│  │  │  - Use Case Implementations                       │  │ │
-│  │  │  - Query/Command Handlers                         │  │ │
-│  │  │  - Application Services                           │  │ │
-│  │  │                                                    │  │ │
-│  │  └──────────────────────────────────────────────────┘  │ │
-│  │                                                          │ │
-│  │  - REST API Controllers (FastAPI)                       │ │
-│  │  - Repository Implementations (SQLAlchemy)              │ │
-│  │  - External Service Adapters (OpenAI, LangChain)       │ │
-│  │  - Presenters/Serializers (Pydantic)                   │ │
-│  │                                                          │ │
-│  └──────────────────────────────────────────────────────┘ │
-│                                                              │
-│  - UI Clients (Web, Mobile)                                 │
-│  - SDK Clients (Python, Go, JavaScript)                     │
-│  - CLI Tools                                                │
-│  - Database (PostgreSQL, SQLite)                            │
-│  - External APIs (OpenAI, etc.)                             │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         EXTERNAL LAYER                                   │
+│                                                                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │
+│  │   Web UI    │  │  Python SDK │  │   Go SDK    │  │  Mobile App │   │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘   │
+│                                                                           │
+└───────────────────────────────┬───────────────────────────────────────┬─┘
+                                │                                         │
+┌───────────────────────────────▼─────────────────────────────────────────▼─┐
+│                    INTERFACE ADAPTERS LAYER                               │
+│                                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   REST API   │  │   GraphQL    │  │     CLI      │  │  gRPC API    │  │
+│  │     (v1)     │  │   (Future)   │  │              │  │  (Future)    │  │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │
+│         │                  │                  │                  │          │
+│         └──────────────────┴──────────────────┴──────────────────┘          │
+│                                    │                                        │
+│  ┌──────────────────────────────────▼─────────────────────────────────┐   │
+│  │  Presenters/Controllers: Convert interface format ↔ use cases      │   │
+│  │  - REST Routers (FastAPI)                                           │   │
+│  │  - CLI Commands (Click/Typer)                                       │   │
+│  │  - GraphQL Resolvers (Strawberry)                                   │   │
+│  └──────────────────────────────────┬─────────────────────────────────┘   │
+│                                      │                                      │
+└──────────────────────────────────────┼──────────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────▼──────────────────────────────────────┐
+│                        APPLICATION LAYER                                    │
+│                          (USE CASES - This is the CENTER)                   │
+│                                                                              │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐         │
+│  │ CreateConnection │  │ ExecuteNLQuery   │  │ ListConnections  │         │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘         │
+│                                                                              │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐         │
+│  │ UpdateConnection │  │ ExportToCSV      │  │ RefreshSchema    │         │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘         │
+│                                                                              │
+│  • Use cases orchestrate domain entities                                    │
+│  • Use cases depend ONLY on domain layer                                    │
+│  • Use cases are interface-agnostic (don't know about HTTP, CLI, etc.)     │
+│                                                                              │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────▼──────────────────────────────────────┐
+│                         DOMAIN LAYER (CORE)                                 │
+│                    (Pure business logic - zero dependencies)                │
+│                                                                              │
+│  ┌────────────────────────────────────────────────────────────┐            │
+│  │  ENTITIES (Business objects with behavior)                  │            │
+│  │  - Connection (validate DSN, test connection, manage schema)│            │
+│  │  - Conversation (add messages, maintain context)            │            │
+│  │  - QueryResult (validate for charts, export to CSV)         │            │
+│  └────────────────────────────────────────────────────────────┘            │
+│                                                                              │
+│  ┌────────────────────────────────────────────────────────────┐            │
+│  │  VALUE OBJECTS (Immutable values)                           │            │
+│  │  - ConnectionId, ConversationId, QueryText, ChartConfig     │            │
+│  └────────────────────────────────────────────────────────────┘            │
+│                                                                              │
+│  ┌────────────────────────────────────────────────────────────┐            │
+│  │  REPOSITORY INTERFACES (Ports - abstractions only)          │            │
+│  │  - ConnectionRepository, ConversationRepository             │            │
+│  └────────────────────────────────────────────────────────────┘            │
+│                                                                              │
+│  ┌────────────────────────────────────────────────────────────┐            │
+│  │  DOMAIN SERVICES (Pure business logic)                      │            │
+│  │  - LLMService, QueryExecutor, ConnectionValidator           │            │
+│  └────────────────────────────────────────────────────────────┘            │
+│                                                                              │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────▼──────────────────────────────────────┐
+│                    INFRASTRUCTURE LAYER                                     │
+│                    (Implementations of domain interfaces)                    │
+│                                                                              │
+│  ┌──────────────────────────────────────────────────────────────┐          │
+│  │  Repository Implementations (SQLAlchemy, MongoDB, etc.)       │          │
+│  └──────────────────────────────────────────────────────────────┘          │
+│                                                                              │
+│  ┌──────────────────────────────────────────────────────────────┐          │
+│  │  Domain Service Implementations                               │          │
+│  │  - LangGraphLLMService (uses LangChain/LangGraph)             │          │
+│  │  - SQLAlchemyQueryExecutor                                    │          │
+│  └──────────────────────────────────────────────────────────────┘          │
+│                                                                              │
+│  ┌──────────────────────────────────────────────────────────────┐          │
+│  │  External Services                                             │          │
+│  │  - Database (PostgreSQL, SQLite)                              │          │
+│  │  - OpenAI API                                                 │          │
+│  │  - Redis (caching, rate limiting)                             │          │
+│  └──────────────────────────────────────────────────────────────┘          │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+DEPENDENCY RULE: Arrows point INWARD
+- Outer layers depend on inner layers
+- Inner layers know NOTHING about outer layers
+- Domain has ZERO dependencies
+- Infrastructure implements domain interfaces
+- Interface adapters (REST, CLI, GraphQL) all call same use cases
 ```
 
-### 2. Domain Layer (Core Business Logic)
+**Key Principle**: REST API is NOT the center. It's just one way to expose the use cases. You could add GraphQL, gRPC, WebSocket, or any other interface without touching the core business logic.
+
+### 2. Why Use Cases are Central, Not REST
+
+**Critical Design Decision**: The application layer (use cases) is the center of the system, NOT the REST API.
+
+#### Benefits of Use-Case-Centric Design
+
+**1. Multiple Interfaces Share Same Logic**
+
+All interfaces call the same use cases:
+
+```python
+# Single use case implementation
+class ExecuteNaturalLanguageQuery:
+    async def execute(self, request):
+        # Core business logic here
+        # This code is reused by ALL interfaces
+        pass
+
+# Interface 1: REST API
+@router.post("/api/v1/conversations/{id}/query")
+async def query_via_rest(...):
+    result = await use_case.execute(request)
+    return JSONResponse(result)
+
+# Interface 2: CLI
+@cli.command("query")
+def query_via_cli(...):
+    result = asyncio.run(use_case.execute(request))
+    print_table(result)
+
+# Interface 3: GraphQL
+@strawberry.mutation
+async def query_via_graphql(...):
+    result = await use_case.execute(request)
+    return to_graphql(result)
+
+# Interface 4: gRPC
+async def Query(self, request, context):
+    result = await use_case.execute(request)
+    return to_proto(result)
+
+# Interface 5: Message Queue
+async def handle_query_message(message):
+    result = await use_case.execute(request)
+    await publish_result(result)
+```
+
+**2. Easy to Add New Interfaces**
+
+Want to add GraphQL? Just create a new adapter that calls existing use cases. No changes to business logic.
+
+```python
+# Add GraphQL without touching core logic
+api/graphql/
+├── schema.py          # GraphQL schema definitions
+├── resolvers.py       # Call existing use cases
+└── server.py          # GraphQL server setup
+
+# GraphQL resolver just translates GraphQL → Use Case → GraphQL
+@strawberry.type
+class Query:
+    @strawberry.field
+    async def connections(self, info: Info) -> List[Connection]:
+        # Reuse existing use case!
+        use_case = info.context.get_list_connections_use_case()
+        connections = await use_case.execute()
+        return [to_graphql(c) for c in connections]
+```
+
+**3. Business Logic is Testable**
+
+Use cases have zero HTTP dependencies, making them easy to test:
+
+```python
+# Test use case without HTTP, database, or external services
+async def test_execute_query():
+    # Mock dependencies (repositories, services)
+    mock_repo = AsyncMock()
+    mock_llm = AsyncMock()
+
+    # Create use case with mocks
+    use_case = ExecuteNaturalLanguageQuery(
+        conversation_repo=mock_repo,
+        llm_service=mock_llm
+    )
+
+    # Test business logic directly
+    result = await use_case.execute(request)
+
+    # Assert business rules
+    assert result.is_valid()
+    assert mock_llm.called_with_correct_params()
+```
+
+**4. Interface-Agnostic Business Rules**
+
+Business rules don't depend on HTTP status codes, CLI exit codes, or GraphQL errors:
+
+```python
+# ❌ WRONG: Business logic coupled to HTTP
+class ConnectionService:
+    async def create_connection(self, data):
+        if not data.dsn:
+            raise HTTPException(400, "DSN required")  # HTTP leaking in!
+        # Now can't use this from CLI without HTTPException
+
+# ✅ CORRECT: Business logic independent of interface
+class CreateConnection:
+    async def execute(self, request):
+        if not request.dsn:
+            raise InvalidConnectionError("DSN required")  # Domain exception
+        # Can be caught and translated by any interface:
+        # - REST → HTTP 400
+        # - CLI → exit code 1
+        # - GraphQL → validation error
+```
+
+**5. Framework Independence**
+
+Want to switch from FastAPI to Flask? Or add gRPC? Easy - just change the interface adapter:
+
+```python
+# Current: FastAPI adapter
+api/rest/fastapi/routers/connections.py
+
+# Add: gRPC adapter (same use cases!)
+api/grpc/services/connection_service.py
+
+# Add: Flask adapter (same use cases!)
+api/rest/flask/routes/connections.py
+```
+
+#### Example: Multiple Interfaces for Same Feature
+
+Here's how "Create Connection" works through different interfaces:
+
+```python
+# CORE: Use case (single implementation)
+application/use_cases/connection/create_connection.py
+class CreateConnection:
+    async def execute(self, request: CreateConnectionRequest):
+        # Validate, create entity, test, save
+        # This code runs for ALL interfaces
+        pass
+
+# INTERFACE 1: REST API
+api/v1/routers/connections.py
+@router.post("/connections")
+async def create_via_rest(request: CreateConnectionHTTPRequest):
+    use_case = get_create_connection_use_case()
+    result = await use_case.execute(request.to_use_case_request())
+    return JSONResponse(status_code=201, content=to_json(result))
+
+# INTERFACE 2: CLI
+cli/commands/connection.py
+@click.command("create-connection")
+@click.option("--name")
+@click.option("--dsn")
+def create_via_cli(name: str, dsn: str):
+    use_case = get_create_connection_use_case()
+    result = asyncio.run(use_case.execute(
+        CreateConnectionRequest(name=name, dsn=dsn)
+    ))
+    click.echo(f"✓ Created: {result.connection.name}")
+
+# INTERFACE 3: Python SDK (user code)
+from dataline import DatalineClient
+client = DatalineClient(api_key="...")
+connection = client.connections.create(name="DB", dsn="postgresql://...")
+
+# INTERFACE 4: Go SDK (user code)
+import "github.com/dataline/dataline-go"
+client := dataline.NewClient(apiKey)
+conn, _ := client.Connections.Create(ctx, &dataline.CreateConnectionRequest{
+    Name: "DB",
+    DSN:  "postgresql://...",
+})
+
+# INTERFACE 5: GraphQL (future)
+mutation {
+  createConnection(input: {name: "DB", dsn: "postgresql://..."}) {
+    id
+    name
+  }
+}
+
+# All five interfaces call the SAME use case underneath!
+```
+
+This architecture ensures that:
+- ✅ Business logic is written once, used everywhere
+- ✅ New interfaces are easy to add
+- ✅ Testing doesn't require HTTP mocking
+- ✅ You can switch frameworks without rewriting logic
+- ✅ Each interface can have its own authentication, rate limiting, etc.
+
+---
+
+### 3. Domain Layer (Core Business Logic)
 
 The innermost layer contains pure business logic with zero external dependencies.
 
@@ -184,7 +450,7 @@ class LLMService(Protocol):
     ) -> ChartConfiguration: ...
 ```
 
-### 3. Application Layer (Use Cases)
+### 4. Application Layer (Use Cases)
 
 Orchestrates domain objects to fulfill business requirements.
 
@@ -337,7 +603,7 @@ class CreateConnection:
 # Not to be confused with domain entities
 ```
 
-### 4. Interface Adapters Layer
+### 5. Interface Adapters Layer
 
 Adapts external interfaces to application layer.
 
@@ -486,7 +752,7 @@ class LangGraphLLMService(LLMService):
             yield self._translate_event(event)
 ```
 
-### 5. External Layer
+### 6. External Layer
 
 #### SDK Clients
 
@@ -609,7 +875,7 @@ $ dataline export csv \
     --output revenue.csv
 ```
 
-### 6. Project Structure
+### 7. Project Structure
 
 ```
 dataline/
@@ -802,7 +1068,7 @@ dataline/
 └── README.md
 ```
 
-### 7. Authentication & Authorization
+### 8. Authentication & Authorization
 
 #### API Key Authentication
 ```python
@@ -841,7 +1107,7 @@ class Organization:
 # API keys are scoped to organization
 ```
 
-### 8. OpenAPI-First Development
+### 9. OpenAPI-First Development
 
 ```yaml
 # docs/api/openapi.yaml
@@ -952,7 +1218,7 @@ components:
           format: date-time
 ```
 
-### 9. Migration Strategy
+### 10. Migration Strategy
 
 #### Phase 1: Foundation (Weeks 1-2)
 1. Create new directory structure following clean architecture
@@ -997,7 +1263,7 @@ components:
 4. Deprecate old API routes
 5. Announce API-first architecture
 
-### 10. Key Benefits
+### 11. Key Benefits
 
 #### For API Users
 - **Clean, versioned API**: `/api/v1/` with stability guarantees
@@ -1020,7 +1286,7 @@ components:
 - **Ecosystem**: Third-party integrations and extensions
 - **Scalability**: Independent scaling of API and UI
 
-### 11. Example: End-to-End Flow
+### 12. Example: End-to-End Flow
 
 ```python
 # Industry team integrating Dataline into their Go application
@@ -1095,7 +1361,7 @@ This team:
 - Maintained full control over their data
 - Got enterprise-grade query generation with any LLM
 
-### 12. Comparison: Before vs After
+### 13. Comparison: Before vs After
 
 | Aspect | Current (UI-Coupled) | Proposed (API-First) |
 |--------|---------------------|----------------------|
@@ -1110,7 +1376,7 @@ This team:
 | **Deployment** | Single service | Independent API/UI services |
 | **Extensibility** | Requires modifying core | Plugin architecture via interfaces |
 
-### 13. Open Questions for Discussion
+### 14. Open Questions for Discussion
 
 1. **Migration timeline**: Should we aim for big-bang or gradual migration?
 2. **Backward compatibility**: How long should we support old API routes?
@@ -1120,7 +1386,7 @@ This team:
 6. **Deployment**: Docker-only or support other platforms?
 7. **Database**: Continue with SQLite default or require PostgreSQL?
 
-### 14. Success Metrics
+### 15. Success Metrics
 
 - **API adoption**: 100+ external integrations within 6 months
 - **SDK downloads**: 1,000+ monthly downloads per SDK
