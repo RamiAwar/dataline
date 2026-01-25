@@ -522,27 +522,16 @@ result = await query_engine.execute_with_handler(
 
 ---
 
-## Recommendation: Hybrid Approach
+## Recommendation: Typed Events Only (Keep It Simple)
 
-**Implement Solution 3 (Hybrid)** - support both streaming and callbacks.
+**Implement Solution 1 (Typed Events)** - clean, simple, fully typed.
 
 ### Why?
 
-1. **Typed events** (Solution 1) give us:
-   - Full type safety
-   - IDE autocomplete
-   - Pattern matching support
-   - Flexibility
-
-2. **Callbacks** (Solution 2) give us:
-   - Simple API for basic cases
-   - No if/elif chains
-   - Familiar pattern
-
-3. **Both together** let users choose their preferred style:
-   - Advanced users use streaming
-   - Simple users use callbacks
-   - Both are fully typed
+1. **Type safety** - Full IDE support and compile-time checking
+2. **Simple** - One pattern to learn and document
+3. **Flexible** - Pattern matching (Python 3.10+) or isinstance checks
+4. **No over-engineering** - Don't need callbacks until users ask for them
 
 ### Implementation Plan
 
@@ -555,18 +544,12 @@ dataline/core/events.py
 - CompleteEvent
 - etc.
 
-# 2. Define callback interface
-dataline/core/callbacks.py
-- StreamCallbacks dataclass
-- Optional callback for each event type
-
-# 3. Update QueryEngine
+# 2. Update QueryEngine
 dataline/core/engine.py
 - execute_stream() returns AsyncIterator[StreamEvent]
-- execute() accepts optional callbacks parameter
-- execute() internally uses execute_stream() and dispatches to callbacks
+- execute() internally uses execute_stream() and returns final result
 
-# 4. Update workflow to emit typed events
+# 3. Update workflow to emit typed events
 dataline/core/graph/workflow.py
 - Emit typed events instead of generic dicts
 ```
@@ -576,29 +559,29 @@ dataline/core/graph/workflow.py
 ```python
 from dataline.core import QueryEngine
 from dataline.core.events import *
-from dataline.core.callbacks import StreamCallbacks
 
 engine = QueryEngine(llm_api_key="...")
 
-# Style 1: Advanced - full control
+# Pattern 1: Streaming with pattern matching (Python 3.10+)
 async for event in engine.execute_stream(connection=db, query="..."):
     match event:
         case SQLGeneratedEvent(sql=sql):
             audit_log.save(sql)
+        case QueryExecutedEvent(row_count=count):
+            print(f"{count} rows")
         case CompleteEvent(result=result):
             return result
 
-# Style 2: Simple - callbacks
-result = await engine.execute(
-    connection=db,
-    query="...",
-    callbacks=StreamCallbacks(
-        on_sql_generated=lambda e: print(e.sql),
-        on_query_executed=lambda e: print(f"{e.row_count} rows")
-    )
-)
+# Pattern 2: Streaming with isinstance (Python 3.9+)
+async for event in engine.execute_stream(connection=db, query="..."):
+    if isinstance(event, SQLGeneratedEvent):
+        audit_log.save(event.sql)
+    elif isinstance(event, QueryExecutedEvent):
+        print(f"{event.row_count} rows")
+    elif isinstance(event, CompleteEvent):
+        return event.result
 
-# Style 3: Simplest - no events
+# Pattern 3: No streaming - just get result
 result = await engine.execute(connection=db, query="...")
 ```
 

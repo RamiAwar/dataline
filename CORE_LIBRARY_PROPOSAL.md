@@ -95,31 +95,43 @@ result2 = await query_engine.execute(
 )
 ```
 
-### With Streaming
+### With Streaming (Typed Events)
 
 ```python
-# Stream tool calls and results
+from dataline.core.events import *
+
+# Stream tool calls and results - fully typed!
 async for event in query_engine.execute_stream(
     connection=engine,
     query="Show customer lifetime value distribution",
 ):
-    if event.type == "tool_call":
-        print(f"Calling tool: {event.tool_name}")
-        print(f"Args: {event.arguments}")
+    # Pattern matching (Python 3.10+)
+    match event:
+        case ToolCallEvent(tool_name=name, arguments=args):
+            print(f"Calling tool: {name}")
+            print(f"Args: {args}")
 
-    elif event.type == "sql_generated":
-        print(f"SQL: {event.sql}")
+        case SQLGeneratedEvent(sql=sql, reasoning=why):
+            print(f"SQL: {sql}")
+            print(f"Reasoning: {why}")
 
-    elif event.type == "query_executed":
-        print(f"Rows: {event.row_count}")
-        print(f"Data: {event.rows[:5]}")  # First 5 rows
+        case QueryExecutedEvent(row_count=count, rows=data):
+            print(f"Rows: {count}")
+            print(f"Data: {data[:5]}")  # First 5 rows
 
-    elif event.type == "iteration":
-        print(f"Iterating... {event.reason}")
+        case IterationEvent(iteration=i, reason=reason):
+            print(f"Iterating ({i})... {reason}")
 
-    elif event.type == "complete":
-        print("Done!")
-        result = event.result
+        case CompleteEvent(result=result):
+            print("Done!")
+            return result
+
+# Or isinstance checks (Python 3.9+)
+async for event in query_engine.execute_stream(...):
+    if isinstance(event, SQLGeneratedEvent):
+        print(f"SQL: {event.sql}")  # Fully typed!
+    elif isinstance(event, CompleteEvent):
+        return event.result
 ```
 
 ### With Options
@@ -229,7 +241,11 @@ class QueryEngine:
         options: Optional[QueryOptions] = None,
     ) -> QueryResult:
         """
-        Execute natural language query against connection.
+        Execute natural language query and return final result.
+
+        This is a convenience method that consumes the event stream
+        and returns only the final result. Use execute_stream() if you
+        need to handle events.
 
         Args:
             connection: SQLAlchemy engine (user manages this!)
@@ -242,15 +258,17 @@ class QueryEngine:
         """
         options = options or QueryOptions()
 
-        # Run the workflow
-        result = await self.workflow.run(
+        # Consume the stream and return final result
+        async for event in self.execute_stream(
             connection=connection,
             query=query,
-            message_history=message_history or [],
+            message_history=message_history,
             options=options
-        )
+        ):
+            if isinstance(event, CompleteEvent):
+                return event.result
 
-        return result
+        raise RuntimeError("Query stream ended without CompleteEvent")
 
     async def execute_stream(
         self,
@@ -258,12 +276,20 @@ class QueryEngine:
         query: str,
         message_history: Optional[List[Dict[str, str]]] = None,
         options: Optional[QueryOptions] = None,
-    ) -> AsyncIterator[QueryEvent]:
+    ) -> AsyncIterator[StreamEvent]:
         """
-        Stream query execution events.
+        Stream typed query execution events.
 
         Yields:
-            QueryEvent objects (tool_call, sql_generated, query_executed, etc.)
+            Typed event objects (ToolCallEvent, SQLGeneratedEvent, etc.)
+
+        Example:
+            async for event in engine.execute_stream(...):
+                match event:
+                    case SQLGeneratedEvent(sql=sql):
+                        print(sql)
+                    case CompleteEvent(result=result):
+                        return result
         """
         options = options or QueryOptions()
 
@@ -338,11 +364,49 @@ class QueryResult:
     chart: Optional['ChartConfig'] = None
 
 @dataclass
-class QueryEvent:
-    """Event emitted during streaming execution"""
-    type: str  # "tool_call", "sql_generated", "query_executed", "complete"
-    timestamp: datetime
-    data: Dict[str, Any]
+class QueryEvent(ABC):
+    """Base class for all streaming events"""
+    timestamp: datetime = field(default_factory=datetime.utcnow)
+
+@dataclass
+class ToolCallEvent(QueryEvent):
+    """LLM is calling a tool"""
+    tool_name: str
+    arguments: Dict[str, Any]
+
+@dataclass
+class SQLGeneratedEvent(QueryEvent):
+    """SQL query has been generated"""
+    sql: str
+    reasoning: str
+
+@dataclass
+class QueryExecutedEvent(QueryEvent):
+    """SQL executed successfully"""
+    sql: str
+    row_count: int
+    execution_time_ms: int
+    rows: List[Dict[str, Any]]
+
+@dataclass
+class IterationEvent(QueryEvent):
+    """LLM is iterating to improve result"""
+    iteration: int
+    reason: str
+
+@dataclass
+class CompleteEvent(QueryEvent):
+    """Query execution complete"""
+    result: QueryResult
+
+# Type alias for all events
+StreamEvent = Union[
+    ToolCallEvent,
+    SQLGeneratedEvent,
+    QueryExecutedEvent,
+    IterationEvent,
+    CompleteEvent
+]
 
 @dataclass
 class ChartConfig:
