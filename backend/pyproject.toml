@@ -16,7 +16,7 @@ dependencies = [
     "pydantic==2.9.*",
     "openai<2.0.0,>=1.11.0",
     # newer python-multipart versions break packages, see pypi changelog
-    "python-multipart>=0.0.9,<=0.0.12",
+    "python-multipart>=0.0.9,<=0.0.22",
     "aiosqlite<1.0.0,>=0.20.0",
     "alembic<2.0.0,>=1.13.1",
     "pydantic-settings<3.0.0,>=2.2.1",
