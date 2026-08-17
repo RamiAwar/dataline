@@ -6,7 +6,7 @@ import {
   IMessageOptions,
   IMessageOut,
   IMessageWithResultsOut,
-  IResult,
+  ISQLQueryRunResult,
   IUserInfo,
 } from "./components/Library/types";
 import { IEditConnection } from "./components/Library/types";
@@ -305,7 +305,7 @@ const streamingQuery = async ({
   });
 };
 
-export type RunSQLResult = ApiResponse<IResult>;
+export type RunSQLResult = ApiResponse<ISQLQueryRunResult>;
 const runSQL = async (
   conversationId: string,
   code: string,
@@ -314,6 +314,7 @@ const runSQL = async (
   return (
     await backendApi<RunSQLResult>({
       url: `/conversation/${conversationId}/run-sql`,
+      method: "post",
       params: { sql: code, linked_id: linkedId },
     })
   ).data;

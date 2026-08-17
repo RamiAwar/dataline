@@ -11,8 +11,14 @@ from fastapi.responses import StreamingResponse
 from dataline.errors import ValidationError
 from dataline.models.connection.schema import Connection
 from dataline.models.llm_flow.enums import QueryResultType
-from dataline.models.llm_flow.schema import ChartGenerationResultContent, SQLQueryStringResultContent
-from dataline.models.result.schema import ChartRefreshOut, ResultUpdate
+from dataline.models.llm_flow.schema import (
+    ChartGenerationResultContent,
+    QueryRunData,
+    SQLQueryRunResultContent,
+    SQLQueryStringResultContent,
+)
+from dataline.models.result.model import ResultModel
+from dataline.models.result.schema import ChartRefreshOut, ResultCreate, ResultUpdate
 from dataline.repositories.base import AsyncSession, NotFoundError
 from dataline.repositories.result import ResultRepository
 from dataline.services.llm_flow.llm_calls.chart_generator import ChartType
@@ -45,6 +51,54 @@ class ResultService:
         else:
             # Just update sql, no chart involved
             await self._update_sql(session, result_id, sql)
+
+    async def upsert_sql_run_result(
+        self,
+        session: AsyncSession,
+        conversation_id: UUID,
+        sql_query_string_id: UUID,
+        query_run_data: QueryRunData,
+    ) -> ResultModel:
+        query_string_result = await self.result_repo.get_by_uuid(session, sql_query_string_id)
+        if query_string_result.type != QueryResultType.SQL_QUERY_STRING_RESULT.value:
+            raise ValueError("The linked result must be an SQL_QUERY_STRING_RESULT")
+
+        message = await self.result_repo.get_message_from_result(session, sql_query_string_id)
+        if message.conversation_id != conversation_id:
+            raise ValueError("The linked SQL result does not belong to this conversation")
+
+        created_at = datetime.now()
+        try:
+            existing_run = await self.result_repo.get_run_from_sql_query(session, sql_query_string_id)
+            existing_content = SQLQueryRunResultContent.model_validate_json(existing_run.content)
+            is_secure = existing_content.is_secure
+        except NotFoundError:
+            existing_run = None
+            is_secure = bool(message.options and message.options.get("secure_data", False))
+
+        content = SQLQueryRunResultContent(
+            data=query_run_data,
+            is_secure=is_secure,
+            for_chart=False,
+        ).model_dump_json()
+
+        if existing_run is None:
+            return await self.result_repo.create(
+                session,
+                ResultCreate(
+                    created_at=created_at,
+                    content=content,
+                    type=QueryResultType.SQL_QUERY_RUN_RESULT.value,
+                    message_id=query_string_result.message_id,
+                    linked_id=sql_query_string_id,
+                ),
+            )
+
+        return await self.result_repo.update_by_uuid(
+            session,
+            existing_run.id,
+            ResultUpdate(created_at=created_at, content=content),
+        )
 
     async def _validate_chart_sql(
         self,

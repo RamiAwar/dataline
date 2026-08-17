@@ -2,8 +2,8 @@ import { api, RefreshChartResult } from "@/api";
 import {
   IMessageOut,
   IMessageWithResultsOut,
-  IResult,
   IResultType,
+  ISQLQueryRunResult,
   QueryStreamingEvent,
 } from "@/components/Library/types";
 import {
@@ -190,7 +190,7 @@ export function useRunSql(
     sql: string;
     resultId: string;
   },
-  options: UseMutationOptions<IResult> = {}
+  options: UseMutationOptions<ISQLQueryRunResult> = {}
 ) {
   return useMutation({
     mutationFn: async () =>
@@ -218,7 +218,7 @@ export function useRunSqlInConversation(
     sql: string;
     resultId: string;
   },
-  options: UseMutationOptions<IResult> = {}
+  options: UseMutationOptions<ISQLQueryRunResult> = {}
 ) {
   const { conversationId } = useParams({ from: "/_app/chat/$conversationId" });
   return useMutation({

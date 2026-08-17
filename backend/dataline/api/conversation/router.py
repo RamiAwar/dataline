@@ -20,6 +20,7 @@ from dataline.services.connection import ConnectionService
 from dataline.services.conversation import ConversationService
 from dataline.services.llm_flow.toolkit import execute_sql_query
 from dataline.services.llm_flow.utils import DatalineSQLDatabase as SQLDatabase
+from dataline.services.result import ResultService
 from dataline.utils.posthog import posthog_capture
 from dataline.utils.utils import generate_with_errors
 
@@ -123,7 +124,7 @@ def query(
     )
 
 
-@router.get("/conversation/{conversation_id}/run-sql")
+@router.post("/conversation/{conversation_id}/run-sql")
 async def execute_sql(
     conversation_id: UUID,
     sql: str,
@@ -131,6 +132,7 @@ async def execute_sql(
     session: Annotated[AsyncSession, Depends(get_session)],
     conversation_service: Annotated[ConversationService, Depends()],
     connection_service: Annotated[ConnectionService, Depends()],
+    result_service: Annotated[ResultService, Depends()],
     background_tasks: BackgroundTasks,
     limit: int = 10,
     execute: bool = True,
@@ -156,6 +158,9 @@ async def execute_sql(
         for_chart=False,
         linked_id=linked_id,
     )
+    stored_result = await result_service.upsert_sql_run_result(session, conversation_id, linked_id, query_run_data)
+    result.result_id = stored_result.id
+    result.created_at = stored_result.created_at
 
     return SuccessResponse(data=result.serialize_result())
 

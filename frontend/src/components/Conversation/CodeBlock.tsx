@@ -22,7 +22,7 @@ import {
   AlertTitle,
 } from "../Catalyst/alert";
 import { Button } from "../Catalyst/button";
-import { Dialect } from "../Library/types";
+import { Dialect, ISQLQueryRunResult } from "../Library/types";
 import Minimizer from "../Minimizer/Minimizer";
 
 function copyToClipboard(text: string) {
@@ -103,7 +103,7 @@ export const CodeBlock = ({
   code: string;
   resultId: string;
   dialect?: string;
-  onUpdateSQLRunResult: (sql_string_result_id: string, arg: string) => void;
+  onUpdateSQLRunResult: (sql_string_result_id: string, result: ISQLQueryRunResult) => void;
   onSaveSQLStringResult: (
     data?: { created_at: string; chartjs_json: string } | void
   ) => void;
@@ -140,10 +140,8 @@ export const CodeBlock = ({
         onSettled: (data, error) => {
           if (error) {
             console.error("onsettled error in: ", error);
-          } else {
-            if (data?.content) {
-              onUpdateSQLRunResult(resultId, data.content as string);
-            }
+          } else if (data) {
+            onUpdateSQLRunResult(resultId, data);
           }
         },
       }
