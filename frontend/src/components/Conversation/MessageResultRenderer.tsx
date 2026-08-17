@@ -1,6 +1,7 @@
 import {
   IResultType,
   ISQLQueryStringResult,
+  ISQLQueryRunResult,
   ISelectedTablesResult,
 } from "@components/Library/types";
 import { useMemo, useState } from "react";
@@ -120,10 +121,10 @@ export const MessageResultRenderer = ({
   // Necessary since the results are only present at this level and the codeblock can't modify them
   function updateLinkedSQLRunResult(
     sql_string_result_id: string,
-    content: string
+    persistedResult: ISQLQueryRunResult
   ) {
     // != null, rules out both null and undefined
-    if (results != null && content != null) {
+    if (results != null && persistedResult != null) {
       // Remove SQL query run result linked to this ID if any
       const newResults = results?.filter(
         (result) =>
@@ -133,14 +134,7 @@ export const MessageResultRenderer = ({
           )
       );
 
-      const updatedResults = [
-        ...newResults,
-        {
-          type: "SQL_QUERY_RUN_RESULT",
-          linked_id: sql_string_result_id,
-          content,
-        },
-      ] as IResultType[];
+      const updatedResults = [...newResults, persistedResult];
       setResults(updatedResults);
     }
   }

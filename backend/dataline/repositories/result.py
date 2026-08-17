@@ -48,3 +48,24 @@ class ResultRepository(BaseRepository[ResultModel, ResultCreate, ResultUpdate]):
             raise NotFoundError(f"Could not find chart for result_id: {sql_string_result_id}")
 
         return chart[0]
+
+    async def get_run_from_sql_query(self, session: AsyncSession, sql_string_result_id: UUID) -> ResultModel:
+        query = (
+            select(ResultModel)
+            .filter_by(linked_id=sql_string_result_id)
+            .filter(ResultModel.type == QueryResultType.SQL_QUERY_RUN_RESULT.value)
+        )
+        result = await session.execute(query)
+        run = result.fetchone()
+        if not run:
+            raise NotFoundError(f"Could not find SQL run for result_id: {sql_string_result_id}")
+
+        return run[0]
+
+    async def get_message_from_result(self, session: AsyncSession, result_id: UUID) -> MessageModel:
+        query = select(MessageModel).join(ResultModel).where(ResultModel.id == result_id)
+        result = await session.execute(query)
+        message = result.scalar_one_or_none()
+        if message is None:
+            raise NotFoundError(f"Could not find message for result_id: {result_id}")
+        return message
