@@ -234,6 +234,12 @@ For example, running the docker image on a remote server with IP `123.123.12.34`
 docker run -p 7377:7377 -v dataline:/home/.dataline --name dataline -e ALLOWED_ORIGINS="http://123.123.12.34:7377,https://123.123.12.34:7377" ramiawar/dataline:latest
 ```
 
+#### Easypanel
+
+[Easypanel](https://easypanel.io) is a self-hosted Docker deployment platform. It has a one-click Easypanel template for DataLine, which runs the image above and sets `ALLOWED_ORIGINS` to the deployed domain automatically.
+
+[![Deploy on Easypanel](https://easypanel.io/img/deploy-on-easypanel-40.svg)](https://easypanel.io/templates/dataline)
+
 ### Excel Support
 
 We support excel files, but they will have to conform to some structure for the time being. We also support multiple sheets - each sheet will be ingested as a separate table.
